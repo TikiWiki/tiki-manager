@@ -1,5 +1,5 @@
 default:
-	echo Valid options are : instance, viewdb, check
+	echo Valid options are : instance, viewdb, check, update
 
 instance:
 	php5 -d memory_limit=256M scripts/addinstance.php
