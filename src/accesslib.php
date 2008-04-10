@@ -229,7 +229,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 		$host->sendFile( $localFile, $remoteFile );
 		$output = $host->runCommands(
-			"{$this->instance->phpexec} -d memory_limit=256M {$remoteFile} {$this->instance->webroot}",
+			"{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$this->instance->webroot}",
 			"rm {$remoteFile}" );
 
 		return $output;
