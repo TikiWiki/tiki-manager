@@ -12,3 +12,6 @@ check:
 
 update:
 	php5 -d memory_limit=256M scripts/update.php
+
+detect:
+	php5 scripts/detect.php
