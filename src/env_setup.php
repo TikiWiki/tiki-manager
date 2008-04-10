@@ -3,6 +3,17 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+if( ! function_exists( 'readline' ) )
+{
+	function readline( $prompt )
+	{
+		echo $prompt;
+		$fp = fopen("php://stdin","r");
+		$line = rtrim(fgets($fp, 1024) );
+		return $line;
+	}
+}
+
 include dirname(__FILE__) . "/sshlib.php";
 include dirname(__FILE__) . "/accesslib.php";
 include dirname(__FILE__) . "/instancelib.php";
@@ -48,7 +59,7 @@ if( ! file_exists( SSH_KEY ) || ! file_exists( SSH_PUBLIC_KEY ) )
 		die( "Impossible to generate SSH key. Make sure data folder is writable.\n" );
 
 	$key = SSH_KEY;
-	`ssh-keygen -f $key`;
+	`ssh-keygen -t dsa -f $key`;
 }
 
 if( ! file_exists( CACHE_FOLDER ) )
