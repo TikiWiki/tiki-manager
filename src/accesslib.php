@@ -17,6 +17,8 @@ abstract class Access
 	{
 		if( $type == 'ssh' )
 			return 'Access_SSH';
+		elseif( $type == 'ssh::nokey' )
+			return 'Access_SSH';
 		else
 			die( "Unknown type: $type\n" );
 	} // }}}
