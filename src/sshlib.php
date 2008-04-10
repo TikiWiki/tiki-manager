@@ -27,13 +27,13 @@ class SSH_Host
 		if( ! is_array( $commands ) )
 			$commands = func_get_args();
 
-		$string = implode( "\n", $commands );
+		$string = implode( " && ", $commands );
+		$fullcommand = escapeshellarg( $string );
 
 		$name = tempnam( '/tmp', 'command' );
-		file_put_contents( $name, $string );
 		$key = SSH_KEY;
 
-		$output = trim( `ssh -i $key {$this->user}@{$this->host} < $name` );
+		$output = trim( `ssh -i $key {$this->user}@{$this->host} $fullcommand` );
 
 		`rm $name`;
 
