@@ -15,8 +15,11 @@ $selection = getEntries( $instances, $selection );
 
 foreach( $selection as $instance )
 {
-	$instance->detectPHP();
-	$app = $instance->findApplication();
+	if( ! $instance->detectPHP() )
+		die( 'PHP Interpreter could not be found on remote host.' );
+
+	if( ! $app = $instance->findApplication() )
+		die( 'No known application found in web root' );
 }
 
 ?>
