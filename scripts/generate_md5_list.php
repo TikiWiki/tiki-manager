@@ -11,12 +11,7 @@ if(!function_exists('scandir')) {
 			$dirlist = opendir($dir);
 
 			while( ($file = readdir($dirlist)) !== false)
-			{
-				if(!is_dir($file))
-				{
-					$files[] = $file;
-				}
-			}
+				$files[] = $file;
 
 			($sortorder == 0) ? asort($files) : rsort($files); // arsort was replaced with rsort
 
