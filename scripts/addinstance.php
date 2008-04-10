@@ -41,8 +41,10 @@ if( ! $access )
 	echo "Set-up failure. Instance removed.\n";
 }
 
-$instance->detectPHP();
+if( ! $instance->detectPHP() )
+	die( 'PHP Interpreter could not be found on remote host.' );
 
-$app = $instance->findApplication();
+if( ! $app = $instance->findApplication() )
+	die( 'No known application found in web root' );
 
 ?>

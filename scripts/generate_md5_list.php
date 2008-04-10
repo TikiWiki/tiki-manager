@@ -3,6 +3,32 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+if(!function_exists('scandir')) {
+	function scandir( $dir, $sortorder = 0 )
+	{
+		if( is_dir( $dir ) )
+		{
+			$dirlist = opendir($dir);
+
+			while( ($file = readdir($dirlist)) !== false)
+			{
+				if(!is_dir($file))
+				{
+					$files[] = $file;
+				}
+			}
+
+			($sortorder == 0) ? asort($files) : rsort($files); // arsort was replaced with rsort
+
+			return $files;
+		}
+		else
+		{
+			return true;
+		}
+	}
+}
+
 $cur = trim( `pwd` );
 
 if( array_key_exists( 'REQUEST_METHOD', $_SERVER ) )

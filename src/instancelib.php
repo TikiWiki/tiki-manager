@@ -128,7 +128,11 @@ class Instance
 		{
 			$this->phpexec = $path;
 			$this->save();
+
+			return true;
 		}
+
+		return false;
 	} // }}}
 
 	function findApplication() // {{{
