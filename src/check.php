@@ -132,7 +132,7 @@ function handleCheckResult( $instance, $version, $array )
 				$serverFile = $access->downloadFile( $file );
 
 				$diff = DIFF;
-				`$diff $realFile $serverFile`;
+				passthru( "$diff $realFile $serverFile" );
 			}
 
 			break;
