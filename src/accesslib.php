@@ -256,7 +256,10 @@ class Access_SSH extends Access implements ShellPrompt
 		$local = tempnam( '/tmp', 'trim' );
 
 		$host = new SSH_Host( $this->host, $this->user );
-		$host->sendFile( $filename, $this->instance->getWebPath( $remoteLocation ) );
+		if( $remoteLocation{0} == '/' )
+			$host->sendFile( $filename, $remoteLocation );
+		else
+			$host->sendFile( $filename, $this->instance->getWebPath( $remoteLocation ) );
 	} // }}}
 
 	function deleteFile( $filename ) // {{{

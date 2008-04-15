@@ -6,21 +6,51 @@
 class Application_Tikiwiki extends Application
 {
 	private $installType = null;
+	private $branch = null;
+	private $installed = null;
 
 	function getName()
 	{
 		return 'tikiwiki';
 	}
 
+	function getVersions() // {{{
+	{
+		$versions = array();
+		$versions[] = Version::buildFake( 'cvs', 'REL-1-9-11' );
+
+		$base = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki";
+		foreach( explode( "\n", `svn ls $base/tags` ) as $line )
+		{
+			$line = trim( $line );
+			if( empty( $line ) )
+				continue;
+
+			if( substr( $line, -1 ) == '/' && ctype_digit( $line{0} ) )
+				$versions[] = Version::buildFake( 'svn', "tags/" . substr( $line, 0, -1 ) );
+		}
+
+		foreach( explode( "\n", `svn ls $base/branches` ) as $line )
+		{
+			$line = trim( $line );
+			if( empty( $line ) )
+				continue;
+
+			if( substr( $line, -1 ) == '/' && ctype_digit( $line{0} ) )
+				$versions[] = Version::buildFake( 'svn', "branches/" . substr( $line, 0, -1 ) );
+		}
+
+		return $versions;
+	} // }}}
+
 	function isInstalled() // {{{
 	{
-		static $installed = null;
-		if( ! is_null( $installed ) )
-			return $installed;
+		if( ! is_null( $this->installed ) )
+			return $this->installed;
 
 		$access = $this->instance->getBestAccess( 'filetransfer' );
 
-		return $installed = $access->fileExists( $this->instance->getWebPath( 'tiki-setup.php' ) );
+		return $this->installed = $access->fileExists( $this->instance->getWebPath( 'tiki-setup.php' ) );
 	} // }}}
 
 	function getInstallType() // {{{
@@ -37,8 +67,46 @@ class Application_Tikiwiki extends Application
 			return $this->installType = 'tarball';
 	} // }}}
 
+	function install( Version $version ) // {{{
+	{
+		$folder = cache_folder( $this, $version );
+		$this->extractTo( $version, $folder );
+		
+		$pwd = trim( `pwd` );
+		$tar = tempnam( '/tmp', 'trim' );
+		rename( $tar, "$tar.tar" );
+
+		chdir( $folder );
+		`tar -cf $tar.tar .`;
+		`gzip -5 $tar.tar`;
+		chdir( $pwd );
+
+		$remote = $this->instance->getWorkPath( basename( "$tar.tar.gz" ) );
+
+		$access = $this->instance->getBestAccess( 'scripting' );
+		if( ! $access instanceof ShellPrompt )
+			die( "Requires shell access to the server.\n" );
+
+		$access->uploadFile( "$tar.tar.gz", $remote );
+		
+		$access->shellExec(
+			"cd " . escapeshellarg( $this->instance->webroot ),
+			"tar -zxf " . escapeshellarg( $remote ),
+			"rm " . escapeshellarg( $remote ) );
+
+		$this->branch = $version->branch;
+		$this->installType = $version->type;
+		$this->installed = true;
+
+		$version = $this->registerCurrentInstallation();
+		$version->collectChecksumFromSource( $this->instance );
+	} // }}}
+
 	function getBranch() // {{{
 	{
+		if( $this->branch )
+			return $this->branch;
+
 		$access = $this->instance->getBestAccess( 'filetransfer' );
 
 		$content = $access->fileGetContents( $this->instance->getWebPath( 'tiki-setup.php' ) );
@@ -50,9 +118,9 @@ class Application_Tikiwiki extends Application
 
 			$entry = readline( "Branch $branch was found. If this is not correct, enter the one to use : " );
 			if( !empty( $entry ) )
-				return $entry;
+				return $this->branch = $entry;
 			else
-				return $branch;
+				return $this->branch = $branch;
 		}
 
 		$content = $access->fileGetContents( $this->instance->getWebPath( 'lib/setup/twversion.class.php' ) );
@@ -64,7 +132,7 @@ class Application_Tikiwiki extends Application
 
 			$entry = readline( "Branch $branch was found. If this is not correct, enter the one to use : " );
 			if( !empty( $entry ) )
-				return $entry;
+				return $this->branch = $entry;
 		}
 		else
 		{
@@ -73,7 +141,7 @@ class Application_Tikiwiki extends Application
 				$branch = readline( "No version found. Which tag should be used? (Ex.: (CVS) REL-1-9-10 or (Subversion) branches/1.10) " );
 		}
 
-		return $branch;
+		return $this->branch = $branch;
 	} // }}}
 
 	function getUpdateDate() // {{{

@@ -65,6 +65,15 @@ if( ! file_exists( SSH_KEY ) || ! file_exists( SSH_PUBLIC_KEY ) )
 if( ! file_exists( CACHE_FOLDER ) )
 	mkdir( CACHE_FOLDER );
 
+function cache_folder( $app, $version )
+{
+	$key = sprintf( "%s-%s-%s", $app->getName(), $version->type, $version->branch );
+	$key = str_replace( '/', '_', $key );
+	$folder = CACHE_FOLDER . "/$key";
+
+	return $folder;
+}
+
 // Make sure the raw database exists
 if( ! file_exists( DB_FILE ) )
 {

@@ -45,6 +45,32 @@ if( ! $instance->detectPHP() )
 	die( "PHP Interpreter could not be found on remote host.\n" );
 
 if( ! $app = $instance->findApplication() )
-	die( "No known application found in web root.\n" );
+{
+	$apps = Application::getApplications( $instance );
+	echo "No applications were found on remote host.\n";
+	echo "Which one do you want to install? (none to skip)\n";
+	foreach( $apps as $key => $app )
+		echo "[$key] {$app->getName()}\n";
+
+	$selection = readline( ">>> " );
+	$selection = getEntries( $apps, $selection );
+	if( empty( $selection ) )
+		die( "No instance to install.\n" );
+
+	$app = reset( $selection );
+
+	$versions = $app->getVersions();
+	echo "Which version do you want to install? (none to skip)\n";
+	foreach( $versions as $key => $version )
+		echo "[$key] {$version->type} : {$version->branch}\n";
+
+	$selection = readline( ">>> " );
+	$selection = getEntries( $versions, $selection );
+	if( empty( $selection ) )
+		die( "No version to install.\n" );
+
+	$version = reset( $selection );
+	$app->install( $version );
+}
 
 ?>

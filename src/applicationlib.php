@@ -7,6 +7,30 @@ abstract class Application
 {
 	protected $instance;
 
+	public static function getApplications( Instance $instance ) // {{{
+	{
+		$objects = array();
+
+		$dir = dirname(__FILE__) . "/appinfo";
+		$files = scandir( $dir );
+
+		$apps = array();
+		foreach( $files as $file )
+			if( preg_match( "/^(\w+)\.php$/", $file, $parts ) )
+				$apps[] = $parts[1];
+
+		foreach( $apps as $name )
+		{
+			$classname = 'Application_' . ucfirst( $name );
+			if( ! class_exists( $classname ) )
+				require "$dir/$name.php";
+
+			$objects[] = new $classname( $instance );
+		}
+
+		return $objects;
+	} // }}}
+
 	function __construct( Instance $instance )
 	{
 		$this->instance = $instance;
@@ -14,7 +38,11 @@ abstract class Application
 
 	abstract function getName();
 
+	abstract function getVersions();
+
 	abstract function isInstalled();
+
+	abstract function install( Version $version );
 
 	abstract function getInstallType();
 

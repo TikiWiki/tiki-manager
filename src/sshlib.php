@@ -28,12 +28,9 @@ class SSH_Host
 		$string = implode( " && ", $commands );
 		$fullcommand = escapeshellarg( $string );
 
-		$name = tempnam( '/tmp', 'command' );
 		$key = SSH_KEY;
 
 		$output = trim( `ssh -i $key {$this->user}@{$this->host} $fullcommand` );
-
-		`rm $name`;
 
 		return $output;
 	}

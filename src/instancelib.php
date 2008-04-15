@@ -137,22 +137,8 @@ class Instance
 
 	function findApplication() // {{{
 	{
-		$dir = dirname(__FILE__) . "/appinfo";
-		$files = scandir( $dir );
-
-		$apps = array();
-		foreach( $files as $file )
-			if( preg_match( "/^(\w+)\.php$/", $file, $parts ) )
-				$apps[] = $parts[1];
-
-		foreach( $apps as $name )
+		foreach( Application::getApplications( $this ) as $app )
 		{
-			$classname = 'Application_' . ucfirst( $name );
-			if( ! class_exists( $classname ) )
-				require "$dir/$name.php";
-
-			$app = new $classname( $this );
-
 			if( $app->isInstalled() )
 			{
 				$app->registerCurrentInstallation();
@@ -209,6 +195,15 @@ class Version
 	public $branch;
 	public $date;
 
+	public static function buildFake( $type, $branch )
+	{
+		$v = new self;
+		$v->type = $type;
+		$v->branch = $branch;
+		$v->date = date( 'Y-m-d' );
+
+		return $v;
+	}
 	function __construct( $instanceId = null ) // {{{
 	{
 		$this->instanceId = $instanceId;
@@ -277,9 +272,7 @@ class Version
 	{
 		$app = $instance->getApplication();
 
-		$key = sprintf( "%s-%s-%s", $app->getName(), $this->type, $this->branch );
-		$key = str_replace( '/', '_', $key );
-		$folder = CACHE_FOLDER . "/$key";
+		$folder = cache_folder( $app, $this );
 
 		$app->extractTo( $this, $folder );
 
