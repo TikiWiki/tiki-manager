@@ -16,11 +16,9 @@ class SSH_Host
 
 	function setupKey( $publicKeyFile )
 	{
-		$content = file_get_contents( $publicKeyFile );
-		$content = trim( $content );
-		$this->runCommands(
-			"echo \"$content\" >> ~/.ssh/authorized_keys"
-		);
+		$file = escapeshellarg( $publicKeyFile );
+		$host = escapeshellarg( "{$this->user}@{$this->host}" );
+		`ssh-copy-id -i $file $host`;
 	}
 
 	function runCommands( $commands ) {
