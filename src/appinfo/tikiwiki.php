@@ -244,6 +244,7 @@ class Application_Tikiwiki extends Application
 			$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
 			$svn->updateInstanceTo( $this->instance, $version->branch );
 
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
 			return;
 
 		case 'cvs':
@@ -254,6 +255,8 @@ class Application_Tikiwiki extends Application
 
 			$cvs = new CVS( 'pserver', 'anonymous', 'tikiwiki.cvs.sourceforge.net', '/cvsroot/tikiwiki', 'tikiwiki' );
 			$cvs->updateInstanceTo( $this->instance, $version->branch );
+
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
 			return;
 		}
 

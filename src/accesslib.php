@@ -220,7 +220,7 @@ class Access_SSH extends Access implements ShellPrompt
 			return null;
 	} // }}}
 
-	function runPHP( $localFile ) // {{{
+	function runPHP( $localFile, $arg = '' ) // {{{
 	{
 		$host = new SSH_Host( $this->host, $this->user );
 
@@ -229,7 +229,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 		$host->sendFile( $localFile, $remoteFile );
 		$output = $host->runCommands(
-			"{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$this->instance->webroot}",
+			"{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
 			"rm {$remoteFile}" );
 
 		return $output;

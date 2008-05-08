@@ -235,7 +235,7 @@ class Version
 	function performCheck( Instance $instance ) // {{{
 	{
 		$access = $instance->getBestAccess( 'scripting' );
-		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php' );
+		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', $instance->webroot );
 		
 		$known = $this->getFileMap();
 
@@ -289,7 +289,7 @@ class Version
 		$app = $instance->getApplication();
 
 		$access = $instance->getBestAccess( 'scripting' );
-		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php' );
+		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', $instance->webroot );
 		
 		$this->saveHashDump( $output, $app );
 	} // }}}
