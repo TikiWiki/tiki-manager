@@ -18,6 +18,7 @@ class Application_Tikiwiki extends Application
 	{
 		$versions = array();
 		$versions[] = Version::buildFake( 'cvs', 'REL-1-9-11' );
+		$versions[] = Version::buildFake( 'cvs', 'BRANCH-1-9' );
 
 		$base = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki";
 		foreach( explode( "\n", `svn ls $base/tags` ) as $line )
