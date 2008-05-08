@@ -25,7 +25,7 @@ foreach( $selection as $instance )
 
 	if( $ok )
 		$access->shellExec(
-			"cd {$instance->webroot}",
+			"cd " . escapeshellarg( $instance->webroot ),
 			"touch .htaccess",
 			"mv .htaccess .htaccess.bak",
 			"echo \"Order allow,deny\nDeny from all\" > .htaccess"
@@ -39,7 +39,7 @@ foreach( $selection as $instance )
 
 	if( $ok )
 		$access->shellExec(
-			"cd {$instance->webroot}",
+			"cd " . escapeshellarg( $instance->webroot ),
 			"mv .htaccess.bak .htaccess"
 		);
 }
