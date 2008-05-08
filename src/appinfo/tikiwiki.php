@@ -73,7 +73,7 @@ class Application_Tikiwiki extends Application
 		$this->extractTo( $version, $folder );
 		
 		$pwd = trim( `pwd` );
-		$tar = tempnam( '/tmp', 'trim' );
+		$tar = tempnam( TEMP_FOLDER, 'trim' );
 		rename( $tar, "$tar.tar" );
 
 		chdir( $folder );
@@ -158,7 +158,7 @@ class Application_Tikiwiki extends Application
 		$dot = strrpos( $filename, '.' );
 		$ext = substr( $filename, $dot );
 
-		$local = tempnam( '/tmp', 'trim' );
+		$local = tempnam( TEMP_FOLDER, 'trim' );
 		rename( $local, $local . $ext );
 		$local .= $ext;
 
@@ -174,7 +174,7 @@ class Application_Tikiwiki extends Application
 		elseif( $version->type == 'cvs' )
 		{
 			$cur = `pwd`;
-			chdir( '/tmp' );
+			chdir( TEMP_FOLDER );
 
 			$folder = md5( $filename );
 			mkdir( $folder );

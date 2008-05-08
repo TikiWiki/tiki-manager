@@ -25,6 +25,7 @@ define( "DB_FILE", "$root/data/trim.db" );
 define( "SSH_KEY", "$root/data/id_dsa" );
 define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
 define( "CACHE_FOLDER", "$root/cache" );
+define( "TEMP_FOLDER", "$root/tmp" );
 
 if( array_key_exists( 'EDITOR', $_ENV ) )
 	define( 'EDITOR', $_ENV['EDITOR'] );
@@ -64,6 +65,8 @@ if( ! file_exists( SSH_KEY ) || ! file_exists( SSH_PUBLIC_KEY ) )
 
 if( ! file_exists( CACHE_FOLDER ) )
 	mkdir( CACHE_FOLDER );
+if( ! file_exists( TEMP_FOLDER ) )
+	mkdir( TEMP_FOLDER );
 
 function cache_folder( $app, $version )
 {

@@ -240,7 +240,7 @@ class Access_SSH extends Access implements ShellPrompt
 		$dot = strrpos( $filename, '.' );
 		$ext = substr( $filename, $dot );
 
-		$local = tempnam( '/tmp', 'trim' );
+		$local = tempnam( TEMP_FOLDER, 'trim' );
 
 		$host = new SSH_Host( $this->host, $this->user );
 		$host->receiveFile( $this->instance->getWebPath( $filename ), $local );
@@ -253,7 +253,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function uploadFile( $filename, $remoteLocation ) // {{{
 	{
-		$local = tempnam( '/tmp', 'trim' );
+		$local = tempnam( TEMP_FOLDER, 'trim' );
 
 		$host = new SSH_Host( $this->host, $this->user );
 		if( $remoteLocation{0} == '/' )

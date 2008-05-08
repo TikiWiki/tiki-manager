@@ -19,11 +19,29 @@ $selection = getEntries( $instances, $selection );
 
 foreach( $selection as $instance )
 {
+	$access = $instance->getBestAccess( 'scripting' );
+	if( ! $ok = $access instanceof ShellPrompt )
+		echo "Site will not be disabled during the update. Shell access required.\n";
+
+	if( $ok )
+		$access->shellExec(
+			"cd {$instance->webroot}",
+			"touch .htaccess",
+			"mv .htaccess .htaccess.bak",
+			"echo \"Order allow,deny\nDeny from all\" > .htaccess"
+		);
+
 	$app = $instance->getApplication();
 	$filesToResolve = $app->performUpdate( $instance );
 	$version = $instance->getLatestVersion();
 
 	handleCheckResult( $instance, $version, $filesToResolve );
+
+	if( $ok )
+		$access->shellExec(
+			"cd {$instance->webroot}",
+			"mv .htaccess.bak .htaccess"
+		);
 }
 
 ?>
