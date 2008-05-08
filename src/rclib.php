@@ -18,7 +18,8 @@ class SVN
 		if( ! $access instanceof ShellPrompt )
 			return false;
 
-		$remoteXml = $access->shellExec( 'svn info --non-interactive --xml ' . escapeshellarg( $instance->webroot ), 'sleep 1' );
+		// --non-interactive not supported for info on older versions
+		$remoteXml = $access->shellExec( 'svn info --xml ' . escapeshellarg( $instance->webroot ), 'sleep 1' );
 		if( empty( $remoteXml ) )
 			return false;
 
