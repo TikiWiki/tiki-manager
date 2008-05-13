@@ -101,6 +101,8 @@ class Application_Tikiwiki extends Application
 
 		$version = $this->registerCurrentInstallation();
 		$version->collectChecksumFromSource( $this->instance );
+
+		$this->fixPermissions();
 	} // }}}
 
 	function getBranch() // {{{
@@ -269,6 +271,17 @@ class Application_Tikiwiki extends Application
 			return "REL-" . str_replace( '.', '-', $version );
 		else
 			return "tags/$version";
+	} // }}}
+
+	function fixPermissions() // {{{
+	{
+		$access = $this->instance->getBestAccess( 'scripting' );
+
+		$filename = $this->instance->getWorkPath( 'setup.sh' );
+		$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
+		$access->shellExec(
+			"cd " . escapeshellarg( $this->instance->webroot ),
+			"bash " . escapeshellarg( $filename ) );
 	} // }}}
 }
 

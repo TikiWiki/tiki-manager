@@ -69,6 +69,7 @@ if( ! $app = $instance->findApplication() )
 	if( empty( $selection ) )
 		die( "No version to install.\n" );
 
+	echo "If for any reason the installation fails (ex: wrong setup.sh parameters for tikiwiki), you can use `make access` to complete the installation manually.\n";
 	$version = reset( $selection );
 	$app->install( $version );
 }

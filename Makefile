@@ -1,5 +1,5 @@
 default:
-	echo Valid options are : instance, viewdb, check, update, access
+	echo Valid options are : instance, viewdb, check, update, access, fix
 
 instance:
 	php5 -d memory_limit=256M scripts/addinstance.php
@@ -15,6 +15,9 @@ update:
 
 access:
 	php5 -d memory_limit=256M scripts/access.php
+
+fix:
+	php5 -d memory_limit=256M scripts/fixperms.php
 
 detect:
 	php5 scripts/detect.php
