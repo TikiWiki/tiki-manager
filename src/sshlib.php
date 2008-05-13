@@ -52,6 +52,12 @@ class SSH_Host
 		$key = SSH_KEY;
 		`scp -i $key {$this->user}@{$this->host}:$remoteFile $localFile`;
 	}
+
+	function openShell()
+	{
+		$key = SSH_KEY;
+		passthru( "ssh -i $key {$this->user}@{$this->host}" );
+	}
 }
 
 ?>

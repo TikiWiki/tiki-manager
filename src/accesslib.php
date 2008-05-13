@@ -100,6 +100,8 @@ abstract class Access
 interface ShellPrompt {
 	function shellExec( $command );
 
+	function openShell();
+
 	function hasExecutable( $name );
 }
 
@@ -278,6 +280,12 @@ class Access_SSH extends Access implements ShellPrompt
 
 		$host = new SSH_Host( $this->host, $this->user );
 		return $host->runCommands( $commands );
+	} // }}}
+
+	function openShell() // {{{
+	{
+		$host = new SSH_Host( $this->host, $this->user );
+		$host->openShell();
 	} // }}}
 
 	function hasExecutable( $command ) // {{{
