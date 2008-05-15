@@ -1,6 +1,8 @@
 default:
 	echo Valid options are : instance, viewdb, check, update, access, fix
 
+.PHONY: backup
+
 instance:
 	php5 -d memory_limit=256M scripts/addinstance.php
 
@@ -18,6 +20,9 @@ update:
 
 access:
 	php5 -d memory_limit=256M scripts/access.php
+
+backup:
+	php5 -d memory_limit=256M scripts/backup.php
 
 fix:
 	php5 -d memory_limit=256M scripts/fixperms.php

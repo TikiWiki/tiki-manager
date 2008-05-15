@@ -26,6 +26,8 @@ define( "SSH_KEY", "$root/data/id_dsa" );
 define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
 define( "CACHE_FOLDER", "$root/cache" );
 define( "TEMP_FOLDER", "$root/tmp" );
+define( "BACKUP_FOLDER", "$root/backup" );
+define( "ARCHIVE_FOLDER", "$root/backup/archive" );
 
 if( array_key_exists( 'EDITOR', $_ENV ) )
 	define( 'EDITOR', $_ENV['EDITOR'] );
@@ -67,6 +69,10 @@ if( ! file_exists( CACHE_FOLDER ) )
 	mkdir( CACHE_FOLDER );
 if( ! file_exists( TEMP_FOLDER ) )
 	mkdir( TEMP_FOLDER );
+if( ! file_exists( BACKUP_FOLDER ) )
+	mkdir( BACKUP_FOLDER );
+if( ! file_exists( ARCHIVE_FOLDER ) )
+	mkdir( ARCHIVE_FOLDER );
 
 function cache_folder( $app, $version )
 {

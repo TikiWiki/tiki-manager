@@ -283,6 +283,30 @@ class Application_Tikiwiki extends Application
 			"cd " . escapeshellarg( $this->instance->webroot ),
 			"bash " . escapeshellarg( $filename ) );
 	} // }}}
+
+	function getFileLocations() // {{{
+	{
+		$access = $this->instance->getBestAccess( 'scripting' );
+		$out = $access->runPHP( dirname(__FILE__) . '/../../scripts/get_directory_list.php', $this->instance->webroot );
+
+		$folders = array( $this->instance->webroot );
+		foreach( explode( "\n", $out ) as $line )
+		{
+			$line = trim( $line );
+			if( empty( $line ) )
+				continue;
+
+			$line = rtrim( $line, '/' );
+
+			if( $line{0} != '/' )
+				$line = "{$this->instance->webroot}/$line";
+
+			if( ! empty( $line ) )
+				$folders[] = $line;
+		}
+
+		return $folders;
+	} // }}}
 }
 
 ?>

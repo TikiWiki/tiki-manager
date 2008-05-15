@@ -56,6 +56,8 @@ abstract class Application
 
 	abstract function extractTo( Version $version, $folder );
 
+	abstract function getFileLocations();
+
 	function performUpdate( Instance $instance ) // {{{
 	{
 		$current = $instance->getLatestVersion();

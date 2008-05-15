@@ -58,6 +58,15 @@ class SSH_Host
 		$key = SSH_KEY;
 		passthru( "ssh -i $key {$this->user}@{$this->host}" );
 	}
+
+	function rsync( $remoteLocation, $localMirror )
+	{
+		$user = $this->user;
+		$host = $this->host;
+		$key = SSH_KEY;
+		
+		`rsync -a -e "ssh -i $key -l $user" $user@$host:$remoteLocation $localMirror`;
+	}
 }
 
 ?>

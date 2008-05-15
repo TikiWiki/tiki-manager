@@ -180,6 +180,27 @@ class Instance
 		return new $class( $this );
 	} // }}}
 
+	function backup() // {{{
+	{
+		$access = $this->getBestAccess( 'scripting' );
+		$locations = $this->getApplication()->getFileLocations();
+
+		$approot = BACKUP_FOLDER . '/' . $this->id;
+		if( ! file_exists( $approot ) )
+			mkdir( $approot );
+
+		`rm $approot/manifest.txt`;
+		foreach( $locations as $remote )
+		{
+			$hash = md5( $remote );
+			$locmirror = $approot . '/' . $hash;
+			$access->localizeFolder( $remote, $locmirror );
+			`echo "$hash    $remote" >> $approot/manifest.txt`;
+		}
+
+		// TODO : Archive files
+	} // }}}
+
 	function __get( $name ) // {{{
 	{
 		if( isset( $this->$name ) )
