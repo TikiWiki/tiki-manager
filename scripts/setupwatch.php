@@ -24,7 +24,7 @@ file_put_contents(
 	$file = TEMP_FOLDER . '/crontab',
 	`crontab -l` . "$minute $hour * * * php -d memory_limit=256M $path $email\n" );
 
-echo "If adding to crontab fails, add these parameters manually.\n\t$minute $hour * * * php -d memory_limit=256M $path $email\n";
+echo "If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.\n\t$minute $hour * * * php -d memory_limit=256M $path $email\n";
 `crontab $file`;
 
 ?>
