@@ -10,6 +10,9 @@ viewdb:
 check:
 	php5 -d memory_limit=256M scripts/check.php
 
+watch:
+	php5 -d memory_limit=256M scripts/setupwatch.php
+
 update:
 	php5 -d memory_limit=256M scripts/update.php
 
