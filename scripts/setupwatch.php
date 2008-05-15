@@ -22,7 +22,7 @@ $path = realpath( dirname(__FILE__) . '/watch.php' );
 
 file_put_contents( 
 	$file = TEMP_FOLDER . '/crontab',
-	"$minute $hour * * * php -d memory_limit=256M $path $email\n" );
+	`crontab -l` . "$minute $hour * * * php -d memory_limit=256M $path $email\n" );
 
 `crontab $file`;
 
