@@ -4,7 +4,7 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 include dirname(__FILE__) . "/../src/env_setup.php";
-include dirname(__FILE__) . "/../src/check.php";
+include dirname(__FILE__) . "/../src/clean.php";
 
 $all = Instance::getInstances();
 
@@ -26,5 +26,7 @@ foreach( $selection as $instance )
 {
 	$instance->backup();
 }
+
+perform_archive_cleanup();
 
 ?>

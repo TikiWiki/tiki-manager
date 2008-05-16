@@ -198,7 +198,15 @@ class Instance
 			`echo "$hash    $remote" >> $approot/manifest.txt`;
 		}
 
-		// TODO : Archive files
+		$current = trim( `pwd` );
+		chdir( BACKUP_FOLDER );
+
+		$tarLocation = ARCHIVE_FOLDER . "/{$this->id}_" . date( 'Y-m-d_H:i:s' ) . '.tar';
+		$tar = escapeshellarg( $tarLocation );
+		`tar -cf $tar {$this->id}`;
+		`bzip2 -6 $tar`;
+
+		chdir( $current );
 	} // }}}
 
 	function __get( $name ) // {{{
