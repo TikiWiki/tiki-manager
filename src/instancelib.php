@@ -189,6 +189,7 @@ class Instance
 		if( ! file_exists( $approot ) )
 			mkdir( $approot );
 
+		// Bring all remote files locally
 		`rm $approot/manifest.txt`;
 		foreach( $locations as $remote )
 		{
@@ -198,6 +199,16 @@ class Instance
 			`echo "$hash    $remote" >> $approot/manifest.txt`;
 		}
 
+		// Backup database
+		$randomName = md5( time() . 'trimbackup' ) . '.sql';
+		$remoteFile = $this->getWorkPath( $randomName );
+		$access->runPHP( dirname(__FILE__) . '/../scripts/backup_database.php', escapeshellarg( $this->webroot ) . ' ' . escapeshellarg( $remoteFile ) );
+		$localName = $access->downloadFile( $remoteFile );
+		$access->deleteFile( $remoteFile );
+
+		rename( $localName, $approot . '/database_dump.sql' );
+
+		// Perform archiving
 		$current = trim( `pwd` );
 		chdir( BACKUP_FOLDER );
 

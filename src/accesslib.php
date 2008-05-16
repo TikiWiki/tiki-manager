@@ -241,13 +241,16 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function downloadFile( $filename ) // {{{
 	{
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
 		$dot = strrpos( $filename, '.' );
 		$ext = substr( $filename, $dot );
 
 		$local = tempnam( TEMP_FOLDER, 'trim' );
 
 		$host = new SSH_Host( $this->host, $this->user );
-		$host->receiveFile( $this->instance->getWebPath( $filename ), $local );
+		$host->receiveFile( $filename, $local );
 
 		rename( $local, $local . $ext );
 		chmod( $local . $ext, 0644 );
@@ -268,8 +271,10 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function deleteFile( $filename ) // {{{
 	{
-		$path = $this->instance->getWebPath( $filename );
-		$path = escapeshellarg( $path );
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
+		$path = escapeshellarg( $filename );
 
 		$host = new SSH_Host( $this->host, $this->user );
 		$host->runCommands( "rm $path" );
