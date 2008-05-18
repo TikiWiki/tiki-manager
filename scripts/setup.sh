@@ -19,7 +19,7 @@ fi
 
 AUSER=nobody
 AGROUP=nobody
-RIGHTS=02775
+RIGHTS=02777
 VIRTUALS=""
 
 UNAME=`uname | cut -c 1-6`
