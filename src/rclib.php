@@ -65,6 +65,7 @@ class CVS
 		$rep = escapeshellarg( ":{$this->protocol}:{$this->user}@{$this->host}:{$this->root}" );
 		$access->shellExec( 
 			"cd " . escapeshellarg( $instance->webroot ),
+			"export CVS_RSH=ssh",
 			"cvs -d$rep up -d -r " . escapeshellarg( $tag )
 		);
 	}
