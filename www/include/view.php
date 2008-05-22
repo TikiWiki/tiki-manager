@@ -34,6 +34,7 @@
 		</tr>
 	</table>
 	<p><a href="<?php echo html( url( "edit/{$instance->id}" ) ) ?>">Edit</a></p>
+	<p><a href="<?php echo html( url( '' ) ) ?>">&lt;&lt;&lt; Back to List</a>
 	<h2>Archives</h2>
 	<ul>
 		<?php foreach( $instance->getArchives() as $filename ): ?>

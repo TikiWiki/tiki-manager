@@ -51,5 +51,6 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 		</tr>
 	</table>
 	</form>
+	<p><a href="<?php echo html( url( "view/{$instance->id}" ) ) ?>">&lt;&lt;&lt; Cancel</a>
 </body>
 </html>
