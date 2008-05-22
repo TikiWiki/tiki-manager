@@ -10,7 +10,7 @@ require $authFile;
 require dirname(__FILE__) . '/../src/env_setup.php';
 ob_end_clean();
 
-if( RESTRICT && $_SERVER['HTTP_HOST'] != 'localhost' )
+if( RESTRICT && ( $_SERVER['HTTP_HOST'] != 'localhost' || $_SERVER['REMOTE_ADDR'] != '127.0.0.1' ) )
 	die( "This interface is not enabled." );
 
 session_start();
