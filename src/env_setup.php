@@ -95,6 +95,8 @@ if( ! file_exists( DB_FILE ) )
 	sqlite_query( $db, "CREATE TABLE info ( name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name) );" );
 	sqlite_query( $db, "INSERT INTO info ( name, value ) VALUES( 'version', '0' );" );
 	sqlite_close( $db );
+
+	$file = DB_FILE;
 }
 
 if( ! $db = sqlite_open( DB_FILE, 0666, $sqlite_error ) )
@@ -164,7 +166,7 @@ function query( $query, $params = null ) // {{{
 	}
 	
 	global $db;
-	return sqlite_query( $db, $query );
+	return sqlite_query( $db, $query, SQLITE_ASSOC, $errors );
 } // }}}
 
 function rowid() // {{{

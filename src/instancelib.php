@@ -29,6 +29,18 @@ class Instance
 		return $instances;
 	} // }}}
 
+	function getInstance( $id ) // {{{
+	{
+		$result = query( "
+			SELECT instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app 
+			FROM instance
+			WHERE instance_id = :id", array( ':id' => $id ) );
+
+		$instance = sqlite_fetch_object( $result, 'Instance' );
+
+		return $instance;
+	} // }}}
+
 	static function getUpdatableInstances() // {{{
 	{
 		$result = query( "
@@ -218,6 +230,11 @@ class Instance
 		`bzip2 -6 $tar`;
 
 		chdir( $current );
+	} // }}}
+
+	function getArchives() // {{{
+	{
+		return array_reverse( glob( ARCHIVE_FOLDER . "/{$this->id}_*.tar.bz2" ) );
 	} // }}}
 
 	function __get( $name ) // {{{

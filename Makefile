@@ -29,3 +29,6 @@ fix:
 
 detect:
 	php5 scripts/detect.php
+
+enablewww:
+	php5 scripts/enablewww.php
