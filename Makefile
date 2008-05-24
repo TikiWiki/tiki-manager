@@ -1,5 +1,5 @@
 default:
-	echo Valid options are : instance, viewdb, check, update, access, fix
+	echo Valid options are : instance, viewdb, check, watch, update, access, backup, fix, detect, enablewww
 
 .PHONY: backup
 
