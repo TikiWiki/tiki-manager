@@ -1,34 +1,39 @@
+# Change paths to executables here
+PHP = php5 -d memory_limit=256M
+SQLITE = sqlite
+
+# No changes should be required from here
 default:
 	echo Valid options are : instance, viewdb, check, watch, update, access, backup, fix, detect, enablewww
 
 .PHONY: backup
 
 instance:
-	php5 -d memory_limit=256M scripts/addinstance.php
+	$(PHP) scripts/addinstance.php
 
 viewdb:
-	sqlite data/trim.db
+	$(SQLITE) data/trim.db
 
 check:
-	php5 -d memory_limit=256M scripts/check.php
+	$(PHP) scripts/check.php
 
 watch:
-	php5 -d memory_limit=256M scripts/setupwatch.php
+	$(PHP) scripts/setupwatch.php
 
 update:
-	php5 -d memory_limit=256M scripts/update.php
+	$(PHP) scripts/update.php
 
 access:
-	php5 -d memory_limit=256M scripts/access.php
+	$(PHP) scripts/access.php
 
 backup:
-	php5 -d memory_limit=256M scripts/backup.php
+	$(PHP) scripts/backup.php
 
 fix:
-	php5 -d memory_limit=256M scripts/fixperms.php
+	$(PHP) scripts/fixperms.php
 
 detect:
-	php5 scripts/detect.php
+	$(PHP) scripts/detect.php
 
 enablewww:
-	php5 scripts/enablewww.php
+	$(PHP) scripts/enablewww.php
