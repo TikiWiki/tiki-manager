@@ -120,7 +120,7 @@ class Application_Tikiwiki extends Application
 			$version = $parts[1];
 			$branch = $this->formatBranch( $version );
 
-			$entry = readline( "Branch $branch was found. If this is not correct, enter the one to use : " );
+			$entry = readline( "Branch $branch was found. If this is not correct, enter the one to use. Until 1.10 is tagged, you can use branches/1.10 : " );
 			if( !empty( $entry ) )
 				return $this->branch = $entry;
 			else
