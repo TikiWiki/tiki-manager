@@ -10,6 +10,10 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 	$instance->phpexec = rtrim( $_POST['phpexec'], '/' );
 	$instance->save();
 
+	$locations = explode( "\n", $_POST['backups'] );
+	$locations = array_map( 'trim', $locations );
+	$instance->setExtraBackups( $locations );
+
 	header( "Location: " . url( "view/{$instance->id}" ) );
 	exit;
 }
@@ -44,6 +48,10 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 		<tr>
 			<th>PHP Interpreter</th>
 			<td><input type="text" name="phpexec" value="<?php echo html( $instance->phpexec ) ?>"/></td>
+		</tr>
+		<tr>
+			<th>Additional folders to backup<br/><small>(One per line)</small></th>
+			<td><textarea cols="50" rows="6" name="backups"><?php echo html( implode( "\n", $instance->getExtraBackups() ) ) ?></textarea></td>
 		</tr>
 		<tr>
 			<td></td>

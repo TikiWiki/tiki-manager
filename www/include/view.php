@@ -32,6 +32,17 @@
 			<th>Last update</th>
 			<td><?php echo html( $version->date ) ?></td>
 		</tr>
+		<tr>
+			<th valign="top">Additional folders to backup</th>
+			<td>
+				<ul>
+					<li style="display:none"></li>
+					<?php foreach( $instance->getExtraBackups() as $path ): ?>
+					<li><?php echo html( $path ) ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</td>
+		</tr>
 	</table>
 	<p><a href="<?php echo html( url( "edit/{$instance->id}" ) ) ?>">Edit</a></p>
 	<p><a href="<?php echo html( url( '' ) ) ?>">&lt;&lt;&lt; Back to List</a>

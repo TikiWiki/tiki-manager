@@ -196,6 +196,7 @@ class Instance
 	{
 		$access = $this->getBestAccess( 'scripting' );
 		$locations = $this->getApplication()->getFileLocations();
+		$locations = array_merge( $locations, $this->getExtraBackups() );
 
 		$approot = BACKUP_FOLDER . '/' . $this->id;
 		if( ! file_exists( $approot ) )
@@ -230,6 +231,29 @@ class Instance
 		`bzip2 -6 $tar`;
 
 		chdir( $current );
+	} // }}}
+
+	function getExtraBackups() // {{{
+	{
+		$result = query( "SELECT location FROM backup WHERE instance_id = :id",
+			array( ':id' => $this->id ) );
+
+		$list = array();
+		while( $str = sqlite_fetch_single( $result ) )
+			$list[] = $str;
+
+		return $list;
+	} // }}}
+
+	function setExtraBackups( $paths ) // {{{
+	{
+		query( "DELETE FROM backup WHERE instance_id = :id",
+			array( ':id' => $this->id ) );
+
+		foreach( $paths as $path )
+			if( ! empty( $path ) )
+				query( "INSERT INTO backup ( instance_id, location ) VALUES( :id, :loc )",
+					array( ':id' => $this->id, ':loc' => $path ) );
 	} // }}}
 
 	function getArchives() // {{{

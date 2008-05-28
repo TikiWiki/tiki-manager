@@ -150,6 +150,20 @@ case 0:
 
 		UPDATE info SET value = '1' WHERE name = 'version';
 	" );
+case 1:
+	sqlite_query( $db, "
+		CREATE TABLE backup (
+			instance_id INTEGER,
+			location VARCHAR(200)
+		);
+
+		CREATE INDEX version_instance_ix ON version ( instance_id );
+		CREATE INDEX file_version_ix ON file ( version_id );
+		CREATE INDEX access_instance_ix ON access ( instance_id );
+		CREATE INDEX backup_instance_ix ON backup ( instance_id );
+
+		UPDATE info SET value = '2' WHERE name = 'version';
+	" );
 } // }}}
 
 // Database access
