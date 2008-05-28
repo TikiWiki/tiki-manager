@@ -260,8 +260,6 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function uploadFile( $filename, $remoteLocation ) // {{{
 	{
-		$local = tempnam( TEMP_FOLDER, 'trim' );
-
 		$host = new SSH_Host( $this->host, $this->user );
 		if( $remoteLocation{0} == '/' )
 			$host->sendFile( $filename, $remoteLocation );

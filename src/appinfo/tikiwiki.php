@@ -307,6 +307,40 @@ class Application_Tikiwiki extends Application
 
 		return $folders;
 	} // }}}
+
+	function requiresDatabase() // {{{
+	{
+		return true;
+	} // }}}
+
+	function getAcceptableExtensions() // {{{
+	{
+		return array( 'mysqli', 'mysql' );
+	} // }}}
+
+	function setupDatabase( Database $database ) // {{{
+	{
+		$tmp = tempnam( TEMP_FOLDER, 'dblocal' );
+		file_put_contents( $tmp, <<<LOCAL
+<?php
+\$db_tiki='{$database->type}';
+\$dbversion_tiki='1.10';
+\$host_tiki='{$database->host}';
+\$user_tiki='{$database->user}';
+\$pass_tiki='{$database->pass}';
+\$dbs_tiki='{$database->dbname}';
+?>
+LOCAL
+);
+
+		$access = $this->instance->getBestAccess( 'filetransfer' );
+		$access->uploadFile( $tmp, 'db/local.php' );
+
+		$access = $this->instance->getBestAccess( 'scripting' );
+		$file = $this->instance->getWebPath( 'db/tiki.sql' );
+		$root = $this->instance->webroot;
+		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $file ) );
+	} // }}}
 }
 
 ?>

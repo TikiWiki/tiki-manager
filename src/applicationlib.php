@@ -58,6 +58,12 @@ abstract class Application
 
 	abstract function getFileLocations();
 
+	abstract function requiresDatabase();
+
+	abstract function getAcceptableExtensions();
+
+	abstract function setupDatabase( Database $database );
+
 	function performUpdate( Instance $instance ) // {{{
 	{
 		$current = $instance->getLatestVersion();

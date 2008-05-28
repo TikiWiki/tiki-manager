@@ -18,7 +18,10 @@ include dirname(__FILE__) . "/sshlib.php";
 include dirname(__FILE__) . "/accesslib.php";
 include dirname(__FILE__) . "/instancelib.php";
 include dirname(__FILE__) . "/applicationlib.php";
+include dirname(__FILE__) . "/databaselib.php";
 include dirname(__FILE__) . "/rclib.php";
+
+include dirname(__FILE__) . "/ext/Password.php";
 
 $root = realpath( dirname(__FILE__) . "/.." );
 define( "DB_FILE", "$root/data/trim.db" );

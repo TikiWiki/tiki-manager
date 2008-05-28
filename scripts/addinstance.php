@@ -4,6 +4,7 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 include dirname(__FILE__) . "/../src/env_setup.php";
+include dirname(__FILE__) . "/../src/dbsetup.php";
 
 $user = $host = '';
 while( empty( $host ) )
@@ -91,6 +92,9 @@ if( ! $app = $instance->findApplication() )
 	echo "If for any reason the installation fails (ex: wrong setup.sh parameters for tikiwiki), you can use `make access` to complete the installation manually.\n";
 	$version = reset( $selection );
 	$app->install( $version );
+
+	if( $app->requiresDatabase() )
+		perform_database_setup( $instance );
 }
 
 ?>

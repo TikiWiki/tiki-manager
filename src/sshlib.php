@@ -42,6 +42,7 @@ class SSH_Host
 
 		$key = SSH_KEY;
 		`scp -i $key $localFile {$this->user}@{$this->host}:$remoteFile`;
+		$this->runCommands( "chmod 0644 $remoteFile" );
 	}
 
 	function receiveFile( $remoteFile, $localFile )
