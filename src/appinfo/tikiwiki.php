@@ -93,7 +93,8 @@ class Application_Tikiwiki extends Application
 		$access->shellExec(
 			"cd " . escapeshellarg( $this->instance->webroot ),
 			"tar -zxf " . escapeshellarg( $remote ),
-			"rm " . escapeshellarg( $remote ) );
+			"rm " . escapeshellarg( $remote ),
+			"cp _htaccess .htaccess" );
 
 		$this->branch = $version->branch;
 		$this->installType = $version->type;
