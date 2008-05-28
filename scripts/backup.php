@@ -13,14 +13,19 @@ foreach( $all as $instance )
 	if( $instance->getBestAccess( 'scripting' ) instanceof ShellPrompt )
 		$instances[] = $instance;
 
-echo "Note: Backups are only available on SSH instances.\n\n";
-echo "Which instances do you want to backup?\n";
+if( ! isset( $_SERVER['argv'][1] ) || $_SERVER['argv'][1] != 'all' )
+{
+	echo "Note: Backups are only available on SSH instances.\n\n";
+	echo "Which instances do you want to backup?\n";
 
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 30 ) . str_pad( $i->contact, 20 ) . "\n";
+	foreach( $instances as $key => $i )
+		echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 30 ) . str_pad( $i->contact, 20 ) . "\n";
 
-$selection = readline( ">>> " );
-$selection = getEntries( $instances, $selection );
+	$selection = readline( ">>> " );
+	$selection = getEntries( $instances, $selection );
+}
+else
+	$selection = $instances;
 
 foreach( $selection as $instance )
 {

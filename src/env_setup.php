@@ -215,4 +215,32 @@ function getEntries( $list, $selection ) // {{{
 	return $output;
 } // }}}
 
+function php() // {{{
+{
+	$paths = `locate bin/php`;
+	$phps = explode( "\n", $paths );
+
+	// Check different versions
+	$valid = array();
+	foreach( $phps as $interpreter )
+	{
+		if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
+			continue;
+
+		$versionInfo = `$interpreter -v`;
+		if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
+			$valid[$parts[1]] = $interpreter;
+	}
+
+	// Handle easy cases
+	if( count( $valid ) == 0 )
+		return null;
+	if( count( $valid ) == 1 )
+		return reset( $valid );
+
+	// List available options for user
+	krsort( $valid );
+	return reset( $valid );
+} // }}}
+
 ?>
