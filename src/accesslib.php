@@ -301,11 +301,11 @@ class Access_SSH extends Access implements ShellPrompt
 		return ! empty( $exists );
 	} // }}}
 
-	function localizeFolder( $remoteLocation, $localMirror )
+	function localizeFolder( $remoteLocation, $localMirror ) // {{{
 	{
 		$host = new SSH_Host( $this->host, $this->user );
 		$host->rsync( $remoteLocation, $localMirror );
-	}
+	} // }}}
 }
 
 
