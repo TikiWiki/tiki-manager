@@ -125,7 +125,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 		$answer = '';
 		while( ! in_array( $answer, array( 'yes', 'no' ) ) )
-			$answer = readline( "After indicating your password, were you asked for a password again? [yes|no] " );
+			$answer = readline( "After successfully entering your password, were you asked for a password again? [yes|no] " );
 
 		if( $answer == 'yes' )
 			$this->changeType( 'ssh::nokey' );
