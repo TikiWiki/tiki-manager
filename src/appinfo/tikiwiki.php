@@ -70,30 +70,13 @@ class Application_Tikiwiki extends Application
 
 	function install( Version $version ) // {{{
 	{
-		$folder = cache_folder( $this, $version );
-		$this->extractTo( $version, $folder );
-		
-		$pwd = trim( `pwd` );
-		$tar = tempnam( TEMP_FOLDER, 'trim' );
-		rename( $tar, "$tar.tar" );
-
-		chdir( $folder );
-		`tar -cf $tar.tar .`;
-		`gzip -5 $tar.tar`;
-		chdir( $pwd );
-
-		$remote = $this->instance->getWorkPath( basename( "$tar.tar.gz" ) );
-
 		$access = $this->instance->getBestAccess( 'scripting' );
 		if( ! $access instanceof ShellPrompt )
 			die( "Requires shell access to the server.\n" );
 
-		$access->uploadFile( "$tar.tar.gz", $remote );
-		
 		$access->shellExec(
 			"cd " . escapeshellarg( $this->instance->webroot ),
-			"tar -zxf " . escapeshellarg( $remote ),
-			"rm " . escapeshellarg( $remote ),
+			$this->getExtractCommand( $version, $this->instance->webroot ),
 			"cp _htaccess .htaccess" );
 
 		$this->branch = $version->branch;
@@ -197,6 +180,22 @@ class Application_Tikiwiki extends Application
 		}
 	} // }}}
 
+	private function getExtractCommand( $version, $folder ) // {{{
+	{
+		if( $version->type == 'svn' )
+		{
+			$branch = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki/{$version->branch}";
+			$branch = str_replace( '/./', '/', $branch );
+			$branch = escapeshellarg( $branch );
+			return "svn co $branch $folder";
+		}
+		elseif( $version->type == 'cvs' )
+		{
+			$base = basename( $folder );
+			return "cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $base tikiwiki 2> /dev/null";
+		}
+	} // }}}
+
 	function extractTo( Version $version, $folder ) // {{{
 	{
 		if( $version->type == 'svn' )
@@ -207,10 +206,8 @@ class Application_Tikiwiki extends Application
 			}
 			else
 			{
-				$branch = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki/{$version->branch}/$filename";
-				$branch = str_replace( '/./', '/', $branch );
-				$branch = escapeshellarg( $branch );
-				`svn co $branch $folder`;
+				$command = $this->getExtractCommand( $version );
+				`$command`;
 			}
 		}
 		elseif( $version->type == 'cvs' )
@@ -226,8 +223,8 @@ class Application_Tikiwiki extends Application
 			{
 				chdir( dirname( $folder ) );
 
-				$base = basename( $folder );
-				`cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $base tikiwiki 2> /dev/null`;
+				$command = $this->getExtractCommand( $version );
+				`$command`;
 			}
 
 			chdir( trim($cur) );
