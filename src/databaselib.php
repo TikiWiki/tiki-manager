@@ -70,7 +70,7 @@ class Database
 
 class Database_Adapter_Dummy implements Database_Adapter
 {
-	function __construct( $host ) // {{{
+	function __construct() // {{{
 	{
 	} // }}}
 
