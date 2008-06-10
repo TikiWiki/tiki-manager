@@ -13,7 +13,7 @@ foreach( $all as $instance )
 	if( $instance->getBestAccess( 'scripting' ) instanceof ShellPrompt )
 		$instances[] = $instance;
 
-echo "Note: Only SSH instances can be accessed directly.\n\n";
+echo color("Note: Only SSH instances can be accessed directly.\n\n", 'yellow');
 echo "Which instances do you want to access?\n";
 
 foreach( $instances as $key => $i )

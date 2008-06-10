@@ -39,7 +39,7 @@ function handleCheckResult( $instance, $version, $array )
 				$access->deleteFile( $file );
 				$newFlat = array_diff( $newFlat, (array) $file );
 				unset( $new[$file] );
-				echo "-- $file\n";
+				echo color('--', 'green') . " $file\n";
 			}
 
 			break;
@@ -51,7 +51,7 @@ function handleCheckResult( $instance, $version, $array )
 				$version->recordFile( $new[$file], $file, $app );
 				$newFlat = array_diff( $newFlat, (array) $file );
 				unset( $new[$file] );
-				echo "++ $file\n";
+				echo color('++', 'green') . " $file\n";
 			}
 
 			break;
@@ -118,7 +118,7 @@ function handleCheckResult( $instance, $version, $array )
 					$access->uploadFile( $localName, $file );
 					$modFlat = array_diff( $modFlat, (array) $file );
 					unset( $mod[$file] );
-					echo "== $file\n";
+					echo color('==', 'green') . " $file\n";
 				}
 			}
 			break;
@@ -151,7 +151,7 @@ function handleCheckResult( $instance, $version, $array )
 
 				$modFlat = array_diff( $modFlat, (array) $file );
 				unset( $mod[$file] );
-				echo "== $file\n";
+				echo color('==', 'green') . " $file\n";
 			}
 
 			break;
@@ -163,7 +163,7 @@ function handleCheckResult( $instance, $version, $array )
 				$version->replaceFile( $mod[$file], $file, $app );
 				$modFlat = array_diff( $modFlat, (array) $file );
 				unset( $mod[$file] );
-				echo "++ $file\n";
+				echo color('++', 'green') . " $file\n";
 			}
 
 			break;
@@ -209,7 +209,7 @@ function handleCheckResult( $instance, $version, $array )
 
 				$delFlat = array_diff( $delFlat, (array) $file );
 				unset( $del[$file] );
-				echo "== $file\n";
+				echo color('==', 'green') . " $file\n";
 			}
 
 			break;
@@ -223,7 +223,7 @@ function handleCheckResult( $instance, $version, $array )
 
 				$delFlat = array_diff( $delFlat, (array) $file );
 				unset( $del[$file] );
-				echo "-- $file\n";
+				echo color('--', 'green') . " $file\n";
 			}
 
 			break;

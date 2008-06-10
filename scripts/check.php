@@ -26,7 +26,7 @@ foreach( $selection as $instance )
 
 	if( ! $version )
 	{
-		echo "Instance [$id] ({$instance->name}) does not have a registered version. Skip.\n";
+		echo color("Instance [$id] ({$instance->name}) does not have a registered version. Skip.\n", 'yellow');
 		continue;
 	}
 

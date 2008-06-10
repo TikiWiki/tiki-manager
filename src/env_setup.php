@@ -14,6 +14,20 @@ if( ! function_exists( 'readline' ) )
 	}
 }
 
+function color( $string, $color )
+{
+	$avail = array(
+		'red' => 31,
+		'green' => 32,
+		'yellow' => 33,
+	);
+
+	if( !isset($avail[$color]) )
+		return $string;
+
+	return "\033[{$avail[$color]}m$string\033[0m";
+}
+
 include dirname(__FILE__) . "/sshlib.php";
 include dirname(__FILE__) . "/accesslib.php";
 include dirname(__FILE__) . "/instancelib.php";

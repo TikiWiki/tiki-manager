@@ -46,23 +46,23 @@ $instance->weburl = rtrim( $weburl, '/' );
 $instance->tempdir = rtrim( $tempdir, '/' );
 
 $instance->save();
-echo "Instance information saved.\n";
+echo color("Instance information saved.\n", 'green');
 
 $access = $instance->registerAccessMethod( 'ssh', $host, $user );
 
 if( ! $access )
 {
 	$instance->delete();
-	echo "Set-up failure. Instance removed.\n";
+	echo color("Set-up failure. Instance removed.\n", 'red');
 }
 
 if( $access instanceof ShellPrompt )
 	$access->shellExec( "mkdir -p $tempdir" );
 else
-	echo "Shell access is required to create the working directory. You will need to create it manually.\n";
+	echo color("Shell access is required to create the working directory. You will need to create it manually.\n",'yellow');
 
 if( ! $instance->detectPHP() )
-	die( "PHP Interpreter could not be found on remote host.\n" );
+	die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
 
 if( ! $app = $instance->findApplication() )
 {
@@ -89,7 +89,7 @@ if( ! $app = $instance->findApplication() )
 	if( empty( $selection ) )
 		die( "No version to install.\n" );
 
-	echo "If for any reason the installation fails (ex: wrong setup.sh parameters for tikiwiki), you can use `make access` to complete the installation manually.\n";
+	echo color("If for any reason the installation fails (ex: wrong setup.sh parameters for tikiwiki), you can use `make access` to complete the installation manually.\n", 'yellow');
 	$version = reset( $selection );
 	$app->install( $version );
 

@@ -15,7 +15,7 @@ foreach( $all as $instance )
 
 if( ! isset( $_SERVER['argv'][1] ) || $_SERVER['argv'][1] != 'all' )
 {
-	echo "Note: Backups are only available on SSH instances.\n\n";
+	echo color("Note: Backups are only available on SSH instances.\n\n", 'yellow');
 	echo "Which instances do you want to backup?\n";
 
 	foreach( $instances as $key => $i )
