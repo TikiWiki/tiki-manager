@@ -206,7 +206,7 @@ class Application_Tikiwiki extends Application
 			}
 			else
 			{
-				$command = $this->getExtractCommand( $version );
+				$command = $this->getExtractCommand( $version, $folder );
 				`$command`;
 			}
 		}
