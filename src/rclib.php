@@ -18,24 +18,47 @@ class SVN
 		if( ! $access instanceof ShellPrompt )
 			return false;
 
-		// --non-interactive not supported for info on older versions
-		$remoteXml = $access->shellExec( 'svn info --xml ' . escapeshellarg( $instance->webroot ), 'sleep 1' );
-		if( empty( $remoteXml ) )
-			return false;
+		$info = $this->getRepositoryInfo( $instance, $access );
 
-		$info = simplexml_load_string( $remoteXml );
-		$rep = (string) $info->entry->repository->root;
-		$url = (string) $info->entry->url;
-
-		if( $this->repository != $rep )
+		if( isset( $info['root'] ) && $info['root'] != $this->repository )
 			return false;
 
 		$full = "{$this->repository}/$path";
 		$escaped = escapeshellarg( $full );
-		if( $url == $full )
+		if( !isset( $info['url'] ) || $info['url'] == $full )
 			$access->shellExec( "cd " . escapeshellarg( $instance->webroot ), "svn up --non-interactive" );
 		else
 			$access->shellExec( "cd " . escapeshellarg( $instance->webroot ), "svn switch --non-interactive $escaped ." );
+	}
+
+	private function getRepositoryInfo( $instance, $access )
+	{
+		$remoteText = $access->shellExec( 'svn info ' . escapeshellarg( $instance->webroot ), 'sleep 1' );
+		if( empty( $remoteText ) )
+			return array();
+
+		$info = array();
+
+		$raw = explode( "\n", $remoteText );
+
+		foreach( $raw as $line )
+		{
+			list( $key, $value ) = explode( ':', $line, 2 );
+			$key = trim( $key );
+			$value = trim( $value );
+
+			switch( $key )
+			{
+			case 'URL':
+				$info['url'] = $value;
+				break;
+			case 'Repository Root':
+				$info['root'] = $value;
+				break;
+			}
+		}
+
+		return $info;
 	}
 }
 
