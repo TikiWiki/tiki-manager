@@ -25,7 +25,6 @@ $selection = getEntries( $instances, $selection );
 
 foreach( $selection as $instance )
 {
-	echo "Connecting to {$instance->name}... (use `exit` to move to next instance)\n";
 	$instance->getApplication()->fixPermissions();
 }
 
