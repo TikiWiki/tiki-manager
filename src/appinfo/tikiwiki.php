@@ -103,7 +103,9 @@ class Application_Tikiwiki extends Application
 			$version = $parts[1];
 			$branch = $this->formatBranch( $version );
 
-			$entry = readline( "Branch $branch was found. If this is not correct, enter the one to use. Until 1.10 is tagged, you can use  branches/1.10  : " );
+
+			echo "The branch provided may not be correct. Until 1.10 is tagged, use branches/1.10.\n";
+			$entry = readline( "If this is not correct, enter the one to use: [$branch] " );
 			if( !empty( $entry ) )
 				return $this->branch = $entry;
 			else
@@ -117,7 +119,8 @@ class Application_Tikiwiki extends Application
 			$version = $parts[1];
 			$branch = $this->formatBranch( $version );
 
-			$entry = readline( "Branch $branch was found. If this is not correct, enter the one to use. Until 1.10 is tagged, you can use  branches/1.10  : " );
+			echo "The branch provided may not be correct. Until 1.10 is tagged, use branches/1.10.\n";
+			$entry = readline( "If this is not correct, enter the one to use: [$branch] " );
 			if( !empty( $entry ) )
 				return $this->branch = $entry;
 		}
@@ -267,7 +270,9 @@ class Application_Tikiwiki extends Application
 	{
 		if( substr( $version, 0, 4 ) == '1.9.' )
 			return "REL-" . str_replace( '.', '-', $version );
-		else
+		elseif( $this->getInstallType() == 'cvs' )
+			return "BRANCH-1-10";
+		elseif( $this->getInstallType() == 'svn' )
 			return "tags/$version";
 	} // }}}
 
