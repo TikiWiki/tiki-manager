@@ -29,8 +29,9 @@ class SSH_Host
 		$fullcommand = escapeshellarg( $string );
 
 		$key = SSH_KEY;
+		$config = SSH_CONFIG;
 
-		$output = trim( `ssh -i $key {$this->user}@{$this->host} $fullcommand` );
+		$output = trim( `ssh -i $key -F $config {$this->user}@{$this->host} $fullcommand` );
 
 		return $output;
 	}

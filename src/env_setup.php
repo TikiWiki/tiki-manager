@@ -40,6 +40,7 @@ include dirname(__FILE__) . "/ext/Password.php";
 $root = realpath( dirname(__FILE__) . "/.." );
 define( "DB_FILE", "$root/data/trim.db" );
 define( "SSH_KEY", "$root/data/id_dsa" );
+define( "SSH_CONFIG", "$root/data/ssh_config" );
 define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
 define( "CACHE_FOLDER", "$root/cache" );
 define( "TEMP_FOLDER", "$root/tmp" );

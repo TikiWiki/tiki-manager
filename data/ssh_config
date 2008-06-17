@@ -1,0 +1,3 @@
+ServerAliveInterval 60
+BatchMode yes
+
