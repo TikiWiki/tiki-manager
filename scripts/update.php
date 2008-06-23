@@ -23,13 +23,26 @@ foreach( $selection as $instance )
 	if( ! $ok = $access instanceof ShellPrompt )
 		echo "Site will not be disabled during the update. Shell access required.\n";
 
+	$url = "{$instance->weburl}/maintenance.html";
+	$htaccess = <<<HTACCESS
+RewriteEngine On
+
+RewriteRule . maintenance.html
+HTACCESS;
+	$htaccess = escapeshellarg( $htaccess );
+
 	if( $ok )
+	{
+		if( ! $access->fileExists( $instance->getWebPath( 'maintenance.html' ) ) )
+			$access->uploadFile( dirname(__FILE__) . "/maintenance.html", "maintenance.html" );
+
 		$access->shellExec(
 			"cd " . escapeshellarg( $instance->webroot ),
 			"touch .htaccess",
 			"mv .htaccess .htaccess.bak",
-			"echo \"Order allow,deny\nDeny from all\" > .htaccess"
+			"echo $htaccess > .htaccess"
 		);
+	}
 
 	$app = $instance->getApplication();
 	$filesToResolve = $app->performUpdate( $instance );
