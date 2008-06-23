@@ -137,52 +137,55 @@ class Access_SSH extends Access implements ShellPrompt
 	{
 		$host = new SSH_Host( $this->host, $this->user );
 		
-		// Make sure we can find paths
-		$locateExists = $host->runCommands( 'which locate' );
-		if( empty( $locateExists ) )
-			return null;
+		$sets = array(
+			array( 'which php', 'which php5', 'which php4' ),
+			array( 'locate bin/php' ),
+		);
 
-		// Get possible paths
-		$phps = $host->runCommands( 'locate bin/php' );
-		$phps = explode( "\n", $phps );
-
-		// Check different versions
-		$valid = array();
-		foreach( $phps as $interpreter )
+		foreach( $sets as $attempt )
 		{
-			if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
+			// Get possible paths
+			$phps = $host->runCommands( $attempt );
+			$phps = explode( "\n", $phps );
+
+			// Check different versions
+			$valid = array();
+			foreach( $phps as $interpreter )
+			{
+				if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
+					continue;
+
+				$versionInfo = $host->runCommands( "$interpreter -v" );
+				if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
+					$valid[$parts[1]] = $interpreter;
+			}
+
+			// Handle easy cases
+			if( count( $valid ) == 0 )
 				continue;
+			if( count( $valid ) == 1 )
+				return reset( $valid );
 
-			$versionInfo = $host->runCommands( "$interpreter -v" );
-			if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
-				$valid[$parts[1]] = $interpreter;
+			// List available options for user
+			krsort( $valid );
+			$versions = array_keys( $valid );
+			echo "Multiple PHP interpreters available on host :\n";
+			$counter = 0;
+			foreach( $valid as $version => $path )
+			{
+				echo "[$counter] $path ($version)\n";
+				$counter++;
+			}
+
+			// Ask user
+			$counter--;
+			$selection = -1;
+			while( ! array_key_exists( $selection, $versions ) )
+				$selection = readline( "Which version do you want to use? [0-$counter] " );
+
+			$version = $versions[$selection];
+			return $valid[$version];
 		}
-
-		// Handle easy cases
-		if( count( $valid ) == 0 )
-			return null;
-		if( count( $valid ) == 1 )
-			return reset( $valid );
-
-		// List available options for user
-		krsort( $valid );
-		$versions = array_keys( $valid );
-		echo "Multiple PHP interpreters available on host :\n";
-		$counter = 0;
-		foreach( $valid as $version => $path )
-		{
-			echo "[$counter] $path ($version)\n";
-			$counter++;
-		}
-
-		// Ask user
-		$counter--;
-		$selection = -1;
-		while( ! array_key_exists( $selection, $versions ) )
-			$selection = readline( "Which version do you want to use? [0-$counter] " );
-
-		$version = $versions[$selection];
-		return $valid[$version];
 	} // }}}
 
 	function fileExists( $filename ) // {{{
