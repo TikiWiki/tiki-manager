@@ -23,6 +23,7 @@ class SVN
 		if( isset( $info['root'] ) && $info['root'] != $this->repository )
 			return false;
 
+		info( "Performing SVN update on remote host." );
 		$full = "{$this->repository}/$path";
 		$escaped = escapeshellarg( $full );
 		if( !isset( $info['url'] ) || $info['url'] == $full )
@@ -84,7 +85,8 @@ class CVS
 		$access = $instance->getBestAccess( 'scripting' );
 		if( ! $access instanceof ShellPrompt )
 			return false;
-
+		
+		info( "Performing CVS update on remote host." );
 		$rep = escapeshellarg( ":{$this->protocol}:{$this->user}@{$this->host}:{$this->root}" );
 		$access->shellExec( 
 			"cd " . escapeshellarg( $instance->webroot ),

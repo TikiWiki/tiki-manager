@@ -29,6 +29,7 @@ else
 
 foreach( $selection as $instance )
 {
+	info( "Performing backup for {$instance->name}" );
 	$instance->backup();
 }
 

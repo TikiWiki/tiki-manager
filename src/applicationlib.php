@@ -74,10 +74,12 @@ abstract class Application
 		$new->branch = $current->branch;
 		$new->date = date( 'Y-m-d' );
 		$new->save();
+		info( "Obtaining latest checksum from source." );
 		$new->collectChecksumFromSource( $instance );
 
 		$this->performActualUpdate( $new );
 
+		info( "Obtaining remote checksums." );
 		$array = $new->performCheck( $instance );
 		$newF = $modF = $delF = array();
 

@@ -33,6 +33,7 @@ HTACCESS;
 
 	if( $ok )
 	{
+		info( "Locking website." );
 		if( ! $access->fileExists( $instance->getWebPath( 'maintenance.html' ) ) )
 			$access->uploadFile( dirname(__FILE__) . "/maintenance.html", "maintenance.html" );
 
@@ -51,10 +52,13 @@ HTACCESS;
 	handleCheckResult( $instance, $version, $filesToResolve );
 
 	if( $ok )
+	{
+		info( "Unlocking website." );
 		$access->shellExec(
 			"cd " . escapeshellarg( $instance->webroot ),
 			"mv .htaccess.bak .htaccess"
 		);
+	}
 }
 
 ?>

@@ -25,6 +25,7 @@ $selection = getEntries( $instances, $selection );
 
 foreach( $selection as $instance )
 {
+	info( "Fixing permissions for {$instance->name}" );
 	$instance->getApplication()->fixPermissions();
 }
 

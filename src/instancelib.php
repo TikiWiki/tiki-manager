@@ -204,6 +204,7 @@ class Instance
 
 		// Bring all remote files locally
 		`rm $approot/manifest.txt`;
+		info( "Downloading files locally." );
 		foreach( $locations as $remote )
 		{
 			$hash = md5( $remote );
@@ -213,6 +214,7 @@ class Instance
 		}
 
 		// Backup database
+		info( "Obtaining database dump." );
 		$randomName = md5( time() . 'trimbackup' ) . '.sql';
 		$remoteFile = $this->getWorkPath( $randomName );
 		$access->runPHP( dirname(__FILE__) . '/../scripts/backup_database.php', escapeshellarg( $this->webroot ) . ' ' . escapeshellarg( $remoteFile ) );
@@ -225,6 +227,7 @@ class Instance
 		$current = trim( `pwd` );
 		chdir( BACKUP_FOLDER );
 
+		info( "Creating archive." );
 		$tarLocation = ARCHIVE_FOLDER . "/{$this->id}_" . date( 'Y-m-d_H:i:s' ) . '.tar';
 		$tar = escapeshellarg( $tarLocation );
 		`tar -cf $tar {$this->id}`;

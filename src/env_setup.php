@@ -20,12 +20,18 @@ function color( $string, $color )
 		'red' => 31,
 		'green' => 32,
 		'yellow' => 33,
+		'cyan' => 36,
 	);
 
 	if( !isset($avail[$color]) )
 		return $string;
 
 	return "\033[{$avail[$color]}m$string\033[0m";
+}
+
+function info( $text )
+{
+	echo color( $text, 'cyan' ) . "\n";
 }
 
 include dirname(__FILE__) . "/sshlib.php";

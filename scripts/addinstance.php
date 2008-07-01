@@ -61,6 +61,7 @@ if( $access instanceof ShellPrompt )
 else
 	echo color("Shell access is required to create the working directory. You will need to create it manually.\n",'yellow');
 
+info( "Detecting remote configuration." );
 if( ! $instance->detectPHP() )
 	die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
 
@@ -89,6 +90,7 @@ if( ! $app = $instance->findApplication() )
 	if( empty( $selection ) )
 		die( "No version to install.\n" );
 
+	info( "Installing application." );
 	echo color("If for any reason the installation fails (ex: wrong setup.sh parameters for tikiwiki), you can use `make access` to complete the installation manually.\n", 'yellow');
 	$version = reset( $selection );
 	$app->install( $version );
