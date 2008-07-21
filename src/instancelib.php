@@ -279,7 +279,7 @@ class Version
 	public $branch;
 	public $date;
 
-	public static function buildFake( $type, $branch )
+	public static function buildFake( $type, $branch ) // {{{{
 	{
 		$v = new self;
 		$v->type = $type;
@@ -287,7 +287,8 @@ class Version
 		$v->date = date( 'Y-m-d' );
 
 		return $v;
-	}
+	} // }}}
+
 	function __construct( $instanceId = null ) // {{{
 	{
 		$this->instanceId = $instanceId;

@@ -28,10 +28,10 @@ $cur = trim( `pwd` );
 
 if( array_key_exists( 'REQUEST_METHOD', $_SERVER ) )
 	chdir( $_SERVER['QUERY_STRING'] );
-elseif( count( $_SERVER['argv'] ) > 1 )
-	chdir( $_SERVER['argv'][1] );
 elseif( isset( $folder ) )
 	chdir( $folder );
+elseif( count( $_SERVER['argv'] ) > 1 )
+	chdir( $_SERVER['argv'][1] );
 
 function md5_file_recurse( $location, &$fulllist )
 {

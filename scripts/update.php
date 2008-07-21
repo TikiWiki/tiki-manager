@@ -6,6 +6,8 @@
 include dirname(__FILE__) . "/../src/env_setup.php";
 include dirname(__FILE__) . "/../src/check.php";
 
+define( 'ARG_SWITCH', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'switch' );
+
 $instances = Instance::getUpdatableInstances();
 
 echo "Note: Only CVS and SVN instances can be updated.\n\n";
@@ -46,10 +48,37 @@ HTACCESS;
 	}
 
 	$app = $instance->getApplication();
-	$filesToResolve = $app->performUpdate( $instance );
-	$version = $instance->getLatestVersion();
 
-	handleCheckResult( $instance, $version, $filesToResolve );
+	if( ARG_SWITCH )
+	{
+		$versions_raw = $app->getVersions();
+		$versions = array();
+		foreach( $versions_raw as $version )
+			if( $version->type == 'svn' )
+				$versions[] = $version;
+		echo "Which version do you want to install? (none to skip)\n";
+		foreach( $versions as $key => $version )
+			echo "[$key] {$version->type} : {$version->branch}\n";
+
+		$versionSel = readline( ">>> " );
+		$versionSel = getEntries( $versions, $versionSel );
+
+		if( count( $versionSel ) > 0 )
+		{
+			$target = reset( $versionSel );
+			$filesToResolve = $app->performUpdate( $instance, $target );
+			$version = $instance->getLatestVersion();
+			handleCheckResult( $instance, $version, $filesToResolve );
+		}
+		else
+			warning( "No version selected. Nothing to perform." );
+	}
+	else
+	{
+		$filesToResolve = $app->performUpdate( $instance );
+		$version = $instance->getLatestVersion();
+		handleCheckResult( $instance, $version, $filesToResolve );
+	}
 
 	if( $ok )
 	{

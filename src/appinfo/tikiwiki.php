@@ -41,6 +41,8 @@ class Application_Tikiwiki extends Application
 				$versions[] = Version::buildFake( 'svn', "branches/" . substr( $line, 0, -1 ) );
 		}
 
+		$versions[] = Version::buildFake( 'svn', "trunk" );
+
 		return $versions;
 	} // }}}
 
@@ -329,7 +331,7 @@ class Application_Tikiwiki extends Application
 		file_put_contents( $tmp, <<<LOCAL
 <?php
 \$db_tiki='{$database->type}';
-\$dbversion_tiki='1.10';
+\$dbversion_tiki='2.0';
 \$host_tiki='{$database->host}';
 \$user_tiki='{$database->user}';
 \$pass_tiki='{$database->pass}';
@@ -345,6 +347,7 @@ LOCAL
 		$file = $this->instance->getWebPath( 'db/tiki.sql' );
 		$root = $this->instance->webroot;
 		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $file ) );
+		$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
 	} // }}}
 }
 

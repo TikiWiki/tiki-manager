@@ -64,16 +64,30 @@ abstract class Application
 
 	abstract function setupDatabase( Database $database );
 
-	function performUpdate( Instance $instance ) // {{{
+	function performUpdate( Instance $instance, $version = null ) // {{{
 	{
 		$current = $instance->getLatestVersion();
 		$oldFiles = $current->getFileMap();
 
-		$new = $instance->createVersion();
-		$new->type = $current->type;
-		$new->branch = $current->branch;
-		$new->date = date( 'Y-m-d' );
-		$new->save();
+		if( is_null( $version ) )
+		{
+			// Simple update, copy from current
+			$new = $instance->createVersion();
+			$new->type = $current->type;
+			$new->branch = $current->branch;
+			$new->date = date( 'Y-m-d' );
+			$new->save();
+		}
+		else
+		{
+			// Provided version, copy properties
+			$new = $instance->createVersion();
+			$new->type = $version->type;
+			$new->branch = $version->branch;
+			$new->date = $version->date;
+			$new->save();
+		}
+
 		info( "Obtaining latest checksum from source." );
 		$new->collectChecksumFromSource( $instance );
 

@@ -29,10 +29,8 @@ function color( $string, $color )
 	return "\033[{$avail[$color]}m$string\033[0m";
 }
 
-function info( $text )
-{
-	echo color( $text, 'cyan' ) . "\n";
-}
+function info( $text ) { echo color( $text, 'cyan' ) . "\n"; }
+function warning( $text ) { echo color( $text, 'yellow' ) . "\n"; }
 
 include dirname(__FILE__) . "/sshlib.php";
 include dirname(__FILE__) . "/accesslib.php";
@@ -204,7 +202,11 @@ function query( $query, $params = null ) // {{{
 	}
 	
 	global $db;
-	return sqlite_query( $db, $query, SQLITE_ASSOC, $errors );
+	$ret = sqlite_query( $db, $query, SQLITE_ASSOC, $errors );
+	if( ! $ret )
+		echo $query;
+
+	return $ret;
 } // }}}
 
 function rowid() // {{{

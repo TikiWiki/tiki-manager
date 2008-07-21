@@ -23,6 +23,9 @@ watch:
 update:
 	$(PHP) scripts/update.php
 
+upgrade:
+	$(PHP) scripts/update.php switch
+
 access:
 	$(PHP) scripts/access.php
 
