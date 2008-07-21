@@ -85,14 +85,17 @@ if( ! $app = $instance->findApplication() )
 	foreach( $versions as $key => $version )
 		echo "[$key] {$version->type} : {$version->branch}\n";
 
-	$selection = readline( ">>> " );
-	$selection = getEntries( $versions, $selection );
-	if( empty( $selection ) )
+	$input = readline( ">>> " );
+	$selection = getEntries( $versions, $input );
+	if( empty( $selection ) && empty( $input ) )
 		die( "No version to install.\n" );
+	elseif( empty( $selection ) )
+		$version = Version::buildFake( 'svn', $input );
+	else
+		$version = reset( $selection );
 
 	info( "Installing application." );
 	echo color("If for any reason the installation fails (ex: wrong setup.sh parameters for tikiwiki), you can use `make access` to complete the installation manually.\n", 'yellow');
-	$version = reset( $selection );
 	$app->install( $version );
 
 	if( $app->requiresDatabase() )

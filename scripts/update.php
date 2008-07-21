@@ -56,16 +56,19 @@ HTACCESS;
 		foreach( $versions_raw as $version )
 			if( $version->type == 'svn' )
 				$versions[] = $version;
-		echo "Which version do you want to install? (none to skip)\n";
+		echo "Which version do you want to upgrade to?\n";
 		foreach( $versions as $key => $version )
 			echo "[$key] {$version->type} : {$version->branch}\n";
 
-		$versionSel = readline( ">>> " );
+		$input = readline( ">>> " );
 		$versionSel = getEntries( $versions, $versionSel );
+		if( empty( $versionSel ) && ! empty( $input ) )
+			$target = Version::buildFake( 'svn', $input );
+		else
+			$target = reset( $versionSel );
 
 		if( count( $versionSel ) > 0 )
 		{
-			$target = reset( $versionSel );
 			$filesToResolve = $app->performUpdate( $instance, $target );
 			$version = $instance->getLatestVersion();
 			handleCheckResult( $instance, $version, $filesToResolve );
