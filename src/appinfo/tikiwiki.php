@@ -78,8 +78,7 @@ class Application_Tikiwiki extends Application
 
 		$access->shellExec(
 			"cd " . escapeshellarg( $this->instance->webroot ),
-			$this->getExtractCommand( $version, $this->instance->webroot ),
-			"cp _htaccess .htaccess" );
+			$this->getExtractCommand( $version, $this->instance->webroot ) );
 
 		$this->branch = $version->branch;
 		$this->installType = $version->type;
@@ -89,6 +88,9 @@ class Application_Tikiwiki extends Application
 		$version->collectChecksumFromSource( $this->instance );
 
 		$this->fixPermissions();
+
+		if( ! $access->fileExists( '.htaccess' ) )
+			$access->shellExec( "cp _htaccess .htaccess" );
 	} // }}}
 
 	function getBranch() // {{{

@@ -26,6 +26,9 @@ update:
 upgrade:
 	$(PHP) scripts/update.php switch
 
+convert:
+	$(PHP) scripts/convert.php
+
 access:
 	$(PHP) scripts/access.php
 

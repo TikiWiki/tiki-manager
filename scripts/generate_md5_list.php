@@ -33,25 +33,28 @@ elseif( isset( $folder ) )
 elseif( count( $_SERVER['argv'] ) > 1 )
 	chdir( $_SERVER['argv'][1] );
 
-function md5_file_recurse( $location, &$fulllist )
+if( ! function_exists( 'md5_file_recurse' ) )
 {
-	$files = scandir( $location );
-	foreach( $files as $child )
+	function md5_file_recurse( $location, &$fulllist )
 	{
-		if( in_array( $child, array( '.', '..', 'CVS', '.svn' ) ) )
-			continue;
+		$files = scandir( $location );
+		foreach( $files as $child )
+		{
+			if( in_array( $child, array( '.', '..', 'CVS', '.svn' ) ) )
+				continue;
 
-		$full = "$location/$child";
-		$full = realpath( $full );
+			$full = "$location/$child";
+			$full = realpath( $full );
 
-		if( array_key_exists( $full, $fulllist ) )
-			continue;
+			if( array_key_exists( $full, $fulllist ) )
+				continue;
 
-		if( is_dir( $full ) )
-			md5_file_recurse( $full, $fulllist );
+			if( is_dir( $full ) )
+				md5_file_recurse( $full, $fulllist );
 
-		if( in_array( substr( $child, -4 ), array( '.php', '.tpl' ) ) )
-			$fulllist[$full] = md5_file( $full );
+			if( in_array( substr( $child, -4 ), array( '.php', '.tpl' ) ) )
+				$fulllist[$full] = md5_file( $full );
+		}
 	}
 }
 
