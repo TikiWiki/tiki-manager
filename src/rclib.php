@@ -61,6 +61,18 @@ class SVN
 
 		return $info;
 	}
+
+	function getRepositoryBranch( Instance $instance )
+	{
+		$access = $instance->getBestAccess( 'scripting' );
+		if( ! $access instanceof ShellPrompt )
+			return false;
+
+		$info = $this->getRepositoryInfo( $instance, $access );
+		
+		if( isset( $info['url'] ) )
+			return substr( $info['url'], strlen( $this->repository ) + 1 );
+	}
 }
 
 class CVS

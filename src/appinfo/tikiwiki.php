@@ -98,6 +98,16 @@ class Application_Tikiwiki extends Application
 		if( $this->branch )
 			return $this->branch;
 
+		if( $this->getInstallType() == 'svn' )
+		{
+			$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
+			if( $branch = $svn->getRepositoryBranch( $this->instance ) )
+			{
+				info( "Detected SVN : $branch" );
+				return $this->branch = $branch;
+			}
+		}
+
 		$access = $this->instance->getBestAccess( 'filetransfer' );
 
 		$content = $access->fileGetContents( $this->instance->getWebPath( 'tiki-setup.php' ) );
@@ -106,7 +116,6 @@ class Application_Tikiwiki extends Application
 		{
 			$version = $parts[1];
 			$branch = $this->formatBranch( $version );
-
 
 			echo "The branch provided may not be correct. Until 1.10 is tagged, use branches/1.10.\n";
 			$entry = readline( "If this is not correct, enter the one to use: [$branch] " );
@@ -118,12 +127,14 @@ class Application_Tikiwiki extends Application
 
 		$content = $access->fileGetContents( $this->instance->getWebPath( 'lib/setup/twversion.class.php' ) );
 
-		if( preg_match( "/this-\>version\s*=\s*[\"'](\d+\.\d+\.\d+(\.\d+)?)/", $content, $parts ) )
+		if( preg_match( "/this-\>version\s*=\s*[\"'](\d+\.\d+(\.\d+)?(\.\d+)?(\w+)?)/", $content, $parts ) )
 		{
 			$version = $parts[1];
 			$branch = $this->formatBranch( $version );
 
-			echo "The branch provided may not be correct. Until 1.10 is tagged, use branches/1.10.\n";
+			if( strpos( $branch, 'branches/1.10' ) === 0 )
+				$branch = 'branches/2.0';
+
 			$entry = readline( "If this is not correct, enter the one to use: [$branch] " );
 			if( !empty( $entry ) )
 				return $this->branch = $entry;
