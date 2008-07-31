@@ -126,6 +126,8 @@ class Application_Tikiwiki extends Application
 		}
 
 		$content = $access->fileGetContents( $this->instance->getWebPath( 'lib/setup/twversion.class.php' ) );
+		if( empty( $content ) )
+			$content = $access->fileGetContents( $this->instance->getWebPath( 'lib/twversion.class.php' ) );
 
 		if( preg_match( "/this-\>version\s*=\s*[\"'](\d+\.\d+(\.\d+)?(\.\d+)?(\w+)?)/", $content, $parts ) )
 		{
