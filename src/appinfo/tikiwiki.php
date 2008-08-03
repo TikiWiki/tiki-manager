@@ -261,6 +261,10 @@ class Application_Tikiwiki extends Application
 			if( ! $access instanceof ShellPrompt || ! $access->hasExecutable( 'svn' ) )
 				break;
 
+			$access->shellExec(
+				"rm -Rf " . escapeshellarg( $this->instance->getWebPath( 'temp/cache' ) )
+			);
+
 			$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
 			$svn->updateInstanceTo( $this->instance, $version->branch );
 
