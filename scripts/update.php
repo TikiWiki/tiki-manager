@@ -61,7 +61,7 @@ HTACCESS;
 			echo "[$key] {$version->type} : {$version->branch}\n";
 
 		$input = readline( ">>> " );
-		$versionSel = getEntries( $versions, $versionSel );
+		$versionSel = getEntries( $versions, $input );
 		if( empty( $versionSel ) && ! empty( $input ) )
 			$target = Version::buildFake( 'svn', $input );
 		else
