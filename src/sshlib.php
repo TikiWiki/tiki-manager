@@ -5,6 +5,8 @@
 
 class SSH_Host
 {
+	private static $resources = array();
+
 	private $host;
 	private $user;
 
@@ -14,30 +16,43 @@ class SSH_Host
 		$this->user = $user;
 	}
 
-	private static function getExtHandle( $host, $user )
+	private function getExtHandle()
 	{
 		if( ! function_exists( 'ssh2_connect' ) )
 			return false;
 
-		static $resources = array();
+		$host = $this->host;
+		$user = $this->user;
+
 		$key = "$user@$host";
 		
-		if( isset( $resources[$key] ) )
-			return $resources[$key];
+		if( isset( self::$resources[$key] ) )
+			return self::$resources[$key];
 
-		$handle = ssh2_connect( $host );
+		$handle = @ssh2_connect( $host );
 		
 		if( ! $handle )
-			return $resources[$key] = false;
+			return self::$resources[$key] = false;
 
-		if( ! ssh2_auth_pubkey_file( $handle, $user, SSH_PUBLIC_KEY, SSH_KEY ) )
-			return $resources[$key] = false;
+		if( ! @ssh2_auth_pubkey_file( $handle, $user, SSH_PUBLIC_KEY, SSH_KEY ) )
+			return self::$resources[$key] = false;
 
-		return $resources[$key] = $handle;
+		return self::$resources[$key] = $handle;
 	}
 
 	function setupKey( $publicKeyFile )
 	{
+		if( function_exists( 'ssh2_connect' ) )
+		{
+			// Check key presence first if possible
+			if( $this->getExtHandle() )
+				return;
+			else
+				// Pretend this check never happened, connection will be
+				// succesful after key set-up
+				unset( self::$resources["{$this->user}@{$this->host}"] );
+		}
+
 		$file = escapeshellarg( $publicKeyFile );
 		$host = escapeshellarg( "{$this->user}@{$this->host}" );
 		`ssh-copy-id -i $file $host`;
@@ -79,7 +94,7 @@ class SSH_Host
 	{
 		if( $handle = self::getExtHandle( $this->host, $this->user ) )
 		{
-			ssh2_scp_send( $handle, $localFile, $remoteFile );
+			ssh2_scp_send( $handle, $localFile, $remoteFile, 0644 );
 		}
 		else
 		{

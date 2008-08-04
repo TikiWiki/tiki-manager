@@ -192,15 +192,9 @@ class Access_SSH extends Access implements ShellPrompt
 	{
 		$host = new SSH_Host( $this->host, $this->user );
 
-		$base = basename( $filename );
-		$dir = dirname( $filename );
+		$eFile = escapeshellarg( $filename );
 
-		$base = escapeshellarg( $base );
-		$dir = escapeshellarg( $dir );
-
-		$output = $host->runCommands(
-			"cd $dir",
-			"ls | grep $base" );
+		$output = $host->runCommands( "ls $eFile" );
 
 		return ! empty( $output );
 	} // }}}
