@@ -111,7 +111,7 @@ class SSH_Host
 	{
 		if( $handle = self::getExtHandle( $this->host, $this->user ) )
 		{
-			ssh2_scp_send( $handle, $remoteFile, $localFile );
+			ssh2_scp_recv( $handle, $remoteFile, $localFile );
 		}
 		else
 		{
