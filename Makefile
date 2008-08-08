@@ -35,6 +35,9 @@ access:
 backup:
 	$(PHP) scripts/backup.php
 
+restore:
+	$(PHP) scripts/restore.php
+
 fix:
 	$(PHP) scripts/fixperms.php
 

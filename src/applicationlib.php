@@ -64,6 +64,8 @@ abstract class Application
 
 	abstract function setupDatabase( Database $database );
 
+	abstract function restoreDatabase( Database $database, $remoteFile );
+
 	function performUpdate( Instance $instance, $version = null ) // {{{
 	{
 		$current = $instance->getLatestVersion();

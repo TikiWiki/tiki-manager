@@ -368,6 +368,29 @@ LOCAL
 		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $file ) );
 		$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
 	} // }}}
+
+	function restoreDatabase( Database $database, $remoteFile ) // {{{
+	{
+		$tmp = tempnam( TEMP_FOLDER, 'dblocal' );
+		file_put_contents( $tmp, <<<LOCAL
+<?php
+\$db_tiki='{$database->type}';
+\$dbversion_tiki='2.0';
+\$host_tiki='{$database->host}';
+\$user_tiki='{$database->user}';
+\$pass_tiki='{$database->pass}';
+\$dbs_tiki='{$database->dbname}';
+?>
+LOCAL
+);
+
+		$access = $this->instance->getBestAccess( 'filetransfer' );
+		$access->uploadFile( $tmp, 'db/local.php' );
+
+		$access = $this->instance->getBestAccess( 'scripting' );
+		$root = $this->instance->webroot;
+		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $remoteFile ) );
+	} // }}}
 }
 
 ?>

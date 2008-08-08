@@ -1,6 +1,6 @@
 <?php
 
-function perform_database_setup( Instance $instance )
+function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 {
 	echo "Perform database setup...\n";
 
@@ -70,7 +70,10 @@ function perform_database_setup( Instance $instance )
 			$db->type = reset( $types );
 	}
 
-	$instance->getApplication()->setupDatabase( $db );
+	if( $remoteBackupFile )
+		$instance->getApplication()->restoreDatabase( $db, $remoteBackupFile );
+	else
+		$instance->getApplication()->setupDatabase( $db );
 }
 
 ?>

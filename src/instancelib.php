@@ -64,6 +64,25 @@ class Instance
 		return $instances;
 	} // }}}
 
+	function getRestorableInstances() // {{{
+	{
+		$dp = opendir( BACKUP_FOLDER );
+
+		$backups = array();
+		while( false !== $file = readdir( $dp ) )
+		{
+			if( ! is_numeric( $file ) )
+				continue;
+
+			if( $instance = self::getInstance( $file ) )
+				$backups[] = $instance;
+		}
+
+		closedir( $dp );
+
+		return $backups;
+	} // }}}
+
 	function save() // {{{
 	{
 		$params = array(
@@ -183,6 +202,9 @@ class Instance
 
 	function getApplication() // {{{
 	{
+		if( empty( $this->app ) )
+			return false;
+
 		$class = 'Application_' . ucfirst( $this->app );
 
 		$dir = dirname(__FILE__) . "/appinfo";
