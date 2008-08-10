@@ -21,31 +21,7 @@ $selection = getEntries( $instances, $selection );
 
 foreach( $selection as $instance )
 {
-	$access = $instance->getBestAccess( 'scripting' );
-	if( ! $ok = $access instanceof ShellPrompt )
-		echo "Site will not be disabled during the update. Shell access required.\n";
-
-	$url = "{$instance->weburl}/maintenance.html";
-	$htaccess = <<<HTACCESS
-RewriteEngine On
-
-RewriteRule . maintenance.html
-HTACCESS;
-	$htaccess = escapeshellarg( $htaccess );
-
-	if( $ok )
-	{
-		info( "Locking website." );
-		if( ! $access->fileExists( $instance->getWebPath( 'maintenance.html' ) ) )
-			$access->uploadFile( dirname(__FILE__) . "/maintenance.html", "maintenance.html" );
-
-		$access->shellExec(
-			"cd " . escapeshellarg( $instance->webroot ),
-			"touch .htaccess",
-			"mv .htaccess .htaccess.bak",
-			"echo $htaccess > .htaccess"
-		);
-	}
+	$locked = $instance->lock();
 
 	$app = $instance->getApplication();
 
@@ -83,14 +59,8 @@ HTACCESS;
 		handleCheckResult( $instance, $version, $filesToResolve );
 	}
 
-	if( $ok )
-	{
-		info( "Unlocking website." );
-		$access->shellExec(
-			"cd " . escapeshellarg( $instance->webroot ),
-			"mv .htaccess.bak .htaccess"
-		);
-	}
+	if( $locked )
+		$instance->unlock();
 }
 
 ?>

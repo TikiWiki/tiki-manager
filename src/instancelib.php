@@ -286,6 +286,54 @@ class Instance
 		return array_reverse( glob( ARCHIVE_FOLDER . "/{$this->id}_*.tar.bz2" ) );
 	} // }}}
 
+	function lock() // {{{
+	{
+		$access = $this->getBestAccess( 'scripting' );
+
+		if( ! $ok = $access instanceof ShellPrompt )
+			echo "Site will not be disabled during the update. Shell access required.\n";
+
+		$url = "{$this->weburl}/maintenance.html";
+		$htaccess = <<<HTACCESS
+	RewriteEngine On
+
+	RewriteRule . maintenance.html
+HTACCESS;
+		$htaccess = escapeshellarg( $htaccess );
+
+		if( $ok )
+		{
+			info( "Locking website." );
+			if( ! $access->fileExists( $this->getWebPath( 'maintenance.html' ) ) )
+				$access->uploadFile( dirname(__FILE__) . "/../scripts/maintenance.html", "maintenance.html" );
+
+			$access->shellExec(
+				"touch "
+					. escapeshellarg( $this->getWebPath( '.htaccess' ) ),
+				"mv "
+					. escapeshellarg( $this->getWebPath( '.htaccess' ) )
+					. ' '
+					. escapeshellarg( $this->getWebPath( '.htaccess.bak' ) ),
+				"echo $htaccess > "
+					. escapeshellarg( $this->getWebPath( '.htaccess' ) )
+			);
+		}
+
+		return $ok;
+	} // }}}
+
+	function unlock() // {{{
+	{
+		info( "Unlocking website." );
+		$access = $this->getBestAccess( 'scripting' );
+		$access->shellExec(
+			"mv "
+				. escapeshellarg( $this->getWebPath( '.htaccess.bak' ) )
+				. ' '
+				. escapeshellarg( $this->getWebPath( '.htaccess' ) )
+		);
+	} // }}}
+
 	function __get( $name ) // {{{
 	{
 		if( isset( $this->$name ) )

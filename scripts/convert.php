@@ -29,26 +29,7 @@ foreach( $selection as $instance )
 		continue;
 	}
 
-	// Lock {{{
-	$url = "{$instance->weburl}/maintenance.html";
-	$htaccess = <<<HTACCESS
-RewriteEngine On
-
-RewriteRule . maintenance.html
-HTACCESS;
-	$htaccess = escapeshellarg( $htaccess );
-
-	info( "Locking website." );
-	if( ! $access->fileExists( $instance->getWebPath( 'maintenance.html' ) ) )
-		$access->uploadFile( dirname(__FILE__) . "/maintenance.html", "maintenance.html" );
-
-	$access->shellExec(
-		"cd " . escapeshellarg( $instance->webroot ),
-		"touch .htaccess",
-		"mv .htaccess .htaccess.bak",
-		"echo $htaccess > .htaccess"
-	);
-	// }}}
+	$locked = $instance->lock();
 
 	$toKeep = array(
 		'db/local.php',
@@ -89,14 +70,8 @@ HTACCESS;
 
 	$filesToResolve = $app->performUpdate( $instance );
 
-	// Unlock {{{
-	info( "Unlocking website." );
-	warning('New .htaccess from 2.0 will be used. Re-apply changes made to .htaccess. Old file kept as .htaccess.bak');
-	$access->shellExec(
-		"cd " . escapeshellarg( $instance->webroot ),
-		"mv _htaccess .htaccess"
-	);
-	// }}}
+	if( $locked )
+		$instance->unlock();
 }
 
 ?>
