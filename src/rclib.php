@@ -27,9 +27,9 @@ class SVN
 		$full = "{$this->repository}/$path";
 		$escaped = escapeshellarg( $full );
 		if( !isset( $info['url'] ) || $info['url'] == $full )
-			$access->shellExec( "cd " . escapeshellarg( $instance->webroot ), "svn up --non-interactive" );
+			$access->shellExec( "svn up --non-interactive " . escapeshellarg( $instance->webroot ) );
 		else
-			$access->shellExec( "cd " . escapeshellarg( $instance->webroot ), "svn switch --non-interactive $escaped ." );
+			$access->shellExec( "svn switch --non-interactive $escaped " . escapeshellarg( $instance->webroot ) );
 	}
 
 	private function getRepositoryInfo( $instance, $access )
