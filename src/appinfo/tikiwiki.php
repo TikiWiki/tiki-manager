@@ -77,7 +77,6 @@ class Application_Tikiwiki extends Application
 			die( "Requires shell access to the server.\n" );
 
 		$access->shellExec(
-			"cd " . escapeshellarg( $this->instance->webroot ),
 			$this->getExtractCommand( $version, $this->instance->webroot ) );
 
 		$this->branch = $version->branch;
@@ -89,8 +88,13 @@ class Application_Tikiwiki extends Application
 
 		$this->fixPermissions();
 
-		if( ! $access->fileExists( '.htaccess' ) )
-			$access->shellExec( "cp _htaccess .htaccess" );
+		if( ! $access->fileExists( $this->instance->getWebPath('.htaccess') ) )
+			$access->shellExec( 
+				"cp "
+				. escapeshellarg( $this->instance->getWebPath('_htaccess') )
+				. ' '
+				. escapeshellarg( $this->instance->getWebPath('.htaccess' ) )
+			);
 	} // }}}
 
 	function getBranch() // {{{
@@ -305,8 +309,8 @@ class Application_Tikiwiki extends Application
 
 		$filename = $this->instance->getWorkPath( 'setup.sh' );
 		$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
+		$access->chdir( $this->instance->webroot );
 		$access->shellExec(
-			"cd " . escapeshellarg( $this->instance->webroot ),
 			"bash " . escapeshellarg( $filename ) );
 	} // }}}
 

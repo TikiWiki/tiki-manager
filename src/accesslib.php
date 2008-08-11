@@ -104,11 +104,15 @@ interface ShellPrompt {
 
 	function openShell();
 
+	function chdir( $location );
+
 	function hasExecutable( $name );
 }
 
 class Access_SSH extends Access implements ShellPrompt
 {
+	private $location;
+
 	function __construct( Instance $instance )
 	{
 		parent::__construct( $instance, 'ssh' );
@@ -275,12 +279,20 @@ class Access_SSH extends Access implements ShellPrompt
 		$host->runCommands( "rm $path" );
 	} // }}}
 
+	function chdir( $location ) // {{{
+	{
+		$this->location = $location;
+	} // }}}
+
 	function shellExec( $commands ) // {{{
 	{
 		if( ! is_array( $commands ) )
 			$commands = func_get_args();
 
 		$host = new SSH_Host( $this->host, $this->user );
+		if( $this->location )
+			$host->chdir( $this->location );
+
 		return $host->runCommands( $commands );
 	} // }}}
 

@@ -7,6 +7,8 @@ class SSH_Host
 {
 	private static $resources = array();
 
+	private $location;
+
 	private $host;
 	private $user;
 
@@ -14,6 +16,11 @@ class SSH_Host
 	{
 		$this->host = $host;
 		$this->user = $user;
+	}
+
+	function chdir( $location )
+	{
+		$this->location = $location;
 	}
 
 	private function getExtHandle()
@@ -68,6 +75,8 @@ class SSH_Host
 
 			foreach( $commands as $line )
 			{
+				if( $this->location )
+					$line = "cd " . escapeshellarg($this->location) . "; $line";
 				$stream = ssh2_exec( $handle, $line );
 				stream_set_blocking( $stream, true );
 
@@ -80,6 +89,9 @@ class SSH_Host
 		{
 			$key = SSH_KEY;
 			$config = SSH_CONFIG;
+
+			if( $this->location )
+				array_unshift( $commands, "cd " . escapeshellarg($this->location) );
 
 			$string = implode( " && ", $commands );
 			$fullcommand = escapeshellarg( $string );
