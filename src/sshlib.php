@@ -8,6 +8,7 @@ class SSH_Host
 	private static $resources = array();
 
 	private $location;
+	private $env = array();
 
 	private $host;
 	private $user;
@@ -21,6 +22,11 @@ class SSH_Host
 	function chdir( $location )
 	{
 		$this->location = $location;
+	}
+
+	function setenv( $var, $value )
+	{
+		$this->env[$var] = $value;
 	}
 
 	private function getExtHandle()
@@ -77,7 +83,7 @@ class SSH_Host
 			{
 				if( $this->location )
 					$line = "cd " . escapeshellarg($this->location) . "; $line";
-				$stream = ssh2_exec( $handle, $line );
+				$stream = ssh2_exec( $handle, $line, null, $this->env );
 				stream_set_blocking( $stream, true );
 
 				$content .= stream_get_contents($stream);
@@ -92,6 +98,8 @@ class SSH_Host
 
 			if( $this->location )
 				array_unshift( $commands, "cd " . escapeshellarg($this->location) );
+			foreach( $this->env as $name => $value )
+				array_unshift( $commands, "export $name=$value" );
 
 			$string = implode( " && ", $commands );
 			$fullcommand = escapeshellarg( $string );

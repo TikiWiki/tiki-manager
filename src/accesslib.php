@@ -106,12 +106,15 @@ interface ShellPrompt {
 
 	function chdir( $location );
 
+	function setenv( $var, $value );
+
 	function hasExecutable( $name );
 }
 
 class Access_SSH extends Access implements ShellPrompt
 {
 	private $location;
+	private $env = array();
 
 	function __construct( Instance $instance )
 	{
@@ -284,6 +287,11 @@ class Access_SSH extends Access implements ShellPrompt
 		$this->location = $location;
 	} // }}}
 
+	function setenv( $var, $value ) // {{{
+	{
+		$this->env[$var] = $value;
+	} // }}}
+
 	function shellExec( $commands ) // {{{
 	{
 		if( ! is_array( $commands ) )
@@ -292,6 +300,8 @@ class Access_SSH extends Access implements ShellPrompt
 		$host = new SSH_Host( $this->host, $this->user );
 		if( $this->location )
 			$host->chdir( $this->location );
+		foreach( $this->env as $key => $value )
+			$host->setenv( $key, $value );
 
 		return $host->runCommands( $commands );
 	} // }}}
