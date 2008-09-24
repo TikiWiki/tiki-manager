@@ -26,10 +26,16 @@ class SVN
 		info( "Performing SVN update on remote host." );
 		$full = "{$this->repository}/$path";
 		$escaped = escapeshellarg( $full );
+
 		if( !isset( $info['url'] ) || $info['url'] == $full )
 			$access->shellExec( "svn up --non-interactive " . escapeshellarg( $instance->webroot ) );
 		else
-			$access->shellExec( "svn switch --non-interactive $escaped " . escapeshellarg( $instance->webroot ) );
+		{
+			$access->shellExec( 
+				"svn up --non-interactive " . escapeshellarg( $instance->getWebPath('temp') ),
+				"svn switch --non-interactive $escaped " . escapeshellarg( $instance->webroot )
+			);
+		}
 	}
 
 	private function getRepositoryInfo( $instance, $access )
