@@ -1,44 +1,27 @@
 <?php
 
-$root = $_SERVER['argv'][1];
-
-include $root . '/db/local.php';
-
-$files = array();
-
-switch( $dbversion_tiki )
+if( $root = $_SERVER['argv'][1] )
 {
-case '1.9':
-	$files[] = $root . '/db/tiki_1.8to1.9.sql';
-case '1.10':
-case '2.0':
-	$files[] = $root . '/db/tiki_1.9to1.10.sql';
-	$files[] = $root . '/db/tiki_1.9to2.0.sql';
-default:
-	$prev = $dbversion_tiki - 1;
-
-	$files[] = $root . "/db/tiki_$prev.0to$dbversion_tiki.sql";
+	chdir( $root );
 }
 
-$args = array();
-if( $user_tiki )
-	$args[] = "-u" . escapeshellarg( $user_tiki );
-if( $pass_tiki )
-	$args[] = "-p" . escapeshellarg( $pass_tiki );
-if( $host_tiki )
-	$args[] = "-h" . escapeshellarg( $host_tiki );
-
-$args[] = $dbs_tiki;
-
-$args = implode( ' ', $args );
-
-foreach( $files as $file )
+if( file_exists( 'installer/shell.php' ) )
 {
-	if( ! file_exists( $file ) )
-		continue;
+	require_once('lib/init/initlib.php');
+	require_once('lib/setup/tikisetup.class.php');
+	TikiSetup::prependIncludePath($root);
+	TikiSetup::prependIncludePath('lib');
+	TikiSetup::prependIncludePath('lib/pear');
+	require_once('tiki-setup_base.php');
+	require_once('installer/installlib.php');
+	include $local_php;
 
-	$command = "mysql -f $args < $file";
-	exec( $command );
+	$installer = new Installer;
+	$installer->update();
+}
+else
+{
+	`sh doc/devtools/sqlupgrade.sh`;
 }
 
 ?>

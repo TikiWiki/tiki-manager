@@ -271,6 +271,7 @@ class Application_Tikiwiki extends Application
 
 			$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
 			$svn->updateInstanceTo( $this->instance, $version->branch );
+			$access->shellExec( "chmod 0777 temp temp/cache" );
 
 			info( "Updating database schema." );
 			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
@@ -366,11 +367,20 @@ LOCAL
 		$access = $this->instance->getBestAccess( 'filetransfer' );
 		$access->uploadFile( $tmp, 'db/local.php' );
 
-		$access = $this->instance->getBestAccess( 'scripting' );
-		$file = $this->instance->getWebPath( 'db/tiki.sql' );
-		$root = $this->instance->webroot;
-		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $file ) );
-		$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
+		if( $access->fileExists( 'installer/shell.php' ) )
+		{
+			$access = $this->instance->getBestAccess( 'scripting' );
+			$access->chdir( $this->instance->webroot );
+			$access->shellExec( $this->instance->phpexec . ' installer/shell.php install' );
+		}
+		else
+		{
+			$access = $this->instance->getBestAccess( 'scripting' );
+			$file = $this->instance->getWebPath( 'db/tiki.sql' );
+			$root = $this->instance->webroot;
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $file ) );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
+		}
 	} // }}}
 
 	function restoreDatabase( Database $database, $remoteFile ) // {{{
