@@ -46,3 +46,6 @@ detect:
 
 enablewww:
 	$(PHP) scripts/enablewww.php
+
+delete:
+	$(PHP) scripts/delete.php
