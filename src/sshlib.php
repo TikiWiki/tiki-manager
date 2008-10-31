@@ -83,7 +83,9 @@ class SSH_Host
 			{
 				if( $this->location )
 					$line = "cd " . escapeshellarg($this->location) . "; $line";
-				$stream = ssh2_exec( $handle, $line, null, $this->env );
+				foreach( $this->env as $key => $value )
+					$line = "export $key=" . escapeshellarg($value) . "; $line";
+				$stream = ssh2_exec( $handle, $line, null );
 				stream_set_blocking( $stream, true );
 
 				$content .= stream_get_contents($stream);

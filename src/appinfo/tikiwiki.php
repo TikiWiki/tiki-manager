@@ -216,7 +216,7 @@ class Application_Tikiwiki extends Application
 		elseif( $version->type == 'cvs' )
 		{
 			$base = basename( $folder );
-			return "cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $base tikiwiki 2> /dev/null";
+			return "cd $folder; cd ..;cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $base tikiwiki 2> /dev/null";
 		}
 	} // }}}
 
@@ -245,9 +245,8 @@ class Application_Tikiwiki extends Application
 			}
 			else
 			{
-				chdir( dirname( $folder ) );
-
-				$command = $this->getExtractCommand( $version );
+				chdir( $folder );
+				$command = $this->getExtractCommand( $version, $folder );
 				`$command`;
 			}
 
