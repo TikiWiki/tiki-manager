@@ -34,7 +34,7 @@ class Database
 	private function locateExtensions() // {{{
 	{
 		$access = $this->instance->getBestAccess( 'scripting' );
-		$content = $access->shellExec( "{$this->instance->phpexec} -m" );
+		$content = $access->shellExec( "{$this->instance->phpexec} -m 2>&1" );
 		$content = str_replace( "\r", '', $content );
 		$modules = explode( "\n", $content );
 
