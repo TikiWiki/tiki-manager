@@ -97,8 +97,8 @@ foreach( $selection as $instance )
 
 		$access->shellExec(
 			"mkdir -p $location",
-			"cp -R $normal $location/",
-			"cp -R $hidden $location/"
+			"mv $normal $location/",
+			"mv $hidden $location/"
 		);
 	}
 
