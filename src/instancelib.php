@@ -104,6 +104,10 @@ class Instance
 
 	function delete() // {{{
 	{
+		query( "DELETE FROM file WHERE version_id IN( SELECT version_id FROM version WHERE instance_id = :id )", array( ':id' => $this->id ) );
+		query( "DELETE FROM version WHERE instance_id = :id", array( ':id' => $this->id ) );
+		query( "DELETE FROM access WHERE instance_id = :id", array( ':id' => $this->id ) );
+		query( "DELETE FROM backup WHERE instance_id = :id", array( ':id' => $this->id ) );
 		query( "DELETE FROM instance WHERE instance_id = :id", array( ':id' => $this->id ) );
 	} // }}}
 
