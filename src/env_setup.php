@@ -31,6 +31,7 @@ function color( $string, $color )
 
 function info( $text ) { echo color( $text, 'cyan' ) . "\n"; }
 function warning( $text ) { echo color( $text, 'yellow' ) . "\n"; }
+function error( $text ) { echo color( $text, 'red' ) . "\n"; }
 
 include dirname(__FILE__) . "/sshlib.php";
 include dirname(__FILE__) . "/accesslib.php";

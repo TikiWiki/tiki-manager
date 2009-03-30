@@ -116,7 +116,9 @@ class SSH_Host
 	{
 		if( $handle = self::getExtHandle( $this->host, $this->user ) )
 		{
-			ssh2_scp_send( $handle, $localFile, $remoteFile, 0644 );
+			if( ! ssh2_scp_send( $handle, $localFile, $remoteFile, 0644 ) ) {
+				error( "Could not create remote file $remoteFile on {$this->user}@{$this->host}" );
+			}
 		}
 		else
 		{
@@ -133,7 +135,9 @@ class SSH_Host
 	{
 		if( $handle = self::getExtHandle( $this->host, $this->user ) )
 		{
-			ssh2_scp_recv( $handle, $remoteFile, $localFile );
+			if( ! ssh2_scp_recv( $handle, $remoteFile, $localFile ) ) {
+				error( "Could not create remote file $remoteFile on {$this->user}@{$this->host}" );
+			}
 		}
 		else
 		{
