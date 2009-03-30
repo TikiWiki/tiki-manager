@@ -109,6 +109,9 @@ class Instance
 		query( "DELETE FROM access WHERE instance_id = :id", array( ':id' => $this->id ) );
 		query( "DELETE FROM backup WHERE instance_id = :id", array( ':id' => $this->id ) );
 		query( "DELETE FROM instance WHERE instance_id = :id", array( ':id' => $this->id ) );
+		query( "DELETE FROM access WHERE instance_id = :id", array( ':id' => $this->id ) );
+		query( "DELETE FROM file WHERE version_id IN(SELECT version_id FROM version WHERE instance_id = :id)", array( ':id' => $this->id ) );
+		query( "DELETE FROM version WHERE instance_id = :id", array( ':id' => $this->id ) );
 	} // }}}
 
 	function registerAccessMethod( $type, $host, $user ) // {{{
@@ -133,7 +136,7 @@ class Instance
 	{
 		if( empty( $this->access ) )
 			$this->access = Access::getAccessFor( $this );
-
+		
 		// TODO : Add intelligence as more access types get added
 		// types :
 		//		scripting
@@ -241,13 +244,15 @@ class Instance
 
 		// Backup database
 		info( "Obtaining database dump." );
-		$randomName = md5( time() . 'trimbackup' ) . '.sql';
+		$randomName = md5( time() . 'trimbackup' ) . '.sql.gz';
 		$remoteFile = $this->getWorkPath( $randomName );
 		$access->runPHP( dirname(__FILE__) . '/../scripts/backup_database.php', escapeshellarg( $this->webroot ) . ' ' . escapeshellarg( $remoteFile ) );
 		$localName = $access->downloadFile( $remoteFile );
 		$access->deleteFile( $remoteFile );
 
-		rename( $localName, $approot . '/database_dump.sql' );
+		$target = $approot . '/database_dump.sql';
+		`zcat $localName > $target`;
+		unlink( $localName );
 
 		// Perform archiving
 		$current = trim( `pwd` );
@@ -502,7 +507,6 @@ class Version
 				continue;
 
 			list( $hash, $file ) = $parts;
-			$this->recordFile( $hash, $file, $app );
 		}
 	} // }}}
 }

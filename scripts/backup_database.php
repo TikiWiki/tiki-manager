@@ -16,7 +16,7 @@ if( $host_tiki )
 $args[] = $dbs_tiki;
 
 $args = implode( ' ', $args );
-$command = "mysqldump --extended-insert $args > " . escapeshellarg( $outputFile );
+$command = "mysqldump --quick $args | gzip -5 > " . escapeshellarg( $outputFile );
 
 exec( $command );
 
