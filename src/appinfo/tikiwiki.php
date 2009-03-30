@@ -274,6 +274,9 @@ class Application_Tikiwiki extends Application
 
 			info( "Updating database schema." );
 			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
+
+			info( "Fixing permissions." );
+			$this->fixPermissions();
 			return;
 
 		case 'cvs':
@@ -287,6 +290,9 @@ class Application_Tikiwiki extends Application
 
 			info( "Updating database schema." );
 			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
+
+			info( "Fixing permissions." );
+			$this->fixPermissions();
 			return;
 		}
 
