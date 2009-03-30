@@ -410,6 +410,15 @@ LOCAL
 		$root = $this->instance->webroot;
 		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $remoteFile ) );
 	} // }}}
+
+	function beforeChecksumCollect() // {{{
+	{
+		$path = $this->instance->getWebPath( 'templates_c/*.php' );
+
+		if( ( $access = $this->instance->getBestAccess('scripting') ) instanceof ShellPrompt ) {
+			$access->shellExec( "rm " . $path );
+		}
+	} // }}}
 }
 
 ?>

@@ -398,6 +398,9 @@ class Version
 
 	function performCheck( Instance $instance ) // {{{
 	{
+		$app = $instance->getApplication();
+		$app->beforeChecksumCollect();
+
 		$access = $instance->getBestAccess( 'scripting' );
 		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', $instance->webroot );
 		
@@ -451,6 +454,7 @@ class Version
 	function collectChecksumFromInstance( Instance $instance ) // {{{
 	{
 		$app = $instance->getApplication();
+		$app->beforeChecksumCollect();
 
 		$access = $instance->getBestAccess( 'scripting' );
 		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', $instance->webroot );

@@ -66,6 +66,10 @@ abstract class Application
 
 	abstract function restoreDatabase( Database $database, $remoteFile );
 
+	function beforeChecksumCollect() // {{{
+	{
+	} // }}}
+
 	function performUpdate( Instance $instance, $version = null ) // {{{
 	{
 		$current = $instance->getLatestVersion();
