@@ -7,17 +7,22 @@ include dirname(__FILE__) . "/../src/env_setup.php";
 include dirname(__FILE__) . "/../src/check.php";
 
 define( 'ARG_SWITCH', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'switch' );
+define( 'ARG_AUTO', $_SERVER['argc'] > 2 && $_SERVER['argv'][1] == 'auto' );
 
 $instances = Instance::getUpdatableInstances();
 
-echo "Note: Only CVS and SVN instances can be updated.\n\n";
-echo "Which instances do you want to update?\n";
+if( ARG_AUTO ) {
+	$selection = getEntries( $instances, implode( ' ', array_slice( $_SERVER['argv'], 2 ) ) );
+} else {
+	echo "Note: Only CVS and SVN instances can be updated.\n\n";
+	echo "Which instances do you want to update?\n";
 
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 30 ) . str_pad( $i->contact, 20 ) . "\n";
+	foreach( $instances as $key => $i )
+		echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 30 ) . str_pad( $i->contact, 20 ) . "\n";
 
-$selection = readline( ">>> " );
-$selection = getEntries( $instances, $selection );
+	$selection = readline( ">>> " );
+	$selection = getEntries( $instances, $selection );
+}
 
 foreach( $selection as $instance )
 {
