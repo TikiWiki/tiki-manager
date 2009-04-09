@@ -14,7 +14,7 @@ foreach( $all as $instance )
 		&& $instance->getApplication() instanceof Application_Tikiwiki )
 		$instances[] = $instance;
 
-echo "Note: Only SSH instances running Tikiwiki can get permissions fixed.\n\n";
+echo "Note: Only SSH instances running TikiWiki can get their permissions fixed.\n\n";
 echo "Which instances do you want to fix?\n";
 
 foreach( $instances as $key => $i )
