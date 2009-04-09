@@ -20,7 +20,7 @@ foreach( $raw as $instance )
 }
 
 echo "Note: It is only possible to restore a backup on a blank install.\n\n";
-echo "Which instance do you want to retore on?\n";
+echo "Which instance do you want to restore on?\n";
 
 foreach( $instances as $key => $i )
 	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 30 ) . str_pad( $i->contact, 20 ) . "\n";
