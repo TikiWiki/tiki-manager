@@ -1,0 +1,82 @@
+<?php
+
+class FTP_Host
+{
+	private $host;
+	private $user;
+	private $pass;
+	private $conn;
+
+	function __construct( $host, $user, $pass ) // {{{
+	{
+		$this->host = $host;
+		$this->user = $user;
+		$this->pass = $pass;
+	} // }}}
+
+	function __destruct() // {{{
+	{
+		if( $this->conn ) {
+			ftp_close( $this->conn );
+		}
+	} // }}}
+
+	function connect() // {{{
+	{
+		if( $this->conn )
+			return;
+
+		$conn = ftp_connect( $this->host, 21, 15 );
+		if( $conn ) {
+			if( ftp_login( $conn, $this->user, $this->pass ) ) {
+				$this->conn = $conn;
+				return true;
+			}
+		}
+
+		return false;
+	} // }}}
+
+	function fileExists( $filename ) // {{{
+	{
+		$this->connect();
+
+		$dir = dirname( $filename );
+		$base = basename( $filename );
+		
+		$list = ftp_nlist( $this->conn, $dir );
+
+		return in_array( $base, $list );
+	} // }}}
+
+	function getContent( $filename ) // {{{
+	{
+		$this->connect();
+
+		$fp = tmpfile();
+		if( ftp_fget( $this->conn, $fp, $filename, FTP_ASCII ) ) {
+			$content = '';
+			rewind( $fp );
+			while( ! feof( $fp ) ) {
+				$content .= fread( $fp, 8192 );
+			}
+
+			return $content;
+		}
+	} // }}}
+
+	function sendFile( $localFile, $remoteFile ) // {{{
+	{
+		$this->connect();
+		ftp_put( $this->conn, $remoteFile, $localFile, FTP_ASCII );
+		ftp_chmod( $this->conn, 0644, $remoteFile );
+	} // }}}
+
+	function removeFile( $remoteFile ) // {{{
+	{
+		$this->connect();
+		ftp_delete( $this->conn, $remoteFile );
+	} // }}}
+}
+
+?>

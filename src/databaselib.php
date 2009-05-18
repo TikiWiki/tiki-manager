@@ -33,6 +33,7 @@ class Database
 
 	private function locateExtensions() // {{{
 	{
+		// FIXME : Not FTP compatible
 		$access = $this->instance->getBestAccess( 'scripting' );
 		$content = $access->shellExec( "{$this->instance->phpexec} -m 2>&1" );
 		$content = str_replace( "\r", '', $content );
@@ -116,12 +117,14 @@ class Database_Adapter_Mysql implements Database_Adapter
 
 	function createDatabase( Instance $instance, $name ) // {{{
 	{
+		// FIXME : Not safemode compatible
 		$access = $instance->getBestAccess( 'scripting' );
 		$access->shellExec( "mysqladmin {$this->args} create $name" );
 	} // }}}
 
 	function createUser( Instance $instance, $username, $password ) // {{{
 	{
+		// FIXME : Not FTP compatible
 		$u = mysql_real_escape_string( $username );
 		$p = mysql_real_escape_string( $password );
 		$query = escapeshellarg( "CREATE USER '$u'@'{$this->host}' IDENTIFIED BY '$p';" );
@@ -132,6 +135,7 @@ class Database_Adapter_Mysql implements Database_Adapter
 
 	function grantRights( Instance $instance, $username, $database ) // {{{
 	{
+		// FIXME : Not FTP compatible
 		$u = mysql_real_escape_string( $username );
 		$d = mysql_real_escape_string( $database );
 		$query = escapeshellarg( "GRANT ALL ON `$d`.* TO '$u'@'{$this->host}';" );
@@ -142,6 +146,7 @@ class Database_Adapter_Mysql implements Database_Adapter
 
 	function finalize( Instance $instance ) // {{{
 	{
+		// FIXME : Not FTP compatible
 		$access = $instance->getBestAccess( 'scripting' );
 		$access->shellExec( "mysqladmin {$this->args} reload" );
 	} // }}}

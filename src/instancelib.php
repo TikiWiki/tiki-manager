@@ -114,14 +114,16 @@ class Instance
 		query( "DELETE FROM version WHERE instance_id = :id", array( ':id' => $this->id ) );
 	} // }}}
 
-	function registerAccessMethod( $type, $host, $user ) // {{{
+	function registerAccessMethod( $type, $host, $user, $password = null ) // {{{
 	{
-		if( ! in_array( $type, array( 'ssh' ) ) )
-			die( "Unsupported access method.\n" );
+		if( ! $class = Access::getClassFor( $type ) ) {
+			return;
+		}
 
-		$access = new Access_SSH( $this );
+		$access = new $class( $this );
 		$access->host = $host;
 		$access->user = $user;
+		$access->password = $password;
 
 		if( $access->firstConnect() )
 		{
@@ -142,6 +144,16 @@ class Instance
 		//		scripting
 		//		filetransfer
 		return reset( $this->access );
+	} // }}}
+
+	function getWebUrl( $relativePath ) // {{{
+	{
+		$weburl = rtrim( $this->weburl, '/' );
+		
+		$path = "$weburl/$relativePath";
+		$path = str_replace( '/./', '/', $path );
+
+		return $path;
 	} // }}}
 
 	function getWebPath( $relativePath ) // {{{
@@ -297,6 +309,7 @@ class Instance
 
 	function lock() // {{{
 	{
+		// FIXME : Not FTP compatible
 		$access = $this->getBestAccess( 'scripting' );
 
 		if( ! $ok = $access instanceof ShellPrompt )

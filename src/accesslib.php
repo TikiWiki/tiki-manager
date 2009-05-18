@@ -19,6 +19,8 @@ abstract class Access
 			return 'Access_SSH';
 		elseif( $type == 'ssh::nokey' )
 			return 'Access_SSH';
+		elseif( $type == 'ftp' )
+			return 'Access_FTP';
 		else
 			die( "Unknown type: $type\n" );
 	} // }}}
@@ -97,6 +99,8 @@ abstract class Access
 	abstract function deleteFile( $filename );
 
 	abstract function localizeFolder( $remoteLocation, $localMirror );
+
+	abstract function replicateRemotely( $localLocation, $remoteMirror );
 }
 
 interface ShellPrompt {
@@ -325,7 +329,91 @@ class Access_SSH extends Access implements ShellPrompt
 		$host = new SSH_Host( $this->host, $this->user );
 		$host->rsync( $remoteLocation, $localMirror );
 	} // }}}
+
+	function replicateRemotely( $localLocation, $remoteMirror ) // {{{
+	{
+		// TODO
+		die( 'Not implemented yet.' );
+	} // }}}
 }
 
+class Access_FTP extends Access
+{
+	function __construct( Instance $instance )
+	{
+		parent::__construct( $instance, 'ftp' );
+	}
+
+	function firstConnect()
+	{
+		$conn = new FTP_Host( $this->host, $this->user, $this->password );
+
+		return $conn->connect();
+	}
+
+	function getInterpreterPath()
+	{
+		$result = $this->runPHP( dirname(__FILE__) . '/../scripts/checkversion.php' );
+
+		if( preg_match( '/^[5-9]\./', $result ) ) {
+			return 'mod_php';
+		}
+	}
+
+	function fileExists( $filename )
+	{
+		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		return $ftp->fileExists( $filename );
+	}
+
+	function fileGetContents( $filename )
+	{
+		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		return $ftp->getContent( $filename );
+	}
+
+	function fileModificationDate( $filename )
+	{
+	}
+
+	function runPHP( $localFile ) // {{{
+	{
+		$host = new FTP_Host( $this->host, $this->user, $this->password );
+
+		$remoteName = 'trim_' . md5( $localFile ) . '.php';
+		$remoteFile = $this->instance->getWebPath( $remoteName );
+
+		$host->sendFile( $localFile, $remoteFile );
+		$output = file_get_contents( $this->instance->getWebUrl( $remoteName ) );
+
+		$host->removeFile( $remoteFile );
+
+		return $output;
+	} // }}}
+
+	function downloadFile( $filename )
+	{
+	}
+
+	function uploadFile( $filename, $remoteLocation )
+	{
+	}
+
+	function deleteFile( $filename )
+	{
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
+		$host->removeFile( $remoteFile );
+	}
+
+	function localizeFolder( $remoteLocation, $localMirror )
+	{
+	}
+
+	function replicateRemotely( $localLocation, $remoteMirror ) // {{{
+	{
+	} // }}}
+}
 
 ?>

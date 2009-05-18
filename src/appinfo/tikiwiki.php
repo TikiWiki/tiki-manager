@@ -73,11 +73,16 @@ class Application_Tikiwiki extends Application
 	function install( Version $version ) // {{{
 	{
 		$access = $this->instance->getBestAccess( 'scripting' );
-		if( ! $access instanceof ShellPrompt )
-			die( "Requires shell access to the server.\n" );
+		if( $access instanceof ShellPrompt ) {
+			$access->shellExec(
+				$this->getExtractCommand( $version, $this->instance->webroot ) );
+		} else {
+			// TODO : Untested
+			$folder = cache_folder( $this, $version );
+			$this->extractTo( $version, $folder );
 
-		$access->shellExec(
-			$this->getExtractCommand( $version, $this->instance->webroot ) );
+			$access->replicateRemotely( $folder, $this->instance->webroot );
+		}
 
 		$this->branch = $version->branch;
 		$this->installType = $version->type;
@@ -256,6 +261,7 @@ class Application_Tikiwiki extends Application
 
 	function performActualUpdate( Version $version ) // {{{
 	{
+		// FIXME : Not FTP compatible
 		switch( $this->getInstallType() )
 		{
 		case 'svn':
@@ -311,6 +317,7 @@ class Application_Tikiwiki extends Application
 
 	function fixPermissions() // {{{
 	{
+		// FIXME : Not FTP compatible
 		$access = $this->instance->getBestAccess( 'scripting' );
 
 		$filename = $this->instance->getWorkPath( 'setup.sh' );
@@ -372,6 +379,7 @@ LOCAL
 		$access = $this->instance->getBestAccess( 'filetransfer' );
 		$access->uploadFile( $tmp, 'db/local.php' );
 
+		// FIXME : Not FTP compatible
 		if( $access->fileExists( 'installer/shell.php' ) )
 		{
 			$access = $this->instance->getBestAccess( 'scripting' );
@@ -408,6 +416,7 @@ LOCAL
 
 		$access = $this->instance->getBestAccess( 'scripting' );
 		$root = $this->instance->webroot;
+		// FIXME : Not FTP compatible (arguments)
 		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $remoteFile ) );
 	} // }}}
 
@@ -415,6 +424,7 @@ LOCAL
 	{
 		$path = $this->instance->getWebPath( 'templates_c/*.php' );
 
+		// FIXME : Not FTP compatible
 		if( ( $access = $this->instance->getBestAccess('scripting') ) instanceof ShellPrompt ) {
 			$access->shellExec( "rm " . $path );
 		}

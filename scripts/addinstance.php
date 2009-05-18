@@ -6,11 +6,17 @@
 include dirname(__FILE__) . "/../src/env_setup.php";
 include dirname(__FILE__) . "/../src/dbsetup.php";
 
-$user = $host = '';
+$type = $user = $host = $pass = '';
+while( ! in_array( $type, array( 'ftp', 'ssh' ) ) ) {
+	$type = readline( "Connection type [ssh|ftp] : " );
+}
+
 while( empty( $host ) )
-	$host = readline( "SSH host name : " );
+	$host = readline( "Host name : " );
 while( empty( $user ) )
-	$user = readline( "SSH user : " );
+	$user = readline( "User : " );
+while( $type == 'ftp' && empty( $pass ) )
+	$pass = readline( "Password : " );
 
 $name = $contact = $webroot = $tempdir = $weburl = '';
 
@@ -48,7 +54,7 @@ $instance->tempdir = rtrim( $tempdir, '/' );
 $instance->save();
 echo color("Instance information saved.\n", 'green');
 
-$access = $instance->registerAccessMethod( 'ssh', $host, $user );
+$access = $instance->registerAccessMethod( $type, $host, $user, $pass );
 
 if( ! $access )
 {
