@@ -431,9 +431,14 @@ class Access_FTP extends Access implements Mountable
 		return $local . $ext;
 	} // }}}
 
-	function uploadFile( $filename, $remoteLocation )
+	function uploadFile( $filename, $remoteLocation ) // {{{
 	{
-	}
+		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		if( $remoteLocation{0} == '/' )
+			$host->sendFile( $filename, $remoteLocation );
+		else
+			$host->sendFile( $filename, $this->instance->getWebPath( $remoteLocation ) );
+	} // }}}
 
 	function moveFile( $remoteSource, $remoteTarget ) // {{{
 	{

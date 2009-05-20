@@ -43,7 +43,7 @@ class FTP_Host
 
 		$dir = dirname( $filename );
 		
-		$list = ftp_nlist( $this->conn, $dir );
+		$list = ftp_nlist( $this->conn, "-a $dir" );
 
 		return in_array( $filename, $list );
 	} // }}}

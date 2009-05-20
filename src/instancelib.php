@@ -309,51 +309,28 @@ class Instance
 
 	function lock() // {{{
 	{
-		// FIXME : Not FTP compatible
 		$access = $this->getBestAccess( 'scripting' );
 
-		if( ! $ok = $access instanceof ShellPrompt )
-			echo "Site will not be disabled during the update. Shell access required.\n";
+		info( "Locking website." );
+		if( ! $access->fileExists( $this->getWebPath( 'maintenance.html' ) ) )
+			$access->uploadFile( dirname(__FILE__) . "/../scripts/maintenance.html", "maintenance.html" );
 
-		$url = "{$this->weburl}/maintenance.html";
-		$htaccess = <<<HTACCESS
-	RewriteEngine On
+		if( $access->fileExists( $this->getWebPath( '.htaccess' ) ) )
+			$access->moveFile( '.htaccess', '.htaccess.bak' );
 
-	RewriteRule . maintenance.html
-HTACCESS;
-		$htaccess = escapeshellarg( $htaccess );
+		$access->uploadFile( dirname(__FILE__) . "/../scripts/maintenance.htaccess", ".htaccess" );
 
-		if( $ok )
-		{
-			info( "Locking website." );
-			if( ! $access->fileExists( $this->getWebPath( 'maintenance.html' ) ) )
-				$access->uploadFile( dirname(__FILE__) . "/../scripts/maintenance.html", "maintenance.html" );
-
-			$access->shellExec(
-				"touch "
-					. escapeshellarg( $this->getWebPath( '.htaccess' ) ),
-				"mv "
-					. escapeshellarg( $this->getWebPath( '.htaccess' ) )
-					. ' '
-					. escapeshellarg( $this->getWebPath( '.htaccess.bak' ) ),
-				"echo $htaccess > "
-					. escapeshellarg( $this->getWebPath( '.htaccess' ) )
-			);
-		}
-
-		return $ok;
+		return true;
 	} // }}}
 
 	function unlock() // {{{
 	{
 		info( "Unlocking website." );
 		$access = $this->getBestAccess( 'scripting' );
-		$access->shellExec(
-			"mv "
-				. escapeshellarg( $this->getWebPath( '.htaccess.bak' ) )
-				. ' '
-				. escapeshellarg( $this->getWebPath( '.htaccess' ) )
-		);
+		$access->deleteFile( '.htaccess' );
+
+		if( $access->fileExists( '.htaccess.bak' ) )
+			$access->moveFile( '.htaccess.bak', '.htaccess' );
 	} // }}}
 
 	function __get( $name ) // {{{
