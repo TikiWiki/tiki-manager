@@ -262,22 +262,28 @@ class Application_Tikiwiki extends Application
 
 	function performActualUpdate( Version $version ) // {{{
 	{
-		// FIXME : Not FTP compatible
 		switch( $this->getInstallType() )
 		{
 		case 'svn':
 			$access = $this->instance->getBestAccess( 'scripting' );
 
-			if( ! $access instanceof ShellPrompt || ! $access->hasExecutable( 'svn' ) )
-				break;
+			if( $access instanceof ShellPrompt && $access->hasExecutable( 'svn' ) )
+			{
+				$access->shellExec(
+					"rm -Rf " . escapeshellarg( $this->instance->getWebPath( 'temp/cache' ) )
+				);
 
-			$access->shellExec(
-				"rm -Rf " . escapeshellarg( $this->instance->getWebPath( 'temp/cache' ) )
-			);
+				$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
+				$svn->updateInstanceTo( $this->instance, $version->branch );
+				$access->shellExec( "chmod 0777 temp temp/cache" );
+			} elseif( $access instanceof Mountable ) {
+				$folder = cache_folder( $this, $version );
+				$this->extractTo( $version, $folder );
 
-			$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
-			$svn->updateInstanceTo( $this->instance, $version->branch );
-			$access->shellExec( "chmod 0777 temp temp/cache" );
+				$access->mount( MOUNT_FOLDER );
+				$access->synchronize( $folder, MOUNT_FOLDER . $this->instance->webroot );
+				$access->umount();
+			}
 
 			info( "Updating database schema." );
 			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', array( $this->instance->webroot ) );
@@ -318,7 +324,6 @@ class Application_Tikiwiki extends Application
 
 	function fixPermissions() // {{{
 	{
-		// FIXME : Not FTP compatible
 		$access = $this->instance->getBestAccess( 'scripting' );
 
 		if( $access instanceof ShellPrompt ) {
@@ -326,14 +331,14 @@ class Application_Tikiwiki extends Application
 			$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
 			$access->chdir( $this->instance->webroot );
 			$access->shellExec(
-				"bash " . escapeshellarg( $filename ) );
+				"bash " . escapeshellarg( $filename ) . " 2> /dev/null" );
 		} elseif( $access instanceof Mountable ) {
 			$target = MOUNT_FOLDER . $this->instance->webroot;
 			$cwd = getcwd();
 
 			$access->mount( MOUNT_FOLDER );
 			chdir( $target );
-			shell_exec( "bash " . escapeshellarg( dirname(__FILE__) . '/../../scripts/setup.sh' ) );
+			shell_exec( "bash " . escapeshellarg( dirname(__FILE__) . '/../../scripts/setup.sh' ) . " 2> /dev/null" );
 			$access->umount();
 
 			chdir( $cwd );
