@@ -42,11 +42,10 @@ class FTP_Host
 		$this->connect();
 
 		$dir = dirname( $filename );
-		$base = basename( $filename );
 		
 		$list = ftp_nlist( $this->conn, $dir );
 
-		return in_array( $base, $list );
+		return in_array( $filename, $list );
 	} // }}}
 
 	function getContent( $filename ) // {{{
@@ -70,6 +69,12 @@ class FTP_Host
 		$this->connect();
 		ftp_put( $this->conn, $remoteFile, $localFile, FTP_ASCII );
 		ftp_chmod( $this->conn, 0644, $remoteFile );
+	} // }}}
+
+	function receiveFile( $remoteFile, $localFile ) // {{{
+	{
+		$this->connect();
+		ftp_get( $this->conn, $localFile, $remoteFile, FTP_BINARY );
 	} // }}}
 
 	function removeFile( $remoteFile ) // {{{

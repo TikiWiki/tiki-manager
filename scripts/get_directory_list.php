@@ -1,4 +1,7 @@
 <?php
+if( $_SERVER['REQUEST_METHOD'] == 'GET' ) {
+	$_SERVER['argv'] = $_GET;
+}
 
 $root = $_SERVER['argv'][1];
 

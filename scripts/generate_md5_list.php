@@ -32,6 +32,8 @@ elseif( isset( $folder ) )
 	chdir( $folder );
 elseif( count( $_SERVER['argv'] ) > 1 )
 	chdir( $_SERVER['argv'][1] );
+elseif( count( $_GET ) > 1 )
+	chdir( $_GET[1] );
 
 if( ! function_exists( 'md5_file_recurse' ) )
 {
@@ -61,7 +63,7 @@ if( ! function_exists( 'md5_file_recurse' ) )
 $list = array();
 md5_file_recurse( '.', $list );
 
-$root = trim( `pwd` );
+$root = getcwd();
 foreach( $list as $file => $hash )
 {
 	$file = str_replace( $root, '.', $file );

@@ -90,7 +90,7 @@ abstract class Access
 
 	abstract function fileModificationDate( $filename );
 
-	abstract function runPHP( $localFile );
+	abstract function runPHP( $localFile, $args = array() );
 
 	abstract function downloadFile( $filename );
 
@@ -119,7 +119,7 @@ interface Mountable
 {
 	function mount( $target );
 	function umount();
-	function synchronize( $source, $mirror );
+	function synchronize( $source, $mirror, $keepFolderName = false );
 }
 
 class Access_SSH extends Access implements ShellPrompt
@@ -239,7 +239,7 @@ class Access_SSH extends Access implements ShellPrompt
 			return null;
 	} // }}}
 
-	function runPHP( $localFile, $arg = '' ) // {{{
+	function runPHP( $localFile, $arg = array() ) // {{{
 	{
 		$host = new SSH_Host( $this->host, $this->user );
 
@@ -247,6 +247,7 @@ class Access_SSH extends Access implements ShellPrompt
 		$remoteFile = $this->instance->getWorkPath( $remoteName );
 
 		$host->sendFile( $localFile, $remoteFile );
+		$arg = implode( ' ', array_map( 'escapeshellarg', $args ) );
 		$output = $host->runCommands(
 			"{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
 			"rm {$remoteFile}" );
@@ -361,56 +362,74 @@ class Access_FTP extends Access implements Mountable
 		parent::__construct( $instance, 'ftp' );
 	}
 
-	function firstConnect()
+	function firstConnect() // {{{
 	{
 		$conn = new FTP_Host( $this->host, $this->user, $this->password );
 
 		return $conn->connect();
-	}
+	} // }}}
 
-	function getInterpreterPath()
+	function getInterpreterPath() // {{{
 	{
 		$result = $this->runPHP( dirname(__FILE__) . '/../scripts/checkversion.php' );
 
 		if( preg_match( '/^[5-9]\./', $result ) ) {
 			return 'mod_php';
 		}
-	}
+	} // }}}
 
-	function fileExists( $filename )
+	function fileExists( $filename ) // {{{
 	{
 		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
 		return $ftp->fileExists( $filename );
-	}
+	} // }}}
 
-	function fileGetContents( $filename )
+	function fileGetContents( $filename ) // {{{
 	{
 		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
 		return $ftp->getContent( $filename );
-	}
+	} // }}}
 
 	function fileModificationDate( $filename )
 	{
 	}
 
-	function runPHP( $localFile ) // {{{
+	function runPHP( $localFile, $args = array() ) // {{{
 	{
 		$host = new FTP_Host( $this->host, $this->user, $this->password );
 
 		$remoteName = 'trim_' . md5( $localFile ) . '.php';
 		$remoteFile = $this->instance->getWebPath( $remoteName );
 
+		array_unshift( $args, null );
+		$arg = http_build_query( $args, '', '&' );
+
 		$host->sendFile( $localFile, $remoteFile );
-		$output = file_get_contents( $this->instance->getWebUrl( $remoteName ) );
+		$output = file_get_contents( $this->instance->getWebUrl( $remoteName ) . '?' . $arg );
 
 		$host->removeFile( $remoteFile );
 
 		return $output;
 	} // }}}
 
-	function downloadFile( $filename )
+	function downloadFile( $filename ) // {{{
 	{
-	}
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
+		$dot = strrpos( $filename, '.' );
+		$ext = substr( $filename, $dot );
+
+		$local = tempnam( TEMP_FOLDER, 'trim' );
+
+		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host->receiveFile( $filename, $local );
+
+		rename( $local, $local . $ext );
+		chmod( $local . $ext, 0644 );
+
+		return $local . $ext;
+	} // }}}
 
 	function uploadFile( $filename, $remoteLocation )
 	{
@@ -427,17 +446,21 @@ class Access_FTP extends Access implements Mountable
 		$host->rename( $remoteSource, $remoteTarget );
 	} // }}}
 
-	function deleteFile( $filename )
+	function deleteFile( $filename ) // {{{
 	{
 		if( $filename{0} != '/' )
 			$filename = $this->instance->getWebPath( $filename );
 
-		$host->removeFile( $remoteFile );
-	}
+		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host->removeFile( $filename );
+	} // }}}
 
-	function localizeFolder( $remoteLocation, $localMirror )
+	function localizeFolder( $remoteLocation, $localMirror ) // {{{
 	{
-	}
+		$this->mount( MOUNT_FOLDER );
+		$this->synchronize( MOUNT_FOLDER . $remoteLocation, $localMirror, true );
+		$this->umount();
+	} // }}}
 
 	function mount( $target ) // {{{
 	{
@@ -459,17 +482,18 @@ class Access_FTP extends Access implements Mountable
 		return true;
 	} // }}}
 
-	function umount() {
+	function umount() // {{{
+	{
 		if( $this->lastMount ) {
 			$loc = escapeshellarg( $this->lastMount );
 			`sudo umount $loc`;
 			$this->lastMount = null;
 		}
-	}
+	} // }}}
 
-	function synchronize( $source, $mirror ) // {{{
+	function synchronize( $source, $mirror, $keepFolderName = false ) // {{{
 	{
-		$source = rtrim( $source, '/' ) . '/';
+		$source = rtrim( $source, '/' ) . ($keepFolderName ? '' : '/');
 		$mirror = rtrim( $mirror, '/' ) . '/';
 
 		$source = escapeshellarg( $source );

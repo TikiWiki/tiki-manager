@@ -280,7 +280,7 @@ class Application_Tikiwiki extends Application
 			$access->shellExec( "chmod 0777 temp temp/cache" );
 
 			info( "Updating database schema." );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', array( $this->instance->webroot ) );
 
 			info( "Fixing permissions." );
 			$this->fixPermissions();
@@ -296,7 +296,7 @@ class Application_Tikiwiki extends Application
 			$cvs->updateInstanceTo( $this->instance, $version->branch );
 
 			info( "Updating database schema." );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', array( $this->instance->webroot ) );
 
 			info( "Fixing permissions." );
 			$this->fixPermissions();
@@ -343,7 +343,7 @@ class Application_Tikiwiki extends Application
 	function getFileLocations() // {{{
 	{
 		$access = $this->instance->getBestAccess( 'scripting' );
-		$out = $access->runPHP( dirname(__FILE__) . '/../../scripts/get_directory_list.php', $this->instance->webroot );
+		$out = $access->runPHP( dirname(__FILE__) . '/../../scripts/get_directory_list.php', array( $this->instance->webroot ) );
 
 		$folders = array( $this->instance->webroot );
 		foreach( explode( "\n", $out ) as $line )
@@ -404,8 +404,8 @@ LOCAL
 			$access = $this->instance->getBestAccess( 'scripting' );
 			$file = $this->instance->getWebPath( 'db/tiki.sql' );
 			$root = $this->instance->webroot;
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $file ) );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', $this->instance->webroot );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', array( $root, $file ) );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', array( $this->instance->webroot ) );
 		}
 	} // }}}
 
@@ -430,7 +430,7 @@ LOCAL
 		$access = $this->instance->getBestAccess( 'scripting' );
 		$root = $this->instance->webroot;
 		// FIXME : Not FTP compatible (arguments)
-		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', escapeshellarg( $root ) . ' ' . escapeshellarg( $remoteFile ) );
+		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', array( $root, $remoteFile ) );
 	} // }}}
 
 	function beforeChecksumCollect() // {{{

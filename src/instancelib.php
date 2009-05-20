@@ -258,7 +258,7 @@ class Instance
 		info( "Obtaining database dump." );
 		$randomName = md5( time() . 'trimbackup' ) . '.sql.gz';
 		$remoteFile = $this->getWorkPath( $randomName );
-		$access->runPHP( dirname(__FILE__) . '/../scripts/backup_database.php', escapeshellarg( $this->webroot ) . ' ' . escapeshellarg( $remoteFile ) );
+		$access->runPHP( dirname(__FILE__) . '/../scripts/backup_database.php', array( $this->webroot, $remoteFile ) );
 		$localName = $access->downloadFile( $remoteFile );
 		$access->deleteFile( $remoteFile );
 
@@ -267,7 +267,7 @@ class Instance
 		unlink( $localName );
 
 		// Perform archiving
-		$current = trim( `pwd` );
+		$current = getcwd();
 		chdir( BACKUP_FOLDER );
 
 		info( "Creating archive." );
@@ -415,7 +415,7 @@ class Version
 		$app->beforeChecksumCollect();
 
 		$access = $instance->getBestAccess( 'scripting' );
-		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', $instance->webroot );
+		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', array( $instance->webroot ) );
 		
 		$known = $this->getFileMap();
 
@@ -470,7 +470,7 @@ class Version
 		$app->beforeChecksumCollect();
 
 		$access = $instance->getBestAccess( 'scripting' );
-		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', $instance->webroot );
+		$output = $access->runPHP( dirname(__FILE__) . '/../scripts/generate_md5_list.php', array( $instance->webroot ) );
 		
 		$this->saveHashDump( $output, $app );
 	} // }}}

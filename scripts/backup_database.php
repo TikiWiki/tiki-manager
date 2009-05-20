@@ -1,4 +1,7 @@
 <?php
+if( $_SERVER['REQUEST_METHOD'] == 'GET' ) {
+	$_SERVER['argv'] = $_GET;
+}
 
 $root = $_SERVER['argv'][1];
 $outputFile = $_SERVER['argv'][2];
@@ -19,5 +22,6 @@ $args = implode( ' ', $args );
 $command = "mysqldump --quick $args | gzip -5 > " . escapeshellarg( $outputFile );
 
 exec( $command );
+chmod( $outputFile, 0777 );
 
 ?>

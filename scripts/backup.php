@@ -6,12 +6,7 @@
 include dirname(__FILE__) . "/../src/env_setup.php";
 include dirname(__FILE__) . "/../src/clean.php";
 
-$all = Instance::getInstances();
-
-$instances = array();
-foreach( $all as $instance )
-	if( $instance->getBestAccess( 'scripting' ) instanceof ShellPrompt )
-		$instances[] = $instance;
+$instances = Instance::getInstances();
 
 if( ! isset( $_SERVER['argv'][1] ) || $_SERVER['argv'][1] != 'all' )
 {
