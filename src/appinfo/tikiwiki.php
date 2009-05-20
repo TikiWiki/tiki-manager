@@ -73,15 +73,18 @@ class Application_Tikiwiki extends Application
 	function install( Version $version ) // {{{
 	{
 		$access = $this->instance->getBestAccess( 'scripting' );
-		if( $access instanceof ShellPrompt ) {
-			$access->shellExec(
-				$this->getExtractCommand( $version, $this->instance->webroot ) );
-		} else {
-			// TODO : Untested
+		if( $access instanceof Mountable ) {
 			$folder = cache_folder( $this, $version );
 			$this->extractTo( $version, $folder );
 
-			$access->replicateRemotely( $folder, $this->instance->webroot );
+			$access->mount( MOUNT_FOLDER );
+			$access->synchronize( $folder, MOUNT_FOLDER . $this->instance->webroot );
+			$access->umount();
+		} elseif( $access instanceof ShellPrompt ) {
+			$access->shellExec(
+				$this->getExtractCommand( $version, $this->instance->webroot ) );
+		} else {
+			throw new Exception( "Impossible to install using the current access." );
 		}
 
 		$this->branch = $version->branch;
@@ -94,11 +97,9 @@ class Application_Tikiwiki extends Application
 		$this->fixPermissions();
 
 		if( ! $access->fileExists( $this->instance->getWebPath('.htaccess') ) )
-			$access->shellExec( 
-				"cp "
-				. escapeshellarg( $this->instance->getWebPath('_htaccess') )
-				. ' '
-				. escapeshellarg( $this->instance->getWebPath('.htaccess' ) )
+			$access->moveFile( 
+				$this->instance->getWebPath('_htaccess'),
+				$this->instance->getWebPath('.htaccess')
 			);
 	} // }}}
 
@@ -320,11 +321,23 @@ class Application_Tikiwiki extends Application
 		// FIXME : Not FTP compatible
 		$access = $this->instance->getBestAccess( 'scripting' );
 
-		$filename = $this->instance->getWorkPath( 'setup.sh' );
-		$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
-		$access->chdir( $this->instance->webroot );
-		$access->shellExec(
-			"bash " . escapeshellarg( $filename ) );
+		if( $access instanceof ShellPrompt ) {
+			$filename = $this->instance->getWorkPath( 'setup.sh' );
+			$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
+			$access->chdir( $this->instance->webroot );
+			$access->shellExec(
+				"bash " . escapeshellarg( $filename ) );
+		} elseif( $access instanceof Mountable ) {
+			$target = MOUNT_FOLDER . $this->instance->webroot;
+			$cwd = getcwd();
+
+			$access->mount( MOUNT_FOLDER );
+			chdir( $target );
+			shell_exec( "bash " . escapeshellarg( dirname(__FILE__) . '/../../scripts/setup.sh' ) );
+			$access->umount();
+
+			chdir( $cwd );
+		}
 	} // }}}
 
 	function getFileLocations() // {{{

@@ -98,9 +98,9 @@ abstract class Access
 
 	abstract function deleteFile( $filename );
 
-	abstract function localizeFolder( $remoteLocation, $localMirror );
+	abstract function moveFile( $remoteSource, $remoteTarget );
 
-	abstract function replicateRemotely( $localLocation, $remoteMirror );
+	abstract function localizeFolder( $remoteLocation, $localMirror );
 }
 
 interface ShellPrompt {
@@ -113,6 +113,13 @@ interface ShellPrompt {
 	function setenv( $var, $value );
 
 	function hasExecutable( $name );
+}
+
+interface Mountable
+{
+	function mount( $target );
+	function umount();
+	function synchronize( $source, $mirror );
 }
 
 class Access_SSH extends Access implements ShellPrompt
@@ -286,6 +293,20 @@ class Access_SSH extends Access implements ShellPrompt
 		$host->runCommands( "rm $path" );
 	} // }}}
 
+	function moveFile( $remoteSource, $remoteTarget ) // {{{
+	{
+		if( $remoteSource{0} != '/' )
+			$remoteSource = $this->instance->getWebPath( $remoteSource );
+		if( $remoteTarget{0} != '/' )
+			$remoteTarget = $this->instance->getWebPath( $remoteTarget );
+
+		$a = escapeshellarg( $remoteSource );
+		$b = escapeshellarg( $remoteTarget );
+
+		$host = new SSH_Host( $this->host, $this->user );
+		$host->runCommands( "mv $a $b" );
+	} // }}}
+
 	function chdir( $location ) // {{{
 	{
 		$this->location = $location;
@@ -329,16 +350,12 @@ class Access_SSH extends Access implements ShellPrompt
 		$host = new SSH_Host( $this->host, $this->user );
 		$host->rsync( $remoteLocation, $localMirror );
 	} // }}}
-
-	function replicateRemotely( $localLocation, $remoteMirror ) // {{{
-	{
-		// TODO
-		die( 'Not implemented yet.' );
-	} // }}}
 }
 
-class Access_FTP extends Access
+class Access_FTP extends Access implements Mountable
 {
+	private $lastMount;
+
 	function __construct( Instance $instance )
 	{
 		parent::__construct( $instance, 'ftp' );
@@ -399,6 +416,17 @@ class Access_FTP extends Access
 	{
 	}
 
+	function moveFile( $remoteSource, $remoteTarget ) // {{{
+	{
+		if( $remoteSource{0} != '/' )
+			$remoteSource = $this->instance->getWebPath( $remoteSource );
+		if( $remoteTarget{0} != '/' )
+			$remoteTarget = $this->instance->getWebPath( $remoteTarget );
+
+		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host->rename( $remoteSource, $remoteTarget );
+	} // }}}
+
 	function deleteFile( $filename )
 	{
 		if( $filename{0} != '/' )
@@ -411,8 +439,44 @@ class Access_FTP extends Access
 	{
 	}
 
-	function replicateRemotely( $localLocation, $remoteMirror ) // {{{
+	function mount( $target ) // {{{
 	{
+		if( $this->lastMount )
+			return false;
+
+		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		$pwd = $ftp->getPWD();
+		$toRoot = preg_replace( "/\w+/", '..', $pwd );
+
+		$this->lastMount = $target;
+
+		$remote = escapeshellarg( "ftp://{$this->user}:{$this->password}@{$this->host}$toRoot" );
+		$local = escapeshellarg( $target );
+
+		$cmd = "curlftpfs $remote $local";
+		shell_exec($cmd);
+
+		return true;
+	} // }}}
+
+	function umount() {
+		if( $this->lastMount ) {
+			$loc = escapeshellarg( $this->lastMount );
+			`sudo umount $loc`;
+			$this->lastMount = null;
+		}
+	}
+
+	function synchronize( $source, $mirror ) // {{{
+	{
+		$source = rtrim( $source, '/' ) . '/';
+		$mirror = rtrim( $mirror, '/' ) . '/';
+
+		$source = escapeshellarg( $source );
+		$target = escapeshellarg( $mirror );
+		$tmp = escapeshellarg( RSYNC_FOLDER );
+		$cmd = "rsync -au --no-p --no-g --exclude .svn --temp-dir=$tmp $source $target";
+		shell_exec($cmd);
 	} // }}}
 }
 

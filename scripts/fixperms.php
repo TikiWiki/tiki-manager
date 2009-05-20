@@ -10,11 +10,10 @@ $all = Instance::getInstances();
 
 $instances = array();
 foreach( $all as $instance )
-	if( $instance->getBestAccess( 'scripting' ) instanceof ShellPrompt
-		&& $instance->getApplication() instanceof Application_Tikiwiki )
+	if( $instance->getApplication() instanceof Application_Tikiwiki )
 		$instances[] = $instance;
 
-echo "Note: Only SSH instances running TikiWiki can get their permissions fixed.\n\n";
+echo "Note: Only instances running TikiWiki can get their permissions fixed.\n\n";
 echo "Which instances do you want to fix?\n";
 
 foreach( $instances as $key => $i )

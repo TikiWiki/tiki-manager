@@ -50,6 +50,8 @@ define( "SSH_CONFIG", "$root/data/ssh_config" );
 define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
 define( "CACHE_FOLDER", "$root/cache" );
 define( "TEMP_FOLDER", "$root/tmp" );
+define( "RSYNC_FOLDER", "$root/tmp/rsync" );
+define( "MOUNT_FOLDER", "$root/tmp/mount" );
 define( "BACKUP_FOLDER", "$root/backup" );
 define( "ARCHIVE_FOLDER", "$root/backup/archive" );
 
@@ -93,6 +95,10 @@ if( ! file_exists( CACHE_FOLDER ) )
 	mkdir( CACHE_FOLDER );
 if( ! file_exists( TEMP_FOLDER ) )
 	mkdir( TEMP_FOLDER );
+if( ! file_exists( RSYNC_FOLDER ) )
+	mkdir( RSYNC_FOLDER );
+if( ! file_exists( MOUNT_FOLDER ) )
+	mkdir( MOUNT_FOLDER );
 if( ! file_exists( BACKUP_FOLDER ) )
 	mkdir( BACKUP_FOLDER );
 if( ! file_exists( ARCHIVE_FOLDER ) )

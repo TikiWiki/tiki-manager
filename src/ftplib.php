@@ -77,6 +77,18 @@ class FTP_Host
 		$this->connect();
 		ftp_delete( $this->conn, $remoteFile );
 	} // }}}
+
+	function getPWD() // {{{
+	{
+		$this->connect();
+		return ftp_pwd( $this->conn );
+	} // }}}
+
+	function rename( $from, $to ) // {{{
+	{
+		$this->connect();
+		return ftp_rename( $this->conn, $from, $to );
+	} // }}}
 }
 
 ?>

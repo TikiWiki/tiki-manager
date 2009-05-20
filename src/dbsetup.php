@@ -2,6 +2,11 @@
 
 function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 {
+	if( ! $instance->getBestAccess( 'scripting' ) instanceof ShellPrompt ) {
+		error("Database setup requires shell access at this time.");
+		return;
+	}
+
 	echo "Perform database setup...\n";
 
 	echo "Note: creating databases and users requires root privileges on MySQL.\n";
