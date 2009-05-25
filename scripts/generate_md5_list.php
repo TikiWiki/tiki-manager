@@ -24,10 +24,10 @@ if(!function_exists('scandir')) {
 	}
 }
 
-$cur = trim( `pwd` );
+$cur = getcwd();
 
 if( array_key_exists( 'REQUEST_METHOD', $_SERVER ) )
-	chdir( $_SERVER['QUERY_STRING'] );
+	chdir( $_GET[1] );
 elseif( isset( $folder ) )
 	chdir( $folder );
 elseif( count( $_SERVER['argv'] ) > 1 )
@@ -54,7 +54,7 @@ if( ! function_exists( 'md5_file_recurse' ) )
 			if( is_dir( $full ) )
 				md5_file_recurse( $full, $fulllist );
 
-			if( in_array( substr( $child, -4 ), array( '.php', '.tpl' ) ) )
+			if( in_array( substr( $child, -4 ), array( '.php', '.tpl' ) ) && is_readable( $full ) )
 				$fulllist[$full] = md5_file( $full );
 		}
 	}

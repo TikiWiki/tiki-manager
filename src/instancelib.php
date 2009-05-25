@@ -402,6 +402,9 @@ class Version
 
 		foreach( explode( "\n", $output ) as $line )
 		{
+			if( empty( $line ) )
+				continue;
+
 			list( $hash, $filename ) = explode( ":", $line );
 
 			if( ! isset( $known[$filename] ) )
@@ -501,6 +504,7 @@ class Version
 				continue;
 
 			list( $hash, $file ) = $parts;
+			$this->recordFile( $hash, $file, $app );
 		}
 	} // }}}
 }
