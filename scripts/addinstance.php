@@ -71,41 +71,6 @@ info( "Detecting remote configuration." );
 if( ! $instance->detectPHP() )
 	die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
 
-if( ! $app = $instance->findApplication() )
-{
-	$apps = Application::getApplications( $instance );
-	echo "No applications were found on remote host.\n";
-	echo "Which one do you want to install? (none to skip)\n";
-	foreach( $apps as $key => $app )
-		echo "[$key] {$app->getName()}\n";
-
-	$selection = readline( ">>> " );
-	$selection = getEntries( $apps, $selection );
-	if( empty( $selection ) )
-		die( "No instance to install.\n" );
-
-	$app = reset( $selection );
-
-	$versions = $app->getVersions();
-	echo "Which version do you want to install? (none to skip)\n";
-	foreach( $versions as $key => $version )
-		echo "[$key] {$version->type} : {$version->branch}\n";
-
-	$input = readline( ">>> " );
-	$selection = getEntries( $versions, $input );
-	if( empty( $selection ) && empty( $input ) )
-		die( "No version to install.\n" );
-	elseif( empty( $selection ) )
-		$version = Version::buildFake( 'svn', $input );
-	else
-		$version = reset( $selection );
-
-	info( "Installing application." );
-	echo color("If for any reason the installation fails (ex: wrong setup.sh parameters for tikiwiki), you can use `make access` to complete the installation manually.\n", 'yellow');
-	$app->install( $version );
-
-	if( $app->requiresDatabase() )
-		perform_database_setup( $instance );
-}
+perform_instance_installation( $instance );
 
 ?>

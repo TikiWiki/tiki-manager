@@ -2,6 +2,7 @@
 
 include dirname(__FILE__) . "/../src/env_setup.php";
 include dirname(__FILE__) . "/../src/check.php";
+include dirname(__FILE__) . "/../src/dbsetup.php";
 
 $instances = Instance::getInstances();
 
@@ -18,8 +19,7 @@ foreach( $selection as $instance )
 	if( ! $instance->detectPHP() )
 		die( "PHP Interpreter could not be found on remote host.\n" );
 
-	if( ! $app = $instance->findApplication() )
-		die( "No known application found in web root\n" );
+	perform_instance_installation( $instance );
 }
 
 ?>
