@@ -504,9 +504,21 @@ class Access_FTP extends Access implements Mountable
 		$source = escapeshellarg( $source );
 		$target = escapeshellarg( $mirror );
 		$tmp = escapeshellarg( RSYNC_FOLDER );
-		$cmd = "rsync -au --no-p --no-g --exclude .svn --temp-dir=$tmp $source $target";
+		$cmd = "rsync -au --no-p --no-g --exclude .svn --exclude copyright.txt --exclude changelog.txt --temp-dir=$tmp $source $target";
 		shell_exec($cmd);
 	} // }}}
+
+	function openWeb()
+	{
+		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		$ftp->chmod( 0777, $this->instance->webpath );
+	}
+
+	function closeWeb()
+	{
+		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		$ftp->chmod( 0755, $this->instance->webpath );
+	}
 }
 
 ?>

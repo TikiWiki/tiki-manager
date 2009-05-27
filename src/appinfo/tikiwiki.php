@@ -77,9 +77,24 @@ class Application_Tikiwiki extends Application
 			$folder = cache_folder( $this, $version );
 			$this->extractTo( $version, $folder );
 
-			$access->mount( MOUNT_FOLDER );
-			$access->synchronize( $folder, MOUNT_FOLDER . $this->instance->webroot );
-			$access->umount();
+			$current = getcwd();
+			chdir( $folder );
+
+			$temp = TEMP_FOLDER;
+			$name = md5(time());
+			`tar --exclude=.svn -cf $temp/$name.tar *`;
+
+			chdir( $current );
+
+			$access->uploadFile( "$temp/$name.tar", "$name.tar" );
+			unlink( "$temp/$name.tar" );
+
+			$access->openWeb();
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/extract_tar.php', array("$name.tar") );
+			$access->closeWeb();
+
+			$access->deleteFile( "$name.tar" );
+
 		} elseif( $access instanceof ShellPrompt ) {
 			$access->shellExec(
 				$this->getExtractCommand( $version, $this->instance->webroot ) );

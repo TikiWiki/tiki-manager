@@ -67,8 +67,14 @@ class FTP_Host
 	function sendFile( $localFile, $remoteFile ) // {{{
 	{
 		$this->connect();
-		ftp_put( $this->conn, $remoteFile, $localFile, FTP_ASCII );
+		ftp_put( $this->conn, $remoteFile, $localFile, FTP_BINARY );
 		ftp_chmod( $this->conn, 0644, $remoteFile );
+	} // }}}
+
+	function chmod( $level, $remoteFile ) // {{{
+	{
+		$this->connect();
+		ftp_chmod( $this->conn, $level, $remoteFile );
 	} // }}}
 
 	function receiveFile( $remoteFile, $localFile ) // {{{
