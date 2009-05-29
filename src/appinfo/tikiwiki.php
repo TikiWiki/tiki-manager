@@ -353,7 +353,34 @@ class Application_Tikiwiki extends Application
 
 			$access->mount( MOUNT_FOLDER );
 			chdir( $target );
-			shell_exec( "bash " . escapeshellarg( dirname(__FILE__) . '/../../scripts/setup.sh' ) . " 2> /dev/null" );
+
+			// This code was taken from the installer.
+			$dirs=array(
+					'backups',
+					'db',
+					'dump',
+					'img/wiki',
+					'img/wiki_up',
+					'img/trackers',
+					'modules/cache',
+					'temp',
+					'temp/cache',
+					'templates_c',
+					'templates',
+					'styles',
+					'whelp');
+
+			$ret = "";
+			foreach ($dirs as $dir) {
+				$dir = $dir;
+				// Create directories as needed
+				if (!is_dir($dir)) {
+					mkdir($dir,02775);
+				}
+
+				chmod($dir,02775);
+			}
+
 			$access->umount();
 
 			chdir( $cwd );
