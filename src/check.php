@@ -34,6 +34,7 @@ function handleCheckResult( $instance, $version, $array )
 		case 'd':
 			$access = $instance->getBestAccess( 'filetransfer' );
 
+			query('BEGIN TRANSACTION');
 			foreach( $files as $file )
 			{
 				$access->deleteFile( $file );
@@ -41,11 +42,13 @@ function handleCheckResult( $instance, $version, $array )
 				unset( $new[$file] );
 				echo color('--', 'green') . " $file\n";
 			}
+			query('COMMIT');
 
 			break;
 		case 'a':
 			$app = $instance->getApplication();
 
+			query('BEGIN TRANSACTION');
 			foreach( $files as $file )
 			{
 				$version->recordFile( $new[$file], $file, $app );
@@ -53,6 +56,7 @@ function handleCheckResult( $instance, $version, $array )
 				unset( $new[$file] );
 				echo color('++', 'green') . " $file\n";
 			}
+			query('COMMIT');
 
 			break;
 		case 'v':
@@ -158,6 +162,7 @@ function handleCheckResult( $instance, $version, $array )
 		case 'u':
 			$app = $instance->getApplication();
 
+			query('BEGIN TRANSACTION');
 			foreach( $files as $file )
 			{
 				$version->replaceFile( $mod[$file], $file, $app );
@@ -165,6 +170,7 @@ function handleCheckResult( $instance, $version, $array )
 				unset( $mod[$file] );
 				echo color('++', 'green') . " $file\n";
 			}
+			query('COMMIT');
 
 			break;
 		}

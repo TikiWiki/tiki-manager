@@ -497,6 +497,7 @@ class Version
 	private function saveHashDump( $output, Application $app ) // {{{
 	{
 		$entries = explode( "\n", $output );
+		query('BEGIN TRANSACTION');
 		foreach( $entries as $line )
 		{
 			$parts = explode( ':', $line );
@@ -506,6 +507,7 @@ class Version
 			list( $hash, $file ) = $parts;
 			$this->recordFile( $hash, $file, $app );
 		}
+		query('COMMIT');
 	} // }}}
 }
 

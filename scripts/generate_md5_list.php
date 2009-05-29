@@ -27,13 +27,15 @@ if(!function_exists('scandir')) {
 $cur = getcwd();
 
 if( array_key_exists( 'REQUEST_METHOD', $_SERVER ) )
-	chdir( $_GET[1] );
+	$next = $_GET[1];
 elseif( isset( $folder ) )
-	chdir( $folder );
+	$next = $folder;
 elseif( count( $_SERVER['argv'] ) > 1 )
-	chdir( $_SERVER['argv'][1] );
-elseif( count( $_GET ) > 1 )
-	chdir( $_GET[1] );
+	$next = $_SERVER['argv'][1];
+
+if( file_exists( $next ) ) {
+	chdir( $next );
+}
 
 if( ! function_exists( 'md5_file_recurse' ) )
 {
