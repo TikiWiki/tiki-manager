@@ -439,15 +439,19 @@ LOCAL
 		$access = $this->instance->getBestAccess( 'filetransfer' );
 		$access->uploadFile( $tmp, 'db/local.php' );
 
-		// FIXME : Not FTP compatible
 		if( $access->fileExists( 'installer/shell.php' ) )
 		{
-			$access = $this->instance->getBestAccess( 'scripting' );
-			$access->chdir( $this->instance->webroot );
-			$access->shellExec( $this->instance->phpexec . ' installer/shell.php install' );
+			if( $access instanceof ShellPrompt ) {
+				$access = $this->instance->getBestAccess( 'scripting' );
+				$access->chdir( $this->instance->webroot );
+				$access->shellExec( $this->instance->phpexec . ' installer/shell.php install' );
+			} else {
+				$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki_dbinstall_ftp.php', array( $this->instance->webroot ) );
+			}
 		}
 		else
 		{
+			// FIXME : Not FTP compatible ? prior to 3.0 only
 			$access = $this->instance->getBestAccess( 'scripting' );
 			$file = $this->instance->getWebPath( 'db/tiki.sql' );
 			$root = $this->instance->webroot;

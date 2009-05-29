@@ -42,15 +42,16 @@ function perform_instance_installation( Instance $instance )
 
 function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 {
-	if( ! $instance->getBestAccess( 'scripting' ) instanceof ShellPrompt ) {
-		error("Database setup requires shell access at this time.");
-		return;
-	}
-
 	echo "Perform database setup...\n";
 
-	echo "Note: creating databases and users requires root privileges on MySQL.\n";
-	$type = readline( "Should a new database and user be created? [yes] " );
+	$access = $instance->getBestAccess('scripting');
+
+	if( $access instanceof ShellPrompt ) {
+		echo "Note: creating databases and users requires root privileges on MySQL.\n";
+		$type = readline( "Should a new database and user be created? [yes] " );
+	} else {
+		$type = 'no';
+	}
 
 	if( strtolower( $type{0} ) == 'n' )
 	{

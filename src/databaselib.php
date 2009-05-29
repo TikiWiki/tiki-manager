@@ -33,10 +33,8 @@ class Database
 
 	private function locateExtensions() // {{{
 	{
-		// FIXME : Not FTP compatible
 		$access = $this->instance->getBestAccess( 'scripting' );
-		$content = $access->shellExec( "{$this->instance->phpexec} -m 2>&1" );
-		$content = str_replace( "\r", '', $content );
+		$content = $access->runPHP( dirname(__FILE__) . '/../scripts/get_extensions.php' );
 		$modules = explode( "\n", $content );
 
 		$this->extensions = array_intersect( $modules, array(
