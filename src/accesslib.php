@@ -239,7 +239,7 @@ class Access_SSH extends Access implements ShellPrompt
 			return null;
 	} // }}}
 
-	function runPHP( $localFile, $arg = array() ) // {{{
+	function runPHP( $localFile, $args = array() ) // {{{
 	{
 		$host = new SSH_Host( $this->host, $this->user );
 
