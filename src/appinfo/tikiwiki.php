@@ -280,6 +280,7 @@ class Application_Tikiwiki extends Application
 		switch( $this->getInstallType() )
 		{
 		case 'svn':
+		case 'tarball':
 			$access = $this->instance->getBestAccess( 'scripting' );
 
 			if( $access instanceof ShellPrompt && $access->hasExecutable( 'svn' ) )

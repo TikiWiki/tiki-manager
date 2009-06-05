@@ -10,14 +10,14 @@ if( $root = $_SERVER['argv'][1] )
 
 if( file_exists( 'installer/shell.php' ) )
 {
-	require_once('lib/init/initlib.php');
-	require_once('lib/setup/tikisetup.class.php');
-	TikiSetup::prependIncludePath($root);
-	TikiSetup::prependIncludePath('lib');
-	TikiSetup::prependIncludePath('lib/pear');
-	require_once('tiki-setup_base.php');
+	$local_php = 'db/local.php';
+
 	require_once('installer/installlib.php');
+	include_once ('lib/adodb/adodb.inc.php');
+
 	include $local_php;
+	$dbTiki = ADONewConnection($db_tiki);
+	$dbTiki->Connect($host_tiki, $user_tiki, $pass_tiki, $dbs_tiki);
 
 	$installer = new Installer;
 	$installer->update();

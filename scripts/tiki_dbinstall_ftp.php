@@ -2,7 +2,6 @@
 
 $local_php = 'db/local.php';
 
-require_once ( 'lib/smarty/libs/Smarty.class.php');
 require_once('installer/installlib.php');
 include_once ('lib/adodb/adodb.inc.php');
 

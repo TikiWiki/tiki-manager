@@ -208,11 +208,11 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function fileExists( $filename ) // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
 
 		$eFile = escapeshellarg( $filename );
-
-		$output = $host->runCommands( "ls $eFile" );
+		$output = $this->shellExec( "ls $eFile" );
 
 		return ! empty( $output );
 	} // }}}
@@ -304,8 +304,7 @@ class Access_SSH extends Access implements ShellPrompt
 		$a = escapeshellarg( $remoteSource );
 		$b = escapeshellarg( $remoteTarget );
 
-		$host = new SSH_Host( $this->host, $this->user );
-		$host->runCommands( "mv $a $b" );
+		$this->shellExec( "mv $a $b" );
 	} // }}}
 
 	function chdir( $location ) // {{{
@@ -504,8 +503,8 @@ class Access_FTP extends Access implements Mountable
 		$source = escapeshellarg( $source );
 		$target = escapeshellarg( $mirror );
 		$tmp = escapeshellarg( RSYNC_FOLDER );
-		$cmd = "rsync -au --no-p --no-g --exclude .svn --exclude copyright.txt --exclude changelog.txt --temp-dir=$tmp $source $target";
-		shell_exec($cmd);
+		$cmd = "rsync -rDu --no-p --no-g --size-only --exclude .svn --exclude copyright.txt --exclude changelog.txt --temp-dir=$tmp $source $target";
+		passthru($cmd);
 	} // }}}
 
 	function openWeb()
