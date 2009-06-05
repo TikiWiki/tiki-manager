@@ -108,7 +108,7 @@ class Database_Adapter_Mysql implements Database_Adapter
 		$args[] = "-h " . escapeshellarg( $host );
 		$args[] = "-u " . escapeshellarg( $masterUser );
 		if( $masterPassword )
-			$args[] = "-p " . escapeshellarg( $masterPassword );
+			$args[] = "-p" . escapeshellarg( $masterPassword );
 
 		$this->args = implode( " ", $args );
 	} // }}}
