@@ -185,6 +185,15 @@ class Instance
 		return false;
 	} // }}}
 
+	function getExtensions() // {{{
+	{
+		$access = $this->getBestAccess( 'scripting' );
+		$content = $access->runPHP( dirname(__FILE__) . '/../scripts/get_extensions.php' );
+		$modules = explode( "\n", $content );
+
+		return $modules;
+	} // }}}
+
 	function findApplication() // {{{
 	{
 		foreach( Application::getApplications( $this ) as $app )

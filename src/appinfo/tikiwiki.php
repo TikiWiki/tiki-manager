@@ -73,7 +73,12 @@ class Application_Tikiwiki extends Application
 	function install( Version $version ) // {{{
 	{
 		$access = $this->instance->getBestAccess( 'scripting' );
-		if( $access instanceof Mountable ) {
+		if( $access instanceof ShellPrompt ) {
+			$access->shellExec(
+				$this->getExtractCommand( $version, $this->instance->webroot ) );
+		} else {
+			$compress = in_array( 'zlib', $this->instance->getExtensions() );
+
 			$folder = cache_folder( $this, $version );
 			$this->extractTo( $version, $folder );
 
@@ -81,25 +86,22 @@ class Application_Tikiwiki extends Application
 			chdir( $folder );
 
 			$temp = TEMP_FOLDER;
-			$name = md5(time());
-			`tar --exclude=.svn -cf $temp/$name.tar *`;
+			$name = md5(time()) . '.tar';
+			`tar --exclude=.svn -cf $temp/$name *`;
+			if( $compress ) {
+				`gzip -5 $temp/$name`;
+				$name .= '.gz';
+			}
 
 			chdir( $current );
 
-			$access->uploadFile( "$temp/$name.tar", "$name.tar" );
-			unlink( "$temp/$name.tar" );
+			$access->uploadFile( "$temp/$name", $name );
+			unlink( "$temp/$name" );
 
-			$access->openWeb();
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/extract_tar.php', array("$name.tar") );
-			$access->closeWeb();
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/extract_tar.php', array($name) );
 
-			$access->deleteFile( "$name.tar" );
+			$access->deleteFile( $name );
 
-		} elseif( $access instanceof ShellPrompt ) {
-			$access->shellExec(
-				$this->getExtractCommand( $version, $this->instance->webroot ) );
-		} else {
-			throw new Exception( "Impossible to install using the current access." );
 		}
 
 		$this->branch = $version->branch;

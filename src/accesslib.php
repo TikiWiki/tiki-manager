@@ -510,13 +510,13 @@ class Access_FTP extends Access implements Mountable
 	function openWeb()
 	{
 		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
-		$ftp->chmod( 0777, $this->instance->webpath );
+		$ftp->chmod( 0777, $this->instance->webroot );
 	}
 
 	function closeWeb()
 	{
 		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
-		$ftp->chmod( 0755, $this->instance->webpath );
+		$ftp->chmod( 0755, $this->instance->webroot );
 	}
 }
 

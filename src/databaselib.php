@@ -33,9 +33,7 @@ class Database
 
 	private function locateExtensions() // {{{
 	{
-		$access = $this->instance->getBestAccess( 'scripting' );
-		$content = $access->runPHP( dirname(__FILE__) . '/../scripts/get_extensions.php' );
-		$modules = explode( "\n", $content );
+		$modules = $this->instance->getExtensions();
 
 		$this->extensions = array_intersect( $modules, array(
 			'mysqli',
