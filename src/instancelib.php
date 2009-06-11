@@ -53,7 +53,7 @@ class Instance
 					FROM version
 					GROUP BY instance_id
 				) t ON t.version = version.version_id
-			WHERE type = 'cvs' OR type = 'svn'" );
+			WHERE type = 'cvs' OR type = 'svn' OR type = 'tarball'" );
 
 		$instances = array();
 		while( $instance = sqlite_fetch_object( $result, 'Instance' ) )

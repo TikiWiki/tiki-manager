@@ -379,6 +379,9 @@ class Access_FTP extends Access implements Mountable
 
 	function fileExists( $filename ) // {{{
 	{
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
 		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
 		return $ftp->fileExists( $filename );
 	} // }}}
@@ -466,6 +469,23 @@ class Access_FTP extends Access implements Mountable
 		$this->umount();
 	} // }}}
 
+	static function obtainRelativePathTo( $targetFolder, $originFolder ) // {{{
+	{
+		$parts = array();
+		while( ( 0 !== strpos( $targetFolder, $originFolder ) ) 
+			&& $originFolder != '/' 
+			&& $originFolder != '' ) {
+			$originFolder = dirname( $originFolder );
+			$parts [] = '..';
+		}
+
+		if( strpos( $targetFolder, $originFolder ) === 0 ) {
+			// Target is under the origin
+			$relative = substr( $targetFolder, strlen( $originFolder ) );
+			return ltrim( implode( '/', $parts ) . '/' . ltrim( $relative, '/' ), '/' );
+		}
+	} // }}}
+
 	function mount( $target ) // {{{
 	{
 		if( $this->lastMount )
@@ -507,17 +527,36 @@ class Access_FTP extends Access implements Mountable
 		passthru($cmd);
 	} // }}}
 
-	function openWeb()
+	function copyLocalFolder( $localFolder, $remoteFolder = '' ) // {{{
 	{
-		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
-		$ftp->chmod( 0777, $this->instance->webroot );
-	}
+		if( $remoteFolder{0} != '/' ) {
+			$remoteFolder = $this->instance->getWebPath( $remoteFolder );
+		}
 
-	function closeWeb()
-	{
-		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
-		$ftp->chmod( 0755, $this->instance->webroot );
-	}
+		$remoteFolderRelativeToWebRoot = $this->obtainRelativePathTo( $remoteFolder, $this->instance->webroot );
+
+		$compress = in_array( 'zlib', $this->instance->getExtensions() );
+
+		$current = getcwd();
+		chdir( $localFolder );
+
+		$temp = TEMP_FOLDER;
+		$name = md5(time()) . '.tar';
+		`tar --exclude=.svn -cf $temp/$name *`;
+		if( $compress ) {
+			`gzip -5 $temp/$name`;
+			$name .= '.gz';
+		}
+
+		chdir( $current );
+
+		$this->uploadFile( "$temp/$name", $name );
+		unlink( "$temp/$name" );
+
+		$this->runPHP( dirname(__FILE__) . '/../scripts/extract_tar.php', array($name, $remoteFolderRelativeToWebroot) );
+
+		$this->deleteFile( $name );
+	} // }}}
 }
 
 ?>

@@ -77,31 +77,10 @@ class Application_Tikiwiki extends Application
 			$access->shellExec(
 				$this->getExtractCommand( $version, $this->instance->webroot ) );
 		} else {
-			$compress = in_array( 'zlib', $this->instance->getExtensions() );
-
 			$folder = cache_folder( $this, $version );
 			$this->extractTo( $version, $folder );
 
-			$current = getcwd();
-			chdir( $folder );
-
-			$temp = TEMP_FOLDER;
-			$name = md5(time()) . '.tar';
-			`tar --exclude=.svn -cf $temp/$name *`;
-			if( $compress ) {
-				`gzip -5 $temp/$name`;
-				$name .= '.gz';
-			}
-
-			chdir( $current );
-
-			$access->uploadFile( "$temp/$name", $name );
-			unlink( "$temp/$name" );
-
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/extract_tar.php', array($name) );
-
-			$access->deleteFile( $name );
-
+			$access->copyLocalFolder( $folder );
 		}
 
 		$this->branch = $version->branch;
@@ -229,7 +208,7 @@ class Application_Tikiwiki extends Application
 
 	private function getExtractCommand( $version, $folder ) // {{{
 	{
-		if( $version->type == 'svn' )
+		if( $version->type == 'svn' || $version->type == 'tarball' )
 		{
 			$branch = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki/{$version->branch}";
 			$branch = str_replace( '/./', '/', $branch );
@@ -245,7 +224,7 @@ class Application_Tikiwiki extends Application
 
 	function extractTo( Version $version, $folder ) // {{{
 	{
-		if( $version->type == 'svn' )
+		if( $version->type == 'svn' || $version->type == 'tarball' )
 		{
 			if( file_exists( $folder ) )
 			{
@@ -298,9 +277,7 @@ class Application_Tikiwiki extends Application
 				$folder = cache_folder( $this, $version );
 				$this->extractTo( $version, $folder );
 
-				$access->mount( MOUNT_FOLDER );
-				$access->synchronize( $folder, MOUNT_FOLDER . $this->instance->webroot );
-				$access->umount();
+				$access->copyLocalFolder( $folder );
 			}
 
 			info( "Updating database schema." );
@@ -337,6 +314,8 @@ class Application_Tikiwiki extends Application
 		elseif( $this->getInstallType() == 'cvs' )
 			return "BRANCH-1-10";
 		elseif( $this->getInstallType() == 'svn' )
+			return "tags/$version";
+		elseif( $this->getInstallType() == 'tarball' )
 			return "tags/$version";
 	} // }}}
 

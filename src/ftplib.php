@@ -42,10 +42,17 @@ class FTP_Host
 		$this->connect();
 
 		$dir = dirname( $filename );
+		$base = basename( $filename );
 		
-		$list = ftp_nlist( $this->conn, "-a $dir" );
+		$list = ftp_nlist( $this->conn, $dir );
 
-		return in_array( $filename, $list );
+		if( in_array( $filename, $list ) || in_array( $base, $list ) ) {
+			return true;
+		} else {
+			$list = ftp_nlist( $this->conn, "-a $dir" );
+
+			return in_array( $filename, $list ) || in_array( $base, $list );
+		}
 	} // }}}
 
 	function getContent( $filename ) // {{{

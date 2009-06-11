@@ -2949,34 +2949,13 @@ if(!function_exists('scandir')) {
 		}
 	}
 }
-function change_ownership( $location, $user, $group )
-{
-	$files = scandir( $location );
-	foreach( $files as $child )
-	{
-		if( in_array( $child, array( '.', '..' ) ) )
-			continue;
-
-		$full = "$location/$child";
-		$full = realpath( $full );
-
-		if( is_dir( $full ) ) {
-			change_ownership( $full, $user, $group );
-		}
-
-		@chgrp( $full, $group );
-		@chown( $full, $user );
-	}
-}
 
 set_time_limit(0);
 
+$files = scandir($_GET[2]);
+$files = array_diff( $files, array( '..', '.' ) );
+
 $archive = new Archive_Tar( $_GET[1] );
-$archive->extract( $_GET[2] );
-
-$group = filegroup( dirname(__FILE__) );
-$user = fileowner( dirname(__FILE__) );
-
-change_ownership( dirname(__FILE__), $user, $group );
+$archive->create( $files );
 
 ?>
