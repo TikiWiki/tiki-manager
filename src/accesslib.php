@@ -398,6 +398,12 @@ class Access_FTP extends Access implements Mountable
 
 	function runPHP( $localFile, $args = array() ) // {{{
 	{
+		foreach( $args as & $potentialPath ) {
+			if( $potentialPath{0} == '/' ) {
+				$potentialPath = $this->obtainRelativePathTo( $potentialPath, $this->instance->webroot );
+			}
+		}
+
 		$host = new FTP_Host( $this->host, $this->user, $this->password );
 
 		$remoteName = 'trim_' . md5( $localFile ) . '.php';
@@ -464,9 +470,37 @@ class Access_FTP extends Access implements Mountable
 
 	function localizeFolder( $remoteLocation, $localMirror ) // {{{
 	{
-		$this->mount( MOUNT_FOLDER );
-		$this->synchronize( MOUNT_FOLDER . $remoteLocation, $localMirror, true );
-		$this->umount();
+		if( $remoteLocation{0} != '/' ) {
+			$remoteLocation = $this->instance->getWebPath( $remoteLocation );
+		}
+
+		$compress = in_array( 'zlib', $this->instance->getExtensions() );
+
+		$name = md5(time()) . '.tar';
+		if( $compress ) {
+			$name .= '.gz';
+		}
+
+		$remoteTar = $this->instance->getWebPath( $name );
+		$this->runPHP( dirname(__FILE__) . '/../scripts/package_tar.php', array($remoteTar, $remoteLocation) );
+
+		$localized = $this->downloadFile( $remoteTar );
+		$this->deleteFile( $remoteTar );
+
+		$current = getcwd();
+		var_dump($localMirror);
+		var_dump(file_exists( $localMirror ) );
+		mkdir( $localMirror );
+		chdir( $localMirror );
+
+		$eLoc = escapeshellarg( $localized );
+		if( $compress ) {
+			passthru( "tar -zxf $eLoc" );
+		} else {
+			`tar -xf $eLoc`;
+		}
+
+		chdir( $current );
 	} // }}}
 
 	static function obtainRelativePathTo( $targetFolder, $originFolder ) // {{{
@@ -479,11 +513,18 @@ class Access_FTP extends Access implements Mountable
 			$parts [] = '..';
 		}
 
+		$out = null;
 		if( strpos( $targetFolder, $originFolder ) === 0 ) {
 			// Target is under the origin
 			$relative = substr( $targetFolder, strlen( $originFolder ) );
-			return ltrim( implode( '/', $parts ) . '/' . ltrim( $relative, '/' ), '/' );
+			$out = ltrim( implode( '/', $parts ) . '/' . ltrim( $relative, '/' ), '/' );
 		}
+
+		if( empty( $out ) ) {
+			$out = '.';
+		}
+
+		return $out;
 	} // }}}
 
 	function mount( $target ) // {{{
@@ -533,8 +574,6 @@ class Access_FTP extends Access implements Mountable
 			$remoteFolder = $this->instance->getWebPath( $remoteFolder );
 		}
 
-		$remoteFolderRelativeToWebRoot = $this->obtainRelativePathTo( $remoteFolder, $this->instance->webroot );
-
 		$compress = in_array( 'zlib', $this->instance->getExtensions() );
 
 		$current = getcwd();
@@ -553,7 +592,7 @@ class Access_FTP extends Access implements Mountable
 		$this->uploadFile( "$temp/$name", $name );
 		unlink( "$temp/$name" );
 
-		$this->runPHP( dirname(__FILE__) . '/../scripts/extract_tar.php', array($name, $remoteFolderRelativeToWebroot) );
+		$this->runPHP( dirname(__FILE__) . '/../scripts/extract_tar.php', array($name, $remoteFolder) );
 
 		$this->deleteFile( $name );
 	} // }}}

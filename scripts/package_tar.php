@@ -2953,7 +2953,7 @@ if(!function_exists('scandir')) {
 set_time_limit(0);
 
 $files = scandir($_GET[2]);
-$files = array_diff( $files, array( '..', '.' ) );
+$files = array_diff( $files, array( '..', '.', basename(__FILE__) ) );
 
 $archive = new Archive_Tar( $_GET[1] );
 $archive->create( $files );
