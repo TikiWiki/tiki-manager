@@ -361,6 +361,12 @@ class Access_FTP extends Access implements Mountable
 		parent::__construct( $instance, 'ftp' );
 	}
 
+	function openShell() // {{{
+	{
+		echo "User: {$this->user}, Pass: {$this->password}\n";
+		passthru( "ftp {$this->host}" );
+	} // }}}
+
 	function firstConnect() // {{{
 	{
 		$conn = new FTP_Host( $this->host, $this->user, $this->password );
@@ -488,9 +494,10 @@ class Access_FTP extends Access implements Mountable
 		$this->deleteFile( $remoteTar );
 
 		$current = getcwd();
-		var_dump($localMirror);
-		var_dump(file_exists( $localMirror ) );
-		mkdir( $localMirror );
+		if( ! file_exists( $localMirror ) ) {
+			mkdir( $localMirror );
+		}
+		
 		chdir( $localMirror );
 
 		$eLoc = escapeshellarg( $localized );

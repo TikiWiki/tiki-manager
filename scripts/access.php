@@ -6,14 +6,8 @@
 include dirname(__FILE__) . "/../src/env_setup.php";
 include dirname(__FILE__) . "/../src/check.php";
 
-$all = Instance::getInstances();
+$instances = Instance::getInstances();
 
-$instances = array();
-foreach( $all as $instance )
-	if( $instance->getBestAccess( 'scripting' ) instanceof ShellPrompt )
-		$instances[] = $instance;
-
-echo color("Note: Only SSH instances can be accessed directly.\n\n", 'yellow');
 echo "Which instances do you want to access?\n";
 
 foreach( $instances as $key => $i )

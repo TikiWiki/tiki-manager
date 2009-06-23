@@ -330,6 +330,7 @@ class Application_Tikiwiki extends Application
 			$access->shellExec(
 				"bash " . escapeshellarg( $filename ) . " 2> /dev/null" );
 		} elseif( $access instanceof Mountable ) {
+			return;
 			$target = MOUNT_FOLDER . $this->instance->webroot;
 			$cwd = getcwd();
 
@@ -464,6 +465,24 @@ LOCAL
 		$root = $this->instance->webroot;
 		// FIXME : Not FTP compatible (arguments)
 		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', array( $root, $remoteFile ) );
+	} // }}}
+
+	function backupDatabase( $target ) // {{{
+	{
+		$access = $this->instance->getBestAccess( 'scripting' );
+		if( $access instanceof ShellPrompt ) {
+			$randomName = md5( time() . 'trimbackup' ) . '.sql.gz';
+			$remoteFile = $this->getWorkPath( $randomName );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/backup_database.php', array( $this->webroot, $remoteFile ) );
+			$localName = $access->downloadFile( $remoteFile );
+			$access->deleteFile( $remoteFile );
+
+			`zcat $localName > $target`;
+			unlink( $localName );
+		} else {
+			$data = $access->runPHP( dirname(__FILE__) . '/../../scripts/mysqldump.php' );
+			file_put_contents( $target, $data );
+		}
 	} // }}}
 
 	function beforeChecksumCollect() // {{{

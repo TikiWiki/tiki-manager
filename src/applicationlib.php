@@ -66,6 +66,8 @@ abstract class Application
 
 	abstract function restoreDatabase( Database $database, $remoteFile );
 
+	abstract function backupDatabase( $targetFile );
+
 	function beforeChecksumCollect() // {{{
 	{
 	} // }}}

@@ -259,21 +259,15 @@ class Instance
 		{
 			$hash = md5( $remote );
 			$locmirror = $approot . '/' . $hash;
+			var_dump($remote);
+			var_dump($locmirror);
 			$access->localizeFolder( $remote, $locmirror );
 			`echo "$hash    $remote" >> $approot/manifest.txt`;
 		}
 
-		// Backup database
-		info( "Obtaining database dump." );
-		$randomName = md5( time() . 'trimbackup' ) . '.sql.gz';
-		$remoteFile = $this->getWorkPath( $randomName );
-		$access->runPHP( dirname(__FILE__) . '/../scripts/backup_database.php', array( $this->webroot, $remoteFile ) );
-		$localName = $access->downloadFile( $remoteFile );
-		$access->deleteFile( $remoteFile );
-
 		$target = $approot . '/database_dump.sql';
-		`zcat $localName > $target`;
-		unlink( $localName );
+		info( "Obtaining database dump." );
+		$this->getApplication()->backupDatabase( $target );
 
 		// Perform archiving
 		$current = getcwd();
