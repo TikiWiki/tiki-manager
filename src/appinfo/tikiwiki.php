@@ -472,8 +472,8 @@ LOCAL
 		$access = $this->instance->getBestAccess( 'scripting' );
 		if( $access instanceof ShellPrompt ) {
 			$randomName = md5( time() . 'trimbackup' ) . '.sql.gz';
-			$remoteFile = $this->getWorkPath( $randomName );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/backup_database.php', array( $this->webroot, $remoteFile ) );
+			$remoteFile = $this->instance->getWorkPath( $randomName );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/backup_database.php', array( $this->instance->webroot, $remoteFile ) );
 			$localName = $access->downloadFile( $remoteFile );
 			$access->deleteFile( $remoteFile );
 
