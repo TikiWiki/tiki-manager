@@ -2,8 +2,7 @@
 
 class BackupReport
 {
-	function queueChannels( Channel $channel ) {
-		$instances = Instance::getInstances();
+	function queueChannels( Channel $channel, $instances ) {
 		$channel->push( 'trim_backup_summary', array( 'body' => $this->getSummary( $instances ) ) );
 		
 		foreach( $instances as $instance ) {

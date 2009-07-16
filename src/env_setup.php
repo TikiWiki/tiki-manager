@@ -43,6 +43,7 @@ include dirname(__FILE__) . "/rclib.php";
 
 include dirname(__FILE__) . "/channellib.php";
 include dirname(__FILE__) . "/backupreportlib.php";
+include dirname(__FILE__) . "/reportlib.php";
 
 include dirname(__FILE__) . "/ext/Password.php";
 
@@ -193,6 +194,24 @@ case 1:
 		CREATE INDEX backup_instance_ix ON backup ( instance_id );
 
 		UPDATE info SET value = '2' WHERE name = 'version';
+	" );
+case 2:
+	sqlite_query( $db, "
+		CREATE TABLE report_receiver (
+			instance_id INTEGER PRIMARY KEY,
+			user VARCHAR(200),
+			pass VARCHAR(200)
+		);
+
+		CREATE TABLE report_content (
+			receiver_id INTEGER,
+			instance_id INTEGER
+		);
+
+		CREATE INDEX report_receiver_ix ON report_content ( receiver_id );
+		CREATE INDEX report_instance_ix ON report_content ( instance_id );
+
+		UPDATE info SET value = '3' WHERE name = 'version';
 	" );
 } // }}}
 

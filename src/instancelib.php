@@ -112,6 +112,8 @@ class Instance
 		query( "DELETE FROM access WHERE instance_id = :id", array( ':id' => $this->id ) );
 		query( "DELETE FROM file WHERE version_id IN(SELECT version_id FROM version WHERE instance_id = :id)", array( ':id' => $this->id ) );
 		query( "DELETE FROM version WHERE instance_id = :id", array( ':id' => $this->id ) );
+		query( "DELETE FROM report_receiver WHERE instance_id = :id", array( ':id' => $this->id ) );
+		query( "DELETE FROM report_content WHERE instance_id = :id OR receiver_id = :id", array( ':id' => $this->id ) );
 	} // }}}
 
 	function registerAccessMethod( $type, $host, $user, $password = null ) // {{{

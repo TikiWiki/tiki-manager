@@ -53,3 +53,6 @@ delete:
 profile:
 	$(PHP) scripts/profile.php
 
+report:
+	$(PHP) scripts/report.php
+
