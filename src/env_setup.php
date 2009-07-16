@@ -41,6 +41,9 @@ include dirname(__FILE__) . "/applicationlib.php";
 include dirname(__FILE__) . "/databaselib.php";
 include dirname(__FILE__) . "/rclib.php";
 
+include dirname(__FILE__) . "/channellib.php";
+include dirname(__FILE__) . "/backupreportlib.php";
+
 include dirname(__FILE__) . "/ext/Password.php";
 
 $root = realpath( dirname(__FILE__) . "/.." );
