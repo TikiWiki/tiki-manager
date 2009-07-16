@@ -259,8 +259,6 @@ class Instance
 		{
 			$hash = md5( $remote );
 			$locmirror = $approot . '/' . $hash;
-			var_dump($remote);
-			var_dump($locmirror);
 			$access->localizeFolder( $remote, $locmirror );
 			`echo "$hash    $remote" >> $approot/manifest.txt`;
 		}
