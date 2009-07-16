@@ -8,7 +8,7 @@ include dirname(__FILE__) . "/../src/clean.php";
 
 $instances = Instance::getInstances();
 
-if( ! isset( $_SERVER['argv'][1] ) || $_SERVER['argv'][1] != 'all' )
+if( ! isset( $_SERVER['argv'][1] ) )
 {
 	echo color("Note: Backups are only available on SSH instances.\n\n", 'yellow');
 	echo "Which instances do you want to backup?\n";
@@ -19,8 +19,14 @@ if( ! isset( $_SERVER['argv'][1] ) || $_SERVER['argv'][1] != 'all' )
 	$selection = readline( ">>> " );
 	$selection = getEntries( $instances, $selection );
 }
-else
+elseif( $_SERVER['argv'][1] == 'all' )
+{
 	$selection = $instances;
+}
+else
+{
+	$selection = getEntries( $instances, implode( ' ', array_slice( $_SERVER['argv'], 1 ) ) );
+}
 
 foreach( $selection as $instance )
 {
