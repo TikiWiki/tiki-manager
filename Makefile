@@ -4,7 +4,7 @@ SQLITE = sqlite
 
 # No changes should be required from here
 default:
-	@echo Valid options are : instance, viewdb, check, watch, update, upgrade, convert, access, backup, restore, fix, detect, enablewww, delete
+	@echo Valid options are : instance, viewdb, check, watch, update, upgrade, convert, access, backup, restore, fix, detect, enablewww, delete, profile
 
 .PHONY: backup
 
@@ -49,3 +49,7 @@ enablewww:
 
 delete:
 	$(PHP) scripts/delete.php
+
+profile:
+	$(PHP) scripts/profile.php
+
