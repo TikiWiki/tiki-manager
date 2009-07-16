@@ -121,8 +121,8 @@ class Database_Adapter_Mysql implements Database_Adapter
 	function createUser( Instance $instance, $username, $password ) // {{{
 	{
 		// FIXME : Not FTP compatible
-		$u = mysql_real_escape_string( $username );
-		$p = mysql_real_escape_string( $password );
+		$u = mysql_escape_string( $username );
+		$p = mysql_escape_string( $password );
 		$query = escapeshellarg( "CREATE USER '$u'@'{$this->host}' IDENTIFIED BY '$p';" );
 
 		$access = $instance->getBestAccess( 'scripting' );
@@ -132,8 +132,8 @@ class Database_Adapter_Mysql implements Database_Adapter
 	function grantRights( Instance $instance, $username, $database ) // {{{
 	{
 		// FIXME : Not FTP compatible
-		$u = mysql_real_escape_string( $username );
-		$d = mysql_real_escape_string( $database );
+		$u = mysql_escape_string( $username );
+		$d = mysql_escape_string( $database );
 		$query = escapeshellarg( "GRANT ALL ON `$d`.* TO '$u'@'{$this->host}';" );
 
 		$access = $instance->getBestAccess( 'scripting' );
