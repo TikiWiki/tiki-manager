@@ -74,6 +74,7 @@ Class ReportManager
 		$backup = new BackupReport;
 
 		foreach( $this->getReportSenders() as $row ) {
+			$instance = $row['instance'];
 			$content = $this->getReportContent( $instance );
 
 			$channel = new Channel( $instance->getWebUrl( 'tiki-channel.php' ) );
