@@ -48,18 +48,47 @@ function add() {
 	$selection = getEntries( $instances, $selection );
 
 	foreach( $selection as $instance ) {
-		$instances = Instance::getInstances();
+		$all = Instance::getInstances();
 		
 		echo "Which instances do you want to include in the report?\n";
-		foreach( $instances as $key => $instance ) {
-			echo "[$key] {$instance->name}\n";
+		foreach( $all as $key => $child ) {
+			echo "[$key] {$child->name}\n";
 		}
 
-		$selection = readline( '>>> ' );
-		$selection = getEntries( $instances, $selection );
+		$toAdd = readline( '>>> ' );
+		$toAdd = getEntries( $all, $toAdd );
 
 		$report->reportOn( $instance );
-		$report->setInstances( $instance, $instances );
+		$report->setInstances( $instance, $toAdd );
+	}
+}
+
+function modify() {
+	$report = new ReportManager;
+	$instances = $report->getReportInstances();
+	
+	echo "Which reports do you want to modify?";
+	foreach( $instances as $key => $instance ) {
+		echo "[$key] {$instance->name}\n";
+	}
+
+	$selection = readline( '>>> ' );
+	$selection = getEntries( $instances, $selection );
+
+	foreach( $selection as $instance ) {
+		$all = $report->getReportCandidates( $instance );
+		
+		echo "Which instances do you want to include in the report?\n";
+		foreach( $all as $key => $child ) {
+			echo "[$key] {$child->name}\n";
+		}
+
+		$toAdd = readline( '>>> ' );
+		$toAdd = getEntries( $all, $toAdd );
+
+		$full = array_merge( $report->getReportContent( $instance ), $toAdd );
+
+		$report->setInstances( $instance, $full );
 	}
 }
 

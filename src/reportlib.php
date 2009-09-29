@@ -35,6 +35,25 @@ Class ReportManager
 		return array_map( array( $instance, 'getInstance' ), $ids );
 	}
 
+	function getReportCandidates( Instance $instance ) {
+		$result = query( "
+			SELECT instance.instance_id 
+			FROM 
+				instance
+				LEFT JOIN report_content
+					ON instance.instance_id = report_content.instance_id
+					AND report_content.receiver_id = :id
+			WHERE
+				report_content.instance_id IS NULL", array( ':id' => $instance->id ) );
+
+		$records = sqlite_fetch_all( $result );
+		$ids = array_map( 'reset', $records );
+
+		$instance = new Instance;
+
+		return array_map( array( $instance, 'getInstance' ), $ids );
+	}
+
 	function reportOn( $instance ) {
 		$instance->getApplication()->installProfile( 'profiles.tikiwiki.org', 'TRIM_Report_Receiver' );
 		$password = $instance->getBestAccess('scripting')->runPHP( dirname(__FILE__) . '/../scripts/remote_setup_channels.php', array( $instance->webroot, $instance->contact ) );
@@ -54,11 +73,7 @@ Class ReportManager
 	function sendReports() {
 		$backup = new BackupReport;
 
-		$senders = query( 'SELECT instance_id, user, pass FROM report_receiver' );
-		while( $row = sqlite_fetch_array( $senders ) ) {
-			$instance = new Instance;
-			$instance = $instance->getInstance( $row['instance_id'] );
-
+		foreach( $this->getReportSenders() as $row ) {
 			$content = $this->getReportContent( $instance );
 
 			$channel = new Channel( $instance->getWebUrl( 'tiki-channel.php' ) );
@@ -66,6 +81,31 @@ Class ReportManager
 			$backup->queueChannels( $channel, $content );
 			$channel->process();
 		}
+	}
+
+	private function getReportSenders() {
+		$senders = query( 'SELECT instance_id, user, pass FROM report_receiver' );
+		$out = array();
+
+		while( $row = sqlite_fetch_array( $senders ) ) {
+			$instance = new Instance;
+			$instance = $instance->getInstance( $row['instance_id'] );
+			
+			$row['instance'] = $instance;
+			$out[] = $row;
+		}
+
+		return $out;
+	}
+
+	function getReportInstances() {
+		$instances = array();
+
+		foreach( $this->getReportSenders() as $row ) {
+			$instances[] = $row['instance'];
+		}
+
+		return $instances;
 	}
 }
 
