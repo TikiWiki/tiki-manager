@@ -25,7 +25,7 @@ class BackupReport
 		$date = date( 'F j, Y' );
 		$summary = <<<SUM
 ! Summary
-{img src="http://chart.apis.google.com/chart?cht=p3&chd=t:$usedRatio,$availableRatio&chs=500x150&chl=Used|Available&chtt=Disk+Usage" imalign=right}
+{img src="http://chart.apis.google.com/chart?cht=p3&chd=t:$usedRatio%2C$availableRatio&chs=500x150&chl=Used%7CAvailable&chtt=Disk+Usage" imalign=right}
 __Disk usage:__ $humanUsed / $humanTotal ( $humanFree free )
 __Date:__ $date
 
