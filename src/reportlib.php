@@ -108,6 +108,15 @@ Class ReportManager
 
 		return $instances;
 	}
+
+	function removeInstances( $receiver, $instances ) {
+		foreach( $instances as $instance ) {
+			query( 'DELETE FROM report_content WHERE receiver_id = :id AND instance_id = :inst', array( 
+				':id' => $receiver->id,
+				':inst' => $instance->id
+			) );
+		}
+	}
 }
 
 ?>

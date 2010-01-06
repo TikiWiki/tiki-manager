@@ -92,6 +92,33 @@ function modify() {
 	}
 }
 
+function remove() {
+	$report = new ReportManager;
+	$instances = $report->getReportInstances();
+	
+	echo "Which reports do you want to modify?";
+	foreach( $instances as $key => $instance ) {
+		echo "[$key] {$instance->name}\n";
+	}
+
+	$selection = readline( '>>> ' );
+	$selection = getEntries( $instances, $selection );
+
+	foreach( $selection as $instance ) {
+		$all = $report->getReportContent( $instance );
+		
+		echo "Which instances do you want to remove from the report?\n";
+		foreach( $all as $key => $child ) {
+			echo "[$key] {$child->name}\n";
+		}
+
+		$toRemove = readline( '>>> ' );
+		$toRemove = getEntries( $all, $toRemove );
+
+		$report->removeInstances( $instance, $toRemove );
+	}
+}
+
 function send() {
 	$report = new ReportManager;
 	$report->sendReports();
