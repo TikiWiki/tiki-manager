@@ -93,7 +93,7 @@ OUT;
 			$backups = array_map( 'filesize', $archives );
 			$latest = $this->humanReadableSize( $backups[0] );
 
-			$sizes = implode( ',', $this->getRelativeSizes( $backups ) );
+			$sizes = implode( '%2C', $this->getRelativeSizes( $backups ) );
 
 			$title = urlencode( "{$instance->name} Backup Sizes" );
 			$date = date( 'F j, Y H:i:s', filemtime( $archives[0] ) );
