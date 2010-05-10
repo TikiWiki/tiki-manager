@@ -21,5 +21,3 @@ foreach( $selection as $instance )
 
 	perform_instance_installation( $instance );
 }
-
-?>

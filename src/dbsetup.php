@@ -121,5 +121,3 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	else
 		$instance->getApplication()->setupDatabase( $db );
 }
-
-?>

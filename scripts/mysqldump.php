@@ -299,5 +299,3 @@ function _mysql_test($mysql_host,$mysql_database, $mysql_username, $mysql_passwo
 		$db_selected = select_db($mysql_database, $link);
 	}
 }
-
-?>

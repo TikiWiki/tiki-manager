@@ -25,5 +25,3 @@ file_put_contents(
 
 echo "If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.\n\t$minute $hour * * * " . php() . " -d memory_limit=256M $path all\n";
 `crontab $file`;
-
-?>

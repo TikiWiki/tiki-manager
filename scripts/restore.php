@@ -123,5 +123,3 @@ foreach( $selection as $instance )
 		"rm -Rf {$instance->tempdir}/restore"
 	);
 }
-
-?>

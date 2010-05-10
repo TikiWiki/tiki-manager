@@ -23,5 +23,3 @@ foreach( $selection as $instance )
 {
 	$instance->delete();
 }
-
-?>

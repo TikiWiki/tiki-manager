@@ -73,5 +73,3 @@ foreach( $selection as $instance )
 	if( $locked )
 		$instance->unlock();
 }
-
-?>

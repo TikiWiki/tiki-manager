@@ -26,5 +26,3 @@ else
 {
 	`sh doc/devtools/sqlupgrade.sh`;
 }
-
-?>

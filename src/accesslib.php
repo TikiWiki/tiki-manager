@@ -604,5 +604,3 @@ class Access_FTP extends Access implements Mountable
 		$this->deleteFile( $name );
 	} // }}}
 }
-
-?>

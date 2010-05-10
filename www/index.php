@@ -50,5 +50,3 @@ else
 	$instance = Instance::getInstance( $id );
 
 require "include/$op.php";
-
-?>

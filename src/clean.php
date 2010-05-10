@@ -29,5 +29,3 @@ function perform_archive_cleanup()
 		}
 	}
 }
-
-?>

@@ -108,5 +108,3 @@ class FTP_Host
 		return ftp_rename( $this->conn, $from, $to );
 	} // }}}
 }
-
-?>

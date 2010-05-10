@@ -39,7 +39,8 @@ $_Text_Password_NumberOfPossibleCharacters = 0;
  * @version    Release: @package_version@
  * @link       http://pear.php.net/package/Text_Password
  */
-class Text_Password {
+class Text_Password
+{
 
     /**
      * Create a single password.
@@ -186,7 +187,7 @@ class Text_Password {
     {
         $tmp = '';
 
-        for ($i = 0; $i < strlen($login); $i++) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++) {
             $next = ord($login{$i}) ^ $key;
             if ($next > 255) {
                 $next -= 255;
@@ -215,7 +216,7 @@ class Text_Password {
         $tmp = '';
         $login = strtolower($login);
 
-        for ($i = 0; $i < strlen($login); $i++) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++) {
             if ((ord($login{$i}) >= 97) && (ord($login{$i}) <= 122)) { // 65, 90 for uppercase
                 $next = ord($login{$i}) + $key;
                 if ($next > 122) {
@@ -248,7 +249,7 @@ class Text_Password {
         $tmp = '';
         $login = strtolower($login);
 
-        for ($i = 0; $i < strlen($login); $i++, $key++) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++, $key++) {
             if ((ord($login{$i}) >= 97) && (ord($login{$i}) <= 122)) { // 65, 90 for uppercase
                 $next = ord($login{$i}) + $key;
                 if ($next > 122) {
@@ -281,7 +282,7 @@ class Text_Password {
         $tmp = '';
         $login = strtolower($login);
 
-        for ($i = 0; $i < strlen($login); $i++, $key--) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++, $key--) {
             if ((ord($login{$i}) >= 97) && (ord($login{$i}) <= 122)) { // 65, 90 for uppercase
                 $next = ord($login{$i}) + $key;
                 if ($next > 122) {
@@ -312,7 +313,7 @@ class Text_Password {
     {
         $tmp = '';
 
-        for ($i = 0; $i < strlen($login); $i++) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++) {
             $next = ord($login{$i}) + $key;
             if ($next > 255) {
                 $next -= 255;
@@ -346,7 +347,7 @@ class Text_Password {
     {
         $tmp = '';
 
-        for ($i = 0; $i < strlen($login); $i++, $key++) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++, $key++) {
             $next = ord($login{$i}) + $key;
             if ($next > 255) {
                 $next -= 255;
@@ -380,7 +381,7 @@ class Text_Password {
     {
         $tmp = '';
 
-        for ($i = 0; $i < strlen($login); $i++, $key--) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++, $key--) {
             $next = ord($login{$i}) + $key;
             if ($next > 255) {
                 $next -= 255;
@@ -413,7 +414,7 @@ class Text_Password {
     {
         $tmp = array();
 
-        for ($i = 0; $i < strlen($login); $i++) {
+        for ($i = 0, $tmp_count = strlen($login); $i < $tmp_count; $i++) {
             $tmp[] = $login{$i};
         }
 
@@ -533,4 +534,3 @@ class Text_Password {
          return $password;
     }
 }
-?>

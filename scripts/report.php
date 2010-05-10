@@ -132,5 +132,3 @@ $report->queueChannels( $channel );
 
 $channel->process();
 */
-
-?>

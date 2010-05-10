@@ -22,5 +22,3 @@ $args = implode( ' ', $args );
 $command = "mysql $args < " . escapeshellarg( $sqlfile );
 
 exec( $command );
-
-?>

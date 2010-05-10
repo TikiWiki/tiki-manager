@@ -27,5 +27,3 @@ foreach( $selection as $instance )
 	info( "Fixing permissions for {$instance->name}" );
 	$instance->getApplication()->fixPermissions();
 }
-
-?>

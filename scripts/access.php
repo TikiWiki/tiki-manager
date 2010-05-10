@@ -22,5 +22,3 @@ foreach( $selection as $instance )
 	$access = $instance->getBestAccess( 'scripting' );
 	$access->openShell();
 }
-
-?>

@@ -23,5 +23,3 @@ $command = "mysqldump --quick $args | gzip -5 > " . escapeshellarg( $outputFile 
 
 exec( $command );
 chmod( $outputFile, 0777 );
-
-?>

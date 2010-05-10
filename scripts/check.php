@@ -57,5 +57,3 @@ foreach( $selection as $instance )
 		}
 	}
 }
-
-?>

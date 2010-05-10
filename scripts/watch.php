@@ -41,5 +41,3 @@ foreach( $instances as $instance )
 
 if( !empty( $log ) )
 	mail( $email, "[TRIM] Potential intrusions detected.", $log );
-
-?>

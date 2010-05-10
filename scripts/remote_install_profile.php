@@ -12,5 +12,3 @@ $profile = Tiki_Profile::fromNames( $_SERVER['argv'][2], $_SERVER['argv'][3] );
 
 $installer = new Tiki_Profile_Installer;
 $installer->install( $profile );
-
-?>

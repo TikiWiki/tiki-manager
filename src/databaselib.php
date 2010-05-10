@@ -152,5 +152,3 @@ class Database_Adapter_Mysql implements Database_Adapter
 		return array( 'mysqli', 'mysql', 'pdo_mysql' );
 	} // }}}
 }
-
-?>

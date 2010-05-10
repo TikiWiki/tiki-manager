@@ -73,5 +73,3 @@ foreach( $list as $file => $hash )
 }
 
 chdir( $cur );
-
-?>

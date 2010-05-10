@@ -20,5 +20,3 @@ NEW;
 $tikilib->set_preference( 'profile_channels', $channels );
 
 echo $password;
-
-?>

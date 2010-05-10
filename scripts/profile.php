@@ -29,5 +29,3 @@ foreach( $selection as $instance )
 }
 
 perform_archive_cleanup();
-
-?>

@@ -21,5 +21,3 @@ $args = implode( ' ', $args );
 $command = "echo \"select distinct value from tiki_preferences where name like '%use_dir' union select att_store_dir from tiki_forums\" | mysql -f $args";
 
 exec( $command );
-
-?>

@@ -66,5 +66,3 @@ $data = dirname( DB_FILE );
 `$prefix ln -sf $web $folder`;
 `$prefix chmod 0666 $db`;
 `$prefix chmod 0777 $data`;
-
-?>

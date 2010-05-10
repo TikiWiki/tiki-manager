@@ -150,5 +150,3 @@ abstract class Application
 		return $update;
 	} // }}}
 }
-
-?>

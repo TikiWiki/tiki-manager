@@ -72,5 +72,3 @@ if( ! $instance->detectPHP() )
 	die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
 
 perform_instance_installation( $instance );
-
-?>

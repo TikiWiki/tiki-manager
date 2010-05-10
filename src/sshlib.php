@@ -164,5 +164,3 @@ class SSH_Host
 		`rsync -aL --delete -e "ssh -i $key -l $user" $user@$host:$remoteLocation $localMirror`;
 	}
 }
-
-?>

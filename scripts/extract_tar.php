@@ -394,7 +394,7 @@ class PEAR
         } else {
             array_push($this->_expected_errors, array($code));
         }
-        return sizeof($this->_expected_errors);
+        return count($this->_expected_errors);
     }
 
     // }}}
@@ -538,7 +538,7 @@ class PEAR
             $message     = $message->getMessage();
         }
 
-        if (isset($this) && isset($this->_expected_errors) && sizeof($this->_expected_errors) > 0 && sizeof($exp = end($this->_expected_errors))) {
+        if (isset($this) && isset($this->_expected_errors) && count($this->_expected_errors) > 0 && count($exp = end($this->_expected_errors))) {
             if ($exp[0] == "*" ||
                 (is_int(reset($exp)) && in_array($code, $exp)) ||
                 (is_string(reset($exp)) && in_array($message, $exp))) {
@@ -643,7 +643,7 @@ class PEAR
         $setmode     = &$GLOBALS['_PEAR_default_error_mode'];
         $setoptions  = &$GLOBALS['_PEAR_default_error_options'];
         array_pop($stack);
-        list($mode, $options) = $stack[sizeof($stack) - 1];
+        list($mode, $options) = $stack[count($stack) - 1];
         array_pop($stack);
         switch ($mode) {
             case PEAR_ERROR_EXCEPTION:
@@ -722,7 +722,7 @@ class PEAR
     {
         $stack = &$GLOBALS['_PEAR_error_handler_stack'];
         array_pop($stack);
-        list($mode, $options) = $stack[sizeof($stack) - 1];
+        list($mode, $options) = $stack[count($stack) - 1];
         array_pop($stack);
         if (isset($this) && is_a($this, 'PEAR')) {
             $this->setErrorHandling($mode, $options);
@@ -774,7 +774,7 @@ function _PEAR_call_destructors()
 {
     global $_PEAR_destructor_object_list;
     if (is_array($_PEAR_destructor_object_list) &&
-        sizeof($_PEAR_destructor_object_list))
+        count($_PEAR_destructor_object_list))
     {
         reset($_PEAR_destructor_object_list);
         if (PEAR::getStaticProperty('PEAR', 'destructlifo')) {
@@ -1958,7 +1958,7 @@ class Archive_Tar extends PEAR
           return false;
       }
 
-      if (sizeof($p_list) == 0)
+      if (count($p_list) == 0)
           return true;
 
       foreach ($p_list as $v_filename) {
@@ -2565,7 +2565,7 @@ class Archive_Tar extends PEAR
         // ----- By default no unzip if the file is not found
         $v_extract_file = false;
 
-        for ($i=0; $i<sizeof($p_file_list); $i++) {
+        for ($i=0, $tmp_count($p_file_list); $i < $tmp_count; $i++) {
           // ----- Look if it is a directory
           if (substr($p_file_list[$i], -1) == '/') {
             // ----- Look if the directory is in the filename path
@@ -2882,7 +2882,7 @@ class Archive_Tar extends PEAR
             $v_list = explode('/', $p_dir);
 
             // ----- Study directories from last to first
-            for ($i=sizeof($v_list)-1; $i>=0; $i--) {
+            for ($i=count($v_list)-1; $i>=0; $i--) {
                 // ----- Look for current path
                 if ($v_list[$i] == ".") {
                     // ----- Ignore this directory
@@ -2893,12 +2893,12 @@ class Archive_Tar extends PEAR
                     $i--;
                 }
                 else if (   ($v_list[$i] == '')
-				         && ($i!=(sizeof($v_list)-1))
+				         && ($i!=(count($v_list)-1))
 						 && ($i!=0)) {
                     // ----- Ignore only the double '//' in path,
                     // but not the first and last /
                 } else {
-                    $v_result = $v_list[$i].($i!=(sizeof($v_list)-1)?'/'
+                    $v_result = $v_list[$i].($i!=(count($v_list)-1)?'/'
 					            .$v_result:'');
                 }
             }
@@ -2978,5 +2978,3 @@ $group = filegroup( dirname(__FILE__) );
 $user = fileowner( dirname(__FILE__) );
 
 change_ownership( dirname(__FILE__), $user, $group );
-
-?>

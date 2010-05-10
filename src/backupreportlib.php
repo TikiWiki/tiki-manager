@@ -149,5 +149,3 @@ DET;
 		return $percs;
 	}
 }
-
-?>

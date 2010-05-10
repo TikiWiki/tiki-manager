@@ -11,5 +11,3 @@ $dbTiki->Connect($host_tiki, $user_tiki, $pass_tiki, $dbs_tiki);
 
 $installer = new Installer;
 $installer->cleanInstall();
-
-?>

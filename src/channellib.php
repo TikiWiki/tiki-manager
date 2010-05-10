@@ -42,5 +42,3 @@ class Channel
 		file_get_contents( $this->url, false, $context );
 	}
 }
-
-?>

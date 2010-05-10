@@ -501,5 +501,3 @@ LOCAL
 		echo $access->runPHP( dirname(__FILE__) . '/../../scripts/remote_install_profile.php', array( $this->instance->webroot, $domain, $profile ) );
 	}
 }
-
-?>

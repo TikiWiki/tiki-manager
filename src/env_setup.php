@@ -295,5 +295,3 @@ function php() // {{{
 	krsort( $valid );
 	return reset( $valid );
 } // }}}
-
-?>

@@ -236,5 +236,3 @@ function handleCheckResult( $instance, $version, $array )
 		}
 	} // }}}
 }
-
-?>
