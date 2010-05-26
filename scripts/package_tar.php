@@ -20,7 +20,7 @@
  * @author     Greg Beaver <cellog@php.net>
  * @copyright  1997-2008 The PHP Group
  * @license    http://www.php.net/license/3_0.txt  PHP License 3.0
- * @version    CVS: $Id: PEAR.php,v 1.104 2008/01/03 20:26:34 cellog Exp $
+ * @version    CVS: $Id$
  * @link       http://pear.php.net/package/PEAR
  * @since      File available since Release 0.1
  */
@@ -1134,7 +1134,7 @@ class PEAR_Error
 // | Author: Vincent Blavet <vincent@phpconcept.net>                      |
 // +----------------------------------------------------------------------+
 //
-// $Id: Tar.php,v 1.39 2006/12/22 19:20:08 cellog Exp $
+// $Id$
 
 
 define ('ARCHIVE_TAR_ATT_SEPARATOR', 90001);
