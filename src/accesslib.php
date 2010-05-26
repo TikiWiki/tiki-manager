@@ -103,7 +103,8 @@ abstract class Access
 	abstract function localizeFolder( $remoteLocation, $localMirror );
 }
 
-interface ShellPrompt {
+interface ShellPrompt
+{
 	function shellExec( $command );
 
 	function openShell();
