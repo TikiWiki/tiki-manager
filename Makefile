@@ -4,7 +4,7 @@ SQLITE = sqlite
 
 # No changes should be required from here
 default:
-	@echo Valid options are : instance, viewdb, check, watch, update, upgrade, convert, access, backup, restore, fix, detect, enablewww, delete, profile
+	@echo Valid options are : instance, viewdb, check, watch, update, upgrade, convert, access, backup, restore, fix, detect, enablewww, delete, profile, report
 
 .PHONY: backup
 
