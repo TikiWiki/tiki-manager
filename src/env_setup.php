@@ -213,6 +213,14 @@ case 2:
 
 		UPDATE info SET value = '3' WHERE name = 'version';
 	" );
+case 3:
+	sqlite_query( $db, "
+		UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh';
+		UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh::nokey';
+		UPDATE access SET host = (host || ':' || '21') WHERE type = 'ftp';
+
+		UPDATE info SET value = '4' WHERE name = 'version';
+	" );
 } // }}}
 
 // Database access

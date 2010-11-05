@@ -3,8 +3,8 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-include dirname(__FILE__) . "/../src/env_setup.php";
-include dirname(__FILE__) . "/../src/dbsetup.php";
+include_once dirname(__FILE__) . "/../src/env_setup.php";
+include_once dirname(__FILE__) . "/../src/dbsetup.php";
 
 $type = $user = $host = $pass = '';
 while( ! in_array( $type, array( 'ftp', 'ssh' ) ) ) {
@@ -13,6 +13,12 @@ while( ! in_array( $type, array( 'ftp', 'ssh' ) ) ) {
 
 while( empty( $host ) )
 	$host = readline( "Host name : " );
+
+$d_port = ( $type == 'ssh' ) ? 22 : 21;
+$port = readline( "Port number : [$d_port] " );
+if( empty($port) )
+	$port = $d_port;
+
 while( empty( $user ) )
 	$user = readline( "User : " );
 while( $type == 'ftp' && empty( $pass ) )
@@ -54,7 +60,7 @@ $instance->tempdir = rtrim( $tempdir, '/' );
 $instance->save();
 echo color("Instance information saved.\n", 'green');
 
-$access = $instance->registerAccessMethod( $type, $host, $user, $pass );
+$access = $instance->registerAccessMethod( $type, $host, $user, $pass, $port );
 
 if( ! $access )
 {

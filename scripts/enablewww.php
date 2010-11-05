@@ -1,6 +1,6 @@
 <?php
 
-include dirname(__FILE__) . "/../src/env_setup.php";
+include_once dirname(__FILE__) . "/../src/env_setup.php";
 
 echo <<<INFO
 TRIM web administration files are located in the TRIM directory. In order to

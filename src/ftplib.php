@@ -7,11 +7,12 @@ class FTP_Host
 	private $pass;
 	private $conn;
 
-	function __construct( $host, $user, $pass ) // {{{
+	function __construct( $host, $user, $pass, $port ) // {{{
 	{
 		$this->host = $host;
 		$this->user = $user;
 		$this->pass = $pass;
+		$this->port = $port;
 	} // }}}
 
 	function __destruct() // {{{
@@ -26,7 +27,7 @@ class FTP_Host
 		if( $this->conn )
 			return;
 
-		$conn = ftp_connect( $this->host, 21, 15 );
+		$conn = ftp_connect( $this->host, $this->port, 15 );
 		if( $conn ) {
 			if( ftp_login( $conn, $this->user, $this->pass ) ) {
 				$this->conn = $conn;

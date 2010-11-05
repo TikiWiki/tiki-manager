@@ -12,11 +12,13 @@ class SSH_Host
 
 	private $host;
 	private $user;
+	private $port;
 
-	function __construct( $host, $user )
+	function __construct( $host, $user, $port )
 	{
 		$this->host = $host;
 		$this->user = $user;
+		$this->port = $port;
 	}
 
 	function chdir( $location )
@@ -36,13 +38,14 @@ class SSH_Host
 
 		$host = $this->host;
 		$user = $this->user;
+		$port = $this->port;
 
-		$key = "$user@$host";
+		$key = "$user@$host:$port";
 		
 		if( isset( self::$resources[$key] ) )
 			return self::$resources[$key];
 
-		$handle = @ssh2_connect( $host );
+		$handle = @ssh2_connect( $host, $port );
 		
 		if( ! $handle )
 			return self::$resources[$key] = false;
@@ -63,11 +66,15 @@ class SSH_Host
 			else
 				// Pretend this check never happened, connection will be
 				// succesful after key set-up
-				unset( self::$resources["{$this->user}@{$this->host}"] );
+				unset( self::$resources["{$this->user}@{$this->host}:{$this->port}"] );
 		}
 
+		$port = null;
+		if( $this->port != 22 )
+			$port = " -p {$this->port} ";
 		$file = escapeshellarg( $publicKeyFile );
-		$host = escapeshellarg( "{$this->user}@{$this->host}" );
+		$host = escapeshellarg( "$port{$this->user}@{$this->host}" );
+
 		`ssh-copy-id -i $file $host`;
 	}
 
@@ -106,7 +113,10 @@ class SSH_Host
 			$string = implode( " && ", $commands );
 			$fullcommand = escapeshellarg( $string );
 
-			$output = trim( `ssh -i $key -F $config {$this->user}@{$this->host} $fullcommand` );
+			$port = null;
+			if( $this->port != 22 )
+				$port = " -p {$this->port} ";
+			$output = trim( `ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand` );
 
 			return $output;
 		}
@@ -126,7 +136,10 @@ class SSH_Host
 			$remoteFile = escapeshellarg( $remoteFile );
 
 			$key = SSH_KEY;
-			`scp -i $key $localFile {$this->user}@{$this->host}:$remoteFile`;
+			$port = null;
+			if( $this->port != 22 )
+				$port = " -P {$this->port} ";
+			`scp -i $key $port $localFile {$this->user}@{$this->host}:$remoteFile`;
 			$this->runCommands( "chmod 0644 $remoteFile" );
 		}
 	}
@@ -145,14 +158,20 @@ class SSH_Host
 			$remoteFile = escapeshellarg( $remoteFile );
 
 			$key = SSH_KEY;
-			`scp -i $key {$this->user}@{$this->host}:$remoteFile $localFile`;
+			$port = null;
+			if( $this->port != 22 )
+				$port = " -P {$this->port} ";
+			`scp -i $key $port {$this->user}@{$this->host}:$remoteFile $localFile`;
 		}
 	}
 
 	function openShell()
 	{
 		$key = SSH_KEY;
-		passthru( "ssh -i $key {$this->user}@{$this->host}" );
+		$port = null;
+		if( $this->port != 22 )
+			$port = " -p {$this->port} ";
+		passthru( "ssh $port -i $key {$this->user}@{$this->host}" );
 	}
 
 	function rsync( $remoteLocation, $localMirror )
@@ -161,6 +180,9 @@ class SSH_Host
 		$host = $this->host;
 		$key = SSH_KEY;
 		
-		`rsync -aL --delete -e "ssh -i $key -l $user" $user@$host:$remoteLocation $localMirror`;
+		$port = null;
+		if( $this->port != 22 )
+			$port = " -p {$this->port} ";
+		`rsync -aL --delete -e "ssh $port -i $key -l $user" $user@$host:$remoteLocation $localMirror`;
 	}
 }

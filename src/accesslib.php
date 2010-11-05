@@ -12,6 +12,7 @@ abstract class Access
 	public $host;
 	public $user;
 	public $password;
+	public $port;
 
 	static function getClassFor( $type ) // {{{
 	{
@@ -36,7 +37,7 @@ abstract class Access
 			$class = self::getClassFor( $row['type'] );
 
 			$a = new $class( $instance );
-			$a->host = $row['host'];
+			list($a->host, $a->port) = explode(':', $row['host']);
 			$a->user = $row['user'];
 			$a->password = $row['password'];
 
@@ -61,9 +62,10 @@ abstract class Access
 			':host' => $this->host,
 			':user' => $this->user,
 			':pass' => $this->password,
+			':port' => $this->port,
 		);
 
-		query( "INSERT OR REPLACE INTO access (instance_id, rowid, type, user, host, pass) VALUES( :instance, :rowid, :type, :user, :host, :pass )", $params );
+		query( "INSERT OR REPLACE INTO access (instance_id, rowid, type, user, host, pass) VALUES( :instance, :rowid, :type, :user, (:host || ':' || :port), :pass )", $params );
 		$rowid = rowid();
 		if( ! $this->rowid && $rowid )
 			$this->rowid = $rowid;
@@ -131,11 +133,17 @@ class Access_SSH extends Access implements ShellPrompt
 	function __construct( Instance $instance )
 	{
 		parent::__construct( $instance, 'ssh' );
+		$this->port = 22;
+	}
+
+	private function getHost()
+	{
+		return new SSH_Host( $this->host, $this->user, $this->port );
 	}
 
 	function firstConnect() // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		$host->setupKey( SSH_PUBLIC_KEY );
 
 		echo "Testing connection...\n";
@@ -154,7 +162,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function getInterpreterPath() // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		
 		$sets = array(
 			array( 'which php', 'which php5', 'which php4' ),
@@ -220,7 +228,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function fileGetContents( $filename ) // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		
 		$filename = escapeshellarg( $filename );
 		return $host->runCommands( "cat $filename" );
@@ -228,7 +236,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function fileModificationDate( $filename ) // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 
 		$root = escapeshellarg( $filename );
 
@@ -242,7 +250,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function runPHP( $localFile, $args = array() ) // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 
 		$remoteName = md5( $localFile );
 		$remoteFile = $this->instance->getWorkPath( $remoteName );
@@ -266,7 +274,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 		$local = tempnam( TEMP_FOLDER, 'trim' );
 
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		$host->receiveFile( $filename, $local );
 
 		rename( $local, $local . $ext );
@@ -277,7 +285,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function uploadFile( $filename, $remoteLocation ) // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		if( $remoteLocation{0} == '/' )
 			$host->sendFile( $filename, $remoteLocation );
 		else
@@ -291,7 +299,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 		$path = escapeshellarg( $filename );
 
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		$host->runCommands( "rm $path" );
 	} // }}}
 
@@ -323,7 +331,7 @@ class Access_SSH extends Access implements ShellPrompt
 		if( ! is_array( $commands ) )
 			$commands = func_get_args();
 
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		if( $this->location )
 			$host->chdir( $this->location );
 		foreach( $this->env as $key => $value )
@@ -334,7 +342,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function openShell() // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		$host->openShell();
 	} // }}}
 
@@ -348,7 +356,7 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function localizeFolder( $remoteLocation, $localMirror ) // {{{
 	{
-		$host = new SSH_Host( $this->host, $this->user );
+		$host = $this->getHost();
 		$host->rsync( $remoteLocation, $localMirror );
 	} // }}}
 }
@@ -360,17 +368,23 @@ class Access_FTP extends Access implements Mountable
 	function __construct( Instance $instance )
 	{
 		parent::__construct( $instance, 'ftp' );
+		$this->port = 21;
 	}
 
 	function openShell() // {{{
 	{
 		echo "User: {$this->user}, Pass: {$this->password}\n";
-		passthru( "ftp {$this->host}" );
+		passthru( "ftp {$this->host} {$this->port}" );
 	} // }}}
+
+	private function getHost()
+	{
+		return new FTP_Host( $this->host, $this->user, $this->password, $this->port );
+	}
 
 	function firstConnect() // {{{
 	{
-		$conn = new FTP_Host( $this->host, $this->user, $this->password );
+		$conn = $this->getHost();
 
 		return $conn->connect();
 	} // }}}
@@ -389,13 +403,13 @@ class Access_FTP extends Access implements Mountable
 		if( $filename{0} != '/' )
 			$filename = $this->instance->getWebPath( $filename );
 
-		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		$ftp = $this->getHost();
 		return $ftp->fileExists( $filename );
 	} // }}}
 
 	function fileGetContents( $filename ) // {{{
 	{
-		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		$ftp = $this->getHost();
 		return $ftp->getContent( $filename );
 	} // }}}
 
@@ -411,7 +425,7 @@ class Access_FTP extends Access implements Mountable
 			}
 		}
 
-		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host = $this->getHost();
 
 		$remoteName = 'trim_' . md5( $localFile ) . '.php';
 		$remoteFile = $this->instance->getWebPath( $remoteName );
@@ -437,7 +451,7 @@ class Access_FTP extends Access implements Mountable
 
 		$local = tempnam( TEMP_FOLDER, 'trim' );
 
-		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host = $this->getHost();
 		$host->receiveFile( $filename, $local );
 
 		rename( $local, $local . $ext );
@@ -448,7 +462,7 @@ class Access_FTP extends Access implements Mountable
 
 	function uploadFile( $filename, $remoteLocation ) // {{{
 	{
-		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host = $this->getHost();
 		if( $remoteLocation{0} == '/' )
 			$host->sendFile( $filename, $remoteLocation );
 		else
@@ -462,7 +476,7 @@ class Access_FTP extends Access implements Mountable
 		if( $remoteTarget{0} != '/' )
 			$remoteTarget = $this->instance->getWebPath( $remoteTarget );
 
-		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host = $this->getHost();
 		$host->rename( $remoteSource, $remoteTarget );
 	} // }}}
 
@@ -471,7 +485,7 @@ class Access_FTP extends Access implements Mountable
 		if( $filename{0} != '/' )
 			$filename = $this->instance->getWebPath( $filename );
 
-		$host = new FTP_Host( $this->host, $this->user, $this->password );
+		$host = $this->getHost();
 		$host->removeFile( $filename );
 	} // }}}
 
@@ -540,7 +554,7 @@ class Access_FTP extends Access implements Mountable
 		if( $this->lastMount )
 			return false;
 
-		$ftp = new FTP_Host( $this->host, $this->user, $this->password );
+		$ftp = $this->getHost();
 		$pwd = $ftp->getPWD();
 		$toRoot = preg_replace( "/\w+/", '..', $pwd );
 

@@ -1,8 +1,8 @@
 <?php
 
-include dirname(__FILE__) . "/../src/env_setup.php";
-include dirname(__FILE__) . "/../src/check.php";
-include dirname(__FILE__) . "/../src/dbsetup.php";
+include_once dirname(__FILE__) . "/../src/env_setup.php";
+include_once dirname(__FILE__) . "/../src/check.php";
+include_once dirname(__FILE__) . "/../src/dbsetup.php";
 
 $instances = Instance::getInstances();
 

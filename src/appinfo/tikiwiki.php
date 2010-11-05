@@ -106,7 +106,7 @@ class Application_Tikiwiki extends Application
 
 		if( $this->getInstallType() == 'svn' )
 		{
-			$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
+			$svn = new RC_SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
 			if( $branch = $svn->getRepositoryBranch( $this->instance ) )
 			{
 				info( "Detected SVN : $branch" );
@@ -270,7 +270,7 @@ class Application_Tikiwiki extends Application
 					"rm -Rf " . escapeshellarg( $this->instance->getWebPath( 'temp/cache' ) )
 				);
 
-				$svn = new SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
+				$svn = new RC_SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
 				$svn->updateInstanceTo( $this->instance, $version->branch );
 				$access->shellExec( "chmod 0777 temp temp/cache" );
 			} elseif( $access instanceof Mountable ) {
@@ -293,7 +293,7 @@ class Application_Tikiwiki extends Application
 			if( ! $access instanceof ShellPrompt || ! $access->hasExecutable( 'cvs' ) )
 				break;
 
-			$cvs = new CVS( 'pserver', 'anonymous', 'tikiwiki.cvs.sourceforge.net', '/cvsroot/tikiwiki', 'tikiwiki' );
+			$cvs = new RC_CVS( 'pserver', 'anonymous', 'tikiwiki.cvs.sourceforge.net', '/cvsroot/tikiwiki', 'tikiwiki' );
 			$cvs->updateInstanceTo( $this->instance, $version->branch );
 
 			info( "Updating database schema." );

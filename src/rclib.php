@@ -3,7 +3,7 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-class SVN
+class RC_SVN
 {
 	private $repository;
 
@@ -81,7 +81,7 @@ class SVN
 	}
 }
 
-class CVS
+class RC_CVS
 {
 	private $protocol;
 	private $user;

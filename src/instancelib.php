@@ -116,7 +116,7 @@ class Instance
 		query( "DELETE FROM report_content WHERE instance_id = :id OR receiver_id = :id", array( ':id' => $this->id ) );
 	} // }}}
 
-	function registerAccessMethod( $type, $host, $user, $password = null ) // {{{
+	function registerAccessMethod( $type, $host, $user, $password = null, $port = null ) // {{{
 	{
 		if( ! $class = Access::getClassFor( $type ) ) {
 			return;
@@ -126,6 +126,10 @@ class Instance
 		$access->host = $host;
 		$access->user = $user;
 		$access->password = $password;
+
+		if ($port) {
+			$access->port = $port;
+		}
 
 		if( $access->firstConnect() )
 		{
@@ -238,7 +242,7 @@ class Instance
 		$class = 'Application_' . ucfirst( $this->app );
 
 		$dir = dirname(__FILE__) . "/appinfo";
-		if( ! class_exists( $classname ) )
+		if( ! class_exists( $class ) )
 			require_once "$dir/{$this->app}.php";
 
 		return new $class( $this );
