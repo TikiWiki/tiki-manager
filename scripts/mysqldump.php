@@ -29,7 +29,7 @@ Removed CSV, UI
 Limited query length for large data sets
 Abstraction for mysql, mysqli
 Use unbuffered query to extract data
-Get credentials from local file (for TikiWiki)
+Get credentials from local file (for Tiki)
 */
 
 // Wrappers {{{

@@ -115,7 +115,7 @@ foreach( $selection as $instance )
 
 	$version->collectChecksumFromInstance( $instance );
 
-	if( $instance->app == 'tikiwiki' )
+	if( $instance->app == 'tiki' )
 		$instance->getApplication()->fixPermissions();
 
 	info("Cleaning up");

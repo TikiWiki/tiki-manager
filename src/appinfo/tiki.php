@@ -3,7 +3,7 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-class Application_Tikiwiki extends Application
+class Application_Tiki extends Application
 {
 	private $installType = null;
 	private $branch = null;
@@ -11,7 +11,7 @@ class Application_Tikiwiki extends Application
 
 	function getName()
 	{
-		return 'tikiwiki';
+		return 'tiki';
 	}
 
 	function getVersions() // {{{

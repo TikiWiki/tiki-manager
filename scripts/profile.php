@@ -16,8 +16,8 @@ foreach( $instances as $key => $i )
 $selection = readline( ">>> " );
 $selection = getEntries( $instances, $selection );
 
-if( ! $repository = readline( 'Repository: [profiles.tikiwiki.org] ' ) ) {
-	$repository = 'profiles.tikiwiki.org';
+if( ! $repository = readline( 'Repository: [profiles.tiki.org] ' ) ) {
+	$repository = 'profiles.tiki.org';
 }
 
 while( ! $profile = trim( readline( 'Profile: ' ) ) );
