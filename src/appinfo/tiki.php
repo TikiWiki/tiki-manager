@@ -97,6 +97,8 @@ class Application_Tiki extends Application
 				$this->instance->getWebPath('_htaccess'),
 				$this->instance->getWebPath('.htaccess')
 			);
+
+		$access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
 	} // }}}
 
 	function getBranch() // {{{
@@ -285,6 +287,7 @@ class Application_Tiki extends Application
 
 			info( "Fixing permissions." );
 			$this->fixPermissions();
+			$access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
 			return;
 
 		case 'cvs':
@@ -301,6 +304,7 @@ class Application_Tiki extends Application
 
 			info( "Fixing permissions." );
 			$this->fixPermissions();
+			$access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
 			return;
 		}
 
@@ -410,11 +414,11 @@ class Application_Tiki extends Application
 		file_put_contents( $tmp, <<<LOCAL
 <?php
 \$db_tiki='{$database->type}';
-\$dbversion_tiki='2.0';
 \$host_tiki='{$database->host}';
 \$user_tiki='{$database->user}';
 \$pass_tiki='{$database->pass}';
 \$dbs_tiki='{$database->dbname}';
+\$client_charset = 'utf8';
 ?>
 LOCAL
 );
