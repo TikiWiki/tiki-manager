@@ -27,7 +27,7 @@ upgrade:
 	$(PHP) scripts/update.php switch
 
 convert:
-	$(PHP) scripts/convert.php
+	$(PHP) scripts/tiki/convert.php
 
 access:
 	$(PHP) scripts/access.php
@@ -39,7 +39,7 @@ restore:
 	$(PHP) scripts/restore.php
 
 fix:
-	$(PHP) scripts/fixperms.php
+	$(PHP) scripts/tiki/fixperms.php
 
 detect:
 	$(PHP) scripts/detect.php
@@ -51,8 +51,8 @@ delete:
 	$(PHP) scripts/delete.php
 
 profile:
-	$(PHP) scripts/profile.php
+	$(PHP) scripts/tiki/profile.php
 
 report:
-	$(PHP) scripts/report.php
+	$(PHP) scripts/tiki/report.php
 

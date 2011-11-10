@@ -11,7 +11,7 @@ foreach( $raw as $instance )
 	if( $instance->getLatestVersion()->type == 'cvs' )
 		$instances[] = $instance;
 
-warning( "Make sure you have a recent backup before performing this operation. Some customizations and data may be lost." );
+warning( "Make sure you have a recent backup before performing this operation. Some customizations and data may be lost. Note: Only instances running Tiki can be converted." );
 echo "Which instances do you want to convert from CVS 1.9 to SVN 2.0?\n";
 
 foreach( $instances as $key => $i )

@@ -8,6 +8,7 @@ include_once dirname(__FILE__) . "/../src/env_setup.php";
 
 
 do {
+	echo "Note: Only instances running Tiki can enable reports.\n\n";
 	echo <<<MENU
 What do you want to do?
 [add] a report receiver

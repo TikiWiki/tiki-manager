@@ -283,7 +283,7 @@ class Application_Tiki extends Application
 			}
 
 			info( "Updating database schema." );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', array( $this->instance->webroot ) );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php', array( $this->instance->webroot ) );
 
 			info( "Fixing permissions." );
 			$this->fixPermissions();
@@ -300,7 +300,7 @@ class Application_Tiki extends Application
 			$cvs->updateInstanceTo( $this->instance, $version->branch );
 
 			info( "Updating database schema." );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', array( $this->instance->webroot ) );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php', array( $this->instance->webroot ) );
 
 			info( "Fixing permissions." );
 			$this->fixPermissions();
@@ -377,7 +377,7 @@ class Application_Tiki extends Application
 	function getFileLocations() // {{{
 	{
 		$access = $this->instance->getBestAccess( 'scripting' );
-		$out = $access->runPHP( dirname(__FILE__) . '/../../scripts/get_directory_list.php', array( $this->instance->webroot ) );
+		$out = $access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/get_directory_list.php', array( $this->instance->webroot ) );
 
 		$folders = array( $this->instance->webroot );
 		foreach( explode( "\n", $out ) as $line )
@@ -433,7 +433,7 @@ LOCAL
 				$access->chdir( $this->instance->webroot );
 				$access->shellExec( $this->instance->phpexec . ' installer/shell.php install' );
 			} else {
-				$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki_dbinstall_ftp.php', array( $this->instance->webroot ) );
+				$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/tiki_dbinstall_ftp.php', array( $this->instance->webroot ) );
 			}
 		}
 		else
@@ -442,8 +442,8 @@ LOCAL
 			$access = $this->instance->getBestAccess( 'scripting' );
 			$file = $this->instance->getWebPath( 'db/tiki.sql' );
 			$root = $this->instance->webroot;
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', array( $root, $file ) );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/sqlupgrade.php', array( $this->instance->webroot ) );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php', array( $root, $file ) );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php', array( $this->instance->webroot ) );
 		}
 	} // }}}
 
@@ -468,7 +468,7 @@ LOCAL
 		$access = $this->instance->getBestAccess( 'scripting' );
 		$root = $this->instance->webroot;
 		// FIXME : Not FTP compatible (arguments)
-		$access->runPHP( dirname(__FILE__) . '/../../scripts/run_sql_file.php', array( $root, $remoteFile ) );
+		$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php', array( $root, $remoteFile ) );
 	} // }}}
 
 	function backupDatabase( $target ) // {{{
@@ -477,14 +477,14 @@ LOCAL
 		if( $access instanceof ShellPrompt ) {
 			$randomName = md5( time() . 'trimbackup' ) . '.sql.gz';
 			$remoteFile = $this->instance->getWorkPath( $randomName );
-			$access->runPHP( dirname(__FILE__) . '/../../scripts/backup_database.php', array( $this->instance->webroot, $remoteFile ) );
+			$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/backup_database.php', array( $this->instance->webroot, $remoteFile ) );
 			$localName = $access->downloadFile( $remoteFile );
 			$access->deleteFile( $remoteFile );
 
 			`zcat $localName > $target`;
 			unlink( $localName );
 		} else {
-			$data = $access->runPHP( dirname(__FILE__) . '/../../scripts/mysqldump.php' );
+			$data = $access->runPHP( dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php' );
 			file_put_contents( $target, $data );
 		}
 	} // }}}
@@ -502,6 +502,6 @@ LOCAL
 	function installProfile( $domain, $profile ) {
 		$access = $this->instance->getBestAccess('scripting');
 
-		echo $access->runPHP( dirname(__FILE__) . '/../../scripts/remote_install_profile.php', array( $this->instance->webroot, $domain, $profile ) );
+		echo $access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php', array( $this->instance->webroot, $domain, $profile ) );
 	}
 }

@@ -56,7 +56,7 @@ Class ReportManager
 
 	function reportOn( $instance ) {
 		$instance->getApplication()->installProfile( 'profiles.tiki.org', 'TRIM_Report_Receiver' );
-		$password = $instance->getBestAccess('scripting')->runPHP( dirname(__FILE__) . '/../scripts/remote_setup_channels.php', array( $instance->webroot, $instance->contact ) );
+		$password = $instance->getBestAccess('scripting')->runPHP( dirname(__FILE__) . '/../scripts/tiki/remote_setup_channels.php', array( $instance->webroot, $instance->contact ) );
 		
 		query('INSERT INTO report_receiver VALUES(:id, :user, :pass)',
 			array( ':id' => $instance->id, ':user' => 'trim_user', ':pass' => $password ) );

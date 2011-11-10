@@ -8,6 +8,7 @@ include_once dirname(__FILE__) . "/../src/clean.php";
 
 $instances = Instance::getInstances();
 
+echo "Note: Only instances running Tiki can have profiles applied.\n\n";
 echo "Which instances do you want to apply a profile on?\n";
 
 foreach( $instances as $key => $i )
