@@ -6,23 +6,47 @@ if( $_SERVER['REQUEST_METHOD'] == 'GET' ) {
 $root = $_SERVER['argv'][1];
 $outputFile = $_SERVER['argv'][2];
 
-require($root . '/wp-config.php');
+function getWpDbRegex($name) {
+	return "/define\(['\"]{$name}['\"]\s*,\s*['\"](.+?)['\"]\s*\)\s*;/";
+}
+
+$wpConfigContents = file($root . '/wp-config.php');
+
+foreach ($wpConfigContents as $line) {
+	$matches = array();
+	
+	if (preg_match(getWpDbRegex('DB_NAME'), $line, $matches)) {
+		$dbName = $matches[1];
+	}
+	
+	if (preg_match(getWpDbRegex('DB_USER'), $line, $matches)) {
+		$dbUser = $matches[1];
+	}
+	
+	if (preg_match(getWpDbRegex('DB_PASSWORD'), $line, $matches)) {
+		$dbPassword = $matches[1];
+	}
+	
+	if (preg_match(getWpDbRegex('DB_HOST'), $line, $matches)) {
+		$dbHost = $matches[1];
+	}
+}
 
 $args = array();
 
-if (DB_USER) {
-	$args[] = "-u" . escapeshellarg(DB_USER);
+if ($dbUser) {
+	$args[] = "-u" . escapeshellarg($dbUser);
 }
 
-if (DB_PASSWORD) {
-	$args[] = "-p" . escapeshellarg(DB_PASSWORD);
+if ($dbPassword) {
+	$args[] = "-p" . escapeshellarg($dbPassword);
 }
 
-if (DB_HOST) {
-	$args[] = "-h" . escapeshellarg(DB_HOST);
+if ($dbHost) {
+	$args[] = "-h" . escapeshellarg($dbHost);
 }
 
-$args[] = DB_NAME;
+$args[] = $dbName;
 
 $args = implode(' ', $args);
 $command = "mysqldump --quick $args | gzip -5 > " . escapeshellarg($outputFile);
