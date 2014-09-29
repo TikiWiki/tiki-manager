@@ -76,7 +76,7 @@ else
 }
 
 // Check for required extensions
-if( ! function_exists( 'sqlite_open' ) )
+if( ! in_array( 'sqlite', PDO::getAvailableDrivers() ) )
 	die( "SQLite extension not available in current PHP installation. Impossible to continue.\n" );
 
 // Check for required system dependencies
@@ -123,29 +123,35 @@ if( ! file_exists( DB_FILE ) )
 	if( ! is_writable( dirname(DB_FILE) ) )
 		die( "Impossible to generate database. Make sure data folder is writable.\n" );
 
-	if( ! $db = sqlite_open( DB_FILE, 0666, $sqlite_error ) )
-		die( "Could not create the database for an unknown reason. SQLite said: $sqlite_error\n" );
+	try {
+		$db = new PDO( 'sqlite:' . DB_FILE );
+	} catch (PDOException $e) {
+		die( "Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}\n" );
+	}
 	
-	sqlite_query( $db, "CREATE TABLE info ( name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name) );" );
-	sqlite_query( $db, "INSERT INTO info ( name, value ) VALUES( 'version', '0' );" );
-	sqlite_close( $db );
+	$db->exec( "CREATE TABLE info ( name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name) );" );
+	$db->exec( "INSERT INTO info ( name, value ) VALUES( 'version', '0' );" );
+	$db = null;
 
 	$file = DB_FILE;
 }
 
-if( ! $db = sqlite_open( DB_FILE, 0666, $sqlite_error ) )
-	die( "Could not create the database for an unknown reason. SQLite said: $sqlite_error\n" );
+try {
+	$db = new PDO( 'sqlite:' . DB_FILE );
+} catch (PDOException $e) {
+	die( "Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}\n" );
+}
 
 // Obtain the current database version
-$result = sqlite_query( $db, "SELECT value FROM info WHERE name = 'version'" );
-$version = (int) sqlite_fetch_single( $result );
+$result = $db->query( "SELECT value FROM info WHERE name = 'version'" );
+$version = (int) $result->fetchColumn();
 
 // Update the schema to the latest version
 // One case per version, no breaks, no failures
 switch( $version ) // {{{
 {
 case 0:
-	sqlite_query( $db, "
+	$db->exec( "
 		CREATE TABLE instance (
 			instance_id INTEGER PRIMARY KEY,
 			name VARCHAR(25),
@@ -182,7 +188,7 @@ case 0:
 		UPDATE info SET value = '1' WHERE name = 'version';
 	" );
 case 1:
-	sqlite_query( $db, "
+	$db->exec( "
 		CREATE TABLE backup (
 			instance_id INTEGER,
 			location VARCHAR(200)
@@ -196,7 +202,7 @@ case 1:
 		UPDATE info SET value = '2' WHERE name = 'version';
 	" );
 case 2:
-	sqlite_query( $db, "
+	$db->exec( "
 		CREATE TABLE report_receiver (
 			instance_id INTEGER PRIMARY KEY,
 			user VARCHAR(200),
@@ -214,7 +220,7 @@ case 2:
 		UPDATE info SET value = '3' WHERE name = 'version';
 	" );
 case 3:
-	sqlite_query( $db, "
+	$db->exec( "
 		UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh';
 		UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh::nokey';
 		UPDATE access SET host = (host || ':' || '21') WHERE type = 'ftp';
@@ -228,7 +234,7 @@ function query( $query, $params = null ) // {{{
 {
 	if( is_null( $params ) )
 		$params = array();
-	
+
 	foreach( $params as $key => $value )
 	{
 		if( is_null( $value ) )
@@ -238,9 +244,10 @@ function query( $query, $params = null ) // {{{
 		else
 			$query = str_replace( $key, "'$value'", $query );
 	}
-	
+
 	global $db;
-	$ret = sqlite_query( $db, $query, SQLITE_ASSOC, $errors );
+	$ret = $db->query( $query );
+
 	if( ! $ret )
 		echo $query;
 
@@ -250,7 +257,7 @@ function query( $query, $params = null ) // {{{
 function rowid() // {{{
 {
 	global $db;
-	return sqlite_last_insert_rowid( $db );
+	return $db->lastInsertId();
 } // }}}
 
 // Tools

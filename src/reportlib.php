@@ -11,7 +11,7 @@ Class ReportManager
 			WHERE
 				report_receiver.instance_id IS NULL " );
 
-		$records = sqlite_fetch_all( $result );
+		$records = $result->fetchAll();
 		$ids = array_map( 'reset', $records );
 
 		$instance = new Instance;
@@ -27,7 +27,7 @@ Class ReportManager
 			WHERE
 				receiver_id = :id", array( ':id' => $instance->id ) );
 
-		$records = sqlite_fetch_all( $result );
+		$records = $result->fetchAll();
 		$ids = array_map( 'reset', $records );
 
 		$instance = new Instance;
@@ -46,7 +46,7 @@ Class ReportManager
 			WHERE
 				report_content.instance_id IS NULL", array( ':id' => $instance->id ) );
 
-		$records = sqlite_fetch_all( $result );
+		$records = $result->fetchAll();
 		$ids = array_map( 'reset', $records );
 
 		$instance = new Instance;
@@ -88,7 +88,7 @@ Class ReportManager
 		$senders = query( 'SELECT instance_id, user, pass FROM report_receiver' );
 		$out = array();
 
-		while( $row = sqlite_fetch_array( $senders ) ) {
+		while( $row = $senders->fetch() ) {
 			$instance = new Instance;
 			$instance = $instance->getInstance( $row['instance_id'] );
 			

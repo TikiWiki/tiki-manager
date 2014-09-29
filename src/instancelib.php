@@ -21,7 +21,7 @@ class Instance
 		$result = query( "SELECT instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app FROM instance" );
 
 		$instances = array();
-		while( $instance = sqlite_fetch_object( $result, 'Instance' ) )
+		while( $instance = $result->fetchObject( 'Instance' ) )
 		{
 			$instances[] = $instance;
 		}
@@ -36,7 +36,7 @@ class Instance
 			FROM instance
 			WHERE instance_id = :id", array( ':id' => $id ) );
 
-		$instance = sqlite_fetch_object( $result, 'Instance' );
+		$instance = $result->fetchObject( 'Instance' );
 
 		return $instance;
 	} // }}}
@@ -56,7 +56,7 @@ class Instance
 			WHERE type = 'cvs' OR type = 'svn' OR type = 'tarball'" );
 
 		$instances = array();
-		while( $instance = sqlite_fetch_object( $result, 'Instance' ) )
+		while( $instance = $result->fetchObject( 'Instance' ) )
 		{
 			$instances[] = $instance;
 		}
@@ -229,7 +229,7 @@ class Instance
 			LIMIT 1",
 			array( ':id' => $this->id ) );
 
-		$object = sqlite_fetch_object( $result, 'Version' );
+		$object = $result->fetchObject( 'Version' );
 
 		return $object;
 	} // }}}
@@ -292,7 +292,7 @@ class Instance
 			array( ':id' => $this->id ) );
 
 		$list = array();
-		while( $str = sqlite_fetch_single( $result ) )
+		while( $str = $result->fetchColumn() )
 			$list[] = $str;
 
 		return $list;
@@ -390,7 +390,7 @@ class Version
 	{
 		$result = query( "SELECT COUNT(*) FROM file WHERE version_id = :id", array( ':id' => $this->id ) );
 
-		return sqlite_fetch_single( $result ) > 0;
+		return $result->fetchColumn() > 0;
 	} // }}}
 
 	function performCheck( Instance $instance ) // {{{
@@ -492,7 +492,7 @@ class Version
 		$result = query( "SELECT path, hash FROM file WHERE version_id = :v",
 			array( ':v' => $this->id ) );
 
-		while( $row = sqlite_fetch_array( $result ) )
+		while( $row = $result->fetch() )
 		{
 			extract( $row );
 			$map[$path] = $hash;

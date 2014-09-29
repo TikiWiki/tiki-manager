@@ -32,7 +32,7 @@ abstract class Access
 			array( ':id' => $instance->id ) );
 
 		$access = array();
-		while( $row = sqlite_fetch_array( $result ) )
+		while( $row = $result->fetch() )
 		{
 			$class = self::getClassFor( $row['type'] );
 
