@@ -20,7 +20,7 @@ class Application_Tiki extends Application
 		$versions[] = Version::buildFake( 'cvs', 'REL-1-9-11' );
 		$versions[] = Version::buildFake( 'cvs', 'BRANCH-1-9' );
 
-		$base = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki";
+		$base = "https://svn.code.sf.net/p/tikiwiki/code";
 		foreach( explode( "\n", `svn ls $base/tags` ) as $line )
 		{
 			$line = trim( $line );
@@ -108,7 +108,7 @@ class Application_Tiki extends Application
 
 		if( $this->getInstallType() == 'svn' )
 		{
-			$svn = new RC_SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
+			$svn = new RC_SVN( "https://svn.code.sf.net/p/tikiwiki/code" );
 			if( $branch = $svn->getRepositoryBranch( $this->instance ) )
 			{
 				info( "Detected SVN : $branch" );
@@ -179,7 +179,7 @@ class Application_Tiki extends Application
 
 		if( $version->type == 'svn' )
 		{
-			$branch = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki/{$version->branch}/$filename";
+			$branch = "https://svn.code.sf.net/p/tikiwiki/code/{$version->branch}/$filename";
 			$branch = str_replace( '/./', '/', $branch );
 			$branch = escapeshellarg( $branch );
 			`svn export $branch $local`;
@@ -212,7 +212,7 @@ class Application_Tiki extends Application
 	{
 		if( $version->type == 'svn' || $version->type == 'tarball' )
 		{
-			$branch = "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki/{$version->branch}";
+			$branch = "https://svn.code.sf.net/p/tikiwiki/code/{$version->branch}";
 			$branch = str_replace( '/./', '/', $branch );
 			$branch = escapeshellarg( $branch );
 			return "svn co $branch $folder";
@@ -272,7 +272,7 @@ class Application_Tiki extends Application
 					"rm -Rf " . escapeshellarg( $this->instance->getWebPath( 'temp/cache' ) )
 				);
 
-				$svn = new RC_SVN( "https://tikiwiki.svn.sourceforge.net/svnroot/tikiwiki" );
+				$svn = new RC_SVN( "https://svn.code.sf.net/p/tikiwiki/code" );
 				$svn->updateInstanceTo( $this->instance, $version->branch );
 				$access->shellExec( "chmod 0777 temp temp/cache" );
 			} elseif( $access instanceof Mountable ) {

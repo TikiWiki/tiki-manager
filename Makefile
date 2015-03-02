@@ -1,5 +1,5 @@
 # Change paths to executables here
-PHP = php5 -d memory_limit=256M
+PHP = php -d memory_limit=256M
 SQLITE = sqlite
 
 # No changes should be required from here
