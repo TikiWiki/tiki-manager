@@ -3,7 +3,7 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-include_once dirname(__FILE__) . "/../src/env_setup.php";
+include_once dirname(__FILE__) . "/../../src/env_setup.php";
 
 $raw = Instance::getUpdatableInstances();
 $instances = array();
