@@ -328,11 +328,17 @@ class Application_Tiki extends Application
 		$access = $this->instance->getBestAccess( 'scripting' );
 
 		if( $access instanceof ShellPrompt ) {
-			$filename = $this->instance->getWorkPath( 'setup.sh' );
-			$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
 			$access->chdir( $this->instance->webroot );
-			$access->shellExec(
-				"bash " . escapeshellarg( $filename ) . " 2> /dev/null" );
+
+			if ($this->instance->hasComposer()) {
+				$ret = $access->shellExec("bash setup.sh -n fix 2> /dev/null");    // does composer as well
+				// echo $ret; TODO output if verbose one day, or log it?
+			} else {
+				$filename = $this->instance->getWorkPath( 'setup.sh' );
+				$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
+				$access->shellExec(
+					"bash " . escapeshellarg( $filename ) . " 2> /dev/null" );
+			}
 		} elseif( $access instanceof Mountable ) {
 			return;
 			$target = MOUNT_FOLDER . $this->instance->webroot;
@@ -491,7 +497,7 @@ LOCAL
 
 	function beforeChecksumCollect() // {{{
 	{
-		$path = $this->instance->getWebPath( 'templates_c/*.php' );
+		$path = $this->instance->getWebPath( 'templates_c/*[!index].php' );
 
 		// FIXME : Not FTP compatible
 		if( ( $access = $this->instance->getBestAccess('scripting') ) instanceof ShellPrompt ) {

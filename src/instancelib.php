@@ -234,6 +234,16 @@ class Instance
 		return $object;
 	} // }}}
 
+	function hasComposer() {
+		$current = $this->getLatestVersion();
+		preg_match('/(\d+)\.?/', $current->branch, $m);
+		if ($m) {
+			return (float) $m[1] >= 11;
+		} else {
+			return false;
+		}
+	}
+
 	function getApplication() // {{{
 	{
 		if( empty( $this->app ) )
