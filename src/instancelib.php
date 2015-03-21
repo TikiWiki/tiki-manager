@@ -419,7 +419,7 @@ class Version
 
 		foreach( explode( "\n", $output ) as $line )
 		{
-			if( empty( $line ) )
+			if( empty( $line ) || strpos($line, ':./vendor/') !== false )
 				continue;
 
 			list( $hash, $filename ) = explode( ":", $line );
