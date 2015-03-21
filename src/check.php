@@ -22,7 +22,7 @@ function handleCheckResult( $instance, $version, $array )
 		$input = 'z';
 		while( stripos( 'pvdas', $input{0} ) === false )
 		{
-			echo "\tWhat do you want to do about it?\n\t(P)rint list again\n\t(V)iew files\n\t(D)elete files\n\t(A)dd files to valid list\n\t(S)kip\n";
+			echo "\tWhat do you want to do about it?\n\t(P)rint list again\n\t(V)iew files\n\t(D)elete files\n\t(A)dd files to valid list\n\t(S)kip\n(e.g. a0 to add file 0)\n";
 			$input = readline( ">>> " );
 		}
 
@@ -86,7 +86,7 @@ function handleCheckResult( $instance, $version, $array )
 		$input = 'z';
 		while( stripos( 'pvcerus', $input{0} ) === false )
 		{
-			echo "\tWhat do you want to do about it? \n\t(P)rint list again\n\t(V)iew files\n\t(C)ompare files with versions in repository\n\t(E)dit files in place\n\t(R)eplace with version in repository\n\t(U)pdate hash to accept file version\n\t(S)kip\n";
+			echo "\tWhat do you want to do about it? \n\t(P)rint list again\n\t(V)iew files\n\t(C)ompare files with versions in repository\n\t(E)dit files in place\n\t(R)eplace with version in repository\n\t(U)pdate hash to accept file version\n\t(S)kip\n(e.g. v0 to view file 0)\n";
 			$input = readline( ">>> " );
 		}
 
@@ -191,7 +191,7 @@ function handleCheckResult( $instance, $version, $array )
 		$input = 'z';
 		while( stripos( 'drs', $input{0} ) === false )
 		{
-			echo "\tWhat do you want to do about it? \n\t(R)estore version in repository\n\t(D)elete hash to accept file removal\n\t(S)kip\n";
+			echo "\tWhat do you want to do about it? \n\t(R)estore version in repository\n\t(D)elete hash to accept file removal\n\t(S)kip\n(e.g. r0 to restore file 0)\n";
 			$input = readline( ">>> " );
 		}
 
