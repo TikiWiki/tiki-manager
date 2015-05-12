@@ -10,7 +10,7 @@ $instances = Instance::getInstances();
 
 echo "Hosts you can verify:\n";
 foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 30 ) . str_pad( $i->contact, 20 ) . "\n";
+	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
 
 $selection = readline( "\nWhich ones do you want to verify? (can select multiple, blank for all) " );
 
