@@ -234,7 +234,13 @@ class Instance
 		return $object;
 	} // }}}
 
-	function hasComposer() {
+	/**
+	 * Modern in this context means it uses composer and has console.php for shell access which arrived in Tiki 11,
+	 * although this may need to be changed to 12 if 11 is proved to be unreliable in these respects
+	 *
+	 * @return bool
+	 */
+	function isModernTiki() {
 		$current = $this->getLatestVersion();
 		preg_match('/(\d+)\.?/', $current->branch, $m);
 		if ($m) {

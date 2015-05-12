@@ -249,7 +249,7 @@ function query( $query, $params = null ) // {{{
 	$ret = $db->query( $query );
 
 	if( ! $ret )
-		echo $query;
+		echo $query . "\n";
 
 	return $ret;
 } // }}}

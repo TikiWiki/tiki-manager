@@ -268,6 +268,17 @@ class Application_Tiki extends Application
 
 			if( $access instanceof ShellPrompt && $access->hasExecutable( 'svn' ) )
 			{
+				if ($this->instance->isModernTiki()) {
+					$access->chdir( $this->instance->webroot );
+					info( "Updating svn, composer, perms & database..." );
+					$ret = $access->shellExec(array(
+						'sh doc/devtools/svnup.sh',	// does svn up, composer, perms & database
+						"{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
+						'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
+					));
+					// again, not sure what to do with the output form the commands
+					return;
+				}
 				$access->shellExec(
 					"rm -Rf " . escapeshellarg( $this->instance->getWebPath( 'temp/cache' ) )
 				);
@@ -330,8 +341,8 @@ class Application_Tiki extends Application
 		if( $access instanceof ShellPrompt ) {
 			$access->chdir( $this->instance->webroot );
 
-			if ($this->instance->hasComposer()) {
-				$ret = $access->shellExec("bash setup.sh -n fix 2> /dev/null");    // does composer as well
+			if ($this->instance->isModernTiki()) {
+				$ret = $access->shellExec("sh setup.sh -n fix 2> /dev/null");    // does composer as well
 				// echo $ret; TODO output if verbose one day, or log it?
 			} else {
 				$filename = $this->instance->getWorkPath( 'setup.sh' );
@@ -425,14 +436,24 @@ class Application_Tiki extends Application
 \$pass_tiki='{$database->pass}';
 \$dbs_tiki='{$database->dbname}';
 \$client_charset = 'utf8';
-?>
+
 LOCAL
 );
 
 		$access = $this->instance->getBestAccess( 'filetransfer' );
 		$access->uploadFile( $tmp, 'db/local.php' );
 
-		if( $access->fileExists( 'installer/shell.php' ) )
+		if( $access->fileExists( 'console.php' ) && $access instanceof ShellPrompt)
+		{
+			$access = $this->instance->getBestAccess( 'scripting' );
+			$access->chdir( $this->instance->webroot );
+			info( "Updating svn, composer, perms & database..." );
+			$ret = $access->shellExec(array(
+				"{$this->instance->phpexec} -q -d memory_limit=256M console.php database:install",
+				'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
+			));
+
+		} else if( $access->fileExists( 'installer/shell.php' ) )
 		{
 			if( $access instanceof ShellPrompt ) {
 				$access = $this->instance->getBestAccess( 'scripting' );
@@ -464,7 +485,7 @@ LOCAL
 \$user_tiki='{$database->user}';
 \$pass_tiki='{$database->pass}';
 \$dbs_tiki='{$database->dbname}';
-?>
+
 LOCAL
 );
 
