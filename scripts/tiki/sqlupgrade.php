@@ -1,5 +1,5 @@
 <?php
-if( $_SERVER['REQUEST_METHOD'] == 'GET' ) {
+if( isset( $_SERVER['REQUEST_METHOD'] ) && $_SERVER['REQUEST_METHOD'] == 'GET' ) {
 	$_SERVER['argv'] = $_GET;
 }
 
