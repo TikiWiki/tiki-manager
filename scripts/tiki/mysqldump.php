@@ -155,6 +155,17 @@ $mysqldump_version="1.02";
 
 include_once 'db/local.php';
 
+if( $host_tiki ) {
+    $parts = explode( ';', $host_tiki );
+
+    // parse the MySQL port from a DSN string
+    if( isset( $parts[1] ) && strpos( $parts[1], 'port=' ) === true ) {
+        $port = substr( $parts[1], 5 );
+    }
+
+    $host_tiki = $parts[0] . ':' . $port;
+}
+
 $mysql_host=$host_tiki;
 $mysql_database=$dbs_tiki;
 $mysql_username=$user_tiki;
