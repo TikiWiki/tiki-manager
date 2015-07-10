@@ -1,6 +1,6 @@
 # Change paths to executables here
 PHP = php -d memory_limit=256M
-SQLITE = sqlite
+SQLITE = sqlite3
 
 # No changes should be required from here
 default:
