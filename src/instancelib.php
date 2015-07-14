@@ -274,8 +274,11 @@ class Instance
 		if( ! file_exists( $approot ) )
 			mkdir( $approot );
 
+		if( file_exists( "{$approot}/manifest.txt" ) ) {
+			`rm $approot/manifest.txt`;
+		}
+
 		// Bring all remote files locally
-		`rm $approot/manifest.txt`;
 		info( "Downloading files locally." );
 		foreach( $locations as $remote )
 		{
