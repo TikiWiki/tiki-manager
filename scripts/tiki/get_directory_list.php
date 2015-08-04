@@ -28,6 +28,6 @@ if( $host_tiki ) {
 $args[] = $dbs_tiki;
 
 $args = implode( ' ', $args );
-$command = "echo \"select distinct value from tiki_preferences where name like '%use_dir' union select att_store_dir from tiki_forums\" | mysql -f $args";
+$command = "echo \"select distinct value as '' from tiki_preferences where name like '%use_dir' union select att_store_dir from tiki_forums\" | mysql -f $args";
 
-echo exec( $command );
+echo shell_exec( $command );
