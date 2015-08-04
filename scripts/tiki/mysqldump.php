@@ -159,7 +159,7 @@ if( $host_tiki ) {
     $parts = explode( ';', $host_tiki );
 
     // parse the MySQL port from a DSN string
-    if( isset( $parts[1] ) && strpos( $parts[1], 'port=' ) === true ) {
+    if( isset( $parts[1] ) && strpos( $parts[1], 'port=' ) !== false ) {
         $port = substr( $parts[1], 5 );
     }
 

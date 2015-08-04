@@ -20,7 +20,7 @@ if( $host_tiki ) {
     $args[] = "-h" . escapeshellarg( $parts[0] );
 
     // parse the MySQL port from a DSN string
-    if( isset( $parts[1] ) && strpos( $parts[1], 'port=' ) === true ) {
+    if( isset( $parts[1] ) && strpos( $parts[1], 'port=' ) !== false ) {
         $port = substr( $parts[1], 5 );
         $args[] = "-P" . escapeshellarg( $port );
     }
