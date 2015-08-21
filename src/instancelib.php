@@ -338,8 +338,8 @@ class Instance
 		$access = $this->getBestAccess( 'scripting' );
 
 		info( "Locking website." );
-		if( ! $access->fileExists( $this->getWebPath( 'maintenance.html' ) ) )
-			$access->uploadFile( dirname(__FILE__) . "/../scripts/maintenance.html", "maintenance.html" );
+		if( ! $access->fileExists( $this->getWebPath( 'maintenance.php' ) ) )
+			$access->uploadFile( dirname(__FILE__) . "/../scripts/maintenance.php", "maintenance.php" );
 
 		if( $access->fileExists( $this->getWebPath( '.htaccess' ) ) )
 			$access->moveFile( '.htaccess', '.htaccess.bak' );

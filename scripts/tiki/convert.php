@@ -52,8 +52,8 @@ foreach( $selection as $instance )
 	info('Copying user data on drive');
 	$access->shellExec( $store );
 
-	$maint = escapeshellarg( $instance->getWebPath( 'maintenance.html' ) );
-	$temp = escapeshellarg( $instance->getWorkPath( 'maintenance.html' ) );
+	$maint = escapeshellarg( $instance->getWebPath( 'maintenance.php' ) );
+	$temp = escapeshellarg( $instance->getWorkPath( 'maintenance.php' ) );
 
 	info('Removing 1.9 files');
 	$access->shellExec( 
