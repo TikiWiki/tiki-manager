@@ -4,7 +4,7 @@ SQLITE = sqlite3
 
 # No changes should be required from here
 default:
-	@echo Valid options are : instance, viewdb, check, watch, update, upgrade, convert, access, backup, restore, fix, detect, enablewww, delete, profile, report
+	@echo Valid options are : instance, viewdb, check, watch, update, upgrade, convert, access, backup, restore, fix, detect, enablewww, delete, profile, report, copysshkey
 
 .PHONY: backup
 
@@ -56,3 +56,5 @@ profile:
 report:
 	$(PHP) scripts/tiki/report.php
 
+copysshkey:
+	$(PHP) scripts/copysshkey.php
