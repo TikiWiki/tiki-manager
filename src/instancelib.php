@@ -278,6 +278,9 @@ class Instance
 			`rm $approot/manifest.txt`;
 		}
 
+		$app = $this->getApplication();
+		$app->removeTemporaryFiles();
+
 		// Bring all remote files locally
 		info( "Downloading files locally." );
 		foreach( $locations as $remote )

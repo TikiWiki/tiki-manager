@@ -242,4 +242,10 @@ class Application_Wordpress extends Application
 		//TODO
 		return;
 	}
+
+	function removeTemporaryFiles()
+	{
+		//TODO
+		return;
+	}
 }

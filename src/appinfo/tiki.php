@@ -518,17 +518,22 @@ LOCAL
 
 	function beforeChecksumCollect() // {{{
 	{
-		$path = $this->instance->getWebPath( 'templates_c/*[!index].php' );
-
-		// FIXME : Not FTP compatible
-		if( ( $access = $this->instance->getBestAccess('scripting') ) instanceof ShellPrompt ) {
-			$access->shellExec( "rm " . $path );
-		}
+	    $this->removeTemporaryFiles();
 	} // }}}
 
 	function installProfile( $domain, $profile ) {
 		$access = $this->instance->getBestAccess('scripting');
 
 		echo $access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php', array( $this->instance->webroot, $domain, $profile ) );
+	}
+
+	function removeTemporaryFiles()
+	{
+		$path = $this->instance->getWebPath( 'templates_c/*[!index].php' );
+
+		// FIXME : Not FTP compatible
+		if( ( $access = $this->instance->getBestAccess('scripting') ) instanceof ShellPrompt ) {
+			$access->shellExec( "rm " . $path );
+		}
 	}
 }

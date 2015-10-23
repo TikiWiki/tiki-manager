@@ -68,6 +68,8 @@ abstract class Application
 
 	abstract function backupDatabase( $targetFile );
 
+	abstract function removeTemporaryFiles();
+
 	function beforeChecksumCollect() // {{{
 	{
 	} // }}}
