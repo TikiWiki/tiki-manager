@@ -49,15 +49,29 @@ include dirname(__FILE__) . "/ext/Password.php";
 
 $root = realpath( dirname(__FILE__) . "/.." );
 define( "DB_FILE", "$root/data/trim.db" );
-define( "SSH_KEY", "$root/data/id_dsa" );
 define( "SSH_CONFIG", "$root/data/ssh_config" );
-define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
 define( "CACHE_FOLDER", "$root/cache" );
 define( "TEMP_FOLDER", "$root/tmp" );
 define( "RSYNC_FOLDER", "$root/tmp/rsync" );
 define( "MOUNT_FOLDER", "$root/tmp/mount" );
 define( "BACKUP_FOLDER", "$root/backup" );
 define( "ARCHIVE_FOLDER", "$root/backup/archive" );
+
+if( file_exists( "$root/data/id_dsa" ) && file_exists( "$root/data/id_dsa.pub" ) )
+{
+	define( "SSH_KEY", "$root/data/id_dsa" );
+	define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
+	warning( sprintf(
+		"TRIM is using a ssh-dsa key which have been deprecated in openssh-7.0. It is recommended that you remove it (%s and %s). " .
+		"After that, run 'make copysshkey' and TRIM will create a new RSA key. Copy the new key to all your instances.",
+		SSH_KEY, SSH_PUBLIC_KEY
+	) );
+}
+else
+{
+	define( "SSH_KEY", "$root/data/id_rsa" );
+	define( "SSH_PUBLIC_KEY", "$root/data/id_rsa.pub" );
+}
 
 if( array_key_exists( 'EDITOR', $_ENV ) )
 	define( 'EDITOR', $_ENV['EDITOR'] );
@@ -92,7 +106,7 @@ if( ! file_exists( SSH_KEY ) || ! file_exists( SSH_PUBLIC_KEY ) )
 		die( "Impossible to generate SSH key. Make sure data folder is writable.\n" );
 
 	$key = SSH_KEY;
-	`ssh-keygen -t dsa -f $key`;
+	`ssh-keygen -t rsa -f $key`;
 }
 
 if( ! file_exists( CACHE_FOLDER ) )
