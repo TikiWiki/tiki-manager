@@ -9,13 +9,8 @@ include_once dirname(__FILE__) . "/../../src/clean.php";
 $instances = Instance::getInstances();
 
 echo "Note: Only instances running Tiki can have profiles applied.\n\n";
-echo "Which instances do you want to apply a profile on?\n";
 
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
-
-$selection = readline( ">>> " );
-$selection = getEntries( $instances, $selection );
+$selection = selectInstances( $instances, "Which instances do you want to apply a profile on?\n" );
 
 if( ! $repository = readline( 'Repository: [profiles.tiki.org] ' ) ) {
 	$repository = 'profiles.tiki.org';

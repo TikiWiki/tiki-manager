@@ -5,14 +5,7 @@ include_once dirname(__FILE__) . "/../src/check.php";
 include_once dirname(__FILE__) . "/../src/dbsetup.php";
 
 $instances = Instance::getInstances();
-
-echo "Hosts you can detect on:\n";
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
-
-$selection = readline( "\nWhich ones do you want to detect? " );
-
-$selection = getEntries( $instances, $selection );
+$selection = selectInstances( $instances, "Which instances do you want to detect?\n" );
 
 foreach( $selection as $instance )
 {

@@ -24,8 +24,7 @@ $instances = Instance::getUpdatableInstances();
 echo "Note: Only CVS and SVN instances can be updated.\n\n";
 echo "Which instances do you want to update?\n";
 
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
+printInstances( $instances );
 
 $which = readline( ">>> " );
 

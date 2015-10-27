@@ -39,25 +39,13 @@ MENU;
 function add() {
 	$report = new ReportManager;
 	$instances = $report->getAvailableInstances();
-	
-	echo "Which instances do you want to report on?";
-	foreach( $instances as $key => $instance ) {
-		echo "[$key] {$instance->name}\n";
-	}
 
-	$selection = readline( '>>> ' );
-	$selection = getEntries( $instances, $selection );
+	$selection = selectInstances( $instances, "Which instances do you want to report on?\n" );
 
 	foreach( $selection as $instance ) {
 		$all = Instance::getInstances();
-		
-		echo "Which instances do you want to include in the report?\n";
-		foreach( $all as $key => $child ) {
-			echo "[$key] {$child->name}\n";
-		}
 
-		$toAdd = readline( '>>> ' );
-		$toAdd = getEntries( $all, $toAdd );
+		$toAdd = selectInstances( $all, "Which instances do you want to include in the report?\n" );
 
 		$report->reportOn( $instance );
 		$report->setInstances( $instance, $toAdd );
@@ -67,25 +55,13 @@ function add() {
 function modify() {
 	$report = new ReportManager;
 	$instances = $report->getReportInstances();
-	
-	echo "Which reports do you want to modify?";
-	foreach( $instances as $key => $instance ) {
-		echo "[$key] {$instance->name}\n";
-	}
 
-	$selection = readline( '>>> ' );
-	$selection = getEntries( $instances, $selection );
+	$selection = selectInstances( $instances, "Which reports do you want to modify?\n" );
 
 	foreach( $selection as $instance ) {
 		$all = $report->getReportCandidates( $instance );
-		
-		echo "Which instances do you want to include in the report?\n";
-		foreach( $all as $key => $child ) {
-			echo "[$key] {$child->name}\n";
-		}
 
-		$toAdd = readline( '>>> ' );
-		$toAdd = getEntries( $all, $toAdd );
+		$toAdd = selectInstances( $all, "Which instances do you want to include in the report?\n" );
 
 		$full = array_merge( $report->getReportContent( $instance ), $toAdd );
 
@@ -96,25 +72,13 @@ function modify() {
 function remove() {
 	$report = new ReportManager;
 	$instances = $report->getReportInstances();
-	
-	echo "Which reports do you want to modify?";
-	foreach( $instances as $key => $instance ) {
-		echo "[$key] {$instance->name}\n";
-	}
 
-	$selection = readline( '>>> ' );
-	$selection = getEntries( $instances, $selection );
+	$selection = selectInstances( $instances, "Which reports do you want to modify?\n" );
 
 	foreach( $selection as $instance ) {
 		$all = $report->getReportContent( $instance );
-		
-		echo "Which instances do you want to remove from the report?\n";
-		foreach( $all as $key => $child ) {
-			echo "[$key] {$child->name}\n";
-		}
 
-		$toRemove = readline( '>>> ' );
-		$toRemove = getEntries( $all, $toRemove );
+		$toRemove = selectInstances( $all, "Which instances do you want to remove from the report?\n" );
 
 		$report->removeInstances( $instance, $toRemove );
 	}

@@ -11,13 +11,7 @@ $instances = Instance::getInstances();
 if( ! isset( $_SERVER['argv'][1] ) )
 {
 	echo color("Note: Backups are only available on SSH instances.\n\n", 'yellow');
-	echo "Which instances do you want to backup?\n";
-
-	foreach( $instances as $key => $i )
-		echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
-
-	$selection = readline( ">>> " );
-	$selection = getEntries( $instances, $selection );
+	$selection = selectInstances( $instances, "Which instances do you want to backup?\n" );
 }
 elseif( $_SERVER['argv'][1] == 'all' )
 {

@@ -297,6 +297,40 @@ function getEntries( $list, $selection ) // {{{
 	return $output;
 } // }}}
 
+/**
+ * Ask the user to select one or more instances to perform
+ * an action.
+ *
+ * @param array list of Instance objects
+ * @param string $selectionQuestion message displayed to the user before the list of available instances
+ * @return array one or more instances objects
+ */
+function selectInstances( array $instances, $selectionQuestion )
+{
+	echo $selectionQuestion;
+
+	printInstances( $instances );
+
+	$selection = readline( ">>> " );
+	$selection = getEntries( $instances, $selection );
+
+	return $selection;
+}
+
+/**
+ * Print a list of instances to the user for selection.
+ *
+ * @param array $instances list of Instance objects
+ * @return null
+ */
+function printInstances( array $instances )
+{
+	foreach( $instances as $key => $i )
+	{
+		echo "[$key] " . str_pad($i->name, 20) . str_pad($i->weburl, 40) . str_pad($i->contact, 20) . "\n";
+	}
+}
+
 function php() // {{{
 {
 	$paths = `locate bin/php`;

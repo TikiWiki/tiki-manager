@@ -20,13 +20,7 @@ foreach( $raw as $instance )
 }
 
 echo "Note: It is only possible to restore a backup on a blank install.\n\n";
-echo "Which instance do you want to restore on?\n";
-
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
-
-$selection = readline( ">>> " );
-$selection = getEntries( $instances, $selection );
+$selection = selectInstances( $instances, "Which instance do you want to restore on?\n" );
 
 $restorable = Instance::getRestorableInstances();
 
@@ -36,8 +30,7 @@ foreach( $selection as $instance )
 
 	echo "Which instance do you want to restore?\n";
 
-	foreach( $restorable as $key => $i )
-		echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
+	printInstances( $restorable );
 
 	$single = readline( ">>> " );
 

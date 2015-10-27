@@ -7,14 +7,7 @@ include_once dirname(__FILE__) . "/../src/env_setup.php";
 include_once dirname(__FILE__) . "/../src/check.php";
 
 $instances = Instance::getInstances();
-
-echo "Which instances do you want to access?\n";
-
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
-
-$selection = readline( ">>> " );
-$selection = getEntries( $instances, $selection );
+$selection = selectInstances( $instances, "Which instances do you want to access?\n" );
 
 foreach( $selection as $instance )
 {
