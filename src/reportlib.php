@@ -14,9 +14,7 @@ Class ReportManager
 		$records = $result->fetchAll();
 		$ids = array_map( 'reset', $records );
 
-		$instance = new Instance;
-
-		return array_map( array( $instance, 'getInstance' ), $ids );
+		return $this->buildInstancesArray( $ids );
 	}
 
 	function getReportContent( $instance ) {
@@ -30,9 +28,7 @@ Class ReportManager
 		$records = $result->fetchAll();
 		$ids = array_map( 'reset', $records );
 
-		$instance = new Instance;
-
-		return array_map( array( $instance, 'getInstance' ), $ids );
+		return $this->buildInstancesArray( $ids );
 	}
 
 	function getReportCandidates( Instance $instance ) {
@@ -49,9 +45,26 @@ Class ReportManager
 		$records = $result->fetchAll();
 		$ids = array_map( 'reset', $records );
 
+		return $this->buildInstancesArray( $ids );
+	}
+
+	/**
+	 * Build an array of instances objects from a array
+	 * of instances ids.
+	 *
+	 * @param array $ids
+	 * @return array
+	 */
+	protected function buildInstancesArray( $ids ) {
+		$instances = array();
 		$instance = new Instance;
 
-		return array_map( array( $instance, 'getInstance' ), $ids );
+		foreach( $ids as $id )
+		{
+			$instances[$id] = $instance->getInstance($id);
+		}
+
+		return $instances;
 	}
 
 	function reportOn( $instance ) {
@@ -103,7 +116,7 @@ Class ReportManager
 		$instances = array();
 
 		foreach( $this->getReportSenders() as $row ) {
-			$instances[] = $row['instance'];
+			$instances[$row['instance_id']] = $row['instance'];
 		}
 
 		return $instances;

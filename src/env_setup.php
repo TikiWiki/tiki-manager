@@ -327,7 +327,7 @@ function printInstances( array $instances )
 {
 	foreach( $instances as $key => $i )
 	{
-		echo "[$key] " . str_pad($i->name, 20) . str_pad($i->weburl, 40) . str_pad($i->contact, 20) . "\n";
+		echo "[$i->id] " . str_pad($i->name, 20) . str_pad($i->weburl, 40) . str_pad($i->contact, 20) . "\n";
 	}
 }
 
