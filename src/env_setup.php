@@ -57,7 +57,22 @@ define( "MOUNT_FOLDER", "$root/tmp/mount" );
 define( "BACKUP_FOLDER", "$root/backup" );
 define( "ARCHIVE_FOLDER", "$root/backup/archive" );
 
-if( file_exists( "$root/data/id_dsa" ) && file_exists( "$root/data/id_dsa.pub" ) )
+if( file_exists(getenv("HOME").'.ssh/id_rsa') && file_exists(getenv("HOME").'.ssh/id_rsa.pub') )
+{
+	define( "SSH_KEY", getenv("HOME").'.ssh/id_rsa' );
+	define( "SSH_PUBLIC_KEY", getenv("HOME").'.ssh/id_rsa.pub' );
+}
+elseif ( file_exists(getenv("HOME").'.ssh/id_dsa') && file_exists(getenv("HOME").'.ssh/id_dsa.pub') )
+{
+	define( "SSH_KEY", getenv("HOME").'.ssh/id_dsa' );
+	define( "SSH_PUBLIC_KEY", getenv("HOME").'.ssh/id_dsa.pub' );
+	warning( sprintf(
+		"TRIM is using a ssh-dsa key which have been deprecated in openssh-7.0. It is recommended that you remove it (%s and %s). " .
+		"After that, run 'make copysshkey' and TRIM will create a new RSA key. Copy the new key to all your instances.",
+		SSH_KEY, SSH_PUBLIC_KEY
+	) );
+}
+elseif( file_exists( "$root/data/id_dsa" ) && file_exists( "$root/data/id_dsa.pub" ) )
 {
 	define( "SSH_KEY", "$root/data/id_dsa" );
 	define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
