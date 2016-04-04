@@ -8,7 +8,7 @@ include_once dirname(__FILE__) . "/../src/dbsetup.php";
 
 $type = $user = $host = $pass = '';
 while( ! in_array( $type, array( 'ftp', 'ssh' ) ) ) {
-	$type = readline( "Connection type [ssh|ftp] : " );
+	$type = strtolower(readline( "Connection type [ssh|ftp] : " ));
 }
 
 while( empty( $host ) )
