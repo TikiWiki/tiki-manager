@@ -24,12 +24,8 @@ while( empty( $user ) )
 while( $type == 'ftp' && empty( $pass ) )
 	$pass = readline( "Password : " );
 
-$name = $contact = $webroot = $tempdir = $weburl = '';
-
 $d_name = $host;
-$d_webroot = ($user=='root'||$user=='apache'?'/var/www/html/':"/home/$user/public_html");
-$d_tempdir = "/tmp/trim_temp";
-$d_weburl = "http://$host";
+$name = $contact = $webroot = $tempdir = $weburl = '';
 
 $name = readline( "Instance name : [$d_name] " );
 if( empty( $name ) )
@@ -37,18 +33,6 @@ if( empty( $name ) )
 
 while( empty( $contact ) )
 	$contact = strtolower(readline( "Contact email : " ));
-
-$webroot = readline( "Web root : [$d_webroot] " );
-if( empty( $webroot ) )
-	$webroot = $d_webroot;
-
-$weburl = readline( "Web URL : [$d_weburl] " );
-if( empty( $weburl ) )
-	$weburl = $d_weburl;
-
-$tempdir = readline( "Working directory : [$d_tempdir] " );
-if( empty( $tempdir ) )
-	$tempdir = $d_tempdir;
 
 $instance = new Instance;
 $instance->name = $name;
@@ -68,11 +52,6 @@ if( ! $access )
 	echo color("Set-up failure. Instance removed.\n", 'red');
 }
 
-if( $access instanceof ShellPrompt )
-	$access->shellExec( "mkdir -p $tempdir" );
-else
-	echo color("Shell access is required to create the working directory. You will need to create it manually.\n",'yellow');
-
 info( "Detecting remote configuration." );
 if( ! $instance->detectPHP() ){
 	if ($instance->phpversion < 50300){
@@ -82,5 +61,39 @@ if( ! $instance->detectPHP() ){
 		die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
 	}
 }
+
+$d_linux = $instance->detectDistribution();
+echo "You are running on a $d_linux\n";
+
+switch ($d_linux){
+	case "ClearOS":
+		$d_webroot = ($user=='root'||$user=='apache'?'/var/www/virtual/'.$host.'/':"/home/$user/public_html");
+		break;
+	default:
+		$d_webroot = ($user=='root'||$user=='apache'?'/var/www/html/':"/home/$user/public_html");
+}
+
+$d_weburl = "http://$host";
+$d_tempdir = "/tmp/trim_temp";
+
+$webroot = readline( "Web root : [$d_webroot] " );
+if( empty( $webroot ) )
+	$webroot = $d_webroot;
+
+$weburl = readline( "Web URL : [$d_weburl] " );
+if( empty( $weburl ) )
+	$weburl = $d_weburl;
+
+$tempdir = readline( "Working directory : [$d_tempdir] " );
+if( empty( $tempdir ) )
+	$tempdir = $d_tempdir;
+
+if( $access instanceof ShellPrompt )
+	$access->shellExec( "mkdir -p $tempdir" );
+else
+	echo color("Shell access is required to create the working directory. You will need to create it manually.\n",'yellow');
+
+$instance->save();
+echo color("Instance information saved.\n", 'green');
 
 perform_instance_installation( $instance );

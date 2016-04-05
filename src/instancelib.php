@@ -197,6 +197,12 @@ class Instance
 		return false;
 	} // }}}
 
+	function detectDistribution(){ // {{{
+		$access = $this->getBestAccess( 'scripting' );
+		$path = $access->getInterpreterPath();
+		return $access->getDistributionName($path);
+	} // }}}
+
 	function getExtensions() // {{{
 	{
 		$access = $this->getBestAccess( 'scripting' );
