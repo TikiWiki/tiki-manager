@@ -9,8 +9,14 @@ $selection = selectInstances( $instances, "Which instances do you want to detect
 
 foreach( $selection as $instance )
 {
-	if( ! $instance->detectPHP() )
-		die( "PHP Interpreter could not be found on remote host.\n" );
+	if( ! $instance->detectPHP() ){
+		if ($instance->phpversion < 50300){
+			die( color("PHP Interpreter version is less than 5.3.\n", 'red') );
+		}
+		else{
+			die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
+		}
+	}
 
 	perform_instance_installation( $instance );
 }

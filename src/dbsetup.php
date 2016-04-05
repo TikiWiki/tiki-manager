@@ -19,8 +19,14 @@ function perform_instance_installation( Instance $instance )
 
 		$versions = $app->getVersions();
 		echo "Which version do you want to install? (none to skip)\n";
-		foreach( $versions as $key => $version )
-			echo "[$key] {$version->type} : {$version->branch}\n";
+		foreach( $versions as $key => $version ){
+			preg_match('/\d+\./',$version->branch, $matches);
+			if (($matches[0] >= 13) && ($instance->phpversion < 50500)){
+				// none to do, this match is incompatible
+			}
+			else
+				echo "[$key] {$version->type} : {$version->branch}\n";
+		}
 
 		$input = readline( ">>> " );
 		$selection = getEntries( $versions, $input );

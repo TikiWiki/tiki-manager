@@ -215,6 +215,15 @@ class Access_SSH extends Access implements ShellPrompt
 		}
 	} // }}}
 
+	function getInterpreterVersion($interpreter) // {{{
+	{
+		$host = $this->getHost();
+		$versionInfo = $host->runCommands( "$interpreter -r 'echo PHP_VERSION_ID;'" );
+
+		return $versionInfo;
+	} // }}}
+	
+
 	function fileExists( $filename ) // {{{
 	{
 		if( $filename{0} != '/' )

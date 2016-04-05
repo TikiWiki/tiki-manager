@@ -20,15 +20,15 @@ if( empty($port) )
 	$port = $d_port;
 
 while( empty( $user ) )
-	$user = readline( "User : " );
+	$user = strtolower(readline( "User : " ));
 while( $type == 'ftp' && empty( $pass ) )
 	$pass = readline( "Password : " );
 
 $name = $contact = $webroot = $tempdir = $weburl = '';
 
 $d_name = $host;
-$d_webroot = "/home/$user/public_html";
-$d_tempdir = "/home/$user/trim_temp";
+$d_webroot = ($user=='root'||$user=='apache'?'/var/www/html/':"/home/$user/public_html");
+$d_tempdir = "/tmp/trim_temp";
 $d_weburl = "http://$host";
 
 $name = readline( "Instance name : [$d_name] " );
@@ -36,7 +36,7 @@ if( empty( $name ) )
 	$name = $d_name;
 
 while( empty( $contact ) )
-	$contact = readline( "Contact email : " );
+	$contact = strtolower(readline( "Contact email : " ));
 
 $webroot = readline( "Web root : [$d_webroot] " );
 if( empty( $webroot ) )
@@ -74,7 +74,13 @@ else
 	echo color("Shell access is required to create the working directory. You will need to create it manually.\n",'yellow');
 
 info( "Detecting remote configuration." );
-if( ! $instance->detectPHP() )
-	die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
+if( ! $instance->detectPHP() ){
+	if ($instance->phpversion < 50300){
+		die( color("PHP Interpreter version is less than 5.3.\n", 'red') );
+	}
+	else{
+		die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
+	}
+}
 
 perform_instance_installation( $instance );

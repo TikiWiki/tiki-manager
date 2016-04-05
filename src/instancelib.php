@@ -12,6 +12,7 @@ class Instance
 	public $weburl;
 	public $tempdir;
 	public $phpexec;
+	public $phpversion;
 	public $app;
 
 	private $access = array();
@@ -182,6 +183,11 @@ class Instance
 
 		if( strlen( $path ) > 0 )
 		{
+			$version = $access->getInterpreterVersion($path);
+			$this->phpversion = $version;
+			if ($version <  50300){
+				return false;
+			}
 			$this->phpexec = $path;
 			$this->save();
 
