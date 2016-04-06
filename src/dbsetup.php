@@ -54,24 +54,25 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 
 	if( $access instanceof ShellPrompt ) {
 		echo "Note: creating databases and users requires root privileges on MySQL.\n";
-		$type = strtolower(readline( "Should a new database and user be created? [yes] " ));
+		$type = strtolower(readline( "Should a new database and user be created (both)? [yes] " ));
 	} else {
 		$type = 'no';
 	}
-
-	if( strtolower( $type{0} ) == 'n' )
-	{
 		$d_host = 'localhost';
 		$d_user = 'root';
 		$d_pass = '';
-		$d_dbname = '';
 
-		$host = readline( "Database host : [$d_host] " );
+		$host = strtolower(readline( "Database host : [$d_host] " ));
 		if( empty( $host ) ) $host = $d_host;
-		$user = readline( "Database user : [$d_user] " );
+		$user = strtolower(readline( "Database user : [$d_user] " ));
 		if( empty( $user ) ) $user = $d_user;
 		$pass = readline( "Database password : [$d_pass] " );
 		if( empty( $pass ) ) $pass = $d_pass;
+
+	if( strtolower( $type{0} ) == 'n' )
+	{
+		$d_dbname = '';
+
 		while( empty( $dbname ) )
 			$dbname = readline( "Database name : " );
 
@@ -84,17 +85,6 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	}
 	else
 	{
-		$d_host = 'localhost';
-		$d_user = 'root';
-		$d_pass = '';
-
-		$host = readline( "Database host : [$d_host] " );
-		if( empty( $host ) ) $host = $d_host;
-		$user = readline( "Database user : [$d_user] " );
-		if( empty( $user ) ) $user = $d_user;
-		$pass = readline( "Database password : [$d_pass] " );
-		if( empty( $pass ) ) $pass = $d_pass;
-
 		$adapter = new Database_Adapter_Mysql( $host, $user, $pass );
 		$db = new Database( $instance, $adapter );
 		$db->host = $host;
