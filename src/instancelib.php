@@ -314,8 +314,8 @@ class Instance
 		info( "Creating archive." );
 		$tarLocation = ARCHIVE_FOLDER . "/{$this->id}_" . date( 'Y-m-d_H-i-s' ) . '.tar';
 		$tar = escapeshellarg( $tarLocation );
-		`tar -cf $tar {$this->id}`;
-		`bzip2 -6 $tar`;
+		`nice -n 19 tar -cf $tar {$this->id}`;
+		`nice -n 19 bzip2 -6 $tar`;
 
 		chdir( $current );
 	} // }}}

@@ -54,7 +54,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 
 	if( $access instanceof ShellPrompt ) {
 		echo "Note: creating databases and users requires root privileges on MySQL.\n";
-		$type = readline( "Should a new database and user be created? [yes] " );
+		$type = strtolower(readline( "Should a new database and user be created? [yes] " ));
 	} else {
 		$type = 'no';
 	}
