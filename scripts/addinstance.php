@@ -41,7 +41,7 @@ $instance->webroot = rtrim( $webroot, '/' );
 $instance->weburl = rtrim( $weburl, '/' );
 $instance->tempdir = rtrim( $tempdir, '/' );
 
-$instance->save();
+//$instance->save();
 echo color("Instance information saved.\n", 'green');
 
 $access = $instance->registerAccessMethod( $type, $host, $user, $pass, $port );
@@ -93,6 +93,8 @@ if( $access instanceof ShellPrompt )
 else
 	echo color("Shell access is required to create the working directory. You will need to create it manually.\n",'yellow');
 
+$instance->webroot = rtrim( $webroot, '/' );
+$instance->tempdir = rtrim( $tempdir, '/' );
 $instance->save();
 echo color("Instance information saved.\n", 'green');
 
