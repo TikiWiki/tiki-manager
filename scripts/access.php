@@ -13,5 +13,6 @@ foreach( $selection as $instance )
 {
 	echo "Connecting to {$instance->name}... (use `exit` to move to next instance)\n";
 	$access = $instance->getBestAccess( 'scripting' );
+	$access->chdir( $instance->webroot );
 	$access->openShell();
 }
