@@ -11,7 +11,7 @@ $selection = selectInstances( $instances, "Which instances do you want to access
 
 foreach( $selection as $instance )
 {
-	echo "Connecting to {$instance->name}... (use `exit` to move to next instance)\n";
+	echo "Connecting to {$instance->name} at {$instance->webroot} directory ... (use `exit` to move to next instance)\n";
 	$access = $instance->getBestAccess( 'scripting' );
 	$access->chdir( $instance->webroot );
 	$access->openShell();

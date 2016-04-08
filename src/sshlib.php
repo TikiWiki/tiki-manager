@@ -165,13 +165,19 @@ class SSH_Host
 		}
 	}
 
-	function openShell()
+	function openShell($workingDir = '')
 	{
 		$key = SSH_KEY;
 		$port = null;
 		if( $this->port != 22 )
 			$port = " -p {$this->port} ";
-		passthru( "ssh $port -i $key {$this->user}@{$this->host}" );
+		if (strlen($workingDir) > 0){
+                       $command = "ssh $port -i $key {$this->user}@{$this->host} -t 'cd {$workingDir};pwd;bash --login' ";
+               }
+               else{
+                       $command = "ssh $port -i $key {$this->user}@{$this->host}";
+               }
+               passthru( "$command" );
 	}
 
 	function rsync( $remoteLocation, $localMirror )

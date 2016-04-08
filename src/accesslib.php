@@ -109,7 +109,7 @@ interface ShellPrompt
 {
 	function shellExec( $command );
 
-	function openShell();
+	function openShell($workingDir = '');
 
 	function chdir( $location );
 
@@ -393,10 +393,10 @@ echo getLinuxDistro();
 		return $host->runCommands( $commands );
 	} // }}}
 
-	function openShell() // {{{
+	function openShell($workingDir = '') // {{{
 	{
 		$host = $this->getHost();
-		$host->openShell();
+		$host->openShell($workingDir = '');
 	} // }}}
 
 	function hasExecutable( $command ) // {{{
@@ -424,7 +424,8 @@ class Access_FTP extends Access implements Mountable
 		$this->port = 21;
 	}
 
-	function openShell() // {{{
+	// TODO: change directory using FTP
+	function openShell($workingDir = '') // {{{
 	{
 		echo "User: {$this->user}, Pass: {$this->password}\n";
 		passthru( "ftp {$this->host} {$this->port}" );
