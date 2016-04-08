@@ -396,7 +396,7 @@ echo getLinuxDistro();
 	function openShell($workingDir = '') // {{{
 	{
 		$host = $this->getHost();
-		$host->openShell($workingDir = '');
+		$host->openShell($workingDir);
 	} // }}}
 
 	function hasExecutable( $command ) // {{{
