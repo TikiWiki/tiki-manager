@@ -41,7 +41,7 @@ $instance->webroot = rtrim( $webroot, '/' );
 $instance->weburl = rtrim( $weburl, '/' );
 $instance->tempdir = rtrim( $tempdir, '/' );
 
-//$instance->save();
+$instance->save();
 echo color("Instance information saved.\n", 'green');
 
 $access = $instance->registerAccessMethod( $type, $host, $user, $pass, $port );

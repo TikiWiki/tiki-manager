@@ -232,9 +232,11 @@ class Access_SSH extends Access implements ShellPrompt
                 "Arch" => "arch-release",
                 "Debian" => "debian_version",
                 "Fedora" => "fedora-release",
-                "Redhat" => "redhat-release",
+                "ClearOS" => "clearos-release",
                 "CentOS" => "centos-release",
-                "Mageia" => "mageia-release");
+                "Mageia" => "mageia-release",
+                "Redhat" => "redhat-release"
+	);
 
     //Get everything from /etc directory.
     $etcList = scandir("/etc");
