@@ -70,12 +70,13 @@ class Instance
 		$dp = opendir( BACKUP_FOLDER );
 
 		$backups = array();
+		$matches = array();
 		while( false !== $file = readdir( $dp ) )
 		{
-			if( ! is_numeric( $file ) )
+			if( ! preg_match('/^\d+/', $file, $matches ) )
 				continue;
 
-			if( $instance = self::getInstance( $file ) )
+			if( $instance = self::getInstance( $matches[0] ) )
 				$backups[] = $instance;
 		}
 
@@ -282,7 +283,8 @@ class Instance
 		$locations = $this->getApplication()->getFileLocations();
 		$locations = array_merge( $locations, $this->getExtraBackups() );
 
-		$approot = BACKUP_FOLDER . '/' . $this->id;
+		$backup_directory =  $this->id.'-'.$this->name;
+		$approot = BACKUP_FOLDER . '/' . $backup_directory;
 		if( ! file_exists( $approot ) )
 			mkdir( $approot );
 
@@ -312,9 +314,9 @@ class Instance
 		chdir( BACKUP_FOLDER );
 
 		info( "Creating archive." );
-		$tarLocation = ARCHIVE_FOLDER . "/{$this->id}_" . date( 'Y-m-d_H-i-s' ) . '.tar';
+		$tarLocation = ARCHIVE_FOLDER . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar';
 		$tar = escapeshellarg( $tarLocation );
-		`nice -n 19 tar -cf $tar {$this->id}`;
+		`nice -n 19 tar -cf $tar {$backup_directory}`;
 		`nice -n 19 bzip2 -6 $tar`;
 
 		chdir( $current );
