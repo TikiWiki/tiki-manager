@@ -242,11 +242,11 @@ class Access_SSH extends Access implements ShellPrompt
     $etcList = scandir("/etc");
 
     //Loop through /etc results...
-    $OSDistro;
-    foreach ($etcList as $entry)
+    // $OSDistro;
+    foreach ($distros as $distroReleaseFile)
     {
         //Loop through list of distros..
-        foreach ($distros as $distroReleaseFile)
+    	foreach ($etcList as $entry)
         {
             //Match was found.
             if ($distroReleaseFile === $entry)
