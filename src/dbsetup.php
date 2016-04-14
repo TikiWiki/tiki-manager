@@ -66,7 +66,9 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 		if( empty( $host ) ) $host = $d_host;
 		$user = strtolower(readline( "Database user : [$d_user] " ));
 		if( empty( $user ) ) $user = $d_user;
-		$pass = readline( "Database password : [$d_pass] " );
+		print "Database password : [$d_pass] ";
+		$pass = getPassword(true); print "\n";
+//		$pass = readline( "Database password : [$d_pass] " );
 		if( empty( $pass ) ) $pass = $d_pass;
 
 	if( strtolower( $type{0} ) == 'n' )

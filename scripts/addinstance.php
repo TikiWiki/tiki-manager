@@ -21,8 +21,11 @@ if( empty($port) )
 
 while( empty( $user ) )
 	$user = strtolower(readline( "User : " ));
-while( $type == 'ftp' && empty( $pass ) )
-	$pass = readline( "Password : " );
+while( $type == 'ftp' && empty( $pass ) ) {
+	print "Password : ";
+	$pass = getPassword(true); print "\n";
+//	$pass = readline( "Password : " );
+	}
 
 $d_name = $host;
 $name = $contact = $webroot = $tempdir = $weburl = '';
