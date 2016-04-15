@@ -156,7 +156,7 @@ if( ! file_exists( SSH_KEY ) || ! file_exists( SSH_PUBLIC_KEY ) )
 	if( ! is_writable( dirname(SSH_KEY) ) )
 		die( "Impossible to generate SSH key. Make sure data folder is writable.\n" );
 
-	echo "If you enter a passphrase, you will need to enter it every time you run TRIM, and thus, automatic, unattended operations (like backups, file integrity checks, etc.) will not be possible.\n"
+	echo "If you enter a passphrase, you will need to enter it every time you run TRIM, and thus, automatic, unattended operations (like backups, file integrity checks, etc.) will not be possible.\n";
 	$key = SSH_KEY;
 	`ssh-keygen -t rsa -f $key`;
 }
