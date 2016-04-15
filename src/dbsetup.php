@@ -20,8 +20,8 @@ function perform_instance_installation( Instance $instance )
 		$versions = $app->getVersions();
 		echo "Which version do you want to install? (none to skip)\n";
 		foreach( $versions as $key => $version ){
-			preg_match('/\d+\./',$version->branch, $matches);
-			if (($matches[0] >= 13) && ($instance->phpversion < 50500)){
+			preg_match('/(\d+\.|trunk)/',$version->branch, $matches);
+			if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500)){
 				// none to do, this match is incompatible
 			}
 			else
