@@ -192,7 +192,7 @@ class Instance
 			$this->phpexec = $path;
 			$this->save();
 
-			return true;
+			return $version;
 		}
 
 		return false;

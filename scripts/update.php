@@ -5,6 +5,7 @@
 
 include_once dirname(__FILE__) . "/../src/env_setup.php";
 include_once dirname(__FILE__) . "/../src/check.php";
+include_once dirname(__FILE__) . "/../src/dbsetup.php";
 
 define( 'ARG_SWITCH', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'switch' );
 define( 'ARG_AUTO', $_SERVER['argc'] > 2 && $_SERVER['argv'][1] == 'auto' );
@@ -24,11 +25,19 @@ if( ARG_AUTO ) {
 	$selection = getEntries( $instances, $selection );
 }
 
+
 foreach( $selection as $instance )
 {
 	$locked = $instance->lock();
-
+	$instance->detectPHP();
 	$app = $instance->getApplication();
+
+	ob_start();
+	perform_instance_installation( $instance );
+	$contents = $string = trim(preg_replace('/\s\s+/', ' ', ob_get_contents()));
+	ob_end_clean();
+	$ms = array();
+	preg_match('/(\d+\.|trunk)/', $contents, $ms);
 
 	if( ARG_SWITCH )
 	{
@@ -38,8 +47,17 @@ foreach( $selection as $instance )
 			if( $version->type == 'svn' )
 				$versions[] = $version;
 		echo "Which version do you want to upgrade to?\n";
-		foreach( $versions as $key => $version )
-			echo "[$key] {$version->type} : {$version->branch}\n";
+
+		foreach( $versions as $key => $version ){
+                        preg_match('/(\d+\.|trunk)/',$version->branch, $matches);
+                        if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500) ||
+			($matches[0] <= $ms[0])
+			){
+                                // none to do, this match is incompatible
+                        }
+                        else
+                                echo "[$key] {$version->type} : {$version->branch}\n";
+                }
 
 		$input = readline( ">>> " );
 		$versionSel = getEntries( $versions, $input );
