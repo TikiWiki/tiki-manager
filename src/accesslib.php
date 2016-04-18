@@ -412,7 +412,7 @@ echo getLinuxDistro();
 	function localizeFolder( $remoteLocation, $localMirror ) // {{{
 	{
 		$host = $this->getHost();
-		$host->rsync( $remoteLocation, $localMirror );
+		return $host->rsync( $remoteLocation, $localMirror );
 	} // }}}
 }
 

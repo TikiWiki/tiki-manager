@@ -294,31 +294,48 @@ class Instance
 
 		$app = $this->getApplication();
 		$app->removeTemporaryFiles();
-
+		$error_flag = 0;
 		// Bring all remote files locally
 		info( "Downloading files locally." );
 		foreach( $locations as $remote )
 		{
 			$hash = md5( $remote );
 			$locmirror = $approot . '/' . $hash;
-			$access->localizeFolder( $remote, $locmirror );
+			$error_flag += $access->localizeFolder( $remote, $locmirror );
 			`echo "$hash    $remote" >> $approot/manifest.txt`;
 		}
 
-		$target = $approot . '/database_dump.sql';
-		info( "Obtaining database dump." );
-		$this->getApplication()->backupDatabase( $target );
+		if ($error_flag) {
+			// Do something
+			$message = "Your TRIM backup has failed carring files into TRIM.\r\n";
+			$message .= "{$this->name}";
+			mail ( $this->contact , 'TRIM backup error', $message );
+		}
+		else {
+			$target = $approot . '/database_dump.sql';
+			info( "Obtaining database dump." );
+			$this->getApplication()->backupDatabase( $target );	// There is not an easy way to get the return value
 
-		// Perform archiving
-		$current = getcwd();
-		chdir( BACKUP_FOLDER );
+			// Perform archiving
+			$current = getcwd();
+			chdir( BACKUP_FOLDER );
 
-		info( "Creating archive." );
-		$tarLocation = ARCHIVE_FOLDER . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar';
-		$tar = escapeshellarg( $tarLocation );
-		`nice -n 19 tar -cf $tar {$backup_directory}`;
-		`nice -n 19 bzip2 -6 $tar`;
+			info( "Creating archive." );
+			$tarLocation = ARCHIVE_FOLDER . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
+			$tar = escapeshellarg( $tarLocation );
+			$output = array();
+			$return_val = -1;
+			$command = "nice -n 19 tar -cjf $tar {$backup_directory}";
+			exec ($command, $output, $return_var );
 
+			$error_flag +=  $return_var;
+			info ( "Return var: $return_var" );
+			if ($error_flag) {
+				$message = "Your TRIM backup has failed packing files into TRIM.\r\n";
+				$message .= "{$this->name}";
+				mail ( $this->contact , 'TRIM backup error', $message );
+			}
+		}
 		chdir( $current );
 	} // }}}
 

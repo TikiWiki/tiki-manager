@@ -189,6 +189,12 @@ class SSH_Host
 		$port = null;
 		if( $this->port != 22 )
 			$port = " -p {$this->port} ";
-		`rsync -aL --delete -e "ssh $port -i $key -l $user" $user@$host:$remoteLocation $localMirror`;
+
+		$output = array();
+		$return_val = -1;
+		$command = "rsync -aL --delete -e \"ssh $port -i $key -l $user\" $user@$host:$remoteLocation $localMirror";
+		exec ($command, $output, $return_var );
+		info ( "RSYNC Return var: $return_var" );
+		return $return_var;
 	}
 }
