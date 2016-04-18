@@ -1,6 +1,7 @@
 # Change paths to executables here
 PHP = php -d memory_limit=256M
 SQLITE = sqlite3
+BASH = bash
 
 # No changes should be required from here
 default:
@@ -33,7 +34,7 @@ access:
 	$(PHP) scripts/access.php
 
 backup:
-	$(PHP) scripts/backup.php
+	$(BASH) scripts/backup.sh $(PHP)
 
 restore:
 	$(PHP) scripts/restore.php
