@@ -11,7 +11,7 @@ $all = Instance::getInstances();
 $instances = array();
 foreach( $all as $instance )
 	if( $instance->getApplication() instanceof Application_Tiki )
-		$instances[] = $instance;
+		$instances[$instance->id] = $instance;
 
 echo "Note: Only instances running Tiki can get their permissions fixed.\n\n";
 

@@ -363,7 +363,7 @@ function selectInstances( array $instances, $selectionQuestion )
 	printInstances( $instances );
 
 	$selection = readline( ">>> " );
-	$selection = getEntries( $instances, $selection - 1 );
+	$selection = getEntries( $instances, $selection );
 
 	return $selection;
 }
