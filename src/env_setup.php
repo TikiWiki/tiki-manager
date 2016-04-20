@@ -1,4 +1,4 @@
-<?php
+/<?php
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
@@ -340,12 +340,11 @@ function getEntries( $list, $selection ) // {{{
 {
 	if( ! is_array( $selection ) )
 		$selection = findDigits( $selection );
-	
+
 	$output = array();
 	foreach( $selection as $index )
 		if( array_key_exists( $index, $list ) )
 			$output[] = $list[$index];
-
 	return $output;
 } // }}}
 
@@ -364,7 +363,7 @@ function selectInstances( array $instances, $selectionQuestion )
 	printInstances( $instances );
 
 	$selection = readline( ">>> " );
-	$selection = getEntries( $instances, $selection );
+	$selection = getEntries( $instances, $selection - 1 );
 
 	return $selection;
 }
