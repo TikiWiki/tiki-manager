@@ -5,6 +5,7 @@
 
 include_once dirname(__FILE__) . "/../src/env_setup.php";
 include_once dirname(__FILE__) . "/../src/dbsetup.php";
+define( 'ARG_BLANK', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'blank' );
 
 $type = $user = $host = $pass = '';
 while( ! in_array( $type, array( 'ftp', 'ssh' ) ) ) {
@@ -101,4 +102,7 @@ $instance->tempdir = rtrim( $tempdir, '/' );
 $instance->save();
 echo color("Instance information saved.\n", 'green');
 
-perform_instance_installation( $instance );
+if( ARG_BLANK ) 
+	echo color("This is a blank (empty) instance. This is useful to restore a backup later.\n", 'blue');
+else
+	perform_instance_installation( $instance );

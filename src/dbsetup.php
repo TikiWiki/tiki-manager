@@ -6,7 +6,7 @@ function perform_instance_installation( Instance $instance )
 	{
 		$apps = Application::getApplications( $instance );
 		echo "No applications were found on remote host.\n";
-		echo "Which one do you want to install? (none to skip)\n";
+		echo "Which one do you want to install? (none to skip - blank instance)\n";
 		foreach( $apps as $key => $app )
 			echo "[$key] {$app->getName()}\n";
 
@@ -18,7 +18,7 @@ function perform_instance_installation( Instance $instance )
 		$app = reset( $selection );
 
 		$versions = $app->getVersions();
-		echo "Which version do you want to install? (none to skip)\n";
+		echo "Which version do you want to install? (none to skip - blank instance)\n";
 		foreach( $versions as $key => $version ){
 			preg_match('/(\d+\.|trunk)/',$version->branch, $matches);
 			if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500)){
@@ -27,11 +27,16 @@ function perform_instance_installation( Instance $instance )
 			else
 				echo "[$key] {$version->type} : {$version->branch}\n";
 		}
+				echo "[-1] blank : none\n";
 
 		$input = readline( ">>> " );
-		$selection = getEntries( $versions, $input );
-		if( empty( $selection ) && empty( $input ) )
-			die( "No version to install.\n" );
+		if ($input > -1)
+			$selection = getEntries( $versions, $input );
+
+		if (( empty( $selection ) && empty( $input ) ) ||
+			($input < 0)
+		)
+			die( "No version to install.\nThis is a blank instance\n" );
 		elseif( empty( $selection ) )
 			$version = Version::buildFake( 'svn', $input );
 		else

@@ -12,6 +12,9 @@ default:
 instance:
 	$(PHP) scripts/addinstance.php
 
+blank:
+	$(PHP) scripts/addinstance.php blank
+
 viewdb:
 	$(SQLITE) data/trim.db
 
