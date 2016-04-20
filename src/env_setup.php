@@ -128,8 +128,8 @@ if( array_key_exists( 'EDITOR', $_ENV ) )
 	define( 'EDITOR', $_ENV['EDITOR'] );
 else
 {
-	echo "Default editor used (vim). You can change the EDITOR environment variable.\n";
-	define( 'EDITOR', 'vim' );
+	echo "Default editor used (nano). You can change the EDITOR environment variable.\n";
+	define( 'EDITOR', 'nano' );
 }
 
 if( array_key_exists( 'DIFF', $_ENV ) )
