@@ -77,12 +77,11 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 //	$pass = readline( "Database password : [$d_pass] " );
 	if( empty( $pass ) ) $pass = $d_pass;
 
-	print "Testing connectivity and DB data...";
-	$command = "mysql -u ${user} ".(empty($pass)?"":"-p${pass}")."-h ${host} -e 'SELECT 1' 2> /dev/null > /dev/null ; echo $?";
+	print "Testing connectivity and DB data...\n";
+	$command = "mysql -u ${user} ".(empty($pass)?"":"-p${pass}")." -h ${host} -e 'SELECT 1' 2> /dev/null > /dev/null ; echo $?";
         $e =  $access->shellExec($command);
-
 	if ($e){
-		print "TRIM was unable to use of create your database with the information you provided. Aborting the installation";
+		print "TRIM was unable to use of create your database with the information you provided. Aborting the installation\n";
 		exit;
 	}
 
