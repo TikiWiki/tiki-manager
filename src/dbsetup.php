@@ -63,18 +63,28 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	} else {
 		$type = 'no';
 	}
-		$d_host = 'localhost';
-		$d_user = 'root';
-		$d_pass = '';
 
-		$host = strtolower(readline( "Database host : [$d_host] " ));
-		if( empty( $host ) ) $host = $d_host;
-		$user = strtolower(readline( "Database user : [$d_user] " ));
-		if( empty( $user ) ) $user = $d_user;
-		print "Database password : [$d_pass] ";
-		$pass = getPassword(true); print "\n";
-//		$pass = readline( "Database password : [$d_pass] " );
-		if( empty( $pass ) ) $pass = $d_pass;
+	$d_host = 'localhost';
+	$d_user = 'root';
+	$d_pass = '';
+
+	$host = strtolower(readline( "Database host : [$d_host] " ));
+	if( empty( $host ) ) $host = $d_host;
+	$user = strtolower(readline( "Database user : [$d_user] " ));
+	if( empty( $user ) ) $user = $d_user;
+	print "Database password : [$d_pass] ";
+	$pass = getPassword(true); print "\n";
+//	$pass = readline( "Database password : [$d_pass] " );
+	if( empty( $pass ) ) $pass = $d_pass;
+
+	print "Testing connectivity and DB data...";
+	$command = "mysql -u ${user} ".(empty($pass)?"":"-p${pass}")."-h ${host} -e 'SELECT 1' 2> /dev/null > /dev/null ; echo $?";
+        $e =  $access->shellExec($command);
+
+	if ($e){
+		print "TRIM was unable to use of create your database with the information you provided. Aborting the installation";
+		exit;
+	}
 
 	if( strtolower( $type{0} ) == 'n' )
 	{
