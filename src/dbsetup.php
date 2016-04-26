@@ -21,11 +21,13 @@ function perform_instance_installation( Instance $instance )
 		echo "Which version do you want to install? (none to skip - blank instance)\n";
 		foreach( $versions as $key => $version ){
 			preg_match('/(\d+\.|trunk)/',$version->branch, $matches);
-			if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500)){
-				// none to do, this match is incompatible
+			if (array_key_exists(0, $matches)) {
+				if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500)){
+					// none to do, this match is incompatible
+				}
+				else
+					echo "[$key] {$version->type} : {$version->branch}\n";
 			}
-			else
-				echo "[$key] {$version->type} : {$version->branch}\n";
 		}
 				echo "[-1] blank : none\n";
 

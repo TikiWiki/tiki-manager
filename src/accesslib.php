@@ -181,7 +181,6 @@ class Access_SSH extends Access implements ShellPrompt
 			{
 				if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
 					continue;
-
 				$versionInfo = $host->runCommands( "$interpreter -v" );
 				if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
 					$valid[$parts[1]] = $interpreter;
@@ -219,7 +218,6 @@ class Access_SSH extends Access implements ShellPrompt
 	{
 		$host = $this->getHost();
 		$versionInfo = $host->runCommands( "$interpreter -r 'echo PHP_VERSION_ID;'" );
-
 		return $versionInfo;
 	} // }}}
 

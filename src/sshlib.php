@@ -117,8 +117,9 @@ class SSH_Host
 			if( $this->port != 22 )
 				$port = " -p {$this->port} ";
 			$command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand 2> /dev/null";
-			$output = passthru ($command);
-
+			$output = array();
+			exec ($command, $output);
+			$output = implode ("\n",$output);
 			return $output;
 		}
 	}
