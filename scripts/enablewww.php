@@ -33,8 +33,11 @@ if( empty( $folder ) )
 $user = $pass = '';
 while( empty( $user ) )
 	$user = readline( "Desired username : " );
-while( empty( $pass ) )
-	$pass = readline( "Desired password : " );
+
+while( empty( $pass ) ) {
+	print "Desired password : ";
+	$pass = getPassword(true); print "\n";
+}
 
 $d_restrict = 'yes';
 $restrict = readline( "Restrict use to localhost : [$d_restrict] " );

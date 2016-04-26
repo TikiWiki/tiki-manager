@@ -59,7 +59,7 @@ class Instance
 		$instances = array();
 		while( $instance = $result->fetchObject( 'Instance' ) )
 		{
-			$instances[] = $instance;
+			$instances[$instance->id] = $instance;
 		}
 
 		return $instances;

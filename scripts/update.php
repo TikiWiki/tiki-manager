@@ -28,6 +28,7 @@ if( ARG_AUTO ) {
 
 foreach( $selection as $instance )
 {
+	echo "Working on ".$instance->name."\n";
 	$locked = $instance->lock();
 	$instance->detectPHP();
 	$app = $instance->getApplication();
