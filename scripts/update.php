@@ -51,7 +51,7 @@ foreach( $selection as $instance )
 		foreach( $versions as $key => $version ){
                         preg_match('/(\d+\.|trunk)/',$version->branch, $matches);
                         if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500) ||
-			($matches[0] <= $ms[0])
+			($matches[0] < $ms[0])
 			){
                                 // none to do, this match is incompatible
                         }
