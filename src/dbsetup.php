@@ -62,7 +62,11 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	if( $access instanceof ShellPrompt ) {
 		echo "Note: creating databases and users requires root privileges on MySQL.\n";
 		$type = strtolower(readline( "Should a new database and user be created (both)? [yes] " ));
-	} else {
+		if ( empty( $type ) )
+			$type = 'yes';
+
+	} 
+	else {
 		$type = 'no';
 	}
 
@@ -71,13 +75,15 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	$d_pass = '';
 
 	$host = strtolower(readline( "Database host : [$d_host] " ));
-	if( empty( $host ) ) $host = $d_host;
+	if ( empty( $host ) ) 
+		$host = $d_host;
 	$user = strtolower(readline( "Database user : [$d_user] " ));
-	if( empty( $user ) ) $user = $d_user;
+	if ( empty( $user ) ) 
+		$user = $d_user;
 	print "Database password : [$d_pass] ";
 	$pass = getPassword(true); print "\n";
-//	$pass = readline( "Database password : [$d_pass] " );
-	if( empty( $pass ) ) $pass = $d_pass;
+	if ( empty( $pass ) ) 
+		$pass = $d_pass;
 
 	print "Testing connectivity and DB data...\n";
 	$command = "mysql -u ${user} ".(empty($pass)?"":"-p${pass}")." -h ${host} -e 'SELECT 1' 2>> /tmp/trim.output >> /tmp/trim.output ; echo $?";
@@ -87,8 +93,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 		exit;
 	}
 
-	if( strtolower( $type{0} ) == 'n' )
-	{
+	if( strtolower( $type{0} ) == 'n' ){
 		$d_dbname = '';
 
 		while( empty( $dbname ) )
@@ -101,8 +106,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 		$db->pass = $pass;
 		$db->dbname = $dbname;
 	}
-	else
-	{
+	else{
 		$adapter = new Database_Adapter_Mysql( $host, $user, $pass );
 		$db = new Database( $instance, $adapter );
 		$db->host = $host;
@@ -117,8 +121,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	$types = $db->getUsableExtensions();
 	if( count( $types ) == 1 )
 		$db->type = reset( $types );
-	else
-	{
+	else{
 		echo "Which extension should be used? [0]\n";
 		foreach( $types as $key => $name )
 			echo "[$key] $name\n";
