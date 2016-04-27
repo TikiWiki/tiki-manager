@@ -116,7 +116,7 @@ class SSH_Host
 			$port = null;
 			if( $this->port != 22 )
 				$port = " -p {$this->port} ";
-			$command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand 2> /dev/null";
+			$command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand 2>> /tmp/trim.output";
 			$output = array();
 			exec ($command, $output);
 			$output = implode ("\n",$output);

@@ -48,7 +48,7 @@ foreach( $selection as $instance )
 			if( $version->type == 'svn' )
 				$versions[] = $version;
 		echo "Which version do you want to upgrade to?\n";
-
+		$i = 0;
 		foreach( $versions as $key => $version ){
                         preg_match('/(\d+\.|trunk)/',$version->branch, $matches);
                         if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500) ||
@@ -56,25 +56,30 @@ foreach( $selection as $instance )
 			){
                                 // none to do, this match is incompatible
                         }
-                        else
+                        else {
                                 echo "[$key] {$version->type} : {$version->branch}\n";
+				$i++;
+			}
                 }
 
-		$input = readline( ">>> " );
-		$versionSel = getEntries( $versions, $input );
-		if( empty( $versionSel ) && ! empty( $input ) )
-			$target = Version::buildFake( 'svn', $input );
-		else
-			$target = reset( $versionSel );
+		if ($i){
+			$input = readline( ">>> " );
+			$versionSel = getEntries( $versions, $input );
+			if( empty( $versionSel ) && ! empty( $input ) )
+				$target = Version::buildFake( 'svn', $input );
+			else
+				$target = reset( $versionSel );
 
-		if( count( $versionSel ) > 0 )
-		{
-			$filesToResolve = $app->performUpdate( $instance, $target );
-			$version = $instance->getLatestVersion();
-			handleCheckResult( $instance, $version, $filesToResolve );
+			if( count( $versionSel ) > 0 ){
+				$filesToResolve = $app->performUpdate( $instance, $target );
+				$version = $instance->getLatestVersion();
+				handleCheckResult( $instance, $version, $filesToResolve );
+			}
+			else
+				warning( "No version selected. Nothing to perform." );
 		}
 		else
-			warning( "No version selected. Nothing to perform." );
+			warning( "No upgrades are available. This is likely because you are already at the latest version permitted by the server." );
 	}
 	else
 	{
