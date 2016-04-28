@@ -19,12 +19,11 @@ function handleCheckResult( $instance, $version, $array )
 
 		echo "\n\n";
 
-		$input = 'z';
-		while( stripos( 'pvdas', $input{0} ) === false )
-		{
+		do{
 			echo "\tWhat do you want to do about it?\n\t(P)rint list again\n\t(V)iew files\n\t(D)elete files\n\t(A)dd files to valid list\n\t(S)kip\n(e.g. a0 to add file 0)\n";
 			$input = readline( ">>> " );
 		}
+		while( (strlen($input) == 0) || (stripos( 'pvdas', $input{0} ) === false ));
 
 		$op = strtolower( $input{0} );
 		$files = getEntries( $newFlat, $input );
