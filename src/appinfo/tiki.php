@@ -271,6 +271,21 @@ class Application_Tiki extends Application
 				if ($this->instance->isModernTiki()) {
 					$access->chdir( $this->instance->webroot );
 					info( "Updating svn, composer, perms & database..." );
+					$verification = $access->shellExec(array(
+						"cd {$this->instance->webroot} && svn merge --dry-run --revision BASE:HEAD .   --allow-mixed-revisions"
+					), true);
+
+					if (strlen(trim($verification)) > 0){
+						echo "SVN MERGE: $verification\n";
+						$a = 'a';
+						do {
+							$a = strtolower(readline( "It seems there are some conflicts, you may want to review them. Do you want to abort? [yes] : " ));
+						} while( ! in_array( $a, array( 'yes', 'no', '' )  ) );
+
+						if ((strlen($a) == 0) || ($a == 'yes'))
+							exit;
+					}
+
 					$ret = $access->shellExec(array(
 						'sh doc/devtools/svnup.sh',	// does svn up, composer, perms & database
 						"{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",

@@ -78,7 +78,7 @@ class SSH_Host
 		`ssh-copy-id -i $file $host`;
 	}
 
-	function runCommands( $commands ) {
+	function runCommands( $commands , $output = false) {
 		if( ! is_array( $commands ) )
 			$commands = func_get_args();
 
@@ -91,7 +91,7 @@ class SSH_Host
 				if( $this->location )
 					$line = "cd " . escapeshellarg($this->location) . "; $line";
 				foreach( $this->env as $key => $value )
-					$line = "export $key=" . escapeshellarg($value) . "; $line";
+					$line .= "export $key=" . escapeshellarg($value) . "; $line";
 				$stream = ssh2_exec( $handle, $line, null );
 				stream_set_blocking( $stream, true );
 
@@ -116,7 +116,8 @@ class SSH_Host
 			$port = null;
 			if( $this->port != 22 )
 				$port = " -p {$this->port} ";
-			$command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand 2>> /tmp/trim.output";
+			$command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand";
+			$command .= ($output?'':' 2>> /tmp/trim.output');
 			$output = array();
 			exec ($command, $output);
 			$output = implode ("\n",$output);

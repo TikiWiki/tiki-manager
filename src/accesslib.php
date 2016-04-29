@@ -379,7 +379,7 @@ echo getLinuxDistro();
 		$this->env[$var] = $value;
 	} // }}}
 
-	function shellExec( $commands ) // {{{
+	function shellExec( $commands, $output = false ) // {{{
 	{
 		if( ! is_array( $commands ) )
 			$commands = func_get_args();
@@ -390,7 +390,7 @@ echo getLinuxDistro();
 		foreach( $this->env as $key => $value )
 			$host->setenv( $key, $value );
 
-		return $host->runCommands( $commands );
+		return $host->runCommands( $commands, $output );
 	} // }}}
 
 	function openShell($workingDir = '') // {{{

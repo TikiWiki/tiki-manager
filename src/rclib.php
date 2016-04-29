@@ -27,6 +27,22 @@ class RC_SVN
 		$full = "{$this->repository}/$path";
 		$escaped = escapeshellarg( $full );
 
+		$verification = $access->shellExec(array(
+                                               "cd {$instance->webroot} && svn merge --dry-run --revision BASE:HEAD .   --allow-mixed-revisions"
+                                       ), true);
+
+		if (strlen(trim($verification)) > 0){
+			echo "SVN MERGE: $verification\n";
+			$a = 'a';
+			do {
+		        	$a = strtolower(readline( "It seems there are some conflicts, you may want to review them. Do you want to abort? [yes] : " ));
+			} while( ! in_array( $a, array( 'yes', 'no', '' )  ) );
+
+			if ((strlen($a) == 0) || ($a == 'yes'))
+				exit;
+
+		}
+		
 		if( !isset( $info['url'] ) || $info['url'] == $full )
 			$access->shellExec( "svn up --non-interactive " . escapeshellarg( $instance->webroot ) );
 		else
