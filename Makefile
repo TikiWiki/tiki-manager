@@ -11,6 +11,7 @@ default:
 
 .PHONY: backup
 
+# Use this to add a remote installation
 instance:
 	$(PHP) scripts/addinstance.php
 
@@ -26,9 +27,11 @@ check:
 watch:
 	$(PHP) scripts/setupwatch.php
 
+# Use this to update version within the same branch, no major versions changes
 update:
 	$(PHP) scripts/update.php
 
+# Use this to update major releases
 upgrade:
 	$(PHP) scripts/update.php switch
 
