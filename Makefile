@@ -1,4 +1,6 @@
+#
 # Change paths to executables here
+#
 PHP = php -d memory_limit=256M
 SQLITE = sqlite3
 BASH = bash
