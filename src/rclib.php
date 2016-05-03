@@ -31,7 +31,8 @@ class RC_SVN
                                                "cd {$instance->webroot} && svn merge --dry-run --revision BASE:HEAD .   --allow-mixed-revisions"
                                        ), true);
 
-		if (strlen(trim($verification)) > 0){
+		if ((strlen(trim($verification)) > 0) &&
+		   (preg_match("/conflicts:/i",$verification))){
 			echo "SVN MERGE: $verification\n";
 			$a = 'a';
 			do {

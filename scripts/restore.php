@@ -16,7 +16,7 @@ foreach( $raw as $instance )
 	$all[$instance->id] = $instance;
 
 	if( ! $instance->getApplication() )
-		$instances[] = $instance;
+		$instances[$instance->id] = $instance;
 }
 
 echo "Note: It is only possible to restore a backup on a blank install.\n\n";
@@ -38,12 +38,12 @@ foreach( $selection as $instance )
 	{
 		warning("No instance selected.");
 		continue;
-	}
+	} 
 
 	$files = $single->getArchives();
 	echo "Which backup do you want to restore?\n";
 	foreach( $files as $key => $path )
-		echo "[$key] $path\n";
+		echo "[$key] ".basename($path)."\n";
 
 	$file = readline( ">>> " );
 	if( ! $file = reset( getEntries( $files, $file ) ) )
@@ -54,6 +54,7 @@ foreach( $selection as $instance )
 
 	info( "Uploading $file" );
 	$base = basename( $file );
+	list( $basetardir, $trash ) = explode( "_", $base, 2 );
 	$remote = $instance->getWorkPath( $base );
 
 	$access = $instance->getBestAccess('scripting');
@@ -67,16 +68,16 @@ foreach( $selection as $instance )
 	info( "Reading manifest" );
 	$current = trim(`pwd`);
 	chdir( TEMP_FOLDER );
-	`tar -jx {$single->id}/manifest.txt -f $file`;
-	$manifest = file_get_contents( "{$single->id}/manifest.txt" );
+	`tar -jxvf $file $basetardir/manifest.txt `;
+	$manifest = file_get_contents( "{$basetardir}/manifest.txt" );
 	chdir( $current );
 
 	foreach( explode( "\n", $manifest ) as $line )
 	{
+		$line = trim($line);
 		if( empty($line) ) continue;
 
 		list( $hash, $location ) = explode( "    ", $line, 2 );
-
 		$base = basename( $location );
 
 		echo "Previous host used $location\n";
@@ -84,8 +85,8 @@ foreach( $selection as $instance )
 		if( empty( $location ) ) $location = $instance->webroot;
 		$location = escapeshellarg( rtrim( $location, '/' ) );
 
-		$normal = escapeshellarg( $instance->getWorkPath( "restore/{$single->id}/$hash/$base/" ) ) . '*';
-		$hidden = escapeshellarg( $instance->getWorkPath( "restore/{$single->id}/$hash/$base/" ) ) . '.*';
+		$normal = escapeshellarg( $instance->getWorkPath( "restore/{$basetardir}/$hash/$base/" ) ) . '*';
+		$hidden = escapeshellarg( $instance->getWorkPath( "restore/{$basetardir}/$hash/$base/" ) ) . '.*';
 		info("Copying files");
 
 		$access->shellExec(
@@ -104,7 +105,7 @@ foreach( $selection as $instance )
 	$version->save();
 	$instance->save();
 	
-	perform_database_setup( $instance, "{$instance->tempdir}/restore/{$single->id}/database_dump.sql" );
+	perform_database_setup( $instance, "{$instance->tempdir}/restore/{$basetardir}/database_dump.sql" );
 
 	$version->collectChecksumFromInstance( $instance );
 
@@ -115,4 +116,8 @@ foreach( $selection as $instance )
 	echo $access->shellExec(
 		"rm -Rf {$instance->tempdir}/restore"
 	);
+	info("Last step, you must log into your server and type the following commands:");
+	info("cd $location");
+	info("sh setup.sh");
+	info("This can not be done automatically as this needs human interaction.");
 }

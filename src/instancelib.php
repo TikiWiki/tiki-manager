@@ -77,7 +77,7 @@ class Instance
 				continue;
 
 			if( $instance = self::getInstance( $matches[0] ) )
-				$backups[] = $instance;
+				$backups[$matches[0]] = $instance;
 		}
 
 		closedir( $dp );
@@ -364,7 +364,7 @@ class Instance
 
 	function getArchives() // {{{
 	{
-		return array_reverse( glob( ARCHIVE_FOLDER . "/{$this->id}_*.tar.bz2" ) );
+		return array_reverse( glob( ARCHIVE_FOLDER . "/{$this->id}*_*.tar.bz2" ) );
 	} // }}}
 
 	function lock() // {{{

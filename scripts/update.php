@@ -47,6 +47,7 @@ foreach( $selection as $instance )
 		foreach( $versions_raw as $version )
 			if( $version->type == 'svn' )
 				$versions[] = $version;
+		echo "You are currently running $contents\n";
 		echo "Which version do you want to upgrade to?\n";
 		$i = 0;
 		foreach( $versions as $key => $version ){
