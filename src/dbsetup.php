@@ -16,7 +16,7 @@ function perform_instance_installation( Instance $instance )
 			die( "No instance to install.\n" );
 
 		$app = reset( $selection );
-
+		$found_incompatibilities = false;
 		$versions = $app->getVersions();
 		echo "Which version do you want to install? (none to skip - blank instance)\n";
 		foreach( $versions as $key => $version ){
@@ -24,12 +24,17 @@ function perform_instance_installation( Instance $instance )
 			if (array_key_exists(0, $matches)) {
 				if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500)){
 					// none to do, this match is incompatible
+					$found_incompatibilities = true;
 				}
 				else
 					echo "[$key] {$version->type} : {$version->branch}\n";
 			}
 		}
 				echo "[-1] blank : none\n";
+				echo "We detected PHP release {$instance->phpversion}\n";
+				if ($found_incompatibilities){
+					echo "If some versions are not offered, it's likely because the host server doesn't meet the requirements for that version (ex.: PHP version is too old)\n";
+				}
 
 		$input = readline( ">>> " );
 		if ($input > -1)
