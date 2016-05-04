@@ -116,8 +116,8 @@ foreach( $selection as $instance )
 	echo $access->shellExec(
 		"rm -Rf {$instance->tempdir}/restore"
 	);
-	info("Last step, you must log into your server and type the following commands:");
-	info("cd $location");
-	info("sh setup.sh");
-	info("This can not be done automatically as this needs human interaction.");
+
+	info ("It is now time to test your site {$instance->name>}");
+	info ("If there are issues, try make fix");
+	info ("If there are still issues, connect with make access to troubleshoot directly on the server");
 }
