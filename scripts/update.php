@@ -50,12 +50,13 @@ foreach( $selection as $instance )
 		echo "You are currently running $contents\n";
 		echo "Which version do you want to upgrade to?\n";
 		$i = 0;
+		$found_incompatibilities = false;
 		foreach( $versions as $key => $version ){
                         preg_match('/(\d+\.|trunk)/',$version->branch, $matches);
                         if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($instance->phpversion < 50500) ||
 			($matches[0] < $ms[0])
 			){
-                                // none to do, this match is incompatible
+                                $found_incompatibilities = true;
                         }
                         else {
                                 echo "[$key] {$version->type} : {$version->branch}\n";
@@ -64,6 +65,17 @@ foreach( $selection as $instance )
                 }
 
 		if ($i){
+	                $matches2 = array();
+	                preg_match('/(\d+)(\d{2})(\d{2})$/',$instance->phpversion,$matches2);
+
+	                if (array_key_exists(1, $matches2) && array_key_exists(2, $matches2) && array_key_exists(3, $matches2)) {
+	                        echo "We detected PHP release {$matches2[1]}.{$matches2[2]}.{$matches2[3]}\n";
+	                }
+	
+	                if ($found_incompatibilities) {
+	                        echo "If some versions are not offered, it's likely because the host server doesn't meet the requirements for that version (ex.: PHP version is too old)\n";
+	                }
+
 			$input = readline( ">>> " );
 			$versionSel = getEntries( $versions, $input );
 			if( empty( $versionSel ) && ! empty( $input ) )

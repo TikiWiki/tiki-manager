@@ -30,11 +30,18 @@ function perform_instance_installation( Instance $instance )
 					echo "[$key] {$version->type} : {$version->branch}\n";
 			}
 		}
-				echo "[-1] blank : none\n";
-				echo "We detected PHP release {$instance->phpversion}\n";
-				if ($found_incompatibilities){
-					echo "If some versions are not offered, it's likely because the host server doesn't meet the requirements for that version (ex.: PHP version is too old)\n";
-				}
+		
+		echo "[-1] blank : none\n";
+		$matches2 = array();
+		preg_match('/(\d+)(\d{2})(\d{2})$/',$instance->phpversion,$matches2);
+
+		if (array_key_exists(1, $matches2) && array_key_exists(2, $matches2) && array_key_exists(3, $matches2)) {
+			 echo "We detected PHP release {$matches2[1]}.{$matches2[2]}.{$matches2[3]}\n";
+		}
+
+		if ($found_incompatibilities) {
+			echo "If some versions are not offered, it's likely because the host server doesn't meet the requirements for that version (ex.: PHP version is too old)\n";
+		}
 
 		$input = readline( ">>> " );
 		if ($input > -1)
