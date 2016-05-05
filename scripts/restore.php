@@ -86,7 +86,7 @@ foreach( $selection as $instance )
 		$location = escapeshellarg( rtrim( $location, '/' ) );
 
 		$normal = escapeshellarg( $instance->getWorkPath( "restore/{$basetardir}/$hash/$base/" ) ) . '*';
-		$hidden = escapeshellarg( $instance->getWorkPath( "restore/{$basetardir}/$hash/$base/" ) ) . '.*';
+		$hidden = escapeshellarg( $instance->getWorkPath( "restore/{$basetardir}/$hash/$base/" ) ) . '.* 2>> /tmp/trim.output' ;
 		info("Copying files");
 
 		$access->shellExec(
