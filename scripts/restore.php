@@ -99,9 +99,9 @@ foreach( $selection as $instance )
 	$oldVersion = $instance->getLatestVersion();
 	$instance->app = $single->app;
 	$version = $instance->createVersion();
-	$version->type = $oldVersion->type;
-	$version->branch = $oldVersion->branch;
-	$version->date = $oldVersion->date;
+	$version->type = (is_object($oldVersion)?$oldVersion->type:NULL);
+	$version->branch = (is_object($oldVersion)?$oldVersion->branch:NULL);
+	$version->date = (is_object($oldVersion)?$oldVersion->date:NULL);
 	$version->save();
 	$instance->save();
 	
