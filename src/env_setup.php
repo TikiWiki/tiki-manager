@@ -330,7 +330,9 @@ function rowid() // {{{
 function findDigits( $selection ) // {{{
 {
 	// Accept ranges of type 2-10
-	$selection = preg_replace( "/(\d+)-(\d+)/e", "implode( ' ', range( $1, $2 ) )", $selection );
+	$selection = preg_replace_callback( "/(\d+)-(\d+)/",
+		function ($matches) { return implode( ' ', range( $matches[1], $matches[2] ) );},
+		$selection );
 	preg_match_all( "/\d+/", $selection, $parts, PREG_PATTERN_ORDER );
 
 	return $parts[0];
