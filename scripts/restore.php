@@ -122,4 +122,6 @@ foreach( $selection as $instance )
 	info ("It is now time to test your site {$instance->name}");
 	info ("If there are issues, try make fix");
 	info ("If there are still issues, connect with make access to troubleshoot directly on the server");
+	info ("You'll need to login to this restored instance and update the file paths with the new values.");
+	info ("WARNING: If you are restoring on the same server, this can lead to data corruption as both the original and restored Tiki are using the same folder for storage.");
 }
