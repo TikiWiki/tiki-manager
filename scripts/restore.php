@@ -117,6 +117,8 @@ foreach( $selection as $instance )
 		"rm -Rf {$instance->tempdir}/restore"
 	);
 
+	perform_instance_installation( $instance );
+
 	info ("It is now time to test your site {$instance->name}");
 	info ("If there are issues, try make fix");
 	info ("If there are still issues, connect with make access to troubleshoot directly on the server");
