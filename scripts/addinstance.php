@@ -97,6 +97,7 @@ if( $access instanceof ShellPrompt )
 else
 	echo color("Shell access is required to create the working directory. You will need to create it manually.\n",'yellow');
 
+$instance->weburl = rtrim( $weburl, '/' );
 $instance->webroot = rtrim( $webroot, '/' );
 $instance->tempdir = rtrim( $tempdir, '/' );
 $instance->save();
