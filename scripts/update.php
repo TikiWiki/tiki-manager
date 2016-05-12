@@ -69,7 +69,7 @@ foreach( $selection as $instance )
 	                preg_match('/(\d+)(\d{2})(\d{2})$/',$instance->phpversion,$matches2);
 
 	                if (array_key_exists(1, $matches2) && array_key_exists(2, $matches2) && array_key_exists(3, $matches2)) {
-				printf("We detected PHP release %d.%d.%d\n",$matches2[1],$matches2[2],$matches[3]);
+				printf("We detected PHP release %d.%d.%d\n",$matches2[1],$matches2[2],$matches2[3]);
 	                }
 	
 	                if ($found_incompatibilities) {
