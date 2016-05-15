@@ -181,7 +181,7 @@ class Instance
 	{
 		$access = $this->getBestAccess( 'scripting' );
 		$path = $access->getInterpreterPath();
-
+		//echo "DEBUG PHP path $path\n";
 		if( strlen( $path ) > 0 )
 		{
 			$version = $access->getInterpreterVersion($path);
@@ -193,6 +193,19 @@ class Instance
 			$this->save();
 
 			return $version;
+		}
+
+		return false;
+	} // }}}
+
+	function detectSVN() // {{{
+	{
+		$access = $this->getBestAccess( 'scripting' );
+		$path = $access->getSVNPath();
+
+		if( strlen( $path ) > 0 )
+		{
+			return $path;
 		}
 
 		return false;

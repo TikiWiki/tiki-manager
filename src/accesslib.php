@@ -214,6 +214,60 @@ class Access_SSH extends Access implements ShellPrompt
 		}
 	} // }}}
 
+	function getSVNPath() // {{{
+	{
+		$host = $this->getHost();
+		
+		$sets = array(
+			array( 'which svn' ),
+			array( 'locate bin/svn' ),
+		);
+
+		foreach( $sets as $attempt )
+		{
+			// Get possible paths
+			$svns = $host->runCommands( $attempt );
+			$svns = explode( "\n", $svns );
+
+			// Check different versions
+			$valid = array();
+			foreach( $svns as $interpreter )
+			{
+				if( ! in_array( basename( $interpreter ), array( 'svn' ) ) )
+					continue;
+				$versionInfo = $host->runCommands( "$interpreter --version" );
+				if( preg_match( "/svn, version (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
+					$valid[$parts[1]] = $interpreter;
+			}
+
+			// Handle easy cases
+			if( count( $valid ) == 0 )
+				continue;
+			if( count( $valid ) == 1 )
+				return reset( $valid );
+
+			// List available options for user
+			krsort( $valid );
+			$versions = array_keys( $valid );
+			echo "Multiple SVN'es available on host :\n";
+			$counter = 0;
+			foreach( $valid as $version => $path )
+			{
+				echo "[$counter] $path ($version)\n";
+				$counter++;
+			}
+
+			// Ask user
+			$counter--;
+			$selection = -1;
+			while( ! array_key_exists( $selection, $versions ) )
+				$selection = readline( "Which version do you want to use? [0-$counter] " );
+
+			$version = $versions[$selection];
+			return $valid[$version];
+		}
+	} // }}}
+
 	function getInterpreterVersion($interpreter) // {{{
 	{
 		$host = $this->getHost();

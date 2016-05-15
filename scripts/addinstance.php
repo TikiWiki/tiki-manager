@@ -57,15 +57,18 @@ if( ! $access )
 }
 
 info( "Detecting remote configuration." );
+if( ! $instance->detectSVN() ){	
+		die( color("Subversion not detected on the remote serve\n", 'red') );
+}
+
 if( ! $instance->detectPHP() ){
+	die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
+}
+else{
 	if ($instance->phpversion < 50300){
 		die( color("PHP Interpreter version is less than 5.3.\n", 'red') );
 	}
-	else{
-		die( color("PHP Interpreter could not be found on remote host.\n", 'red') );
-	}
 }
-
 $d_linux = $instance->detectDistribution();
 echo "You are running on a $d_linux\n";
 
