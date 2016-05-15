@@ -1,5 +1,5 @@
 <?php
-if (function_exists(posix_getuid)){
+if (function_exists('posix_getuid')){
 	if (posix_getuid() == 0){
 		echo "Good! This is root!\n";
 	} 
