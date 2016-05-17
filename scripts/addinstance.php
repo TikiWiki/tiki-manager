@@ -58,7 +58,7 @@ if( ! $access )
 
 info( "Detecting remote configuration." );
 if( ! $instance->detectSVN() ){	
-		die( color("Subversion not detected on the remote serve\n", 'red') );
+		die( color("Subversion not detected on the remote server\n", 'red') );
 }
 
 if( ! $instance->detectPHP() ){
