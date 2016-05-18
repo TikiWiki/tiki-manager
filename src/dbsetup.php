@@ -100,6 +100,8 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	print "Testing connectivity and DB data...\n";
 	$command = "mysql -u ${user} ".(empty($pass)?"":"-p${pass}")." -h ${host} -e 'SELECT 1' 2>> /tmp/trim.output >> /tmp/trim.output ; echo $?";
         $e =  $access->shellExec($command);
+        `echo 'REMOTE $e' >> logs/trim.output`;
+
 	if ($e){
 		print "TRIM was unable to use of create your database with the information you provided. Aborting the installation\n";
 		exit;

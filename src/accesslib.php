@@ -166,7 +166,6 @@ class Access_SSH extends Access implements ShellPrompt
 		
 		$sets = array(
 			array( 'which php', 'which php5', 'which php4' ),
-			array( 'locate bin/php' ),
 		);
 
 		foreach( $sets as $attempt )
@@ -220,7 +219,6 @@ class Access_SSH extends Access implements ShellPrompt
 		
 		$sets = array(
 			array( 'which svn' ),
-			array( 'locate bin/svn' ),
 		);
 
 		foreach( $sets as $attempt )

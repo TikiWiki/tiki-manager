@@ -121,6 +121,7 @@ class SSH_Host
 			$output = array();
 			exec ($command, $output);
 			$output = implode ("\n",$output);
+	                `echo 'REMOTE $output' >> logs/trim.output`;
 			return $output;
 		}
 	}

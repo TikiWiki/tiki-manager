@@ -89,11 +89,13 @@ foreach( $selection as $instance )
 		$hidden = escapeshellarg( $instance->getWorkPath( "restore/{$basetardir}/$hash/$base/" ) ) . '.* 2>> /tmp/trim.output' ;
 		info("Copying files");
 
-		$access->shellExec(
+		$out = $access->shellExec(
 			"mkdir -p $location",
 			"mv $normal $location/",
 			"mv $hidden $location/"
 		);
+
+		`echo 'REMOTE $out' >> logs/trim.output`;
 	}
 
 	$oldVersion = $instance->getLatestVersion();

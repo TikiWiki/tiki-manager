@@ -197,11 +197,12 @@ class Application_Tiki extends Application
 			$path = str_replace( '/./', '/', $path );
 			$epath = escapeshellarg( $path );
 
-			`cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $folder tikiwiki$epath 2>> /tmp/trim.output`;
+			`cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $folder tikiwiki$epath 2>> logs/trim.output`;
 
 			rename( "$folder$path", $local );
 
-			`rm -Rf $folder`;
+			`rm -Rf $folder 2>> logs/trim.output`;
+
 			chdir( trim($cur) );
 			
 			return $local;
@@ -220,7 +221,7 @@ class Application_Tiki extends Application
 		elseif( $version->type == 'cvs' )
 		{
 			$base = basename( $folder );
-			return "cd $folder; cd ..;cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $base tikiwiki 2>> /tmp/trim.output";
+			return "cd $folder; cd ..;cvs -z3 -d:pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki co -r {$version->branch} -d $base tikiwiki 2>> logs/trim.output";
 		}
 	} // }}}
 
@@ -370,13 +371,15 @@ class Application_Tiki extends Application
 
 			if ($this->instance->isModernTiki()) {
 				$ret = $access->shellExec("sh setup.sh -n fix 2>> /tmp/trim.output");    // does composer as well
-				// echo $ret; TODO output if verbose one day, or log it?
 			} else {
 				$filename = $this->instance->getWorkPath( 'setup.sh' );
 				$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
-				$access->shellExec(
+				$ret = $access->shellExec(
 					"bash " . escapeshellarg( $filename ) . " 2>> /tmp/trim.output" );
 			}
+
+ 		        `echo 'REMOTE $ret' >> logs/trim.output`;
+
 		} elseif( $access instanceof Mountable ) {
 			return;
 			$target = MOUNT_FOLDER . $this->instance->webroot;
