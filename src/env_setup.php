@@ -386,14 +386,20 @@ function printInstances( array $instances )
 
 function php() // {{{
 {
-	$paths = `locate bin/php`;
-	$phps = explode( "\n", $paths );
+	$paths = `whereis php 2>> logs/trim.out`;
+	$phps = explode( " ", $paths );
 
 	// Check different versions
 	$valid = array();
 	foreach( $phps as $interpreter )
 	{
 		if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
+			continue;
+
+		if ( ! @is_executable( $interpreter ) )
+			continue;
+
+		if (  @is_dir( $interpreter ) )
 			continue;
 
 		$versionInfo = `$interpreter -v`;

@@ -103,7 +103,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
         `echo 'REMOTE $e' >> logs/trim.output`;
 
 	if ($e){
-		print "TRIM was unable to use of create your database with the information you provided. Aborting the installation\n";
+		print "TRIM was unable to use or create your database with the information you provided. Aborting the installation. Please check that MySQL or MariaDB is installed and running.";
 		exit;
 	}
 

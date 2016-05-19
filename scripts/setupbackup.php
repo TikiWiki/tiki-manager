@@ -6,8 +6,11 @@
 include_once dirname(__FILE__) . "/../src/env_setup.php";
 
 $time = readline( "What time should it run at? [00:00] " );
+$hour = 0;
+$minute = 0; 
 
-list( $hour, $minute ) = explode( ":", $time );
+if (strlen($time))
+	list( $hour, $minute ) = explode( ":", $time );
 
 $hour = (int) $hour;
 $minute = (int) $minute;
