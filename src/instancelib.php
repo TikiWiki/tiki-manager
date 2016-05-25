@@ -299,7 +299,7 @@ class Instance
 		$backup_directory =  $this->id.'-'.$this->name;
 		$approot = BACKUP_FOLDER . '/' . $backup_directory;
 		if( ! file_exists( $approot ) )
-			mkdir( $approot );
+			mkdir( $approot, 0755, true );
 
 		if( file_exists( "{$approot}/manifest.txt" ) ) {
 			`rm $approot/manifest.txt`;
@@ -333,8 +333,12 @@ class Instance
 			$current = getcwd();
 			chdir( BACKUP_FOLDER );
 
+			$archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
+			if( ! file_exists( $archiveLocation ) )
+				mkdir( $archiveLocation, 0755, true );
+
 			info( "Creating archive." );
-			$tarLocation = ARCHIVE_FOLDER . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
+			$tarLocation = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
 			$tar = escapeshellarg( $tarLocation );
 			$output = array();
 			$return_val = -1;
@@ -377,7 +381,7 @@ class Instance
 
 	function getArchives() // {{{
 	{
-		return array_reverse( glob( ARCHIVE_FOLDER . "/{$this->id}*_*.tar.bz2" ) );
+		return array_reverse( glob( ARCHIVE_FOLDER . "/{$this->id}*/{$this->id}*_*.tar.bz2" ) );
 	} // }}}
 
 	function lock() // {{{

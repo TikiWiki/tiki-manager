@@ -103,12 +103,12 @@ file_put_contents ( $d_httpd_optional.'/webtrim.conf', <<<CONFIG
 Alias /webtrim $web
 
 <Directory $web/>
-LogLevel alert rewrite:trace6
 
 AllowOverride All
 <IfModule mod_authz_core.c>
         # Apache 2.4
        Require all granted
+	LogLevel alert rewrite:trace6
 </IfModule>
 <IfModule !mod_authz_core.c>
         # Apache 2.2
