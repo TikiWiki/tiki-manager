@@ -380,7 +380,9 @@ function printInstances( array $instances )
 {
 	foreach( $instances as $key => $i )
 	{
-		echo "[$i->id] " . str_pad($i->name, 20) . str_pad($i->weburl, 40) . str_pad($i->contact, 20) . "\n";
+		$name = substr($i->name, 0, 18);
+		$weburl = substr($i->weburl, 0, 38);
+		echo "[$i->id] " . str_pad($name, 20) . str_pad($weburl, 40) . str_pad($i->contact, 20) . "\n";
 	}
 }
 
