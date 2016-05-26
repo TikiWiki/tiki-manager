@@ -20,7 +20,7 @@ function handleCheckResult( $instance, $version, $array )
 		echo "\n\n";
 
 		do{
-			echo "\tWhat do you want to do about it?\n\t(P)rint list again\n\t(V)iew files\n\t(D)elete files\n\t(A)dd files to valid list\n\t(S)kip\n(e.g. a0 to add file 0)\n";
+			echo "\tWhat do you want to do about it?\n\t(P)rint list again\n\t(V)iew files\n\t(D)elete files\n\t(A)dd files to valid list\n\t(S)kip\n(a0 to add file 0. Or a0-3 to add files 0 to 3)\n";
 			$input = readline( ">>> " );
 		}
 		while( (strlen($input) == 0) || (stripos( 'pvdas', $input{0} ) === false ));

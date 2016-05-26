@@ -19,4 +19,9 @@ foreach( $selection as $instance )
 	}
 
 	perform_instance_installation( $instance );
+ 	$matches2 = array();
+	preg_match('/(\d+)(\d{2})(\d{2})$/',$instance->phpversion,$matches2);
+	if (array_key_exists(1, $matches2) && array_key_exists(2, $matches2) && array_key_exists(3, $matches2)) {
+		printf("Detected PHP : %d.%d.%d\n",$matches2[1],$matches2[2],$matches2[3]);
+	}
 }

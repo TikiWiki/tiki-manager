@@ -108,5 +108,7 @@ echo color("Instance information saved.\n", 'green');
 
 if( ARG_BLANK ) 
 	echo color("This is a blank (empty) instance. This is useful to restore a backup later.\n", 'blue');
-else
+else {
 	perform_instance_installation( $instance );
+	echo color ("Please test your site at {$instance->weburl}", 'blue');
+}
