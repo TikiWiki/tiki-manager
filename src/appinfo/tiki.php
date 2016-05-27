@@ -98,7 +98,8 @@ class Application_Tiki extends Application
 				$this->instance->getWebPath('.htaccess')
 			);
 
-		$access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
+		if( $access instanceof ShellPrompt )
+			$access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
 	} // }}}
 
 	function getBranch() // {{{
@@ -391,7 +392,6 @@ class Application_Tiki extends Application
 			// This code was taken from the installer.
 			$dirs=array(
 					'backups',
-					'db',
 					'dump',
 					'img/wiki',
 					'img/wiki_up',
@@ -413,6 +413,20 @@ class Application_Tiki extends Application
 				}
 
 				chmod($dir,02775);
+			}
+
+			$dirs=array(
+					'db');
+
+			$ret = "";
+			foreach ($dirs as $dir) {
+				$dir = $dir;
+				// Create directories as needed
+				if (!is_dir($dir)) {
+					mkdir($dir,02775);
+				}
+
+				chmod($dir,02777);
 			}
 
 			$access->umount();
@@ -502,6 +516,17 @@ LOCAL
 			$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php', array( $root, $file ) );
 			$access->runPHP( dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php', array( $this->instance->webroot ) );
 		}
+
+		echo "Verify if you have db/local.php file, if you don't put the following content in it.\n";
+		echo "<?php
+\$db_tiki='{$database->type}';
+\$host_tiki='{$database->host}';
+\$user_tiki='{$database->user}';
+\$pass_tiki='{$database->pass}';
+\$dbs_tiki='{$database->dbname}';
+\$client_charset = 'utf8';
+";
+
 	} // }}}
 
 	function restoreDatabase( Database $database, $remoteFile ) // {{{

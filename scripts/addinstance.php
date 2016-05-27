@@ -45,6 +45,23 @@ $instance->webroot = rtrim( $webroot, '/' );
 $instance->weburl = rtrim( $weburl, '/' );
 $instance->tempdir = rtrim( $tempdir, '/' );
 
+if ($type == 'ftp'){
+	$d_weburl = "http://$host";
+	$d_tempdir = "/tmp/trim_temp";
+	$d_webroot = "/home/$user/public_html";
+
+	$webroot = readline( "Web root : [$d_webroot] " );
+	if( empty( $webroot ) )
+	        $webroot = $d_webroot;
+
+	$weburl = readline( "Web URL : [$d_weburl] " );
+	if( empty( $weburl ) )
+	        $weburl = $d_weburl;
+
+	$instance->webroot = rtrim( $webroot, '/' );
+	$instance->weburl = rtrim( $weburl, '/' );
+}
+
 $instance->save();
 echo color("Instance information saved.\n", 'green');
 
@@ -82,15 +99,15 @@ switch ($d_linux){
 
 $d_weburl = "http://$host";
 $d_tempdir = "/tmp/trim_temp";
+if ($type != 'ftp'){
+	$webroot = readline( "Web root : [$d_webroot] " );
+	if( empty( $webroot ) )
+		$webroot = $d_webroot;
 
-$webroot = readline( "Web root : [$d_webroot] " );
-if( empty( $webroot ) )
-	$webroot = $d_webroot;
-
-$weburl = readline( "Web URL : [$d_weburl] " );
-if( empty( $weburl ) )
-	$weburl = $d_weburl;
-
+	$weburl = readline( "Web URL : [$d_weburl] " );
+	if( empty( $weburl ) )
+		$weburl = $d_weburl;
+}
 $tempdir = readline( "Working directory : [$d_tempdir] " );
 if( empty( $tempdir ) )
 	$tempdir = $d_tempdir;
@@ -110,5 +127,5 @@ if( ARG_BLANK )
 	echo color("This is a blank (empty) instance. This is useful to restore a backup later.\n", 'blue');
 else {
 	perform_instance_installation( $instance );
-	echo color ("Please test your site at {$instance->weburl}", 'blue');
+	echo color ("Please test your site at {$instance->weburl}\n", 'blue');
 }

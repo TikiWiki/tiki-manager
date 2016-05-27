@@ -31,6 +31,7 @@ class FTP_Host
 		if( $conn ) {
 			if( ftp_login( $conn, $this->user, $this->pass ) ) {
 				$this->conn = $conn;
+				ftp_pasv($conn, true);
 				return true;
 			}
 		}

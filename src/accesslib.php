@@ -84,7 +84,7 @@ abstract class Access
 
 	abstract function firstConnect();
 
-	abstract function getInterpreterPath();
+	abstract function getInterpreterPath($instance2 = null);
 
 	abstract function fileExists( $filename );
 
@@ -160,7 +160,7 @@ class Access_SSH extends Access implements ShellPrompt
 		return true;
 	} // }}}
 
-	function getInterpreterPath() // {{{
+	function getInterpreterPath($instance2 = null) // {{{
 	{
 		$host = $this->getHost();
 		
@@ -495,13 +495,29 @@ class Access_FTP extends Access implements Mountable
 		return $conn->connect();
 	} // }}}
 
-	function getInterpreterPath() // {{{
+	function getInterpreterPath($instance2 = null) // {{{
 	{
-		$result = $this->runPHP( dirname(__FILE__) . '/../scripts/checkversion.php' );
+		if (  $instance2 instanceof Instance ) {
+			$this->instance = $instance2;
+		}
+		$result = $this->runPHP( dirname(__FILE__) . '/../scripts/checkversion.php', array($this->instance->webroot) );
 
 		if( preg_match( '/^[5-9]\./', $result ) ) {
 			return 'mod_php';
 		}
+	} // }}}
+
+	function getSVNPath(){ // {{{
+		return 1;
+	} // }}}
+
+	function getInterpreterVersion($interpreter) // {{{
+        {
+                return 99999;
+        } // }}}
+
+	function getDistributionName($interpreter){ // {{{
+		return 'Unknown';
 	} // }}}
 
 	function fileExists( $filename ) // {{{
@@ -530,7 +546,6 @@ class Access_FTP extends Access implements Mountable
 				$potentialPath = $this->obtainRelativePathTo( $potentialPath, $this->instance->webroot );
 			}
 		}
-
 		$host = $this->getHost();
 
 		$remoteName = 'trim_' . md5( $localFile ) . '.php';
@@ -709,6 +724,7 @@ class Access_FTP extends Access implements Mountable
 
 		$temp = TEMP_FOLDER;
 		$name = md5(time()) . '.tar';
+		`chmod 777 db`;
 		`tar --exclude=.svn -cf $temp/$name *`;
 		if( $compress ) {
 			`gzip -5 $temp/$name`;

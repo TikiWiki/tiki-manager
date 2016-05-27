@@ -180,8 +180,7 @@ class Instance
 	function detectPHP() // {{{
 	{
 		$access = $this->getBestAccess( 'scripting' );
-		$path = $access->getInterpreterPath();
-		//echo "DEBUG PHP path $path\n";
+		$path = $access->getInterpreterPath($this);
 		if( strlen( $path ) > 0 )
 		{
 			$version = $access->getInterpreterVersion($path);

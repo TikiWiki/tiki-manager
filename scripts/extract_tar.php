@@ -2954,7 +2954,7 @@ function change_ownership( $location, $user, $group )
 	$files = scandir( $location );
 	foreach( $files as $child )
 	{
-		if( in_array( $child, array( '.', '..' ) ) )
+		if( in_array( $child, array( '.', '..','db' ) ) )
 			continue;
 
 		$full = "$location/$child";
