@@ -19,8 +19,8 @@ foreach( $raw as $instance )
 		$instances[$instance->id] = $instance;
 }
 
-echo "Note: It is only possible to restore a backup on a blank install.\n\n";
-$selection = selectInstances( $instances, "Which instance do you want to restore on?\n" );
+echo color("\nNote: It is only possible to restore a backup on a blank install.\n\n", 'yellow');
+$selection = selectInstances( $instances, "Which instance do you want to restore to?\n" );
 
 $restorable = Instance::getRestorableInstances();
 
@@ -28,7 +28,7 @@ foreach( $selection as $instance )
 {
 	info( $instance->name );
 
-	echo "Which instance do you want to restore?\n";
+	echo "Which instance do you want to restore from?\n";
 
 	printInstances( $restorable );
 
@@ -121,9 +121,11 @@ foreach( $selection as $instance )
 
 	perform_instance_installation( $instance );
 
+	info( "Fixing permissions for {$instance->name}" );
+	$instance->getApplication()->fixPermissions();
+
 	info ("It is now time to test your site {$instance->name}");
-	info ("If there are issues, try make fix");
-	info ("If there are still issues, connect with make access to troubleshoot directly on the server");
+	info ("If there are issues, connect with make access to troubleshoot directly on the server");
 	info ("You'll need to login to this restored instance and update the file paths with the new values.");
 	info ("WARNING: If you are restoring on the same server, this can lead to data corruption as both the original and restored Tiki are using the same folder for storage.");
 }

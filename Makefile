@@ -7,7 +7,12 @@ BASH = bash
 
 # No changes should be required from here
 default:
-	@echo Valid options are : instance, viewdb, check, watch, update, upgrade, convert, access, backup, restore, fix, detect, enablewww, delete, profile, report, copysshkey, blank
+	@echo "Valid options are:"
+	@echo "  instance, viewdb, check, watch, update, upgrade, convert, access,"
+	@echo "  backup, restore, fix, detect, enablewww, delete, profile, report,"
+	@echo "  copysshkey, blank, clone, mirror, cloneandupdate, cloneandupgrade"
+
+help: default
 
 .PHONY: backup
 
@@ -67,3 +72,15 @@ report:
 
 copysshkey:
 	$(PHP) scripts/copysshkey.php
+
+clone:
+	$(PHP) scripts/clone.php clone
+
+mirror:
+	$(PHP) scripts/clone.php mirror
+
+cloneandupdate:
+	$(PHP) scripts/clone.php update
+
+cloneandupgrade:
+	$(PHP) scripts/clone.php upgrade

@@ -69,13 +69,11 @@ class SSH_Host
 				unset( self::$resources["{$this->user}@{$this->host}:{$this->port}"] );
 		}
 
-		$port = null;
-		if( $this->port != 22 )
-			$port = " -p {$this->port} ";
 		$file = escapeshellarg( $publicKeyFile );
-		$host = escapeshellarg( "$port{$this->user}@{$this->host}" );
+		$port = escapeshellarg( $this->port );
+		$host = escapeshellarg( "{$this->user}@{$this->host}" );
 
-		`ssh-copy-id -i $file $host`;
+		`ssh-copy-id -i $file -p $port $host`;
 	}
 
 	function runCommands( $commands , $output = false) {

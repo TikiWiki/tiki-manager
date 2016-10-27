@@ -67,6 +67,7 @@ class RC_SVN
 
 		foreach( $raw as $line )
 		{
+			if (! strlen(trim($line)) || ! strpos($line, ':')) continue;
 			list( $key, $value ) = explode( ':', $line, 2 );
 			$key = trim( $key );
 			$value = trim( $value );
