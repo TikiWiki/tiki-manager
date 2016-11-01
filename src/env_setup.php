@@ -388,7 +388,7 @@ function printInstances( array $instances )
 
 function php() // {{{
 {
-	$paths = `whereis php 2>> logs/trim.out`;
+	$paths = `whereis php 2>> logs/trim.output`;
 	$phps = explode( " ", $paths );
 
 	// Check different versions
