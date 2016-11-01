@@ -3,6 +3,7 @@
 ##
 PHP = php -d memory_limit=256M
 SQLITE = sqlite3
+SQLITE_VERSION := $(shell $(SQLITE) --version 2> /dev/null)
 BASH = bash
 
 # No changes should be required from here
@@ -24,6 +25,9 @@ blank:
 	$(PHP) scripts/addinstance.php blank
 
 viewdb:
+ifndef SQLITE_VERSION
+	$(error $(SQLITE) is not available, please install and try again)
+endif
 	$(SQLITE) data/trim.db
 
 check:
