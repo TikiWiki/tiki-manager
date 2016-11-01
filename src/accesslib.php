@@ -275,46 +275,8 @@ class Access_SSH extends Access implements ShellPrompt
 
 	function getDistributionName($interpreter){ // {{{
 		$host = $this->getHost();
-		$command = 'function getLinuxDistro()
-    {
-        //declare Linux distros(extensible list).
-        $distros = array(
-                "Arch" => "arch-release",
-                "Debian" => "debian_version",
-                "Fedora" => "fedora-release",
-                "ClearOS" => "clearos-release",
-                "CentOS" => "centos-release",
-                "Mageia" => "mageia-release",
-                "Redhat" => "redhat-release"
-	);
-
-    //Get everything from /etc directory.
-    $etcList = scandir("/etc");
-
-    //Loop through /etc results...
-    // $OSDistro;
-    foreach ($distros as $distroReleaseFile)
-    {
-        //Loop through list of distros..
-    	foreach ($etcList as $entry)
-        {
-            //Match was found.
-            if ($distroReleaseFile === $entry)
-            {
-                //Find distros array key(i.e. Distro name) by value(i.e. distro release file)
-                $OSDistro = array_search($distroReleaseFile, $distros);
-
-                break 2;//Break inner and outer loop.
-            }
-        }
-    }
-
-    return $OSDistro;
-
-}
-
-echo getLinuxDistro();
-';
+		$command = file_get_contents(
+			sprintf('%s/getlinuxdistro.php', dirname(__FILE__)));
 		$linuxName = $host->runCommands( "$interpreter -r '$command'" );
 
 		return $linuxName;
