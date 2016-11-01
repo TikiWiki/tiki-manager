@@ -7,6 +7,8 @@ include_once dirname(__FILE__) . "/../src/env_setup.php";
 include_once dirname(__FILE__) . "/../src/dbsetup.php";
 define( 'ARG_BLANK', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'blank' );
 
+echo color("\nAnswer the following to add a new TRIM instance.\n\n", 'yellow');
+
 $type = $user = $host = $pass = '';
 while( ! in_array( $type, array( 'ftp', 'ssh' ) ) ) {
 	$type = strtolower(readline( "Connection type [ssh|ftp] : " ));
