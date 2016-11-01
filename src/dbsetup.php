@@ -27,11 +27,11 @@ function perform_instance_installation( Instance $instance )
 					$found_incompatibilities = true;
 				}
 				else
-					echo "[$key] {$version->type} : {$version->branch}\n";
+					echo sprintf("[%3d] %s : %s\n", $key, $version->type, $version->branch);
 			}
 		}
 		
-		echo "[-1] blank : none\n";
+		echo "[ -1] blank : none\n";
 		$matches2 = array();
 		preg_match('/(\d+)(\d{2})(\d{2})$/',$instance->phpversion,$matches2);
 

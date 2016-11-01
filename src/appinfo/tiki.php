@@ -17,8 +17,9 @@ class Application_Tiki extends Application
 	function getVersions() // {{{
 	{
 		$versions = array();
-		$versions[] = Version::buildFake( 'cvs', 'REL-1-9-11' );
-		$versions[] = Version::buildFake( 'cvs', 'BRANCH-1-9' );
+		$versions[] = 'svn:trunk';
+		$versions[] = 'cvs:REL-1-9-11';
+		$versions[] = 'cvs:BRANCH-1-9';
 
 		$base = "https://svn.code.sf.net/p/tikiwiki/code";
 		foreach( explode( "\n", `svn ls $base/tags` ) as $line )
@@ -28,7 +29,7 @@ class Application_Tiki extends Application
 				continue;
 
 			if( substr( $line, -1 ) == '/' && ctype_digit( $line{0} ) )
-				$versions[] = Version::buildFake( 'svn', "tags/" . substr( $line, 0, -1 ) );
+				$versions[] = 'svn:tags/' . substr( $line, 0, -1 );
 		}
 
 		foreach( explode( "\n", `svn ls $base/branches` ) as $line )
@@ -38,12 +39,18 @@ class Application_Tiki extends Application
 				continue;
 
 			if( substr( $line, -1 ) == '/' && ctype_digit( $line{0} ) )
-				$versions[] = Version::buildFake( 'svn', "branches/" . substr( $line, 0, -1 ) );
+				$versions[] = 'svn:branches/' . substr( $line, 0, -1 );
 		}
 
-		$versions[] = Version::buildFake( 'svn', "trunk" );
+		sort($versions, SORT_NATURAL);
 
-		return $versions;
+		$versions_sorted = array();
+		foreach ($versions as $version) {
+			list($type, $branch) = explode(':', $version);
+			$versions_sorted[] = Version::buildFake($type, $branch);
+		}
+
+		return $versions_sorted;
 	} // }}}
 
 	function isInstalled() // {{{
