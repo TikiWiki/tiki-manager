@@ -319,7 +319,7 @@ class Instance
 
 		if ($error_flag) {
 			// Do something
-			$message = "Your TRIM backup has failed carring files into TRIM.\r\n";
+			$message = "Backup has failed while downloading files into TRIM.\r\n";
 			$message .= "{$this->name}";
 			mail ( $this->contact , 'TRIM backup error', $message );
 		}
