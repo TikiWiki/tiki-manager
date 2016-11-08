@@ -44,9 +44,9 @@ function getPassword($stars = false)
         	while (true) {
             		$char = fgetc(STDIN);
 
-            		if ($char === "\n") {
+            		if ($char == "\n") {
                 	break;
-            		} else if (ord($char) === 127) {
+            		} else if (ord($char) == 127) {
                 		if (strlen($password) > 0) {
                     			fwrite(STDOUT, "\x08 \x08");
                     			$password = substr($password, 0, -1);
