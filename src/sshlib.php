@@ -82,14 +82,14 @@ class SSH_Host
 				unset( self::$resources["{$this->user}@{$this->host}:{$this->port}"] );
 		}
 
-		$port = escapeshellarg( $this->port );
 		$file = escapeshellarg( $publicKeyFile );
 
 		if ($this->copy_id_port_in_host) {
-			$host = escapeshellarg( "-p {$port} {$this->user}@{$this->host}" );
+			$host = escapeshellarg( "-p {$this->port} {$this->user}@{$this->host}" );
 			`ssh-copy-id -i $file $host`;
 		}
 		else {
+			$port = escapeshellarg( $this->port );
 			$host = escapeshellarg( "{$this->user}@{$this->host}" );
 			`ssh-copy-id -i $file -p $port $host`;
 		}
