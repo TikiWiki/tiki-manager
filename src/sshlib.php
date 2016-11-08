@@ -14,11 +14,24 @@ class SSH_Host
 	private $user;
 	private $port;
 
+	private $copy_id_port_in_host;
+
 	function __construct( $host, $user, $port )
 	{
 		$this->host = $host;
 		$this->user = $user;
 		$this->port = $port;
+
+		$this->copy_id_port_in_host = true;
+
+		$ph = popen('ssh-copy-id -h 2>&1', 'r');
+		if (! is_resource($ph))
+			error( "Required command (ssh-copy_id) not found." );
+		else {
+			if (preg_match('/p port/', stream_get_contents($ph)))
+				$this->copy_id_port_in_host = false;
+			pclose($ph);
+		}
 	}
 
 	function chdir( $location )
@@ -69,11 +82,17 @@ class SSH_Host
 				unset( self::$resources["{$this->user}@{$this->host}:{$this->port}"] );
 		}
 
-		$file = escapeshellarg( $publicKeyFile );
 		$port = escapeshellarg( $this->port );
-		$host = escapeshellarg( "{$this->user}@{$this->host}" );
+		$file = escapeshellarg( $publicKeyFile );
 
-		`ssh-copy-id -i $file -p $port $host`;
+		if ($this->copy_id_port_in_host) {
+			$host = escapeshellarg( "-p {$port} {$this->user}@{$this->host}" );
+			`ssh-copy-id -i $file $host`;
+		}
+		else {
+			$host = escapeshellarg( "{$this->user}@{$this->host}" );
+			`ssh-copy-id -i $file -p $port $host`;
+		}
 	}
 
 	function runCommands( $commands , $output = false) {
