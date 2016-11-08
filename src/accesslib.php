@@ -73,7 +73,7 @@ abstract class Access
 
 	function changeType( $type ) // {{{
 	{
-		if( strpos( $type, "{$this->type}::" ) === 0 )
+		if( strpos( $type, "{$this->type}::" ) === false )
 		{
 			$this->type = $type;
 			return true;
@@ -619,7 +619,7 @@ class Access_FTP extends Access implements Mountable
 		}
 
 		$out = null;
-		if( strpos( $targetFolder, $originFolder ) === 0 ) {
+		if( strpos( $targetFolder, $originFolder ) === false ) {
 			// Target is under the origin
 			$relative = substr( $targetFolder, strlen( $originFolder ) );
 			$out = ltrim( implode( '/', $parts ) . '/' . ltrim( $relative, '/' ), '/' );
