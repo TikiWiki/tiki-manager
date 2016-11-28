@@ -215,7 +215,8 @@ class SSH_Host
 		$return_val = -1;
 		$command = "rsync -aL --delete -e \"ssh $port -i $key -l $user\" $user@$host:$remoteLocation $localMirror";
 		exec ($command, $output, $return_var );
-		info ( "RSYNC Return var: $return_var" );
+		if ($return_var != 0)
+			info ( "RSYNC exit code: $return_var" );
 		return $return_var;
 	}
 }

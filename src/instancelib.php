@@ -307,8 +307,9 @@ class Instance
 		$app = $this->getApplication();
 		$app->removeTemporaryFiles();
 		$error_flag = 0;
+
 		// Bring all remote files locally
-		info( "Downloading files locally." );
+		info( "Downloading files locally..." );
 		foreach( $locations as $remote )
 		{
 			$hash = md5( $remote );
@@ -322,37 +323,129 @@ class Instance
 			$message = "Backup has failed while downloading files into TRIM.\r\n";
 			$message .= "{$this->name}";
 			mail ( $this->contact , 'TRIM backup error', $message );
+			return null;
 		}
-		else {
-			$target = $approot . '/database_dump.sql';
-			info( "Obtaining database dump." );
-			$this->getApplication()->backupDatabase( $target );	// There is not an easy way to get the return value
 
-			// Perform archiving
-			$current = getcwd();
-			chdir( BACKUP_FOLDER );
+		info( "Obtaining database dump..." );
 
-			$archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
-			if( ! file_exists( $archiveLocation ) )
-				mkdir( $archiveLocation, 0755, true );
+		$target = $approot . '/database_dump.sql';
+		// There is not an easy way to get the return value
+		$this->getApplication()->backupDatabase( $target );
 
-			info( "Creating archive." );
-			$tarLocation = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
-			$tar = escapeshellarg( $tarLocation );
-			$output = array();
-			$return_val = -1;
-			$command = "nice -n 19 tar -cjf $tar {$backup_directory}";
-			exec ($command, $output, $return_var );
+		// Perform archiving
+		$current = getcwd();
+		chdir( BACKUP_FOLDER );
 
-			$error_flag +=  $return_var;
-			info ( "Return var: $return_var" );
-			if ($error_flag) {
-				$message = "Your TRIM backup has failed packing files into TRIM.\r\n";
-				$message .= "{$this->name}";
-				mail ( $this->contact , 'TRIM backup error', $message );
-			}
-		}
+		$archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
+		if( ! file_exists( $archiveLocation ) )
+			mkdir( $archiveLocation, 0755, true );
+
+		info( "Creating archive..." );
+		$tarLocation = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
+		$tar = escapeshellarg( $tarLocation );
+		$output = array();
+		$return_val = -1;
+		$command = "nice -n 19 tar -cjf $tar {$backup_directory}";
+		exec ($command, $output, $return_var );
+
+		$error_flag += $return_var;
+		if ($return_var != 0)
+			info ( "TAR exit code: $return_var" );
 		chdir( $current );
+
+		if ($error_flag) {
+			$message = "Your TRIM backup has failed packing files into TRIM.\r\n";
+			$message .= "{$this->name}";
+			mail ( $this->contact , 'TRIM backup error', $message );
+			return null;
+		}
+
+		return $tarLocation;
+	} // }}}
+
+	function restore($src_app, $archive, $svn_update = false)
+	{
+	    info( sprintf("Uploading : %s", basename($archive)) );
+	    $base = basename( $archive);
+	    list( $basetardir, $trash ) = explode( "_", $base, 2 );
+	    $remote = $this->getWorkPath( $base );
+
+	    $access = $this->getBestAccess('scripting');
+
+	    $access->uploadFile( $archive, $remote );
+	    echo $access->shellExec(
+		"mkdir -p {$this->tempdir}/restore",
+		"tar -jx -C {$this->tempdir}/restore -f " . escapeshellarg( $remote )
+	    );
+
+	    info( "Reading manifest..." );
+	    $current = trim(`pwd`);
+	    chdir( TEMP_FOLDER );
+	    `tar -jxvf $archive $basetardir/manifest.txt `;
+	    $manifest = file_get_contents( "{$basetardir}/manifest.txt" );
+	    chdir( $current );
+
+	    foreach( explode( "\n", $manifest ) as $line )
+	    {
+		$line = trim($line);
+		if( empty($line) ) continue;
+
+		list( $hash, $location ) = explode( "    ", $line, 2 );
+		$base = basename( $location );
+
+		echo "Previous host used $location\n";
+		$location = readline( "New location: [{$this->webroot}] " );
+		if( empty( $location ) ) $location = $this->webroot;
+
+		info("Copying files...");
+
+		$out = $access->shellExec(
+		    sprintf('mkdir -p %s',
+			escapeshellarg( rtrim($location, '/') )),
+		    sprintf('rsync -a %s %s',
+			escapeshellarg( $this->getWorkPath( "restore/{$basetardir}/$hash/$base/" ) ),
+			escapeshellarg( rtrim($location, '/') . '/'))
+		);
+
+		`echo 'REMOTE $out' >> logs/trim.output`;
+
+		if ($svn_update) {
+			info ("Updating from SVN...");
+
+			$out = $access->shellExec(
+			    sprintf('svn update %s',
+				escapeshellarg( rtrim($location, '/') ))
+			);
+
+			`echo 'REMOTE $out' >> logs/trim.output`;
+		}
+	    }
+
+	    $oldVersion = $this->getLatestVersion();
+	    $this->app = $src_app;
+	    $version = $this->createVersion();
+	    $version->type = (is_object($oldVersion)?$oldVersion->type:NULL);
+	    $version->branch = (is_object($oldVersion)?$oldVersion->branch:NULL);
+	    $version->date = (is_object($oldVersion)?$oldVersion->date:NULL);
+	    $version->save();
+	    $this->save();
+	    
+	    perform_database_setup( $this, "{$this->tempdir}/restore/{$basetardir}/database_dump.sql" );
+
+	    $version->collectChecksumFromInstance( $this);
+
+	    if( $this->app == 'tiki' )
+		$this->getApplication()->fixPermissions();
+
+	    info("Cleaning up...");
+	    echo $access->shellExec(
+		"rm -Rf {$this->tempdir}/restore"
+	    );
+
+	    perform_instance_installation( $this );
+
+	    info( "Fixing permissions for {$this->name}" );
+	    $this->getApplication()->fixPermissions();
 	} // }}}
 
 	function getExtraBackups() // {{{

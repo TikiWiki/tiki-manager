@@ -67,7 +67,7 @@ function perform_instance_installation( Instance $instance )
 
 function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 {
-	echo "Perform database setup...\n";
+	info(sprintf("Perform database %s...\n", ($remoteBackupFile) ? 'restore' : 'setup'));
 
 	$access = $instance->getBestAccess('scripting');
 
@@ -104,7 +104,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
         	`echo 'REMOTE $e' >> logs/trim.output`;
 
 		if ($e){
-			print "TRIM was unable to use or create your database with the information you provided. Aborting the installation. Please check that MySQL or MariaDB is installed and running.";
+			print "TRIM was unable to use or create your database with the information you provided. Aborting the installation. Please check that MySQL or MariaDB is installed and running.\n";
 			exit;
 		}
 	}

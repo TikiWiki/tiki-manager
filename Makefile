@@ -33,6 +33,9 @@ endif
 check:
 	$(PHP) scripts/check.php
 
+verify:
+	$(PHP) scripts/check.php
+
 watch:
 	$(PHP) scripts/setupwatch.php
 
