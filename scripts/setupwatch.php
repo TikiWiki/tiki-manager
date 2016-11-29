@@ -5,8 +5,8 @@
 
 include_once dirname(__FILE__) . "/../src/env_setup.php";
 
-$email = readline( "Email address to contact: " );
-$time = readline( "What time should it run at? [00:00] " );
+$email = promptUser( 'Email address to contact' );
+$time = promptUser( 'What time should it run at?', '00:00' );
 
 list( $hour, $minute ) = explode( ":", $time );
 

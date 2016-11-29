@@ -16,7 +16,9 @@ abstract class Access
 
 	static function getClassFor( $type ) // {{{
 	{
-		if( $type == 'ssh' )
+		if ( $type == 'local' )
+			return 'Access_Local';
+		elseif( $type == 'ssh' )
 			return 'Access_SSH';
 		elseif( $type == 'ssh::nokey' )
 			return 'Access_SSH';
@@ -36,10 +38,13 @@ abstract class Access
 		{
 			$class = self::getClassFor( $row['type'] );
 
-			$a = new $class( $instance );
-			list($a->host, $a->port) = explode(':', $row['host']);
-			$a->user = $row['user'];
-			$a->password = $row['password'];
+            $a = new $class( $instance );
+
+            if ($row['type'] != 'local') {
+                list($a->host, $a->port) = explode(':', $row['host']);
+                $a->user = $row['user'];
+                $a->password = $row['password'];
+            }
 
 			$access[] = $a;
 		}
@@ -125,6 +130,294 @@ interface Mountable
 	function synchronize( $source, $mirror, $keepFolderName = false );
 }
 
+class Access_Local extends Access implements ShellPrompt
+{
+	private $location;
+	private $env = array();
+
+	function __construct( Instance $instance )
+	{
+		parent::__construct( $instance, 'local' );
+	}
+
+	private function getHost()
+	{
+		return new Local_Host();
+	}
+
+	function firstConnect() // {{{
+	{
+		return true;
+	} // }}}
+
+	function getInterpreterPath($instance2 = null) // {{{
+	{
+		$host = $this->getHost();
+		
+		$sets = array(
+			array( 'which php', 'which php5', 'which php4' ),
+		);
+
+		foreach( $sets as $attempt )
+		{
+			// Get possible paths
+			$phps = $host->runCommands( $attempt );
+			$phps = explode( "\n", $phps );
+
+			// Check different versions
+			$valid = array();
+			foreach( $phps as $interpreter )
+			{
+				if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
+					continue;
+				$versionInfo = $host->runCommands( "$interpreter -v" );
+				if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
+					$valid[$parts[1]] = $interpreter;
+			}
+
+			// Handle easy cases
+			if( count( $valid ) == 0 )
+				continue;
+			if( count( $valid ) == 1 )
+				return reset( $valid );
+
+			// List available options for user
+			krsort( $valid );
+			$versions = array_keys( $valid );
+			echo "Multiple PHP interpreters available on host :\n";
+			$counter = 0;
+			foreach( $valid as $version => $path )
+			{
+				echo "[$counter] $path ($version)\n";
+				$counter++;
+			}
+
+			// Ask user
+			$counter--;
+			$selection = -1;
+			while( ! array_key_exists( $selection, $versions ) )
+				$selection = readline( "Which version do you want to use? [0-$counter] " );
+
+			$version = $versions[$selection];
+			return $valid[$version];
+		}
+	} // }}}
+
+	function getSVNPath() // {{{
+	{
+		$host = $this->getHost();
+		
+		$sets = array(
+			array( 'which svn' ),
+		);
+
+		foreach( $sets as $attempt )
+		{
+			// Get possible paths
+			$svns = $host->runCommands( $attempt );
+			$svns = explode( "\n", $svns );
+
+			// Check different versions
+			$valid = array();
+			foreach( $svns as $interpreter )
+			{
+				if( ! in_array( basename( $interpreter ), array( 'svn' ) ) )
+					continue;
+				$versionInfo = $host->runCommands( "$interpreter --version" );
+				if( preg_match( "/svn, version (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
+					$valid[$parts[1]] = $interpreter;
+			}
+
+			// Handle easy cases
+			if( count( $valid ) == 0 )
+				continue;
+			if( count( $valid ) == 1 )
+				return reset( $valid );
+
+			// List available options for user
+			krsort( $valid );
+			$versions = array_keys( $valid );
+			echo "Multiple SVN'es available on host :\n";
+			$counter = 0;
+			foreach( $valid as $version => $path )
+			{
+				echo "[$counter] $path ($version)\n";
+				$counter++;
+			}
+
+			// Ask user
+			$counter--;
+			$selection = -1;
+			while( ! array_key_exists( $selection, $versions ) )
+				$selection = readline( "Which version do you want to use? [0-$counter] " );
+
+			$version = $versions[$selection];
+			return $valid[$version];
+		}
+	} // }}}
+
+	function getInterpreterVersion($interpreter) // {{{
+	{
+		$host = $this->getHost();
+		$versionInfo = $host->runCommands( "$interpreter -r 'echo PHP_VERSION_ID;'" );
+		return $versionInfo;
+	} // }}}
+
+	function getDistributionName($interpreter){ // {{{
+		$host = $this->getHost();
+		$command = file_get_contents(
+			sprintf('%s/getlinuxdistro.php', dirname(__FILE__)));
+		$linuxName = $host->runCommands( "$interpreter -r '$command'" );
+
+		return $linuxName;
+	} // }}}
+
+	function fileExists( $filename ) // {{{
+	{
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
+		$eFile = escapeshellarg( $filename );
+		$output = $this->shellExec( "ls $eFile" );
+
+		return ! empty( $output );
+	} // }}}
+
+	function fileGetContents( $filename ) // {{{
+	{
+		$host = $this->getHost();
+		
+		$filename = escapeshellarg( $filename );
+		return $host->runCommands( "cat $filename" );
+	} // }}}
+
+	function fileModificationDate( $filename ) // {{{
+	{
+		$host = $this->getHost();
+
+		$root = escapeshellarg( $filename );
+
+		$data = $host->runCommands( "ls -l $root" );
+
+		if( preg_match( "/\d{4}-\d{2}-\d{2}/", $data, $parts ) )
+			return $parts[0];
+		else
+			return null;
+	} // }}}
+
+	function runPHP( $localFile, $args = array() ) // {{{
+	{
+		$host = $this->getHost();
+
+		$remoteName = md5( $localFile );
+		$remoteFile = $this->instance->getWorkPath( $remoteName );
+
+		$host->sendFile( $localFile, $remoteFile );
+		$arg = implode( ' ', array_map( 'escapeshellarg', $args ) );
+		$output = $host->runCommands(
+			"{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
+			"rm {$remoteFile}" );
+
+		return $output;
+	} // }}}
+
+	function downloadFile( $filename ) // {{{
+	{
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
+		$dot = strrpos( $filename, '.' );
+		$ext = substr( $filename, $dot );
+
+		$local = tempnam( TEMP_FOLDER, 'trim' );
+
+		$host = $this->getHost();
+		$host->receiveFile( $filename, $local );
+
+		rename( $local, $local . $ext );
+		chmod( $local . $ext, 0644 );
+
+		return $local . $ext;
+	} // }}}
+
+	function uploadFile( $filename, $remoteLocation ) // {{{
+	{
+		$host = $this->getHost();
+		if( $remoteLocation{0} == '/' )
+			$host->sendFile( $filename, $remoteLocation );
+		else
+			$host->sendFile( $filename, $this->instance->getWebPath( $remoteLocation ) );
+	} // }}}
+
+	function deleteFile( $filename ) // {{{
+	{
+		if( $filename{0} != '/' )
+			$filename = $this->instance->getWebPath( $filename );
+
+		$path = escapeshellarg( $filename );
+
+		$host = $this->getHost();
+		$host->runCommands( "rm $path" );
+	} // }}}
+
+	function moveFile( $remoteSource, $remoteTarget ) // {{{
+	{
+		if( $remoteSource{0} != '/' )
+			$remoteSource = $this->instance->getWebPath( $remoteSource );
+		if( $remoteTarget{0} != '/' )
+			$remoteTarget = $this->instance->getWebPath( $remoteTarget );
+
+		$a = escapeshellarg( $remoteSource );
+		$b = escapeshellarg( $remoteTarget );
+
+		$this->shellExec( "mv $a $b" );
+	} // }}}
+
+	function chdir( $location ) // {{{
+	{
+		$this->location = $location;
+	} // }}}
+
+	function setenv( $var, $value ) // {{{
+	{
+		$this->env[$var] = $value;
+	} // }}}
+
+	function shellExec( $commands, $output = false ) // {{{
+	{
+		if( ! is_array( $commands ) )
+			$commands = func_get_args();
+
+		$host = $this->getHost();
+		if( $this->location )
+			$host->chdir( $this->location );
+		foreach( $this->env as $key => $value )
+			$host->setenv( $key, $value );
+
+		return $host->runCommands( $commands, $output );
+	} // }}}
+
+	function openShell($workingDir = '') // {{{
+	{
+		$host = $this->getHost();
+		$host->openShell($workingDir);
+	} // }}}
+
+	function hasExecutable( $command ) // {{{
+	{
+		$command = escapeshellcmd( $command );
+		$exists = $this->shellExec( "which $command" );
+
+		return ! empty( $exists );
+	} // }}}
+
+	function localizeFolder( $remoteLocation, $localMirror ) // {{{
+	{
+		$host = $this->getHost();
+		return $host->rsync( $remoteLocation, $localMirror );
+	} // }}}
+}
+
 class Access_SSH extends Access implements ShellPrompt
 {
 	private $location;
@@ -150,9 +443,10 @@ class Access_SSH extends Access implements ShellPrompt
 
 		$host->runCommands( "exit" );
 
-		$answer = '';
-		while( ! in_array( $answer, array( 'yes', 'no' ) ) )
-			$answer = readline( "After successfully entering your password, were you asked for a password again? [yes|no] " );
+        $answer = promptUser(
+            'After successfully entering your password, were you asked for a password again?',
+            false, array('yes', 'no')
+        );
 
 		if( $answer == 'yes' )
 			$this->changeType( 'ssh::nokey' );

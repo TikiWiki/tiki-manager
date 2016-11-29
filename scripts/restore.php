@@ -32,7 +32,7 @@ foreach( $selection as $instance )
 
 	printInstances( $restorable );
 
-	$single = readline( ">>> " );
+	$single = promptUser( '>>> ' );
 
 	if( ! $single = reset( getEntries( $restorable, $single ) ) )
 	{
@@ -45,7 +45,7 @@ foreach( $selection as $instance )
 	foreach( $files as $key => $path )
 		echo "[$key] ".basename($path)."\n";
 
-	$file = readline( ">>> " );
+	$file = promptUser( '>>> ' );
 	if( ! $file = reset( getEntries( $files, $file ) ) )
 	{
 		warning("Skip: No archive file selected.");

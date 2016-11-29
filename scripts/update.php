@@ -15,13 +15,12 @@ $instances = Instance::getUpdatableInstances();
 if( ARG_AUTO ) {
 	$selection = getEntries( $instances, implode( ' ', array_slice( $_SERVER['argv'], 2 ) ) );
 } else {
-	echo "Note: Only CVS and SVN instances can be updated.\n\n";
+	echo color("\nNote: Only CVS and SVN instances can be updated.\n\n", 'yellow');
 	echo "Which instances do you want to update?\n";
 
-	foreach( $instances as $key => $i )
-		echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
+	printInstances( $instances );
 
-	$selection = readline( ">>> " );
+	$selection = promptUser( '>>> ' );
 	$selection = getEntries( $instances, $selection );
 }
 
@@ -76,7 +75,7 @@ foreach( $selection as $instance )
 	                        echo "If some versions are not offered, it's likely because the host server doesn't meet the requirements for that version (ex.: PHP version is too old)\n";
 	                }
 
-			$input = readline( ">>> " );
+			$input = promptUser( '>>> ' );
 			$versionSel = getEntries( $versions, $input );
 			if( empty( $versionSel ) && ! empty( $input ) )
 				$target = Version::buildFake( 'svn', $input );

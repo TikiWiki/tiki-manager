@@ -9,16 +9,9 @@ include_once dirname(__FILE__) . "/../src/check.php";
 $instances = Instance::getInstances();
 
 echo "\nHosts you can verify:\n";
-foreach( $instances as $key => $i )
-	echo "[$key] " . str_pad( $i->name, 20 ) . str_pad( $i->weburl, 40 ) . str_pad( $i->contact, 20 ) . "\n";
 
-$selection = readline( "\nWhich ones do you want to verify? (can select multiple, blank for all) " );
-
-$selection = findDigits( $selection );
-if( empty( $selection ) )
-	$selection = array_keys( $instances );
-
-$selection = getEntries( $instances, $selection );
+$selection = selectInstances( $instances, "(you can select one, multiple, or blank for all)\n");
+if( !count( $selection ) ) $selection = $instances;
 
 foreach( $selection as $instance )
 {
@@ -38,7 +31,7 @@ foreach( $selection as $instance )
 		while( ! in_array( $input, array( 'current', 'source', 'skip' ) ) )
 		{
 			echo "No checksums exist. What do you want to do?\n[current] Use the files currently online for checksum\n[source] Get checksums from repository (best option)\n[skip] Do nothing\n";
-			$input = readline( ">>> " );
+			$input = promptUser( ">>> ", '' );
 		}
 
 		switch( $input )

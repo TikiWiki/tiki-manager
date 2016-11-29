@@ -36,58 +36,40 @@ access to the administration panel to local users (safer).
 
 INFO;
 echo "This will enable the TRIM administration web panel.\n";
-if( 'confirm' != readline( "Type 'confirm' to continue: " ) )
+if( 'confirm' != promptUser( "Type 'confirm' to continue: ", '' ) )
 	exit;
 
 $ret_var = -1;
 $out = '/etc/httpd/';
 $cmd = 'dirname $(find /etc/httpd -name httpd.conf )';
 exec ($cmd, $out, $ret_var);
-$out2 = $out[0];
 
-$d_httpd = readline( "Apache httpd.conf directory : [$out2] " );
-if( empty( $d_httpd ) )
-	$d_httpd = $out2;
-
+$d_httpd = promptUser('Apache httpd.conf directory', $out[0]);
 $base = dirname($d_httpd);
 $precmd = 'dirname $(find '.$base.' -name httpd.conf -exec grep ^Include {} \; | cut -d'."' '".' -f2)|sort|head -n1';
 $cmd = $precmd;
 exec ($cmd, $out, $ret_var);
 
-$out2 = $base.'/'.$out[1];
-$d_httpd_optional = readline( "Apache httpd.conf IncludeOptional directory : [$out2] " );
-if( empty( $d_httpd_optional ) )
-	$d_httpd_optional = $out2;
+$d_httpd_optional = promptUser('Apache httpd.conf IncludeOptional directory', $base.'/'.$out[1]);
 
-//$d_folder = "/var/www/webtrim";
-//$folder = readline( "TRIM location : [$d_folder] " );
-//if( empty( $folder ) )
-//	$folder = $d_folder;
+//$folder = promptUser('TRIM location', '/var/www/webtrim');
 
 $user = $pass = '';
-while( empty( $user ) )
-	$user = readline( "Desired username : " );
+$user = promptUser('Desired username');
 
 while( empty( $pass ) ) {
 	print "Desired password : ";
 	$pass = getPassword(true); print "\n";
 }
 
-$d_restrict = 'no';
-$restrict = readline( "Restrict use to localhost : [$d_restrict] " );
-if( empty( $restrict ) )
-	$restrict = $d_restrict;
+$restrict = promptUser('Restrict use to localhost', 'no');
+$restrict = (strtolower($restrict{0}) == 'n') ? 'false' : 'true';
 
-$d_sudo = 'no';
-$sudo = readline( "Use sudo for permission changing commands : [$d_sudo] " );
-if( empty( $sudo ) )
-	$sudo = $d_sudo;
-
+$sudo = promptUser('Use sudo for permission changing commands', 'no');
 $prefix = (strtolower($sudo{0}) == 'y') ? 'sudo' : '';
 
 $user = addslashes( $user );
 $pass = addslashes( $pass );
-$restrict = (strtolower($restrict{0}) == 'n') ? 'false' : 'true';
 
 file_put_contents( dirname(__FILE__) . '/../www/config.php', <<<CONFIG
 <?php

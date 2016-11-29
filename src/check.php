@@ -21,7 +21,7 @@ function handleCheckResult( $instance, $version, $array )
 
 		do{
 			echo "\tWhat do you want to do about it?\n\t(P)rint list again\n\t(V)iew files\n\t(D)elete files\n\t(A)dd files to valid list\n\t(S)kip\n(a0 to add file 0. Or a0-3 to add files 0 to 3)\n";
-			$input = readline( ">>> " );
+			$input = promptUser( '>>> ' );
 		}
 		while( (strlen($input) == 0) || (stripos( 'pvdas', $input{0} ) === false ));
 
@@ -86,7 +86,7 @@ function handleCheckResult( $instance, $version, $array )
 		while( stripos( 'pvcerus', $input{0} ) === false )
 		{
 			echo "\tWhat do you want to do about it? \n\t(P)rint list again\n\t(V)iew files\n\t(C)ompare files with versions in repository\n\t(E)dit files in place\n\t(R)eplace with version in repository\n\t(U)pdate hash to accept file version\n\t(S)kip\n(e.g. v0 to view file 0)\n";
-			$input = readline( ">>> " );
+			$input = promptUser( '>>> ' );
 		}
 
 		$op = strtolower( $input{0} );
@@ -112,7 +112,7 @@ function handleCheckResult( $instance, $version, $array )
 				$localName = $access->downloadFile( $file );
 				passthru( EDITOR . " $localName" );
 
-				if( 'y' == readline( "Confirm file replacement? [y|n] " ) )
+				if( 'yes' == promptUser( 'Confirm file replacement?', false, array('yes', 'no') ) )
 				{
 					$hash = md5_file( $localName );
 					if( $mod[$file] != $hash )
@@ -191,7 +191,7 @@ function handleCheckResult( $instance, $version, $array )
 		while( stripos( 'drs', $input{0} ) === false )
 		{
 			echo "\tWhat do you want to do about it? \n\t(R)estore version in repository\n\t(D)elete hash to accept file removal\n\t(S)kip\n(e.g. r0 to restore file 0)\n";
-			$input = readline( ">>> " );
+			$input = promptUser( '>>> ' );
 		}
 
 		$op = strtolower( $input{0} );

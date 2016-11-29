@@ -378,15 +378,16 @@ class Application_Tiki extends Application
 			$access->chdir( $this->instance->webroot );
 
 			if ($this->instance->isModernTiki()) {
-				$ret = $access->shellExec("sh setup.sh -n fix 2>> /tmp/trim.output");    // does composer as well
-			} else {
+				$ret = $access->shellExec("sh setup.sh -n fix");    // does composer as well
+            } else {
+                warning('Old Tiki detected, uploading old setup.sh script.');
 				$filename = $this->instance->getWorkPath( 'setup.sh' );
 				$access->uploadFile( dirname(__FILE__) . '/../../scripts/setup.sh', $filename );
 				$ret = $access->shellExec(
-					"bash " . escapeshellarg( $filename ) . " 2>> /tmp/trim.output" );
+					"bash " . escapeshellarg($filename) );
 			}
 
- 		        `echo 'REMOTE $ret' >> logs/trim.output`;
+            `echo 'REMOTE $ret' >> logs/trim.output`;
 
 		} elseif( $access instanceof Mountable ) {
 			return;

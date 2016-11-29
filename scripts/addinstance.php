@@ -10,35 +10,39 @@ define( 'ARG_BLANK', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'blank' );
 echo color("\nAnswer the following to add a new TRIM instance.\n\n", 'yellow');
 
 $type = $user = $host = $pass = '';
-while( ! in_array( $type, array( 'ftp', 'ssh' ) ) ) {
-	$type = strtolower(readline( "Connection type [ssh|ftp] : " ));
+
+$type = strtolower(
+    promptUser('Connection type', null, array('ftp', 'local', 'ssh'))
+);
+
+if ($type != 'local') {
+    while( empty( $host ) )
+        $host = promptUser('Host name');
+
+	$d_port = ( $type == 'ssh' ) ? 22 : 21;
+	$port = promptUser('Port number', $d_port);
+
+	while( empty( $user ) )
+		$user = strtolower(promptUser('User'));
+	while( $type == 'ftp' && empty( $pass ) ) {
+		print "Password : ";
+		$pass = getPassword(true); print "\n";
+    }
+
+	$d_name = $host;
+}
+else if ($type == 'local') {
+	$user = 'trim';
+	$pass = '';
+	$host = 'localhost';
+	$port = 0;
+	$d_name = 'localhost';
 }
 
-while( empty( $host ) )
-	$host = readline( "Host name : " );
-
-$d_port = ( $type == 'ssh' ) ? 22 : 21;
-$port = readline( "Port number : [$d_port] " );
-if( empty($port) )
-	$port = $d_port;
-
-while( empty( $user ) )
-	$user = strtolower(readline( "User : " ));
-while( $type == 'ftp' && empty( $pass ) ) {
-	print "Password : ";
-	$pass = getPassword(true); print "\n";
-//	$pass = readline( "Password : " );
-	}
-
-$d_name = $host;
 $name = $contact = $webroot = $tempdir = $weburl = '';
 
-$name = readline( "Instance name : [$d_name] " );
-if( empty( $name ) )
-	$name = $d_name;
-
-while( empty( $contact ) )
-	$contact = strtolower(readline( "Contact email : " ));
+$name = promptUser('Instance name', $d_name);
+$contact = strtolower(promptUser('Contact email'));
 
 $instance = new Instance;
 $instance->name = $name;
@@ -52,13 +56,8 @@ if ($type == 'ftp'){
 	$d_tempdir = "/tmp/trim_temp";
 	$d_webroot = "/home/$user/public_html";
 
-	$webroot = readline( "Web root : [$d_webroot] " );
-	if( empty( $webroot ) )
-	        $webroot = $d_webroot;
-
-	$weburl = readline( "Web URL : [$d_weburl] " );
-	if( empty( $weburl ) )
-	        $weburl = $d_weburl;
+	$webroot = promptUser('Web root', $d_webroot);
+    $weburl = promptUser('Web URL', $d_weburl);
 
 	$instance->webroot = rtrim( $webroot, '/' );
 	$instance->weburl = rtrim( $weburl, '/' );
@@ -102,17 +101,10 @@ switch ($d_linux){
 $d_weburl = "http://$host";
 $d_tempdir = "/tmp/trim_temp";
 if ($type != 'ftp'){
-	$webroot = readline( "Web root : [$d_webroot] " );
-	if( empty( $webroot ) )
-		$webroot = $d_webroot;
-
-	$weburl = readline( "Web URL : [$d_weburl] " );
-	if( empty( $weburl ) )
-		$weburl = $d_weburl;
+	$webroot = promptUser('Web root', $d_webroot);
+	$weburl = promptUser('Web URL', $d_weburl);
 }
-$tempdir = readline( "Working directory : [$d_tempdir] " );
-if( empty( $tempdir ) )
-	$tempdir = $d_tempdir;
+$tempdir = promptUser('Working directory', $d_tempdir);
 
 if( $access instanceof ShellPrompt )
 	$access->shellExec( "mkdir -p $tempdir" );
@@ -122,6 +114,7 @@ else
 $instance->weburl = rtrim( $weburl, '/' );
 $instance->webroot = rtrim( $webroot, '/' );
 $instance->tempdir = rtrim( $tempdir, '/' );
+
 $instance->save();
 echo color("Instance information saved.\n", 'green');
 

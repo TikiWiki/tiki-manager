@@ -29,7 +29,7 @@ if (ARG_MODE_MIRROR || ARG_MODE_CLONE_UPGRADE) {
 $instances = Instance::getInstances();
 
 if(! isset($_SERVER['argv'][2])) {
-    echo color("\nNote: Clone/mirror operations are only available on SSH instances.\n\n", 'yellow');
+    echo color("\nNote: Clone/mirror operations are only available on Local and SSH instances.\n\n", 'yellow');
 
     $src_selection = selectInstances(
         $instances, "Select the source instance:\n" );
@@ -40,6 +40,13 @@ else {
         implode(' ', array_slice($_SERVER['argv'], 2))
     );
 }
+
+$instances_pruned = array();
+foreach ($instances as $instance) {
+    if ($instance->getId() == $src_selection[0]->getId()) continue;
+    $instances_pruned[$instance->getId()] = $instance;
+}
+$instances = $instances_pruned;
 
 if (count($src_selection) == 0) exit(1);
 if (count($src_selection) > 1) {

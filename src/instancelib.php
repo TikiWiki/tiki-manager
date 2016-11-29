@@ -17,6 +17,11 @@ class Instance
 
 	private $access = array();
 
+    function getId() // {{{
+    {
+        return $this->id;
+    } // }}}
+
 	static function getInstances() // {{{
 	{
 		$result = query( "SELECT instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app FROM instance" );
@@ -120,9 +125,8 @@ class Instance
 
 	function registerAccessMethod( $type, $host, $user, $password = null, $port = null ) // {{{
 	{
-		if( ! $class = Access::getClassFor( $type ) ) {
+		if( ! $class = Access::getClassFor( $type ) )
 			return;
-		}
 
 		$access = new $class( $this );
 		$access->host = $host;
@@ -267,8 +271,10 @@ class Instance
 	 */
 	function isModernTiki() {
 		$current = $this->getLatestVersion();
+		var_dump($current);
 		preg_match('/(\d+)\.?/', $current->branch, $m);
 		if ($m) {
+		    var_dump($m);
 			return (float) $m[1] >= 11;
 		} else {
 			return false;
@@ -393,9 +399,8 @@ class Instance
 		list( $hash, $location ) = explode( "    ", $line, 2 );
 		$base = basename( $location );
 
-		echo "Previous host used $location\n";
-		$location = readline( "New location: [{$this->webroot}] " );
-		if( empty( $location ) ) $location = $this->webroot;
+		echo "Previous host used: $location\n";
+		$location = promptUser('New location', $this->webroot);
 
 		info("Copying files...");
 

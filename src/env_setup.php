@@ -71,6 +71,7 @@ function error( $text ) { echo color( $text, 'red' ) . "\n"; }
 
 include dirname(__FILE__) . "/ftplib.php";
 include dirname(__FILE__) . "/sshlib.php";
+include dirname(__FILE__) . "/locallib.php";
 include dirname(__FILE__) . "/accesslib.php";
 include dirname(__FILE__) . "/instancelib.php";
 include dirname(__FILE__) . "/applicationlib.php";
@@ -384,6 +385,36 @@ function printInstances( array $instances )
 		$weburl = substr($i->weburl, 0, 38);
 		echo "[$i->id] " . str_pad($name, 20) . str_pad($weburl, 40) . str_pad($i->contact, 20) . "\n";
 	}
+}
+
+/**
+ * Prompt for a user value.
+ *
+ * @param string $prompt Prompt text.
+ * @param string $default Default value.
+ * @param string $values Acceptable values.
+ * @return string User-supplied value.
+ */
+
+function promptUser($prompt, $default = false, $values = array())
+{
+    if (is_array($values) && count($values))
+        $prompt .= ' (' . implode(', ', $values) . ')';
+    if ($default !== false && strlen($default))
+        $prompt .= " [$default]";
+
+    do {
+        $answer = trim(readline($prompt . ' : '));
+        if (!strlen($answer)) $answer = $default;
+
+        if (is_array($values) && count($values)) {
+            if (in_array($answer, $values)) return $answer;
+        }
+        else if (! is_bool($default)) return $answer;
+        else if (strlen($answer)) return $answer;
+
+        error("Invalid response.\n");
+    } while (true);
 }
 
 function php() // {{{

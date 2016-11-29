@@ -28,20 +28,16 @@ class RC_SVN
 		$escaped = escapeshellarg( $full );
 
 		$verification = $access->shellExec(array(
-                                               "cd {$instance->webroot} && svn merge --dry-run --revision BASE:HEAD .   --allow-mixed-revisions"
-                                       ), true);
+            "cd {$instance->webroot} && svn merge --dry-run --revision BASE:HEAD . --allow-mixed-revisions"
+        ), true);
 
 		if ((strlen(trim($verification)) > 0) &&
 		   (preg_match("/conflicts:/i",$verification))){
 			echo "SVN MERGE: $verification\n";
-			$a = 'a';
-			do {
-		        	$a = strtolower(readline( "It seems there are some conflicts, you may want to review them. Do you want to abort? [yes] : " ));
-			} while( ! in_array( $a, array( 'yes', 'no', '' )  ) );
-
-			if ((strlen($a) == 0) || ($a == 'yes'))
-				exit;
-
+            if ('yes' == strtolower(promptUser(
+                'It seems there are some conflicts, you may want to review them. Do you want to abort?',
+                'yes', array('yes', 'no') )))
+                exit;
 		}
 		
 		if( !isset( $info['url'] ) || $info['url'] == $full )

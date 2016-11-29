@@ -10,7 +10,7 @@ function perform_instance_installation( Instance $instance )
 		foreach( $apps as $key => $app )
 			echo "[$key] {$app->getName()}\n";
 
-		$selection = readline( ">>> " );
+        $selection = promptUser( '>>> ', '' );
 		$selection = getEntries( $apps, $selection );
 		if( empty( $selection ) )
 			die( "No instance to install.\n" );
@@ -43,7 +43,7 @@ function perform_instance_installation( Instance $instance )
 			echo "If some versions are not offered, it's likely because the host server doesn't meet the requirements for that version (ex.: PHP version is too old)\n";
 		}
 
-		$input = readline( ">>> " );
+		$input = promptUser( '>>> ', '' );
 		if ($input > -1)
 			$selection = getEntries( $versions, $input );
 
@@ -72,30 +72,15 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	$access = $instance->getBestAccess('scripting');
 
 	if( $access instanceof ShellPrompt ) {
-		echo "Note: creating databases and users requires root privileges on MySQL.\n";
-		$type = strtolower(readline( "Should a new database and user be created (both)? [yes] " ));
-		if ( empty( $type ) )
-			$type = 'yes';
-
+		echo color("Note: creating databases and users requires root privileges on MySQL.\n", 'yellow');
+		$type = strtolower(promptUser( 'Should a new database and user be created (both)?', 'yes', array('yes', 'no') ));
 	} 
-	else {
-		$type = 'no';
-	}
 
-	$d_host = 'localhost';
-	$d_user = 'root';
-	$d_pass = '';
+	$host = strtolower(promptUser('Database host', 'localhost'));
+    $user = strtolower(promptUser('Database user', 'root'));
 
-	$host = strtolower(readline( "Database host : [$d_host] " ));
-	if ( empty( $host ) ) 
-		$host = $d_host;
-	$user = strtolower(readline( "Database user : [$d_user] " ));
-	if ( empty( $user ) ) 
-		$user = $d_user;
-	print "Database password : [$d_pass] ";
+	print "Database password : ";
 	$pass = getPassword(true); print "\n";
-	if ( empty( $pass ) ) 
-		$pass = $d_pass;
 
 	print "Testing connectivity and DB data...\n";
 	$command = "mysql -u ${user} ".(empty($pass)?"":"-p${pass}")." -h ${host} -e 'SELECT 1' 2>> /tmp/trim.output >> /tmp/trim.output ; echo $?";
@@ -109,10 +94,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 		}
 	}
 	if( strtolower( $type{0} ) == 'n' ){
-		$d_dbname = '';
-
-		while( empty( $dbname ) )
-			$dbname = readline( "Database name : " );
+        $dbname = promptUser('Database name', 'tiki_db');
 
 		$adapter = new Database_Adapter_Dummy();
 		$db = new Database( $instance, $adapter );
@@ -126,9 +108,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 		$db = new Database( $instance, $adapter );
 		$db->host = $host;
 
-		$prefix = '';
-		while( empty( $prefix ) )
-			$prefix = readline( "Prefix to use for username and database : " );
+        $prefix = promptUser('Prefix to use for username and database', 'tiki');
 
 		$db->createAccess( $prefix );
 	}
@@ -137,11 +117,11 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	if( count( $types ) == 1 )
 		$db->type = reset( $types );
 	else{
-		echo "Which extension should be used? [0]\n";
+		echo "Which extension should be used?\n";
 		foreach( $types as $key => $name )
 			echo "[$key] $name\n";
 
-		$selection = readline( ">>> " );
+		$selection = promptUser('>>> ', '0');
 		if( array_key_exists( $selection, $types ) )
 			$db->type = $types[$selection];
 		else

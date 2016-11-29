@@ -5,7 +5,7 @@
 
 include_once dirname(__FILE__) . "/../src/env_setup.php";
 
-$time = readline( "What time should it run at? [00:00] " );
+$time = promptUser( 'What time should it run at?', '00:00' );
 
 list( $hour, $minute ) = explode( ":", $time );
 
@@ -26,7 +26,7 @@ echo "Which instances do you want to update?\n";
 
 printInstances( $instances );
 
-$which = readline( ">>> " );
+$which = promptUser( '>>> ' );
 
 file_put_contents( 
 	$file = TEMP_FOLDER . '/crontab',

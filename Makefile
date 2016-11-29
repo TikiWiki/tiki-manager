@@ -9,9 +9,9 @@ BASH = bash
 # No changes should be required from here
 default:
 	@echo "Valid options are:"
-	@echo "  instance, viewdb, check, watch, update, upgrade, convert, access,"
-	@echo "  backup, restore, fix, detect, enablewww, delete, profile, report,"
-	@echo "  copysshkey, blank, clone, mirror, cloneandupdate, cloneandupgrade"
+	@echo "  access, backup, blank, check, clone, cloneandupdate, cloneandupgrade,"
+	@echo "  convert, copysshkey, delete, detect, enablewww, fix, instance, mirror,"
+	@echo "  profile, report, restore, update, upgrade, verify, viewdb, watch"
 
 help: default
 
