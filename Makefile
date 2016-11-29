@@ -9,9 +9,10 @@ BASH = bash
 # No changes should be required from here
 default:
 	@echo "Valid options are:"
-	@echo "  access, backup, blank, check, clone, cloneandupdate, cloneandupgrade,"
-	@echo "  convert, copysshkey, delete, detect, enablewww, fix, instance, mirror,"
-	@echo "  profile, report, restore, update, upgrade, verify, viewdb, watch"
+	@echo "  access, backup, blank, clean, check, clone, cloneandupdate,"
+	@echo "  cloneandupgrade, convert, copysshkey, delete, detect, enablewww,"
+	@echo "  fix, instance, mirror, profile, report, restore, update, upgrade,"
+	@echo "  verify, viewdb, watch"
 
 help: default
 
@@ -91,3 +92,13 @@ cloneandupdate:
 
 cloneandupgrade:
 	$(PHP) scripts/clone.php upgrade
+
+clean:
+	@echo "About to delete all state (sqlite3 database), backup, cache, and log files!"
+	@unset answer;\
+		while [ "$$answer" != "yes" -a "$$answer" != "no" ]; do\
+			read -p "Are you sure (yes/no)? " answer;\
+		done;\
+	if [ "$$answer" == "yes" ]; then\
+		rm -rf cache/* backup/* logs/* data/trim.db;\
+	fi
