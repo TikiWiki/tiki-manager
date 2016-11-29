@@ -93,6 +93,7 @@ define( "RSYNC_FOLDER", "$root/tmp/rsync" );
 define( "MOUNT_FOLDER", "$root/tmp/mount" );
 define( "BACKUP_FOLDER", "$root/backup" );
 define( "ARCHIVE_FOLDER", "$root/backup/archive" );
+define( "TRIM_OUTPUT", "$root/logs/trim.output" );
 
 if( file_exists(getenv("HOME").'/.ssh/id_rsa') && file_exists(getenv("HOME").'/.ssh/id_rsa.pub') )
 {
@@ -174,6 +175,20 @@ if( ! file_exists( BACKUP_FOLDER ) )
 	mkdir( BACKUP_FOLDER );
 if( ! file_exists( ARCHIVE_FOLDER ) )
 	mkdir( ARCHIVE_FOLDER );
+
+function trim_output($output)
+{
+    $fh = fopen(TRIM_OUTPUT, 'a+');
+    if (is_resource($fh)) {
+        fprintf($fh, "%s\n", $output);
+        fclose($fh);
+    }
+}
+
+function trim_debug($output)
+{
+    if (TRIM_DEBUG) trim_output($output);
+}
 
 function cache_folder( $app, $version )
 {

@@ -86,7 +86,7 @@ function perform_database_setup( Instance $instance, $remoteBackupFile = null )
 	$command = "mysql -u ${user} ".(empty($pass)?"":"-p${pass}")." -h ${host} -e 'SELECT 1' 2>> /tmp/trim.output >> /tmp/trim.output ; echo $?";
 	if( $access instanceof ShellPrompt ){
         	$e =  $access->shellExec($command);
-        	`echo 'REMOTE $e' >> logs/trim.output`;
+            trim_output("REMOTE $e");
 
 		if ($e){
 			print "TRIM was unable to use or create your database with the information you provided. Aborting the installation. Please check that MySQL or MariaDB is installed and running.\n";

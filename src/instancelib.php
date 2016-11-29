@@ -271,10 +271,8 @@ class Instance
 	 */
 	function isModernTiki() {
 		$current = $this->getLatestVersion();
-		var_dump($current);
-		preg_match('/(\d+)\.?/', $current->branch, $m);
+        preg_match('/(\d+)\.?/', $current->branch, $m);
 		if ($m) {
-		    var_dump($m);
 			return (float) $m[1] >= 11;
 		} else {
 			return false;
@@ -412,7 +410,7 @@ class Instance
 			escapeshellarg( rtrim($location, '/') . '/'))
 		);
 
-		`echo 'REMOTE $out' >> logs/trim.output`;
+		trim_output("REMOTE $out");
 
 		if ($svn_update) {
 			info ("Updating from SVN...");
@@ -422,7 +420,7 @@ class Instance
 				escapeshellarg( rtrim($location, '/') ))
 			);
 
-			`echo 'REMOTE $out' >> logs/trim.output`;
+		    trim_output("REMOTE $out");
 		}
 	    }
 

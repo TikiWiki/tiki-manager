@@ -93,8 +93,13 @@ cloneandupdate:
 cloneandupgrade:
 	$(PHP) scripts/clone.php upgrade
 
+debug:
+	$(PHP) scripts/debug.php
+	#cd '/tmp/tiki1' 2>> /tmp/trim.output && sh setup.sh -n fix 2>> /tmp/trim.output
+
 clean:
-	@echo "About to delete all state (sqlite3 database), backup, cache, and log files!"
+	@echo 'WARNING!'
+	@echo "You are about to delete all state, backup, cache, and log files!"
 	@unset answer;\
 		while [ "$$answer" != "yes" -a "$$answer" != "no" ]; do\
 			read -p "Are you sure (yes/no)? " answer;\

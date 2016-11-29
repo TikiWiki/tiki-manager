@@ -36,7 +36,7 @@ class Local_Host
         $ph = popen($fullcommand, 'r');
         if (is_resource($ph)) {
             $contents = trim(stream_get_contents($ph));
-            `echo 'LOCAL $contents' >> logs/trim.output`;
+            trim_output("LOCAL $contents");
 
             if (($rc = pclose($ph)) != 0)
                 warning(sprintf("%s [%d]", $fullcommand, $rc));

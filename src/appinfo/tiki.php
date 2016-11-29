@@ -386,9 +386,6 @@ class Application_Tiki extends Application
 				$ret = $access->shellExec(
 					"bash " . escapeshellarg($filename) );
 			}
-
-            `echo 'REMOTE $ret' >> logs/trim.output`;
-
 		} elseif( $access instanceof Mountable ) {
 			return;
 			$target = MOUNT_FOLDER . $this->instance->webroot;
