@@ -383,7 +383,7 @@ class Instance
 
     function findApplication() // {{{
     {
-        foreach(Application::getApplications($this) as $app) {
+        foreach (Application::getApplications($this) as $app) {
             if ($app->isInstalled()) {
                 $app->registerCurrentInstallation();
                 return $app;
@@ -654,7 +654,7 @@ class Instance
 
     function __get($name) // {{{
     {
-        if(isset($this->$name))
+        if (isset($this->$name))
             return $this->$name;
     } // }}}
 }

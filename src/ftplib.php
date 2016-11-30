@@ -68,7 +68,7 @@ class FTP_Host
         if (ftp_fget($this->conn, $fp, $filename, FTP_ASCII)) {
             $content = '';
             rewind($fp);
-            while(! feof($fp))
+            while (! feof($fp))
                 $content .= fread($fp, 8192);
 
             return $content;

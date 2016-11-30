@@ -7,7 +7,7 @@
 if (! function_exists('scandir')) {
     function scandir($dir, $sortorder = 0)
     {
-        if(is_dir($dir)) {
+        if (is_dir($dir)) {
             $dirlist = opendir($dir);
 
             while (($file = readdir($dirlist)) !== false)

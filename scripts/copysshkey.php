@@ -10,7 +10,7 @@ $instances = Instance::getInstances();
 $selection = selectInstances($instances,
     "Which instances do you want to copy the SSH key?\n");
 
-foreach($selection as $instance) {
+foreach ($selection as $instance) {
     echo "Copying SSH key to {$instance->name}... " .
         "(use 'exit' to move to next instance)\n";
 

@@ -29,7 +29,7 @@ if (ARG_MODE_MIRROR || ARG_MODE_CLONE_UPGRADE) {
 
 $instances = Instance::getInstances();
 
-if(! isset($_SERVER['argv'][2])) {
+if (! isset($_SERVER['argv'][2])) {
     echo color("\nNOTE: Clone/mirror operations are only available on Local and SSH instances.\n\n", 'yellow');
 
     $src_selection = selectInstances(
@@ -55,7 +55,7 @@ if (count($src_selection) > 1) {
     exit(1);
 }
 
-if(! isset($_SERVER['argv'][3])) {
+if (! isset($_SERVER['argv'][3])) {
 
     echo "\n";
     $dst_selection = selectInstances(

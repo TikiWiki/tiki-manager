@@ -26,12 +26,12 @@ function handleCheckResult($instance, $version, $array)
                 "\t(D)elete files\n\t(A)dd files to valid list\n" .
                 "\t(S)kip\n(a0 to add file 0. Or a0-3 to add files 0 to 3)\n";
             $input = promptUser('>>> ');
-        } while((strlen($input) == 0) || (stripos('pvdas', $input{0}) === false));
+        } while ((strlen($input) == 0) || (stripos('pvdas', $input{0}) === false));
 
         $op = strtolower($input{0});
         $files = getEntries($newFlat, $input);
 
-        switch($op) {
+        switch ($op) {
         case 'd':
             $access = $instance->getBestAccess('filetransfer');
 
@@ -209,7 +209,7 @@ function handleCheckResult($instance, $version, $array)
         $op = strtolower($input{0});
         $files = getEntries($delFlat, $input);
 
-        switch($op) {
+        switch ($op) {
         case 'r':
             $app = $instance->getApplication();
             $access = $instance->getBestAccess('filetransfer');

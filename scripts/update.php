@@ -109,7 +109,7 @@ foreach ($selection as $instance) {
         handleCheckResult($instance, $version, $filesToResolve);
     }
 
-    if($locked) $instance->unlock();
+    if ($locked) $instance->unlock();
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

@@ -10,7 +10,7 @@ include_once dirname(__FILE__) . '/../src/check.php';
 $instances = Instance::getInstances();
 $selection = selectInstances($instances, "Which instances do you want to access?\n");
 
-foreach($selection as $instance) {
+foreach ($selection as $instance) {
     echo "Connecting to {$instance->name} at {$instance->webroot} directory ... (use 'exit' to move to next instance)\n";
     $access = $instance->getBestAccess('scripting');
     $access->openShell($instance->webroot);

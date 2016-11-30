@@ -181,7 +181,7 @@ if (empty($ssh) || empty($kg)) {
 
 // Make sure SSH is set-up
 if (! file_exists(SSH_KEY) || ! file_exists(SSH_PUBLIC_KEY)) {
-    if(! is_writable(dirname(SSH_KEY)))
+    if (! is_writable(dirname(SSH_KEY)))
         die(error('Impossible to generate SSH key. Make sure data folder is writable.'));
 
     echo 'If you enter a passphrase, you will need to enter it every time you run ' .
@@ -230,7 +230,7 @@ function cache_folder($app, $version)
 
 // Make sure the raw database exists
 if (! file_exists(DB_FILE)) {
-    if(! is_writable(dirname(DB_FILE)))
+    if (! is_writable(dirname(DB_FILE)))
         die(error('Impossible to generate database. Make sure data folder is writable.'));
 
     try {
@@ -354,7 +354,7 @@ function query($query, $params = null) // {{{
     global $db;
     $ret = $db->query($query);
 
-    if(! $ret) echo "$query\n";
+    if (! $ret) echo "$query\n";
 
     return $ret;
 } // }}}

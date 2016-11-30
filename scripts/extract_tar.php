@@ -460,7 +460,7 @@ class PEAR
             // $error_code is a non-empty array here;
             // we walk through it trying to unset all
             // values
-            foreach($error_code as $key => $error) {
+            foreach ($error_code as $key => $error) {
                 if ($this->_checkDelExpect($error)) {
                     $deleted =  true;
                 } else {
@@ -2952,7 +2952,7 @@ function change_ownership($location, $user, $group)
 {
     $files = scandir($location);
 
-    foreach($files as $child) {
+    foreach ($files as $child) {
         if (in_array($child, array('.', '..', 'db')))
             continue;
 

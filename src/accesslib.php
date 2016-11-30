@@ -187,7 +187,7 @@ class Access_Local extends Access implements ShellPrompt
                     continue;
 
                 $versionInfo = $host->runCommands("$interpreter -v");
-                if(preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
+                if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
                     $valid[$matches[1]] = $interpreter;
             }
 
@@ -226,7 +226,7 @@ class Access_Local extends Access implements ShellPrompt
             array('which svn'),
         );
 
-        foreach($sets as $attempt) {
+        foreach ($sets as $attempt) {
             // Get possible paths
             $svns = $host->runCommands($attempt);
             $svns = explode("\n", $svns);
@@ -889,7 +889,7 @@ class Access_FTP extends Access implements Mountable
         $compress = in_array('zlib', $this->instance->getExtensions());
 
         $name = md5(time()) . '.tar';
-        if($compress) $name .= '.gz';
+        if ($compress) $name .= '.gz';
 
         $remoteTar = $this->instance->getWebPath($name);
         $this->runPHP(

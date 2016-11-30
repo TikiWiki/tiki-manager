@@ -13,9 +13,9 @@ list($hour, $minute) = explode(':', $time);
 $hour = (int)$hour;
 $minute = (int)$minute;
 
-if(! in_array($hour, range(0, 23)))
+if (! in_array($hour, range(0, 23)))
     die(error('Invalid hour.'));
-if(! in_array($minute, range(0, 59)))
+if (! in_array($minute, range(0, 59)))
     die(error('Invalid minute.'));
 
 $path = realpath(dirname(__FILE__) . '/backup.php');

@@ -16,7 +16,7 @@ function perform_instance_installation(Instance $instance)
 
         $selection = promptUser('>>> ', '');
         $selection = getEntries($apps, $selection);
-        if(empty($selection))
+        if (empty($selection))
             die(error('No instance to install.'));
 
         echo "Which version do you want to install? (none to skip - blank instance)\n";

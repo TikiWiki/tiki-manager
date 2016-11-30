@@ -488,7 +488,7 @@ class Text_Password
         /**
          * List of character which could be use in the password
          */
-         switch($chars) {
+         switch ($chars) {
 
          case 'alphanumeric':
              $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

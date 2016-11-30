@@ -33,7 +33,7 @@ access to the administration panel to local users (safer).
 INFO;
 
 echo "This will enable the TRIM administration web panel.\n";
-if('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
+if ('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
 
 $ret_var = -1;
 $out = '/etc/httpd/';

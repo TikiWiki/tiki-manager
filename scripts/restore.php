@@ -15,7 +15,7 @@ $raw = Instance::getInstances();
 foreach ($raw as $instance) {
     $all[$instance->id] = $instance;
 
-    if(! $instance->getApplication())
+    if (! $instance->getApplication())
         $instances[$instance->id] = $instance;
 }
 

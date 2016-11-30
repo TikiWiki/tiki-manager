@@ -70,7 +70,7 @@ class RC_SVN
             $key = trim($key);
             $value = trim($value);
 
-            switch($key) {
+            switch ($key) {
             case 'URL':
                 $info['url'] = $value;
                 break;

@@ -160,9 +160,9 @@ class Application_Wordpress extends Application
     function extractTo(Version $version, $folder)
     {
         if ($version->type == 'svn' || $version->type == 'tarball') {
-            if(file_exists($folder)) {
+            if (file_exists($folder))
                 `svn up --non-interactive $folder`;
-            } else {
+            else {
                 $command = $this->getExtractCommand($version, $folder);
                 `$command`;
             }
@@ -171,23 +171,23 @@ class Application_Wordpress extends Application
 
     function performActualUpdate(Version $version)
     {
-        switch($this->getInstallType()) {
-            case 'svn':
-            case 'tarball':
-                $access = $this->instance->getBestAccess('scripting');
-    
-                if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
-                    $svn = new RC_SVN(self::BASE);
-                    $svn->updateInstanceTo($this->instance, $version->branch);
-                } elseif($access instanceof Mountable) {
-                    $folder = cache_folder($this, $version);
-                    $this->extractTo($version, $folder);
-    
-                    $access->copyLocalFolder($folder);
-                }
-    
-                return;
-    
+        switch ($this->getInstallType()) {
+        case 'svn':
+        case 'tarball':
+            $access = $this->instance->getBestAccess('scripting');
+
+            if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
+                $svn = new RC_SVN(self::BASE);
+                $svn->updateInstanceTo($this->instance, $version->branch);
+            }
+            elseif ($access instanceof Mountable) {
+                $folder = cache_folder($this, $version);
+                $this->extractTo($version, $folder);
+
+                $access->copyLocalFolder($folder);
+            }
+
+            return;
         }
 
         // TODO : Handle fallback

@@ -103,7 +103,7 @@ class SSH_Host
             $content = '';
 
             foreach ($commands as $line) {
-                if($this->location)
+                if ($this->location)
                     $line = 'cd ' . escapeshellarg($this->location) . "; $line";
 
                 foreach ($this->env as $key => $value)
