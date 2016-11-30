@@ -23,7 +23,7 @@ function color($string, $color)
         'cyan' => 36,
     );
 
-    if (!isset($avail[$color]))
+    if (! isset($avail[$color]))
         return $string;
 
     return "\033[{$avail[$color]}m$string\033[0m";
@@ -447,7 +447,7 @@ function promptUser($prompt, $default = false, $values = array())
 
     do {
         $answer = trim(readline($prompt . ' : '));
-        if (!strlen($answer)) $answer = $default;
+        if (! strlen($answer)) $answer = $default;
 
         if (is_array($values) && count($values)) {
             if (in_array($answer, $values)) return $answer;

@@ -46,7 +46,7 @@ class RC_SVN
                 exit;
         }
         
-        if (!isset($info['url']) || $info['url'] == $full)
+        if (! isset($info['url']) || $info['url'] == $full)
             $access->shellExec('svn up --non-interactive ' . escapeshellarg($instance->webroot));
         else {
             $access->shellExec( 

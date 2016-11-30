@@ -47,7 +47,7 @@ function perform_instance_installation(Instance $instance)
         preg_match('/(\d+)(\d{2})(\d{2})$/', $instance->phpversion, $matches);
 
         if (count($matches) == 4) {
-            info(sprintf('We detected PHP release: %d.%d.%d',
+            info(sprintf('TRIM detected PHP release: %d.%d.%d',
                 $matches[1], $matches[2], $matches[3]));
         }
 
@@ -67,7 +67,7 @@ function perform_instance_installation(Instance $instance)
         else
             $version = reset($selection);
 
-        info("Installing application.");
+        info("Installing application...");
         echo color("If for any reason the installation fails (ex: wrong setup.sh parameters for tiki), " .
            "you can use 'make access' to complete the installation manually.\n", 'yellow');
         $app->install($version);

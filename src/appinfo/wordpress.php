@@ -52,7 +52,7 @@ class Application_Wordpress extends Application
 
     function isInstalled()
     {
-        if (!is_null($this->installed)) {
+        if (! is_null($this->installed)) {
             return $this->installed;
         }
 
@@ -63,7 +63,7 @@ class Application_Wordpress extends Application
 
     function getInstallType()
     {
-        if (!is_null($this->installType)) {
+        if (! is_null($this->installType)) {
             return $this->installType;
         }
 

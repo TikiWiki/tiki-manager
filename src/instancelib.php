@@ -515,7 +515,7 @@ class Instance
 
     function restore($src_app, $archive, $clone = false)
     {
-        info(sprintf("Uploading : %s", basename($archive)));
+        info(sprintf("Uploading archive : %s", basename($archive)));
 
         $base = basename($archive);
         list($basetardir, $trash) = explode('_', $base, 2);

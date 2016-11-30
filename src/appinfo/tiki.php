@@ -139,7 +139,7 @@ class Application_Tiki extends Application
             echo 'The branch provided may not be correct. ' .
                 "Until 1.10 is tagged, use branches/1.10.\n";
             $entry = readline("If this is not correct, enter the one to use: [$branch]");
-            if (!empty($entry))
+            if (! empty($entry))
                 return $this->branch = $entry;
             else
                 return $this->branch = $branch;
@@ -161,7 +161,7 @@ class Application_Tiki extends Application
                 $branch = 'branches/2.0';
 
             $entry = readline("If this is not correct, enter the one to use: [$branch]");
-            if (!empty($entry))
+            if (! empty($entry))
                 return $this->branch = $entry;
         }
         else {
@@ -423,7 +423,7 @@ class Application_Tiki extends Application
                 $dir = $dir;
 
                 // Create directories as needed
-                if (!is_dir($dir))
+                if (! is_dir($dir))
                     mkdir($dir,02775);
 
                 chmod($dir,02775);
@@ -438,7 +438,7 @@ class Application_Tiki extends Application
                 $dir = $dir;
 
                 // Create directories as needed
-                if (!is_dir($dir))
+                if (! is_dir($dir))
                     mkdir($dir,02775);
 
                 chmod($dir,02777);
