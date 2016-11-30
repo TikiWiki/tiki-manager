@@ -593,7 +593,8 @@ LOCAL
             unlink($localName);
         }
         else {
-            $data = $access->runPHP(dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php');
+            $data = $access->runPHP(
+                dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php');
             file_put_contents($target, $data);
         }
     } // }}}

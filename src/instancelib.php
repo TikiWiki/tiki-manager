@@ -513,7 +513,7 @@ class Instance
         return $tar;
     } // }}}
 
-    function restore($src_app, $archive, $svn_update = false)
+    function restore($src_app, $archive)
     {
         info(sprintf("Uploading : %s", basename($archive)));
 
@@ -558,7 +558,7 @@ class Instance
             );
 
             trim_output("REMOTE $out");
-
+/*
             if ($svn_update) {
                 info('Updating from SVN...');
 
@@ -569,6 +569,7 @@ class Instance
 
                 trim_output("REMOTE $out");
             }
+ */
         }
 
         $this->app = $src_app;
@@ -580,7 +581,8 @@ class Instance
         $version->save();
         $this->save();
         
-        perform_database_setup($this, "{$this->tempdir}/restore/{$basetardir}/database_dump.sql");
+        perform_database_setup($this,
+            "{$this->tempdir}/restore/{$basetardir}/database_dump.sql");
 
         $version->collectChecksumFromInstance($this);
 

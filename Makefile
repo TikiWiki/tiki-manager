@@ -101,7 +101,7 @@ clean:
 	@echo "You are about to delete all state, backup, cache, and log files!"
 	@unset answer;\
 		while [ "$$answer" != "yes" -a "$$answer" != "no" ]; do\
-			read -p "Are you sure (yes/no)? " answer;\
+			read -p "Are you sure (yes, no)? " answer;\
 		done;\
 	if [ "$$answer" == "yes" ]; then\
 		rm -rf cache/* backup/* logs/* data/trim.db;\
