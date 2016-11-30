@@ -78,9 +78,7 @@ if ($archive === null) {
 
 foreach ($dst_selection as $dst_instance) {
     info("Initiating clone/mirror of {$src_selection[0]->name} to {$dst_instance->name}");
-    $dst_instance->restore(
-        $src_selection[0]->app, $archive, ARG_MODE_CLONE_UPDATE
-    );
+    $dst_instance->restore($src_selection[0]->app, $archive, true);
 }
 
 exit(0);

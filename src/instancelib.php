@@ -513,7 +513,7 @@ class Instance
         return $tar;
     } // }}}
 
-    function restore($src_app, $archive)
+    function restore($src_app, $archive, $clone = false)
     {
         info(sprintf("Uploading : %s", basename($archive)));
 
@@ -544,15 +544,19 @@ class Instance
             list($hash, $location) = explode('    ', $line, 2);
             $base = basename($location);
 
-            echo "Previous host used: $location\n";
-            $location = promptUser('New location', $this->webroot);
+            if ($clone)
+                $location = $this->webroot;
+            else {
+                echo "Previous host used: $location\n";
+                $location = promptUser('New location', $this->webroot);
+            }
 
             info('Copying files...');
 
             $out = $access->shellExec(
                 sprintf('mkdir -p %s',
                     escapeshellarg(rtrim($location, '/'))),
-                sprintf('rsync -a %s %s',
+                sprintf('rsync -a %s %s --exclude db/local.php',
                     escapeshellarg($this->getWorkPath("restore/{$basetardir}/$hash/$base/")),
                     escapeshellarg(rtrim($location, '/') . '/'))
             );

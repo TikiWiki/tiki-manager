@@ -107,7 +107,7 @@ function perform_database_connectivity_test(Instance $instance, Database $databa
 
 function perform_database_setup(Instance $instance, $remoteBackupFile = null)
 {
-    info(sprintf("Perform database %s...",
+    info(sprintf("Performing database %s...",
         ($remoteBackupFile) ? 'restore' : 'setup'));
 
     $db = null;
@@ -119,8 +119,10 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
         die(error('Can not setup database in non-interactive mode.'));
 
     if ($remoteBackupFile) {
+
         $remoteFile = "{$instance->webroot}/db/local.php";
         $localFile = $access->downloadFile($remoteFile);
+
         if (filesize($localFile)) {
 
             include $localFile;
@@ -131,7 +133,7 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             $db->user = $user_tiki;
             $db->pass = $pass_tiki;
             $db->dbname = $dbs_tiki;
-            
+
             if (! perform_database_connectivity_test($instance, $db)) {
                 $db = null;
                 if (! ($access instanceof ShellPrompt)) {
@@ -153,7 +155,7 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
         $type = strtolower(
             promptUser(
                 'Should a new database and user be created now (both)?',
-                'no', array('yes', 'no')
+                'yes', array('yes', 'no')
             )
         );
 

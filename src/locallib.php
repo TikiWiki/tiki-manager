@@ -62,6 +62,7 @@ class Local_Host
     {
         $command = sprintf('rsync -a %s %s',
             escapeshellarg($remoteFile), escapeshellarg($localFile));
+        $this->runCommands($command);
     }
 
     function openShell($workingDir = '')

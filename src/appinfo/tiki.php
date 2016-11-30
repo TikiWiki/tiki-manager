@@ -384,7 +384,7 @@ class Application_Tiki extends Application
             if ($this->instance->isModernTiki())
                 $ret = $access->shellExec("sh setup.sh -n fix");    // does composer as well
             else {
-                warning('Old Tiki detected, uploading TRIM setup.sh script.');
+                warning('Old Tiki detected, running bundled TRIM setup.sh script.');
                 $filename = $this->instance->getWorkPath('setup.sh');
                 $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
                 $ret = $access->shellExec('bash ' . escapeshellarg($filename));
