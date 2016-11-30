@@ -1,154 +1,153 @@
 <?php
+// Copyright (c) 2016, Avan.Tech, et. al.
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 abstract class Application
 {
-	protected $instance;
+    protected $instance;
 
-	public static function getApplications( Instance $instance ) // {{{
-	{
-		$objects = array();
+    function __construct(Instance $instance)
+    {
+        $this->instance = $instance;
+    }
 
-		$dir = dirname(__FILE__) . "/appinfo";
-		$files = scandir( $dir );
+    public static function getApplications(Instance $instance) // {{{
+    {
+        $objects = array();
 
-		$apps = array();
-		foreach( $files as $file )
-			if( preg_match( "/^(\w+)\.php$/", $file, $parts ) )
-				$apps[] = $parts[1];
+        $dir = dirname(__FILE__) . "/appinfo";
+        $files = scandir($dir);
 
-		foreach( $apps as $name )
-		{
-			$classname = 'Application_' . ucfirst( $name );
-			if( ! class_exists( $classname ) )
-				require "$dir/$name.php";
+        $apps = array();
+        foreach ($files as $file) {
+            if (preg_match('/^(\w+)\.php$/', $file, $matches))
+                $apps[] = $matches[1];
+        }
 
-			$objects[] = new $classname( $instance );
-		}
+        foreach ($apps as $name) {
+            $classname = 'Application_' . ucfirst($name);
+            if (! class_exists($classname))
+                require "$dir/$name.php";
 
-		return $objects;
-	} // }}}
+            $objects[] = new $classname($instance);
+        }
 
-	function __construct( Instance $instance )
-	{
-		$this->instance = $instance;
-	}
+        return $objects;
+    } // }}}
 
-	abstract function getName();
+    abstract function getName();
 
-	abstract function getVersions();
+    abstract function getVersions();
 
-	abstract function isInstalled();
+    abstract function isInstalled();
 
-	abstract function install( Version $version );
+    abstract function install(Version $version);
 
-	abstract function getInstallType();
+    abstract function getInstallType();
 
-	abstract function getBranch();
+    abstract function getBranch();
 
-	abstract function getUpdateDate();
+    abstract function getUpdateDate();
 
-	abstract function getSourceFile( Version $version, $filename );
+    abstract function getSourceFile(Version $version, $filename);
 
-	abstract function performActualUpdate( Version $version );
+    abstract function performActualUpdate(Version $version);
 
-	abstract function extractTo( Version $version, $folder );
+    abstract function extractTo(Version $version, $folder);
 
-	abstract function getFileLocations();
+    abstract function getFileLocations();
 
-	abstract function requiresDatabase();
+    abstract function requiresDatabase();
 
-	abstract function getAcceptableExtensions();
+    abstract function getAcceptableExtensions();
 
-	abstract function setupDatabase( Database $database );
+    abstract function setupDatabase(Database $database);
 
-	abstract function restoreDatabase( Database $database, $remoteFile );
+    abstract function restoreDatabase(Database $database, $remoteFile);
 
-	abstract function backupDatabase( $targetFile );
+    abstract function backupDatabase($targetFile);
 
-	abstract function removeTemporaryFiles();
+    abstract function removeTemporaryFiles();
 
-	function beforeChecksumCollect() // {{{
-	{
-	} // }}}
+    function beforeChecksumCollect() // {{{
+    {
+    } // }}}
 
-	function performUpdate( Instance $instance, $version = null ) // {{{
-	{
-		$current = $instance->getLatestVersion();
-		$oldFiles = $current->getFileMap();
+    function performUpdate(Instance $instance, $version = null) // {{{
+    {
+        $current = $instance->getLatestVersion();
+        $oldFiles = $current->getFileMap();
 
-		if( is_null( $version ) )
-		{
-			// Simple update, copy from current
-			$new = $instance->createVersion();
-			$new->type = $current->type;
-			$new->branch = $current->branch;
-			$new->date = date( 'Y-m-d' );
-			$new->save();
-		}
-		else
-		{
-			// Provided version, copy properties
-			$new = $instance->createVersion();
-			$new->type = $version->type;
-			$new->branch = $version->branch;
-			$new->date = $version->date;
-			$new->save();
-		}
+        if (is_null($version)) {
+            // Simple update, copy from current
+            $new = $instance->createVersion();
+            $new->type = $current->type;
+            $new->branch = $current->branch;
+            $new->date = date('Y-m-d');
+            $new->save();
+        }
+        else {
+            // Provided version, copy properties
+            $new = $instance->createVersion();
+            $new->type = $version->type;
+            $new->branch = $version->branch;
+            $new->date = $version->date;
+            $new->save();
+        }
 
-		info( "Obtaining latest checksum from source." );
-		$new->collectChecksumFromSource( $instance );
+        info('Obtaining latest checksum from source.');
+        $new->collectChecksumFromSource($instance);
 
-		$this->performActualUpdate( $new );
+        $this->performActualUpdate($new);
 
-		info( "Obtaining remote checksums." );
-		$array = $new->performCheck( $instance );
-		$newF = $modF = $delF = array();
+        info('Obtaining remote checksums.');
+        $array = $new->performCheck($instance);
+        $newF = $modF = $delF = array();
 
-		foreach( $array['new'] as $file => $hash )
-		{
-			// If unknown file was known in old version, accept it
-			if( array_key_exists( $file, $oldFiles ) && $oldFiles[$file] == $hash )
-				$new->recordFile( $hash, $file, $this );
-			else
-				$newF[$file] = $hash;
-		}
+        foreach ($array['new'] as $file => $hash) {
+            // If unknown file was known in old version, accept it
+            if (array_key_exists($file, $oldFiles) && $oldFiles[$file] == $hash)
+                $new->recordFile($hash, $file, $this);
+            else
+                $newF[$file] = $hash;
+        }
 
-		foreach( $array['mod'] as $file => $hash )
-		{
-			// If modified file was in the same state in previous version
-			if( array_key_exists( $file, $oldFiles ) && $oldFiles[$file] == $hash )
-				$new->replaceFile( $hash, $file, $this );
-			else
-				$modF[$file] = $hash;
-		}
+        foreach ($array['mod'] as $file => $hash) {
+            // If modified file was in the same state in previous version
+            if (array_key_exists($file, $oldFiles) && $oldFiles[$file] == $hash)
+                $new->replaceFile($hash, $file, $this);
+            else
+                $modF[$file] = $hash;
+        }
 
-		// Consider all missing files as conflicts
-		$delF = $array['del'];
+        // Consider all missing files as conflicts
+        $delF = $array['del'];
 
-		return array(
-			'new' => $newF,
-			'mod' => $modF,
-			'del' => $delF,
-		);
-	} // }}}
+        return array(
+            'new' => $newF,
+            'mod' => $modF,
+            'del' => $delF,
+        );
+    } // }}}
 
-	function registerCurrentInstallation() // {{{
-	{
-		if( ! $this->isInstalled() )
-			return null;
+    function registerCurrentInstallation() // {{{
+    {
+        if (! $this->isInstalled())
+            return null;
 
-		$this->instance->app = $this->getName();
-		$this->instance->save();
+        $this->instance->app = $this->getName();
+        $this->instance->save();
 
-		$update = $this->instance->createVersion();
-		$update->type = $this->getInstallType();
-		$update->branch = $this->getBranch();
-		$update->date = $this->getUpdateDate();
-		$update->save();
+        $update = $this->instance->createVersion();
+        $update->type = $this->getInstallType();
+        $update->branch = $this->getBranch();
+        $update->date = $this->getUpdateDate();
+        $update->save();
 
-		return $update;
-	} // }}}
+        return $update;
+    } // }}}
 }
+
+// vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

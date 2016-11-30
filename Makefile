@@ -20,82 +20,81 @@ help: default
 
 # Use this to add a remote installation
 instance:
-	$(PHP) scripts/addinstance.php
+	@$(PHP) scripts/addinstance.php
 
 blank:
-	$(PHP) scripts/addinstance.php blank
+	@$(PHP) scripts/addinstance.php blank
 
 viewdb:
 ifndef SQLITE_VERSION
-	$(error $(SQLITE) is not available, please install and try again)
+	@$(error $(SQLITE) is not available, please install and try again)
 endif
-	$(SQLITE) data/trim.db
+	@$(SQLITE) data/trim.db
 
 check:
-	$(PHP) scripts/check.php
+	@$(PHP) scripts/check.php
 
 verify:
-	$(PHP) scripts/check.php
+	@$(PHP) scripts/check.php
 
 watch:
-	$(PHP) scripts/setupwatch.php
+	@$(PHP) scripts/setupwatch.php
 
 # Use this to update version within the same branch, no major versions changes
 update:
-	$(PHP) scripts/update.php
+	@$(PHP) scripts/update.php
 
 # Use this to update major releases
 upgrade:
-	$(PHP) scripts/update.php switch
+	@$(PHP) scripts/update.php switch
 
 convert:
-	$(PHP) scripts/tiki/convert.php
+	@$(PHP) scripts/tiki/convert.php
 
 access:
-	$(PHP) scripts/access.php
+	@$(PHP) scripts/access.php
 
 backup:
-	$(BASH) scripts/backup.sh $(PHP)
+	@$(BASH) scripts/backup.sh $(PHP)
 
 restore:
-	$(PHP) scripts/restore.php
+	@$(PHP) scripts/restore.php
 
 fix:
-	$(PHP) scripts/tiki/fixperms.php
+	@$(PHP) scripts/tiki/fixperms.php
 
 detect:
-	$(PHP) scripts/detect.php
+	@$(PHP) scripts/detect.php
 
 enablewww:
-	$(PHP) scripts/enablewww.php
+	@$(PHP) scripts/enablewww.php
 
 delete:
-	$(PHP) scripts/delete.php
+	@$(PHP) scripts/delete.php
 
 profile:
-	$(PHP) scripts/tiki/profile.php
+	@$(PHP) scripts/tiki/profile.php
 
 report:
-	$(PHP) scripts/tiki/report.php
+	@$(PHP) scripts/tiki/report.php
 
 copysshkey:
-	$(PHP) scripts/copysshkey.php
+	@$(PHP) scripts/copysshkey.php
 
 clone:
-	$(PHP) scripts/clone.php clone
+	@$(PHP) scripts/clone.php clone
 
 mirror:
-	$(PHP) scripts/clone.php mirror
+	@$(PHP) scripts/clone.php mirror
 
 cloneandupdate:
-	$(PHP) scripts/clone.php update
+	@$(PHP) scripts/clone.php update
 
 cloneandupgrade:
-	$(PHP) scripts/clone.php upgrade
+	@$(PHP) scripts/clone.php upgrade
 
 debug:
-	$(PHP) scripts/debug.php
-	#cd '/tmp/tiki1' 2>> /tmp/trim.output && sh setup.sh -n fix 2>> /tmp/trim.output
+	@$(PHP) scripts/debug.php
 
 clean:
 	@echo 'WARNING!'

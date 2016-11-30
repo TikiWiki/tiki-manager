@@ -1,10 +1,11 @@
 <?php
 // Copyright (c) 2016, Avan.Tech, et. al.
+// Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-include_once dirname(__FILE__) . "/../src/env_setup.php";
-include_once dirname(__FILE__) . "/../src/dbsetup.php";
+include_once dirname(__FILE__) . '/../src/env_setup.php';
+include_once dirname(__FILE__) . '/../src/dbsetup.php';
 
 define('ARG_MODE_CLONE',
     $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'clone');
@@ -29,7 +30,7 @@ if (ARG_MODE_MIRROR || ARG_MODE_CLONE_UPGRADE) {
 $instances = Instance::getInstances();
 
 if(! isset($_SERVER['argv'][2])) {
-    echo color("\nNote: Clone/mirror operations are only available on Local and SSH instances.\n\n", 'yellow');
+    echo color("\nNOTE: Clone/mirror operations are only available on Local and SSH instances.\n\n", 'yellow');
 
     $src_selection = selectInstances(
         $instances, "Select the source instance:\n" );

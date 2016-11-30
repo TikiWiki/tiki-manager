@@ -1,154 +1,166 @@
 <?php
+// Copyright (c) 2016, Avan.Tech, et. al.
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 interface Database_Adapter
 {
-	function createDatabase( Instance $instance, $name );
-	function createUser( Instance $instance, $username, $password );
-	function finalize( Instance $instance );
-	function grantRights( Instance $instance, $username, $database );
-	function getSupportedExtensions();
+    function createDatabase(Instance $instance, $name);
+
+    function createUser(Instance $instance, $username, $password);
+
+    function finalize(Instance $instance);
+
+    function grantRights(Instance $instance, $username, $database);
+
+    function getSupportedExtensions();
 }
 
 class Database
 {
-	private $instance;
-	private $adapter;
-	private $extensions = array();
+    private $instance;
+    private $adapter;
+    private $extensions = array();
 
-	public $host;
-	public $user;
-	public $pass;
-	public $dbname;
-	public $type;
+    public $host;
+    public $user;
+    public $pass;
+    public $dbname;
+    public $type;
 
-	function __construct( Instance $instance, Database_Adapter $adapter ) // {{{
-	{
-		$this->instance = $instance;
-		$this->adapter = $adapter;
-		$this->locateExtensions();
-	} // }}}
+    function __construct(Instance $instance, Database_Adapter $adapter) // {{{
+    {
+        $this->instance = $instance;
+        $this->adapter = $adapter;
 
-	private function locateExtensions() // {{{
-	{
-		$modules = $this->instance->getExtensions();
+        $this->locateExtensions();
+    } // }}}
 
-		$this->extensions = array_intersect( $modules, array(
-			'mysqli',
-			'mysql',
-			'pdo_mysql',
-			'sqlite',
-			'pdo_sqlite',
-		) );
-	} // }}}
+    private function locateExtensions() // {{{
+    {
+        $modules = $this->instance->getExtensions();
 
-	function getUsableExtensions() // {{{
-	{
-		return array_intersect(
-			$this->instance->getApplication()->getAcceptableExtensions(),
-			$this->extensions,
-			$this->adapter->getSupportedExtensions() );
-	} // }}}
+        $this->extensions = array_intersect(
+            $modules,
+            array(
+                'mysqli',
+                'mysql',
+                'pdo_mysql',
+                'sqlite',
+                'pdo_sqlite',
+            )
+        );
+    } // }}}
 
-	function createAccess( $prefix ) // {{{
-	{
-		$this->pass = Text_Password::create( 12, 'unpronounceable' );
-		$this->user = "{$prefix}_user";
-		$this->dbname = "{$prefix}_db";
+    function getUsableExtensions() // {{{
+    {
+        return array_intersect(
+            $this->instance->getApplication()->getAcceptableExtensions(),
+            $this->extensions,
+            $this->adapter->getSupportedExtensions()
+        );
+    } // }}}
 
-		$this->adapter->createDatabase( $this->instance, $this->dbname );
-		$this->adapter->createUser( $this->instance, $this->user, $this->pass );
-		$this->adapter->grantRights( $this->instance, $this->user, $this->dbname );
-		$this->adapter->finalize( $this->instance );
-	} // }}}
+    function createAccess($prefix) // {{{
+    {
+        $this->pass = Text_Password::create(12, 'unpronounceable');
+        $this->user = "{$prefix}_user";
+        $this->dbname = "{$prefix}_db";
+
+        $this->adapter->createDatabase($this->instance, $this->dbname);
+        $this->adapter->createUser($this->instance, $this->user, $this->pass);
+        $this->adapter->grantRights($this->instance, $this->user, $this->dbname);
+        $this->adapter->finalize($this->instance);
+    } // }}}
 }
 
 class Database_Adapter_Dummy implements Database_Adapter
 {
-	function __construct() // {{{
-	{
-	} // }}}
+    function __construct() // {{{
+    {
+    } // }}}
 
-	function createDatabase( Instance $instance, $name ) // {{{
-	{
-	} // }}}
+    function createDatabase(Instance $instance, $name) // {{{
+    {
+    } // }}}
 
-	function createUser( Instance $instance, $username, $password ) // {{{
-	{
-	} // }}}
+    function createUser(Instance $instance, $username, $password) // {{{
+    {
+    } // }}}
 
-	function grantRights( Instance $instance, $username, $database ) // {{{
-	{
-	} // }}}
+    function grantRights(Instance $instance, $username, $database) // {{{
+    {
+    } // }}}
 
-	function finalize( Instance $instance ) // {{{
-	{
-	} // }}}
+    function finalize(Instance $instance) // {{{
+    {
+    } // }}}
 
-	function getSupportedExtensions() // {{{
-	{
-		return array( 'mysqli', 'mysql', 'pdo_mysql', 'sqlite', 'pdo_sqlite' );
-	} // }}}
+    function getSupportedExtensions() // {{{
+    {
+        return array('mysqli', 'mysql', 'pdo_mysql', 'sqlite', 'pdo_sqlite');
+    } // }}}
 }
 
 class Database_Adapter_Mysql implements Database_Adapter
 {
-	private $args;
-	private $host;
+    private $args;
+    private $host;
 
-	function __construct( $host, $masterUser, $masterPassword ) // {{{
-	{
-		$this->host = $host;
-		$args = array();
-		
-		$args[] = "-h " . escapeshellarg( $host );
-		$args[] = "-u " . escapeshellarg( $masterUser );
-		if( $masterPassword )
-			$args[] = "-p" . escapeshellarg( $masterPassword );
+    function __construct($host, $masterUser, $masterPassword) // {{{
+    {
+        $args = array();
+        $this->host = $host;
+        
+        $args[] = "-h " . escapeshellarg($host);
+        $args[] = "-u " . escapeshellarg($masterUser);
+        if ($masterPassword)
+            $args[] = '-p' . escapeshellarg($masterPassword);
 
-		$this->args = implode( " ", $args );
-	} // }}}
+        $this->args = implode(' ', $args);
+    } // }}}
 
-	function createDatabase( Instance $instance, $name ) // {{{
-	{
-		// FIXME : Not safemode compatible
-		$access = $instance->getBestAccess( 'scripting' );
-		$access->shellExec( "mysqladmin {$this->args} create $name" );
-	} // }}}
+    function createDatabase(Instance $instance, $name) // {{{
+    {
+        // FIXME : Not safemode compatible
+        $access = $instance->getBestAccess('scripting');
+        $access->shellExec("mysqladmin {$this->args} create $name");
+    } // }}}
 
-	function createUser( Instance $instance, $username, $password ) // {{{
-	{
-		// FIXME : Not FTP compatible
-		$u = mysql_escape_string( $username );
-		$p = mysql_escape_string( $password );
-		$query = escapeshellarg( "CREATE USER '$u'@'{$this->host}' IDENTIFIED BY '$p';" );
+    function createUser(Instance $instance, $username, $password) // {{{
+    {
+        // FIXME : Not FTP compatible
+        $u = mysql_escape_string($username);
+        $p = mysql_escape_string($password);
+        $query = escapeshellarg("CREATE USER '$u'@'{$this->host}' IDENTIFIED BY '$p';");
 
-		$access = $instance->getBestAccess( 'scripting' );
-		$access->shellExec( "echo $query | mysql {$this->args}" );
-	} // }}}
+        $access = $instance->getBestAccess('scripting');
+        $access->shellExec("echo $query | mysql {$this->args}");
+    } // }}}
 
-	function grantRights( Instance $instance, $username, $database ) // {{{
-	{
-		// FIXME : Not FTP compatible
-		$u = mysql_escape_string( $username );
-		$d = mysql_escape_string( $database );
-		$query = escapeshellarg( "GRANT ALL ON `$d`.* TO '$u'@'{$this->host}';" );
+    function grantRights(Instance $instance, $username, $database) // {{{
+    {
+        // FIXME : Not FTP compatible
+        $u = mysql_escape_string($username);
+        $d = mysql_escape_string($database);
+        $query = escapeshellarg("GRANT ALL ON `$d`.* TO '$u'@'{$this->host}';");
 
-		$access = $instance->getBestAccess( 'scripting' );
-		$access->shellExec( "echo $query | mysql {$this->args}" );
-	} // }}}
+        $access = $instance->getBestAccess('scripting');
+        $access->shellExec("echo $query | mysql {$this->args}");
+    } // }}}
 
-	function finalize( Instance $instance ) // {{{
-	{
-		// FIXME : Not FTP compatible
-		$access = $instance->getBestAccess( 'scripting' );
-		$access->shellExec( "mysqladmin {$this->args} reload" );
-	} // }}}
+    function finalize(Instance $instance) // {{{
+    {
+        // FIXME : Not FTP compatible
+        $access = $instance->getBestAccess('scripting');
+        $access->shellExec("mysqladmin {$this->args} reload");
+    } // }}}
 
-	function getSupportedExtensions() // {{{
-	{
-		return array( 'mysqli', 'mysql', 'pdo_mysql' );
-	} // }}}
+    function getSupportedExtensions() // {{{
+    {
+        return array('mysqli', 'mysql', 'pdo_mysql');
+    } // }}}
 }
+
+// vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

@@ -1,180 +1,209 @@
 <?php
+// Copyright (c) 2016, Avan.Tech, et. al.
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-if( ! function_exists( 'readline' ) )
-{
-	function readline( $prompt )
-	{
-		echo $prompt;
-		$fp = fopen("php://stdin","r");
-		$line = rtrim(fgets($fp, 1024) );
-		return $line;
-	}
+if (! function_exists('readline')) {
+    function readline($prompt)
+    {
+        echo $prompt;
+        $fp = fopen('php://stdin', 'r');
+        $line = rtrim(fgets($fp, 1024));
+        return $line;
+    }
 }
 
-function color( $string, $color )
+function color($string, $color)
 {
-	$avail = array(
-		'red' => 31,
-		'green' => 32,
-		'yellow' => 33,
-		'cyan' => 36,
-	);
+    $avail = array(
+        'red' => 31,
+        'green' => 32,
+        'yellow' => 33,
+        'cyan' => 36,
+    );
 
-	if( !isset($avail[$color]) )
-		return $string;
+    if (!isset($avail[$color]))
+        return $string;
 
-	return "\033[{$avail[$color]}m$string\033[0m";
+    return "\033[{$avail[$color]}m$string\033[0m";
 }
 
 function getPassword($stars = false)
 {
-	// Get current style
-    	$oldStyle = shell_exec('stty -g');
+    // Get current style
+    $oldStyle = shell_exec('stty -g');
 
-    	if ($stars === false) {
-        	shell_exec('stty -echo');
-        	$password = rtrim(fgets(STDIN), "\n");
-    	} else {
-        	shell_exec('stty -icanon -echo min 1 time 0');
+    if ($stars === false) {
+        shell_exec('stty -echo');
+        $password = rtrim(fgets(STDIN), "\n");
+    }
+    else {
+        shell_exec('stty -icanon -echo min 1 time 0');
+        $password = '';
 
-        	$password = '';
-        	while (true) {
-            		$char = fgetc(STDIN);
+        while (true) {
+            $char = fgetc(STDIN);
 
-            		if ($char == "\n") {
-                	break;
-            		} else if (ord($char) == 127) {
-                		if (strlen($password) > 0) {
-                    			fwrite(STDOUT, "\x08 \x08");
-                    			$password = substr($password, 0, -1);
-                		}
-            		} else {
-                		fwrite(STDOUT, "*");
-                		$password .= $char;
-            		}
-    		}
-    	}
+            if ($char == "\n")
+                break;
+            else if (ord($char) == 127) {
+                if (strlen($password) > 0) {
+                    fwrite(STDOUT, "\x08 \x08");
+                    $password = substr($password, 0, -1);
+                }
+            }
+            else {
+                fwrite(STDOUT, "*");
+                $password .= $char;
+            }
+        }
+    }
 
-    	// Reset old style
-    	shell_exec('stty ' . $oldStyle);
+    // Reset old style
+    shell_exec("stty $oldStyle");
 
-    	// Return the password
-    	return $password;
+    // Return the password
+    return $password;
 }
 
-function info( $text ) { echo color( $text, 'cyan' ) . "\n"; }
-function warning( $text ) { echo color( $text, 'yellow' ) . "\n"; }
-function error( $text ) { echo color( $text, 'red' ) . "\n"; }
-
-include dirname(__FILE__) . "/ftplib.php";
-include dirname(__FILE__) . "/sshlib.php";
-include dirname(__FILE__) . "/locallib.php";
-include dirname(__FILE__) . "/accesslib.php";
-include dirname(__FILE__) . "/instancelib.php";
-include dirname(__FILE__) . "/applicationlib.php";
-include dirname(__FILE__) . "/databaselib.php";
-include dirname(__FILE__) . "/rclib.php";
-
-include dirname(__FILE__) . "/channellib.php";
-include dirname(__FILE__) . "/backupreportlib.php";
-include dirname(__FILE__) . "/reportlib.php";
-
-include dirname(__FILE__) . "/ext/Password.php";
-
-$root = realpath( dirname(__FILE__) . "/.." );
-define( "DB_FILE", "$root/data/trim.db" );
-define( "SSH_CONFIG", "$root/data/ssh_config" );
-define( "CACHE_FOLDER", "$root/cache" );
-define( "TEMP_FOLDER", "$root/tmp" );
-define( "RSYNC_FOLDER", "$root/tmp/rsync" );
-define( "MOUNT_FOLDER", "$root/tmp/mount" );
-define( "BACKUP_FOLDER", "$root/backup" );
-define( "ARCHIVE_FOLDER", "$root/backup/archive" );
-define( "TRIM_OUTPUT", "$root/logs/trim.output" );
-
-if( file_exists(getenv("HOME").'/.ssh/id_rsa') && file_exists(getenv("HOME").'/.ssh/id_rsa.pub') )
+function info($text)
 {
-	define( "SSH_KEY", getenv("HOME").'/.ssh/id_rsa' );
-	define( "SSH_PUBLIC_KEY", getenv("HOME").'/.ssh/id_rsa.pub' );
-}
-elseif ( file_exists(getenv("HOME").'/.ssh/id_dsa') && file_exists(getenv("HOME").'/.ssh/id_dsa.pub') )
-{
-	define( "SSH_KEY", getenv("HOME").'/.ssh/id_dsa' );
-	define( "SSH_PUBLIC_KEY", getenv("HOME").'/.ssh/id_dsa.pub' );
-	warning( sprintf(
-		"TRIM is using a ssh-dsa key which have been deprecated in openssh-7.0. It is recommended that you remove it (%s and %s). " .
-		"After that, run 'make copysshkey' and TRIM will create a new RSA key. Copy the new key to all your instances.",
-		SSH_KEY, SSH_PUBLIC_KEY
-	) );
-}
-elseif( file_exists( "$root/data/id_dsa" ) && file_exists( "$root/data/id_dsa.pub" ) )
-{
-	define( "SSH_KEY", "$root/data/id_dsa" );
-	define( "SSH_PUBLIC_KEY", "$root/data/id_dsa.pub" );
-	warning( sprintf(
-		"TRIM is using a ssh-dsa key which have been deprecated in openssh-7.0. It is recommended that you remove it (%s and %s). " .
-		"After that, run 'make copysshkey' and TRIM will create a new RSA key. Copy the new key to all your instances.",
-		SSH_KEY, SSH_PUBLIC_KEY
-	) );
-}
-else
-{
-	define( "SSH_KEY", "$root/data/id_rsa" );
-	define( "SSH_PUBLIC_KEY", "$root/data/id_rsa.pub" );
+    echo color("$text\n", 'cyan');
 }
 
-if( array_key_exists( 'EDITOR', $_ENV ) )
-	define( 'EDITOR', $_ENV['EDITOR'] );
-else
+function warning($text)
 {
-	echo "Default editor used (nano). You can change the EDITOR environment variable.\n";
-	define( 'EDITOR', 'nano' );
+    echo color("$text\n", 'yellow');
 }
 
-if( array_key_exists( 'DIFF', $_ENV ) )
-	define( 'DIFF', $_ENV['DIFF'] );
-else
+function error($text)
 {
-	echo "Default diff used (diff). You can change the DIFF environment variable.\n";
-	define( 'DIFF', 'diff' );
+    echo color("$text\n", 'red');
+}
+
+include dirname(__FILE__) . '/ftplib.php';
+include dirname(__FILE__) . '/sshlib.php';
+include dirname(__FILE__) . '/locallib.php';
+include dirname(__FILE__) . '/accesslib.php';
+include dirname(__FILE__) . '/instancelib.php';
+include dirname(__FILE__) . '/applicationlib.php';
+include dirname(__FILE__) . '/databaselib.php';
+include dirname(__FILE__) . '/rclib.php';
+
+include dirname(__FILE__) . '/channellib.php';
+include dirname(__FILE__) . '/backupreportlib.php';
+include dirname(__FILE__) . '/reportlib.php';
+
+include dirname(__FILE__) . '/ext/Password.php';
+
+$root = realpath(dirname(__FILE__) . '/..');
+define('DB_FILE', "$root/data/trim.db");
+define('SSH_CONFIG', "$root/data/ssh_config");
+define('CACHE_FOLDER', "$root/cache");
+define('TEMP_FOLDER', "$root/tmp");
+define('RSYNC_FOLDER', "$root/tmp/rsync");
+define('MOUNT_FOLDER', "$root/tmp/mount");
+define('BACKUP_FOLDER', "$root/backup");
+define('ARCHIVE_FOLDER', "$root/backup/archive");
+define('TRIM_OUTPUT', "$root/logs/trim.output");
+define('TRIM_TEMP', '/tmp/trim_temp');
+define('TRIM_DEBUG', false);
+
+if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
+    file_exists(getenv('HOME') . '/.ssh/id_rsa.pub')) {
+
+    define('SSH_KEY', getenv('HOME') . '/.ssh/id_rsa');
+    define('SSH_PUBLIC_KEY', getenv('HOME') . '/.ssh/id_rsa.pub');
+}
+elseif (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
+    file_exists(getenv('HOME') . '/.ssh/id_dsa.pub')) {
+
+    define('SSH_KEY', getenv('HOME').'/.ssh/id_dsa');
+    define('SSH_PUBLIC_KEY', getenv('HOME').'/.ssh/id_dsa.pub');
+
+    warning(
+        sprintf('TRIM is using a ssh-dsa key which have been deprecated in ' .
+            'openssh-7.0. It is recommended that you remove it (%s and %s). ' .
+            "After that, run 'make copysshkey' and TRIM will create a new " .
+            'RSA key. Copy the new key to all your instances.',
+            SSH_KEY, SSH_PUBLIC_KEY
+        )
+    );
+}
+elseif (file_exists("$root/data/id_dsa") &&
+    file_exists("$root/data/id_dsa.pub")) {
+
+    define('SSH_KEY', "$root/data/id_dsa" );
+    define('SSH_PUBLIC_KEY', "$root/data/id_dsa.pub");
+
+    warning(
+        sprintf('TRIM is using a ssh-dsa key which have been deprecated in ' .
+            'openssh-7.0. It is recommended that you remove it (%s and %s). ' .
+            "After that, run 'make copysshkey' and TRIM will create a new " .
+            'RSA key. Copy the new key to all your instances.',
+            SSH_KEY, SSH_PUBLIC_KEY
+        )
+    );
+}
+else {
+    define('SSH_KEY', "$root/data/id_rsa");
+    define('SSH_PUBLIC_KEY', "$root/data/id_rsa.pub");
+}
+
+if (array_key_exists('EDITOR', $_ENV))
+    define('EDITOR', $_ENV['EDITOR']);
+else {
+    trim_debug('Default editor used (nano). ' .
+        'You can change the EDITOR environment variable.');
+    define('EDITOR', 'nano');
+}
+
+if (array_key_exists('DIFF', $_ENV))
+    define('DIFF', $_ENV['DIFF']);
+else {
+    trim_debug('Default diff used (diff). ' .
+        'You can change the DIFF environment variable.');
+    define('DIFF', 'diff');
 }
 
 // Check for required extensions
-if( ! in_array( 'sqlite', PDO::getAvailableDrivers() ) )
-	die( "SQLite extension not available in current PHP installation. Impossible to continue.\n" );
+if (! in_array('sqlite', PDO::getAvailableDrivers()))
+    die(error("The SQLite PHP extension is not available. Install to continue."));
 
 // Check for required system dependencies
-$kg = `which ssh-keygen`;
 $ssh = `which ssh`;
-if( empty( $kg ) || empty( $ssh ) )
-	die( "SSH tools not installed on current machine. Make sure `ssh-keygen` and `ssh` are available in current path.\n" );
-
-// Make sure SSH is set-up
-if( ! file_exists( SSH_KEY ) || ! file_exists( SSH_PUBLIC_KEY ) )
-{
-	if( ! is_writable( dirname(SSH_KEY) ) )
-		die( "Impossible to generate SSH key. Make sure data folder is writable.\n" );
-
-	echo "If you enter a passphrase, you will need to enter it every time you run TRIM, and thus, automatic, unattended operations (like backups, file integrity checks, etc.) will not be possible.\n";
-	$key = SSH_KEY;
-	`ssh-keygen -t rsa -f $key`;
+$kg = `which ssh-keygen`;
+if (empty($ssh) || empty($kg)) {
+    die(error("SSH tools not installed on current machine. " .
+        "Make sure 'ssh' and 'ssh-keygen' and are installed.\n"));
 }
 
-if( ! file_exists( CACHE_FOLDER ) )
-	mkdir( CACHE_FOLDER );
-if( ! file_exists( TEMP_FOLDER ) )
-	mkdir( TEMP_FOLDER );
-if( ! file_exists( RSYNC_FOLDER ) )
-	mkdir( RSYNC_FOLDER );
-if( ! file_exists( MOUNT_FOLDER ) )
-	mkdir( MOUNT_FOLDER );
-if( ! file_exists( BACKUP_FOLDER ) )
-	mkdir( BACKUP_FOLDER );
-if( ! file_exists( ARCHIVE_FOLDER ) )
-	mkdir( ARCHIVE_FOLDER );
+// Make sure SSH is set-up
+if (! file_exists(SSH_KEY) || ! file_exists(SSH_PUBLIC_KEY)) {
+    if(! is_writable(dirname(SSH_KEY)))
+        die(error('Impossible to generate SSH key. Make sure data folder is writable.'));
+
+    echo 'If you enter a passphrase, you will need to enter it every time you run ' .
+        'TRIM, and thus, automatic, unattended operations (like backups, file integrity ' .
+        "checks, etc.) will not be possible.\n";
+
+    $key = SSH_KEY;
+    `ssh-keygen -t rsa -f $key`;
+}
+
+if (! file_exists(CACHE_FOLDER))
+    mkdir(CACHE_FOLDER);
+if (! file_exists(TEMP_FOLDER))
+    mkdir(TEMP_FOLDER);
+if (! file_exists(RSYNC_FOLDER))
+    mkdir( RSYNC_FOLDER );
+if (! file_exists(MOUNT_FOLDER))
+    mkdir(MOUNT_FOLDER);
+if (! file_exists(BACKUP_FOLDER))
+    mkdir(BACKUP_FOLDER);
+if (! file_exists(ARCHIVE_FOLDER))
+    mkdir(ARCHIVE_FOLDER);
 
 function trim_output($output)
 {
@@ -190,180 +219,179 @@ function trim_debug($output)
     if (TRIM_DEBUG) trim_output($output);
 }
 
-function cache_folder( $app, $version )
+function cache_folder($app, $version)
 {
-	$key = sprintf( "%s-%s-%s", $app->getName(), $version->type, $version->branch );
-	$key = str_replace( '/', '_', $key );
-	$folder = CACHE_FOLDER . "/$key";
+    $key = sprintf('%s-%s-%s', $app->getName(), $version->type, $version->branch);
+    $key = str_replace('/', '_', $key);
+    $folder = CACHE_FOLDER . "/$key";
 
-	return $folder;
+    return $folder;
 }
 
 // Make sure the raw database exists
-if( ! file_exists( DB_FILE ) )
-{
-	if( ! is_writable( dirname(DB_FILE) ) )
-		die( "Impossible to generate database. Make sure data folder is writable.\n" );
+if (! file_exists(DB_FILE)) {
+    if(! is_writable(dirname(DB_FILE)))
+        die(error('Impossible to generate database. Make sure data folder is writable.'));
 
-	try {
-		$db = new PDO( 'sqlite:' . DB_FILE );
-	} catch (PDOException $e) {
-		die( "Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}\n" );
-	}
-	
-	$db->exec( "CREATE TABLE info ( name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name) );" );
-	$db->exec( "INSERT INTO info ( name, value ) VALUES( 'version', '0' );" );
-	$db = null;
+    try {
+        $db = new PDO('sqlite:' . DB_FILE);
+    } catch (PDOException $e) {
+        die(error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}"));
+    }
+    
+    $db->exec('CREATE TABLE info (name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name));');
+    $db->exec("INSERT INTO info (name, value) VALUES('version', '0');");
+    $db = null;
 
-	$file = DB_FILE;
+    $file = DB_FILE;
 }
 
 try {
-	$db = new PDO( 'sqlite:' . DB_FILE );
+    $db = new PDO('sqlite:' . DB_FILE);
 } catch (PDOException $e) {
-	die( "Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}\n" );
+    die(error("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}"));
 }
 
 // Obtain the current database version
-$result = $db->query( "SELECT value FROM info WHERE name = 'version'" );
-$version = (int) $result->fetchColumn();
+$result = $db->query("SELECT value FROM info WHERE name = 'version'");
+$version = (int)$result->fetchColumn();
 
 // Update the schema to the latest version
 // One case per version, no breaks, no failures
-switch( $version ) // {{{
-{
+switch ($version) {
 case 0:
-	$db->exec( "
-		CREATE TABLE instance (
-			instance_id INTEGER PRIMARY KEY,
-			name VARCHAR(25),
-			contact VARCHAR(100),
-			webroot VARCHAR(100),
-			weburl VARCHAR(100),
-			tempdir VARCHAR(100),
-			phpexec VARCHAR(50),
-			app VARCHAR(10)
-		);
+    $db->exec("
+        CREATE TABLE instance (
+            instance_id INTEGER PRIMARY KEY,
+            name VARCHAR(25),
+            contact VARCHAR(100),
+            webroot VARCHAR(100),
+            weburl VARCHAR(100),
+            tempdir VARCHAR(100),
+            phpexec VARCHAR(50),
+            app VARCHAR(10)
+        );
 
-		CREATE TABLE version (
-			version_id INTEGER PRIMARY KEY,
-			instance_id INTEGER,
-			type VARCHAR(10),
-			branch VARCHAR(50),
-			date VARCHAR(25)
-		);
+        CREATE TABLE version (
+            version_id INTEGER PRIMARY KEY,
+            instance_id INTEGER,
+            type VARCHAR(10),
+            branch VARCHAR(50),
+            date VARCHAR(25)
+        );
 
-		CREATE TABLE file (
-			version_id INTEGER,
-			path VARCHAR(255),
-			hash CHAR(32)
-		);
+        CREATE TABLE file (
+            version_id INTEGER,
+            path VARCHAR(255),
+            hash CHAR(32)
+        );
 
-		CREATE TABLE access (
-			instance_id INTEGER,
-			type VARCHAR(10),
-			host VARCHAR(50),
-			user VARCHAR(25),
-			pass VARCHAR(25)
-		);
+        CREATE TABLE access (
+            instance_id INTEGER,
+            type VARCHAR(10),
+            host VARCHAR(50),
+            user VARCHAR(25),
+            pass VARCHAR(25)
+        );
 
-		UPDATE info SET value = '1' WHERE name = 'version';
-	" );
+        UPDATE info SET value = '1' WHERE name = 'version';
+    ");
 case 1:
-	$db->exec( "
-		CREATE TABLE backup (
-			instance_id INTEGER,
-			location VARCHAR(200)
-		);
+    $db->exec("
+        CREATE TABLE backup (
+            instance_id INTEGER,
+            location VARCHAR(200)
+        );
 
-		CREATE INDEX version_instance_ix ON version ( instance_id );
-		CREATE INDEX file_version_ix ON file ( version_id );
-		CREATE INDEX access_instance_ix ON access ( instance_id );
-		CREATE INDEX backup_instance_ix ON backup ( instance_id );
+        CREATE INDEX version_instance_ix ON version ( instance_id );
+        CREATE INDEX file_version_ix ON file ( version_id );
+        CREATE INDEX access_instance_ix ON access ( instance_id );
+        CREATE INDEX backup_instance_ix ON backup ( instance_id );
 
-		UPDATE info SET value = '2' WHERE name = 'version';
-	" );
+        UPDATE info SET value = '2' WHERE name = 'version';
+    ");
 case 2:
-	$db->exec( "
-		CREATE TABLE report_receiver (
-			instance_id INTEGER PRIMARY KEY,
-			user VARCHAR(200),
-			pass VARCHAR(200)
-		);
+    $db->exec("
+        CREATE TABLE report_receiver (
+            instance_id INTEGER PRIMARY KEY,
+            user VARCHAR(200),
+            pass VARCHAR(200)
+        );
 
-		CREATE TABLE report_content (
-			receiver_id INTEGER,
-			instance_id INTEGER
-		);
+        CREATE TABLE report_content (
+            receiver_id INTEGER,
+            instance_id INTEGER
+        );
 
-		CREATE INDEX report_receiver_ix ON report_content ( receiver_id );
-		CREATE INDEX report_instance_ix ON report_content ( instance_id );
+        CREATE INDEX report_receiver_ix ON report_content ( receiver_id );
+        CREATE INDEX report_instance_ix ON report_content ( instance_id );
 
-		UPDATE info SET value = '3' WHERE name = 'version';
-	" );
+        UPDATE info SET value = '3' WHERE name = 'version';
+    ");
 case 3:
-	$db->exec( "
-		UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh';
-		UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh::nokey';
-		UPDATE access SET host = (host || ':' || '21') WHERE type = 'ftp';
+    $db->exec("
+        UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh';
+        UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh::nokey';
+        UPDATE access SET host = (host || ':' || '21') WHERE type = 'ftp';
 
-		UPDATE info SET value = '4' WHERE name = 'version';
-	" );
+        UPDATE info SET value = '4' WHERE name = 'version';
+    ");
 } // }}}
 
 // Database access
-function query( $query, $params = null ) // {{{
+function query($query, $params = null) // {{{
 {
-	if( is_null( $params ) )
-		$params = array();
+    if (is_null($params)) $params = array();
+    foreach ($params as $key => $value) {
+        if (is_null($value))
+            $query = str_replace($key, 'NULL', $query);
+        elseif (is_int($value))
+            $query = str_replace($key, (int) $value, $query);
+        else
+            $query = str_replace($key, "'$value'", $query);
+    }
 
-	foreach( $params as $key => $value )
-	{
-		if( is_null( $value ) )
-			$query = str_replace( $key, 'NULL', $query );
-		elseif( is_int( $value ) )
-			$query = str_replace( $key, (int) $value, $query );
-		else
-			$query = str_replace( $key, "'$value'", $query );
-	}
+    global $db;
+    $ret = $db->query($query);
 
-	global $db;
-	$ret = $db->query( $query );
+    if(! $ret) echo "$query\n";
 
-	if( ! $ret )
-		echo $query . "\n";
-
-	return $ret;
+    return $ret;
 } // }}}
 
 function rowid() // {{{
 {
-	global $db;
-	return $db->lastInsertId();
+    global $db;
+    return $db->lastInsertId();
 } // }}}
 
 // Tools
-function findDigits( $selection ) // {{{
+function findDigits($selection) // {{{
 {
-	// Accept ranges of type 2-10
-	$selection = preg_replace_callback( "/(\d+)-(\d+)/",
-		function ($matches) { return implode( ' ', range( $matches[1], $matches[2] ) );},
-		$selection );
-	preg_match_all( "/\d+/", $selection, $parts, PREG_PATTERN_ORDER );
+    // Accept ranges of type 2-10
+    $selection = preg_replace_callback('/(\d+)-(\d+)/',
+        function ($matches) {
+            return implode(' ', range($matches[1], $matches[2]));
+        },
+        $selection
+    );
 
-	return $parts[0];
+    preg_match_all('/\d+/', $selection, $matches, PREG_PATTERN_ORDER);
+    return $matches[0];
 } // }}}
 
-function getEntries( $list, $selection ) // {{{
+function getEntries($list, $selection) // {{{
 {
-	if( ! is_array( $selection ) )
-		$selection = findDigits( $selection );
+    if (! is_array($selection))
+        $selection = findDigits($selection);
 
-	$output = array();
-	foreach( $selection as $index )
-		if( array_key_exists( $index, $list ) )
-			$output[] = $list[$index];
-	return $output;
+    $output = array();
+    foreach ($selection as $index) {
+        if (array_key_exists($index, $list))
+            $output[] = $list[$index];
+    }
+
+    return $output;
 } // }}}
 
 /**
@@ -374,16 +402,16 @@ function getEntries( $list, $selection ) // {{{
  * @param string $selectionQuestion message displayed to the user before the list of available instances
  * @return array one or more instances objects
  */
-function selectInstances( array $instances, $selectionQuestion )
+function selectInstances(array $instances, $selectionQuestion)
 {
-	echo $selectionQuestion;
+    echo $selectionQuestion;
 
-	printInstances( $instances );
+    printInstances($instances);
 
-	$selection = readline( ">>> " );
-	$selection = getEntries( $instances, $selection );
+    $selection = readline('>>> ');
+    $selection = getEntries($instances, $selection);
 
-	return $selection;
+    return $selection;
 }
 
 /**
@@ -392,14 +420,13 @@ function selectInstances( array $instances, $selectionQuestion )
  * @param array $instances list of Instance objects
  * @return null
  */
-function printInstances( array $instances )
+function printInstances(array $instances)
 {
-	foreach( $instances as $key => $i )
-	{
-		$name = substr($i->name, 0, 18);
-		$weburl = substr($i->weburl, 0, 38);
-		echo "[$i->id] " . str_pad($name, 20) . str_pad($weburl, 40) . str_pad($i->contact, 20) . "\n";
-	}
+    foreach ($instances as $key => $i) {
+        $name = substr($i->name, 0, 18);
+        $weburl = substr($i->weburl, 0, 38);
+        echo "[$i->id] " . str_pad($name, 20) . str_pad($weburl, 40) . str_pad($i->contact, 20) . "\n";
+    }
 }
 
 /**
@@ -434,34 +461,35 @@ function promptUser($prompt, $default = false, $values = array())
 
 function php() // {{{
 {
-	$paths = `whereis php 2>> logs/trim.output`;
-	$phps = explode( " ", $paths );
+    $paths = `whereis php 2>> logs/trim.output`;
+    $phps = explode(' ', $paths);
 
-	// Check different versions
-	$valid = array();
-	foreach( $phps as $interpreter )
-	{
-		if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
-			continue;
+    // Check different versions
+    $valid = array();
+    foreach ($phps as $interpreter) {
+        if (! in_array(basename($interpreter), array('php', 'php5')))
+            continue;
 
-		if ( ! @is_executable( $interpreter ) )
-			continue;
+        if (! @is_executable($interpreter))
+            continue;
 
-		if (  @is_dir( $interpreter ) )
-			continue;
+        if (@is_dir($interpreter))
+            continue;
 
-		$versionInfo = `$interpreter -v`;
-		if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
-			$valid[$parts[1]] = $interpreter;
-	}
+        $versionInfo = `$interpreter -v`;
+        if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
+            $valid[$matches[1]] = $interpreter;
+    }
 
-	// Handle easy cases
-	if( count( $valid ) == 0 )
-		return null;
-	if( count( $valid ) == 1 )
-		return reset( $valid );
+    // Handle easy cases
+    if (count($valid) == 0)
+        return null;
+    if (count($valid) == 1)
+        return reset($valid);
 
-	// List available options for user
-	krsort( $valid );
-	return reset( $valid );
+    // List available options for user
+    krsort($valid);
+    return reset($valid);
 } // }}}
+
+// vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

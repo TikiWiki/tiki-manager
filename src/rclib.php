@@ -1,129 +1,131 @@
 <?php
+// Copyright (c) 2016, Avan.Tech, et. al.
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 class RC_SVN
 {
-	private $repository;
+    private $repository;
 
-	function __construct( $repository )
-	{
-		$this->repository = $repository;
-	}
+    function __construct($repository)
+    {
+        $this->repository = $repository;
+    }
 
-	function updateInstanceTo( Instance $instance, $path )
-	{
-		$access = $instance->getBestAccess( 'scripting' );
-		if( ! $access instanceof ShellPrompt )
-			return false;
+    function updateInstanceTo(Instance $instance, $path)
+    {
+        $access = $instance->getBestAccess('scripting');
+        if (! $access instanceof ShellPrompt) return false;
 
-		$info = $this->getRepositoryInfo( $instance, $access );
+        $info = $this->getRepositoryInfo($instance, $access);
 
-		if( isset( $info['root'] ) && $info['root'] != $this->repository )
-			return false;
+        if (isset($info['root']) && $info['root'] != $this->repository)
+            return false;
 
-		info( "Performing SVN update on remote host." );
-		$full = "{$this->repository}/$path";
-		$escaped = escapeshellarg( $full );
+        info('Performing SVN update on remote host.');
 
-		$verification = $access->shellExec(array(
-            "cd {$instance->webroot} && svn merge --dry-run --revision BASE:HEAD . --allow-mixed-revisions"
-        ), true);
+        $full = "{$this->repository}/$path";
+        $escaped = escapeshellarg($full);
 
-		if ((strlen(trim($verification)) > 0) &&
-		   (preg_match("/conflicts:/i",$verification))){
-			echo "SVN MERGE: $verification\n";
+        $verification = $access->shellExec(
+            array(
+                "cd {$instance->webroot} && svn merge --dry-run --revision BASE:HEAD . --allow-mixed-revisions"
+            ),
+            true
+        );
+
+        if (strlen(trim($verification)) > 0 &&
+            preg_match('/conflicts:/i', $verification)) {
+
+            echo "SVN MERGE: $verification\n";
+
             if ('yes' == strtolower(promptUser(
                 'It seems there are some conflicts, you may want to review them. Do you want to abort?',
                 'yes', array('yes', 'no') )))
                 exit;
-		}
-		
-		if( !isset( $info['url'] ) || $info['url'] == $full )
-			$access->shellExec( "svn up --non-interactive " . escapeshellarg( $instance->webroot ) );
-		else
-		{
-			$access->shellExec( 
-				"svn up --non-interactive " . escapeshellarg( $instance->getWebPath('temp') ),
-				"svn switch --non-interactive $escaped " . escapeshellarg( $instance->webroot )
-			);
-		}
-	}
+        }
+        
+        if (!isset($info['url']) || $info['url'] == $full)
+            $access->shellExec('svn up --non-interactive ' . escapeshellarg($instance->webroot));
+        else {
+            $access->shellExec( 
+                'svn up --non-interactive ' . escapeshellarg( $instance->getWebPath('temp')),
+                "svn switch --non-interactive $escaped " . escapeshellarg($instance->webroot)
+            );
+        }
+    }
 
-	private function getRepositoryInfo( $instance, $access )
-	{
-		$remoteText = $access->shellExec( 'svn info ' . escapeshellarg( $instance->webroot ), 'sleep 1' );
-		if( empty( $remoteText ) )
-			return array();
+    private function getRepositoryInfo($instance, $access)
+    {
+        $remoteText = $access->shellExec('svn info ' . escapeshellarg($instance->webroot), 'sleep 1');
+        if (empty($remoteText)) return array();
 
-		$info = array();
+        $info = array();
+        $raw = explode("\n", $remoteText);
+        foreach ($raw as $line) {
+            if (! strlen(trim($line)) || ! strpos($line, ':')) continue;
 
-		$raw = explode( "\n", $remoteText );
+            list($key, $value) = explode(':', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
 
-		foreach( $raw as $line )
-		{
-			if (! strlen(trim($line)) || ! strpos($line, ':')) continue;
-			list( $key, $value ) = explode( ':', $line, 2 );
-			$key = trim( $key );
-			$value = trim( $value );
+            switch($key) {
+            case 'URL':
+                $info['url'] = $value;
+                break;
+            case 'Repository Root':
+                $info['root'] = $value;
+                break;
+            }
+        }
 
-			switch( $key )
-			{
-			case 'URL':
-				$info['url'] = $value;
-				break;
-			case 'Repository Root':
-				$info['root'] = $value;
-				break;
-			}
-		}
+        return $info;
+    }
 
-		return $info;
-	}
+    function getRepositoryBranch(Instance $instance)
+    {
+        $access = $instance->getBestAccess('scripting');
+        if (! $access instanceof ShellPrompt) return false;
 
-	function getRepositoryBranch( Instance $instance )
-	{
-		$access = $instance->getBestAccess( 'scripting' );
-		if( ! $access instanceof ShellPrompt )
-			return false;
-
-		$info = $this->getRepositoryInfo( $instance, $access );
-		
-		if( isset( $info['url'] ) )
-			return substr( $info['url'], strlen( $this->repository ) + 1 );
-	}
+        $info = $this->getRepositoryInfo($instance, $access);
+        
+        if (isset($info['url']))
+            return substr($info['url'], strlen($this->repository) + 1);
+    }
 }
 
 class RC_CVS
 {
-	private $protocol;
-	private $user;
-	private $host;
-	private $root;
-	private $module;
+    private $protocol;
+    private $user;
+    private $host;
+    private $root;
+    private $module;
 
-	function __construct( $protocol, $user, $host, $root, $module )
-	{
-		$this->protocol = $protocol;
-		$this->user = $user;
-		$this->host = $host;
-		$this->root = $root;
-		$this->module = $module;
-	}
+    function __construct($protocol, $user, $host, $root, $module)
+    {
+        $this->protocol = $protocol;
+        $this->user = $user;
+        $this->host = $host;
+        $this->root = $root;
+        $this->module = $module;
+    }
 
-	function updateInstanceTo( Instance $instance, $tag )
-	{
-		$access = $instance->getBestAccess( 'scripting' );
-		if( ! $access instanceof ShellPrompt )
-			return false;
-		
-		info( "Performing CVS update on remote host." );
-		$rep = escapeshellarg( ":{$this->protocol}:{$this->user}@{$this->host}:{$this->root}" );
-		$access->chdir( $instance->webroot );
-		$access->setenv( 'CVS_RSH', 'ssh' );
-		$access->shellExec( 
-			"cvs -d$rep up -d -r " . escapeshellarg( $tag )
-		);
-	}
+    function updateInstanceTo(Instance $instance, $tag)
+    {
+        $access = $instance->getBestAccess('scripting');
+        if (! $access instanceof ShellPrompt) return false;
+        
+        info('Performing CVS update on remote host.');
+
+        $rep = escapeshellarg(":{$this->protocol}:{$this->user}@{$this->host}:{$this->root}");
+        $access->chdir($instance->webroot);
+        $access->setenv('CVS_RSH', 'ssh');
+        $access->shellExec( 
+            "cvs -d$rep up -d -r " . escapeshellarg($tag)
+        );
+    }
 }
+
+// vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

@@ -1,4 +1,5 @@
 <?php
+// Copyright (c) 2016, Avan.Tech, et. al.
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
@@ -8,28 +9,33 @@ class Local_Host
     private static $resources = array();
 
     private $location;
-	private $env = array();
+    private $env = array();
 
-    function chdir( $location )
+    function chdir($location)
     {
         $this->location = $location;
     }
 
-    function setenv( $var, $value )
+    function setenv($var, $value)
     {
-		$this->env[$var] = $value;
+        $this->env[$var] = $value;
     }
 
-    function runCommands( $commands, $output = false) {
-        if( ! is_array( $commands ) )
+    function runCommands($commands, $output = false)
+    {
+        if (! is_array($commands))
             $commands = func_get_args();
 
-        if( $this->location )
-            array_unshift( $commands, "cd " . escapeshellarg($this->location) );
-        foreach( $this->env as $name => $value )
-            array_unshift( $commands, "export $name=$value" );
+        if ($this->location)
+            array_unshift($commands, 'cd ' . escapeshellarg($this->location));
 
-        $fullcommand = implode( ($output ? ' 2>/dev/null' : ' 2>> /tmp/trim.output') . ' && ', $commands );
+        foreach ($this->env as $name => $value)
+            array_unshift($commands, "export $name=$value");
+
+        $fullcommand = implode(
+            ($output ? ' 2>/dev/null' : ' 2>> /tmp/trim.output') . ' && ',
+            $commands
+        );
         $fullcommand .= ($output ? ' 2>/dev/null' : ' 2>> /tmp/trim.output');
 
         $contents = array();
@@ -39,20 +45,20 @@ class Local_Host
             trim_output("LOCAL $contents");
 
             if (($rc = pclose($ph)) != 0)
-                warning(sprintf("%s [%d]", $fullcommand, $rc));
+                warning(sprintf('%s [%d]', $fullcommand, $rc));
         }
 
         return $contents;
     }
 
-    function sendFile( $localFile, $remoteFile )
+    function sendFile($localFile, $remoteFile)
     {
         $command = sprintf('rsync -a %s %s',
             escapeshellarg($localFile), escapeshellarg($remoteFile));
         $this->runCommands($command);
     }
 
-    function receiveFile( $remoteFile, $localFile )
+    function receiveFile($remoteFile, $localFile)
     {
         $command = sprintf('rsync -a %s %s',
             escapeshellarg($remoteFile), escapeshellarg($localFile));
@@ -62,11 +68,11 @@ class Local_Host
     {
     }
 
-    function rsync( $remoteLocation, $localMirror )
+    function rsync($remoteLocation, $localMirror)
     {
         $output = array();
         $return_val = -1;
-        $command = sprintf("rsync -aL --delete %s %s 2>&1",
+        $command = sprintf('rsync -aL --delete %s %s 2>&1',
             escapeshellarg($remoteLocation), escapeshellarg($localMirror));
 
         $ph = popen($command, 'r');
@@ -74,7 +80,7 @@ class Local_Host
             $return_var = pclose($ph);
 
         if ($return_var != 0)
-            info ( "RSYNC exit code: $return_var" );
+            info("RSYNC exit code: $return_var");
         return $return_var;
     }
 }

@@ -1,44 +1,66 @@
 <?php
+// Copyright (c) 2016, Avan.Tech, et. al.
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+define('SQL_SELECT_ACCESS', '
+SELECT
+    rowid, type, host, user, pass password
+FROM
+    access
+WHERE
+    instance_id = :id
+;');
+
+define('SQL_INSERT_ACCESS', "
+INSERT OR REPLACE INTO
+    access
+(instance_id, rowid, type, user, host, pass)
+    VALUES
+(:instance, :rowid, :type, :user, (:host || ':' || :port), :pass)
+;");
+
 abstract class Access
 {
-	private $rowid;
-	private $type;
-	protected $instance;
+    private $rowid;
+    private $type;
+    protected $instance;
 
-	public $host;
-	public $user;
-	public $password;
-	public $port;
+    public $host;
+    public $user;
+    public $password;
+    public $port;
 
-	static function getClassFor( $type ) // {{{
-	{
-		if ( $type == 'local' )
-			return 'Access_Local';
-		elseif( $type == 'ssh' )
-			return 'Access_SSH';
-		elseif( $type == 'ssh::nokey' )
-			return 'Access_SSH';
-		elseif( $type == 'ftp' )
-			return 'Access_FTP';
-		else
-			die( "Unknown type: $type\n" );
-	} // }}}
+    function __construct(Instance $instance, $type) // {{{
+    {
+        $this->instance = $instance;
+        $this->type = $type;
+    } // }}}
 
-	static function getAccessFor( Instance $instance ) // {{{
-	{
-		$result = query( "SELECT rowid, type, host, user, pass password FROM access WHERE instance_id = :id", 
-			array( ':id' => $instance->id ) );
+    static function getClassFor($type) // {{{
+    {
+        if ($type == 'local')
+            return 'Access_Local';
+        elseif ($type == 'ssh')
+            return 'Access_SSH';
+        elseif ($type == 'ssh::nokey')
+            return 'Access_SSH';
+        elseif ($type == 'ftp')
+            return 'Access_FTP';
+        else
+            die(error("Unknown type: $type"));
+    } // }}}
 
-		$access = array();
-		while( $row = $result->fetch() )
-		{
-			$class = self::getClassFor( $row['type'] );
+    static function getAccessFor(Instance $instance) // {{{
+    {
+        $result = query(SQL_SELECT_ACCESS, array(':id' => $instance->id));
 
-            $a = new $class( $instance );
+        $access = array();
+        while ($row = $result->fetch()) {
+            $class = self::getClassFor($row['type']);
+
+            $a = new $class($instance);
 
             if ($row['type'] != 'local') {
                 list($a->host, $a->port) = explode(':', $row['host']);
@@ -46,954 +68,948 @@ abstract class Access
                 $a->password = $row['password'];
             }
 
-			$access[] = $a;
-		}
+            $access[] = $a;
+        }
 
-		return $access;
-	} // }}}
-	
-	function __construct( Instance $instance, $type ) // {{{
-	{
-		$this->instance = $instance;
-		$this->type = $type;
-	} // }}}
+        return $access;
+    } // }}}
+    
+    function save() // {{{
+    {
+        $params = array(
+            ':instance' => $this->instance->id,
+            ':rowid' => $this->rowid,
+            ':type' => $this->type,
+            ':host' => $this->host,
+            ':user' => $this->user,
+            ':pass' => $this->password,
+            ':port' => $this->port,
+        );
 
-	function save() // {{{
-	{
-		$params = array(
-			':instance' => $this->instance->id,
-			':rowid' => $this->rowid,
-			':type' => $this->type,
-			':host' => $this->host,
-			':user' => $this->user,
-			':pass' => $this->password,
-			':port' => $this->port,
-		);
+        query(SQL_INSERT_ACCESS, $params);
 
-		query( "INSERT OR REPLACE INTO access (instance_id, rowid, type, user, host, pass) VALUES( :instance, :rowid, :type, :user, (:host || ':' || :port), :pass )", $params );
-		$rowid = rowid();
-		if( ! $this->rowid && $rowid )
-			$this->rowid = $rowid;
-	} // }}}
+        $rowid = rowid();
+        if (! $this->rowid && $rowid)
+            $this->rowid = $rowid;
+    } // }}}
 
-	function changeType( $type ) // {{{
-	{
-		if( strpos( $type, "{$this->type}::" ) === false )
-		{
-			$this->type = $type;
-			return true;
-		}
-		else
-			return false;
-	} // }}}
+    function changeType( $type ) // {{{
+    {
+        if (strpos($type, "{$this->type}::") === false) {
+            $this->type = $type;
+            return true;
+        }
+        else
+            return false;
+    } // }}}
 
-	abstract function firstConnect();
+    abstract function firstConnect();
 
-	abstract function getInterpreterPath($instance2 = null);
+    abstract function getInterpreterPath($instance2 = null);
 
-	abstract function fileExists( $filename );
+    abstract function fileExists($filename);
 
-	abstract function fileGetContents( $filename );
+    abstract function fileGetContents($filename);
 
-	abstract function fileModificationDate( $filename );
+    abstract function fileModificationDate($filename);
 
-	abstract function runPHP( $localFile, $args = array() );
+    abstract function runPHP($localFile, $args = array());
 
-	abstract function downloadFile( $filename );
+    abstract function downloadFile($filename);
 
-	abstract function uploadFile( $filename, $remoteLocation );
+    abstract function uploadFile($filename, $remoteLocation);
 
-	abstract function deleteFile( $filename );
+    abstract function deleteFile($filename);
 
-	abstract function moveFile( $remoteSource, $remoteTarget );
+    abstract function moveFile($remoteSource, $remoteTarget);
 
-	abstract function localizeFolder( $remoteLocation, $localMirror );
+    abstract function localizeFolder($remoteLocation, $localMirror);
 }
 
 interface ShellPrompt
 {
-	function shellExec( $command );
+    function shellExec($command);
 
-	function openShell($workingDir = '');
+    function openShell($workingDir = '');
 
-	function chdir( $location );
+    function chdir($location);
 
-	function setenv( $var, $value );
+    function setenv($var, $value);
 
-	function hasExecutable( $name );
+    function hasExecutable($name);
 }
 
 interface Mountable
 {
-	function mount( $target );
-	function umount();
-	function synchronize( $source, $mirror, $keepFolderName = false );
+    function mount($target);
+    function umount();
+    function synchronize($source, $mirror, $keepFolderName = false);
 }
 
 class Access_Local extends Access implements ShellPrompt
 {
-	private $location;
-	private $env = array();
+    private $location;
+    private $env = array();
 
-	function __construct( Instance $instance )
-	{
-		parent::__construct( $instance, 'local' );
-	}
+    function __construct(Instance $instance)
+    {
+        parent::__construct($instance, 'local');
+    }
 
-	private function getHost()
-	{
-		return new Local_Host();
-	}
+    private function getHost()
+    {
+        return new Local_Host();
+    }
 
-	function firstConnect() // {{{
-	{
-		return true;
-	} // }}}
+    function firstConnect() // {{{
+    {
+        return true;
+    } // }}}
 
-	function getInterpreterPath($instance2 = null) // {{{
-	{
-		$host = $this->getHost();
-		
-		$sets = array(
-			array( 'which php', 'which php5', 'which php4' ),
-		);
+    function getInterpreterPath($instance2 = null) // {{{
+    {
+        $host = $this->getHost();
+        
+        $sets = array(
+            array('which php', 'which php5', 'which php4'),
+        );
 
-		foreach( $sets as $attempt )
-		{
-			// Get possible paths
-			$phps = $host->runCommands( $attempt );
-			$phps = explode( "\n", $phps );
+        foreach ($sets as $attempt) {
 
-			// Check different versions
-			$valid = array();
-			foreach( $phps as $interpreter )
-			{
-				if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
-					continue;
-				$versionInfo = $host->runCommands( "$interpreter -v" );
-				if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
-					$valid[$parts[1]] = $interpreter;
-			}
+            // Get possible paths
+            $phps = $host->runCommands($attempt);
+            $phps = explode("\n", $phps);
 
-			// Handle easy cases
-			if( count( $valid ) == 0 )
-				continue;
-			if( count( $valid ) == 1 )
-				return reset( $valid );
+            // Check different versions
+            $valid = array();
+            foreach ($phps as $interpreter) {
+                if (! in_array(basename($interpreter), array('php', 'php5')))
+                    continue;
 
-			// List available options for user
-			krsort( $valid );
-			$versions = array_keys( $valid );
-			echo "Multiple PHP interpreters available on host :\n";
-			$counter = 0;
-			foreach( $valid as $version => $path )
-			{
-				echo "[$counter] $path ($version)\n";
-				$counter++;
-			}
+                $versionInfo = $host->runCommands("$interpreter -v");
+                if(preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
+                    $valid[$matches[1]] = $interpreter;
+            }
 
-			// Ask user
-			$counter--;
-			$selection = -1;
-			while( ! array_key_exists( $selection, $versions ) )
-				$selection = readline( "Which version do you want to use? [0-$counter] " );
+            // Handle easy cases
+            if (count($valid) == 0)
+                continue;
+            if (count($valid) == 1)
+                return reset($valid);
 
-			$version = $versions[$selection];
-			return $valid[$version];
-		}
-	} // }}}
+            // List available options for user
+            echo "Multiple PHP interpreters available on host :\n";
+            $counter = 0;
+            krsort($valid);
+            $versions = array_keys($valid);
+            foreach ($valid as $version => $path) {
+                echo "[$counter] $path ($version)\n";
+                $counter++;
+            }
 
-	function getSVNPath() // {{{
-	{
-		$host = $this->getHost();
-		
-		$sets = array(
-			array( 'which svn' ),
-		);
+            // Ask user
+            $counter--;
+            $selection = -1;
+            while (! array_key_exists($selection, $versions))
+                $selection = readline("Which version do you want to use? (0-$counter) : ");
 
-		foreach( $sets as $attempt )
-		{
-			// Get possible paths
-			$svns = $host->runCommands( $attempt );
-			$svns = explode( "\n", $svns );
+            $version = $versions[$selection];
+            return $valid[$version];
+        }
+    } // }}}
 
-			// Check different versions
-			$valid = array();
-			foreach( $svns as $interpreter )
-			{
-				if( ! in_array( basename( $interpreter ), array( 'svn' ) ) )
-					continue;
-				$versionInfo = $host->runCommands( "$interpreter --version" );
-				if( preg_match( "/svn, version (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
-					$valid[$parts[1]] = $interpreter;
-			}
+    function getSVNPath() // {{{
+    {
+        $host = $this->getHost();
+        
+        $sets = array(
+            array('which svn'),
+        );
 
-			// Handle easy cases
-			if( count( $valid ) == 0 )
-				continue;
-			if( count( $valid ) == 1 )
-				return reset( $valid );
+        foreach($sets as $attempt) {
+            // Get possible paths
+            $svns = $host->runCommands($attempt);
+            $svns = explode("\n", $svns);
 
-			// List available options for user
-			krsort( $valid );
-			$versions = array_keys( $valid );
-			echo "Multiple SVN'es available on host :\n";
-			$counter = 0;
-			foreach( $valid as $version => $path )
-			{
-				echo "[$counter] $path ($version)\n";
-				$counter++;
-			}
+            // Check different versions
+            $valid = array();
+            foreach ($svns as $interpreter) {
+                if (! in_array(basename($interpreter), array('svn')))
+                    continue;
 
-			// Ask user
-			$counter--;
-			$selection = -1;
-			while( ! array_key_exists( $selection, $versions ) )
-				$selection = readline( "Which version do you want to use? [0-$counter] " );
+                $versionInfo = $host->runCommands("$interpreter --version");
+                if (preg_match("/svn, version (\d+\.\d+\.\d+)/", $versionInfo, $matches))
+                    $valid[$matches[1]] = $interpreter;
+            }
 
-			$version = $versions[$selection];
-			return $valid[$version];
-		}
-	} // }}}
+            // Handle easy cases
+            if (count($valid) == 0)
+                continue;
+            if (count($valid) == 1)
+                return reset($valid);
 
-	function getInterpreterVersion($interpreter) // {{{
-	{
-		$host = $this->getHost();
-		$versionInfo = $host->runCommands( "$interpreter -r 'echo PHP_VERSION_ID;'" );
-		return $versionInfo;
-	} // }}}
+            // List available options for user
+            echo "Multiple SVN'es available on host :\n";
+            $counter = 0;
+            krsort($valid);
+            $versions = array_keys($valid);
+            foreach ($valid as $version => $path) {
+                echo "[$counter] $path ($version)\n";
+                $counter++;
+            }
 
-	function getDistributionName($interpreter){ // {{{
-		$host = $this->getHost();
-		$command = file_get_contents(
-			sprintf('%s/getlinuxdistro.php', dirname(__FILE__)));
-		$linuxName = $host->runCommands( "$interpreter -r '$command'" );
+            // Ask user
+            $counter--;
+            $selection = -1;
+            while (! array_key_exists($selection, $versions))
+                $selection = readline("Which version do you want to use? (0-$counter) : ");
 
-		return $linuxName;
-	} // }}}
+            $version = $versions[$selection];
+            return $valid[$version];
+        }
+    } // }}}
 
-	function fileExists( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+    function getInterpreterVersion($interpreter) // {{{
+    {
+        $host = $this->getHost();
+        $versionInfo = $host->runCommands("$interpreter -r 'echo PHP_VERSION_ID;'");
+        return $versionInfo;
+    } // }}}
 
-		$eFile = escapeshellarg( $filename );
-		$output = $this->shellExec( "ls $eFile" );
+    function getDistributionName($interpreter){ // {{{
+        $host = $this->getHost();
+        $command = file_get_contents(
+            sprintf('%s/getlinuxdistro.php', dirname(__FILE__)));
+        $linuxName = $host->runCommands("$interpreter -r '$command'");
 
-		return ! empty( $output );
-	} // }}}
+        return $linuxName;
+    } // }}}
 
-	function fileGetContents( $filename ) // {{{
-	{
-		$host = $this->getHost();
-		
-		$filename = escapeshellarg( $filename );
-		return $host->runCommands( "cat $filename" );
-	} // }}}
+    function fileExists($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-	function fileModificationDate( $filename ) // {{{
-	{
-		$host = $this->getHost();
+        $eFile = escapeshellarg($filename);
+        $output = $this->shellExec("ls $eFile");
 
-		$root = escapeshellarg( $filename );
+        return ! empty($output);
+    } // }}}
 
-		$data = $host->runCommands( "ls -l $root" );
+    function fileGetContents($filename) // {{{
+    {
+        $host = $this->getHost();
+        
+        $filename = escapeshellarg($filename);
+        return $host->runCommands("cat $filename");
+    } // }}}
 
-		if( preg_match( "/\d{4}-\d{2}-\d{2}/", $data, $parts ) )
-			return $parts[0];
-		else
-			return null;
-	} // }}}
+    function fileModificationDate($filename) // {{{
+    {
+        $host = $this->getHost();
 
-	function runPHP( $localFile, $args = array() ) // {{{
-	{
-		$host = $this->getHost();
+        $root = escapeshellarg($filename);
 
-		$remoteName = md5( $localFile );
-		$remoteFile = $this->instance->getWorkPath( $remoteName );
+        $data = $host->runCommands("ls -l $root");
 
-		$host->sendFile( $localFile, $remoteFile );
-		$arg = implode( ' ', array_map( 'escapeshellarg', $args ) );
-		$output = $host->runCommands(
-			"{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
-			"rm {$remoteFile}" );
+        if (preg_match("/\d{4}-\d{2}-\d{2}/", $data, $matches))
+            return $matches[0];
+        else
+            return null;
+    } // }}}
 
-		return $output;
-	} // }}}
+    function runPHP($localFile, $args = array()) // {{{
+    {
+        $host = $this->getHost();
 
-	function downloadFile( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+        $remoteName = md5($localFile);
+        $remoteFile = $this->instance->getWorkPath($remoteName);
 
-		$dot = strrpos( $filename, '.' );
-		$ext = substr( $filename, $dot );
+        $host->sendFile($localFile, $remoteFile);
+        $arg = implode(' ', array_map('escapeshellarg', $args));
+        $output = $host->runCommands(
+            "{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
+            "rm {$remoteFile}"
+        );
 
-		$local = tempnam( TEMP_FOLDER, 'trim' );
+        return $output;
+    } // }}}
 
-		$host = $this->getHost();
-		$host->receiveFile( $filename, $local );
+    function downloadFile($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-		rename( $local, $local . $ext );
-		chmod( $local . $ext, 0644 );
+        $dot = strrpos($filename, '.');
+        $ext = substr($filename, $dot);
 
-		return $local . $ext;
-	} // }}}
+        $local = tempnam(TEMP_FOLDER, 'trim');
 
-	function uploadFile( $filename, $remoteLocation ) // {{{
-	{
-		$host = $this->getHost();
-		if( $remoteLocation{0} == '/' )
-			$host->sendFile( $filename, $remoteLocation );
-		else
-			$host->sendFile( $filename, $this->instance->getWebPath( $remoteLocation ) );
-	} // }}}
+        $host = $this->getHost();
+        $host->receiveFile($filename, $local);
 
-	function deleteFile( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+        rename($local, $local . $ext);
+        chmod($local . $ext, 0644);
 
-		$path = escapeshellarg( $filename );
+        return $local . $ext;
+    } // }}}
 
-		$host = $this->getHost();
-		$host->runCommands( "rm $path" );
-	} // }}}
+    function uploadFile($filename, $remoteLocation) // {{{
+    {
+        $host = $this->getHost();
+        if ($remoteLocation{0} == '/')
+            $host->sendFile($filename, $remoteLocation);
+        else
+            $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
+    } // }}}
 
-	function moveFile( $remoteSource, $remoteTarget ) // {{{
-	{
-		if( $remoteSource{0} != '/' )
-			$remoteSource = $this->instance->getWebPath( $remoteSource );
-		if( $remoteTarget{0} != '/' )
-			$remoteTarget = $this->instance->getWebPath( $remoteTarget );
+    function deleteFile($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-		$a = escapeshellarg( $remoteSource );
-		$b = escapeshellarg( $remoteTarget );
+        $path = escapeshellarg($filename);
 
-		$this->shellExec( "mv $a $b" );
-	} // }}}
+        $host = $this->getHost();
+        $host->runCommands("rm $path");
+    } // }}}
 
-	function chdir( $location ) // {{{
-	{
-		$this->location = $location;
-	} // }}}
+    function moveFile($remoteSource, $remoteTarget) // {{{
+    {
+        if ($remoteSource{0} != '/')
+            $remoteSource = $this->instance->getWebPath($remoteSource);
+        if ($remoteTarget{0} != '/')
+            $remoteTarget = $this->instance->getWebPath($remoteTarget);
 
-	function setenv( $var, $value ) // {{{
-	{
-		$this->env[$var] = $value;
-	} // }}}
+        $a = escapeshellarg($remoteSource);
+        $b = escapeshellarg($remoteTarget);
 
-	function shellExec( $commands, $output = false ) // {{{
-	{
-		if( ! is_array( $commands ) )
-			$commands = func_get_args();
+        $this->shellExec("mv $a $b");
+    } // }}}
 
-		$host = $this->getHost();
-		if( $this->location )
-			$host->chdir( $this->location );
-		foreach( $this->env as $key => $value )
-			$host->setenv( $key, $value );
+    function chdir($location) // {{{
+    {
+        $this->location = $location;
+    } // }}}
 
-		return $host->runCommands( $commands, $output );
-	} // }}}
+    function setenv($var, $value) // {{{
+    {
+        $this->env[$var] = $value;
+    } // }}}
 
-	function openShell($workingDir = '') // {{{
-	{
-		$host = $this->getHost();
-		$host->openShell($workingDir);
-	} // }}}
+    function shellExec($commands, $output = false) // {{{
+    {
+        if (! is_array($commands))
+            $commands = func_get_args();
 
-	function hasExecutable( $command ) // {{{
-	{
-		$command = escapeshellcmd( $command );
-		$exists = $this->shellExec( "which $command" );
+        $host = $this->getHost();
+        if ($this->location)
+            $host->chdir($this->location);
+        foreach ($this->env as $key => $value)
+            $host->setenv($key, $value);
 
-		return ! empty( $exists );
-	} // }}}
+        return $host->runCommands($commands, $output);
+    } // }}}
 
-	function localizeFolder( $remoteLocation, $localMirror ) // {{{
-	{
-		$host = $this->getHost();
-		return $host->rsync( $remoteLocation, $localMirror );
-	} // }}}
+    function openShell($workingDir = '') // {{{
+    {
+        $host = $this->getHost();
+        $host->openShell($workingDir);
+    } // }}}
+
+    function hasExecutable($command) // {{{
+    {
+        $command = escapeshellcmd($command);
+        $exists = $this->shellExec("which $command");
+
+        return ! empty($exists);
+    } // }}}
+
+    function localizeFolder($remoteLocation, $localMirror) // {{{
+    {
+        $host = $this->getHost();
+        return $host->rsync($remoteLocation, $localMirror);
+    } // }}}
 }
 
 class Access_SSH extends Access implements ShellPrompt
 {
-	private $location;
-	private $env = array();
+    private $location;
+    private $env = array();
 
-	function __construct( Instance $instance )
-	{
-		parent::__construct( $instance, 'ssh' );
-		$this->port = 22;
-	}
+    function __construct(Instance $instance)
+    {
+        parent::__construct($instance, 'ssh');
+        $this->port = 22;
+    }
 
-	private function getHost()
-	{
-		return new SSH_Host( $this->host, $this->user, $this->port );
-	}
+    private function getHost()
+    {
+        return new SSH_Host($this->host, $this->user, $this->port);
+    }
 
-	function firstConnect() // {{{
-	{
-		$host = $this->getHost();
-		$host->setupKey( SSH_PUBLIC_KEY );
+    function firstConnect() // {{{
+    {
+        $host = $this->getHost();
+        $host->setupKey(SSH_PUBLIC_KEY);
 
-		echo "Testing connection...\n";
+        info("Testing connection...");
 
-		$host->runCommands( "exit" );
+        $host->runCommands('exit');
 
         $answer = promptUser(
             'After successfully entering your password, were you asked for a password again?',
             false, array('yes', 'no')
         );
 
-		if( $answer == 'yes' )
-			$this->changeType( 'ssh::nokey' );
+        if ($answer == 'yes')
+            $this->changeType('ssh::nokey');
 
-		return true;
-	} // }}}
+        return true;
+    } // }}}
 
-	function getInterpreterPath($instance2 = null) // {{{
-	{
-		$host = $this->getHost();
-		
-		$sets = array(
-			array( 'which php', 'which php5', 'which php4' ),
-		);
+    function getInterpreterPath($instance2 = null) // {{{
+    {
+        $host = $this->getHost();
+        
+        $sets = array(
+            array('which php', 'which php5', 'which php4'),
+        );
 
-		foreach( $sets as $attempt )
-		{
-			// Get possible paths
-			$phps = $host->runCommands( $attempt );
-			$phps = explode( "\n", $phps );
+        foreach ($sets as $attempt) {
 
-			// Check different versions
-			$valid = array();
-			foreach( $phps as $interpreter )
-			{
-				if( ! in_array( basename( $interpreter ), array( 'php', 'php5' ) ) )
-					continue;
-				$versionInfo = $host->runCommands( "$interpreter -v" );
-				if( preg_match( "/PHP (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
-					$valid[$parts[1]] = $interpreter;
-			}
+            // Get possible paths
+            $phps = $host->runCommands($attempt);
+            $phps = explode("\n", $phps);
 
-			// Handle easy cases
-			if( count( $valid ) == 0 )
-				continue;
-			if( count( $valid ) == 1 )
-				return reset( $valid );
+            // Check different versions
+            $valid = array();
+            foreach ($phps as $interpreter) {
+                if (! in_array(basename($interpreter), array('php', 'php5')))
+                    continue;
 
-			// List available options for user
-			krsort( $valid );
-			$versions = array_keys( $valid );
-			echo "Multiple PHP interpreters available on host :\n";
-			$counter = 0;
-			foreach( $valid as $version => $path )
-			{
-				echo "[$counter] $path ($version)\n";
-				$counter++;
-			}
+                $versionInfo = $host->runCommands("$interpreter -v");
+                if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
+                    $valid[$matches[1]] = $interpreter;
+            }
 
-			// Ask user
-			$counter--;
-			$selection = -1;
-			while( ! array_key_exists( $selection, $versions ) )
-				$selection = readline( "Which version do you want to use? [0-$counter] " );
+            // Handle easy cases
+            if (count($valid) == 0)
+                continue;
+            if (count($valid) == 1)
+                return reset($valid);
 
-			$version = $versions[$selection];
-			return $valid[$version];
-		}
-	} // }}}
+            // List available options for user
+            echo "Multiple PHP interpreters available on host:\n";
+            $counter = 0;
+            krsort($valid);
+            $versions = array_keys($valid);
+            foreach ($valid as $version => $path) {
+                echo "[$counter] $path ($version)\n";
+                $counter++;
+            }
 
-	function getSVNPath() // {{{
-	{
-		$host = $this->getHost();
-		
-		$sets = array(
-			array( 'which svn' ),
-		);
+            // Ask user
+            $counter--;
+            $selection = -1;
+            while (! array_key_exists($selection, $versions))
+                $selection = readline("Which version do you want to use? (0-$counter) : ");
 
-		foreach( $sets as $attempt )
-		{
-			// Get possible paths
-			$svns = $host->runCommands( $attempt );
-			$svns = explode( "\n", $svns );
+            $version = $versions[$selection];
+            return $valid[$version];
+        }
+    } // }}}
 
-			// Check different versions
-			$valid = array();
-			foreach( $svns as $interpreter )
-			{
-				if( ! in_array( basename( $interpreter ), array( 'svn' ) ) )
-					continue;
-				$versionInfo = $host->runCommands( "$interpreter --version" );
-				if( preg_match( "/svn, version (\d+\.\d+\.\d+)/", $versionInfo, $parts ) )
-					$valid[$parts[1]] = $interpreter;
-			}
+    function getSVNPath() // {{{
+    {
+        $host = $this->getHost();
+        
+        $sets = array(
+            array('which svn'),
+        );
 
-			// Handle easy cases
-			if( count( $valid ) == 0 )
-				continue;
-			if( count( $valid ) == 1 )
-				return reset( $valid );
+        foreach ($sets as $attempt) {
+            // Get possible paths
+            $svns = $host->runCommands($attempt);
+            $svns = explode("\n", $svns);
 
-			// List available options for user
-			krsort( $valid );
-			$versions = array_keys( $valid );
-			echo "Multiple SVN'es available on host :\n";
-			$counter = 0;
-			foreach( $valid as $version => $path )
-			{
-				echo "[$counter] $path ($version)\n";
-				$counter++;
-			}
+            // Check different versions
+            $valid = array();
+            foreach ($svns as $interpreter) {
+                if (! in_array(basename($interpreter), array('svn')))
+                    continue;
 
-			// Ask user
-			$counter--;
-			$selection = -1;
-			while( ! array_key_exists( $selection, $versions ) )
-				$selection = readline( "Which version do you want to use? [0-$counter] " );
+                $versionInfo = $host->runCommands("$interpreter --version");
+                if (preg_match('/svn, version (\d+\.\d+\.\d+)/', $versionInfo, $matches))
+                    $valid[$matches[1]] = $interpreter;
+            }
 
-			$version = $versions[$selection];
-			return $valid[$version];
-		}
-	} // }}}
+            // Handle easy cases
+            if (count($valid) == 0)
+                continue;
+            if (count($valid) == 1)
+                return reset($valid);
 
-	function getInterpreterVersion($interpreter) // {{{
-	{
-		$host = $this->getHost();
-		$versionInfo = $host->runCommands( "$interpreter -r 'echo PHP_VERSION_ID;'" );
-		return $versionInfo;
-	} // }}}
+            // List available options for user
+            echo "Multiple SVN'es available on host :\n";
+            $counter = 0;
+            krsort($valid);
+            $versions = array_keys($valid);
+            foreach ($valid as $version => $path) {
+                echo "[$counter] $path ($version)\n";
+                $counter++;
+            }
 
-	function getDistributionName($interpreter){ // {{{
-		$host = $this->getHost();
-		$command = file_get_contents(
-			sprintf('%s/getlinuxdistro.php', dirname(__FILE__)));
-		$linuxName = $host->runCommands( "$interpreter -r '$command'" );
+            // Ask user
+            $counter--;
+            $selection = -1;
+            while (! array_key_exists($selection, $versions))
+                $selection = readline("Which version do you want to use? (0-$counter) : ");
 
-		return $linuxName;
-	} // }}}
+            $version = $versions[$selection];
+            return $valid[$version];
+        }
+    } // }}}
 
-	function fileExists( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+    function getInterpreterVersion($interpreter) // {{{
+    {
+        $host = $this->getHost();
+        $versionInfo = $host->runCommands("$interpreter -r 'echo PHP_VERSION_ID;'");
+        return $versionInfo;
+    } // }}}
 
-		$eFile = escapeshellarg( $filename );
-		$output = $this->shellExec( "ls $eFile" );
+    function getDistributionName($interpreter){ // {{{
+        $host = $this->getHost();
+        $command = file_get_contents(
+            sprintf('%s/getlinuxdistro.php', dirname(__FILE__)));
+        $linuxName = $host->runCommands("$interpreter -r '$command'");
 
-		return ! empty( $output );
-	} // }}}
+        return $linuxName;
+    } // }}}
 
-	function fileGetContents( $filename ) // {{{
-	{
-		$host = $this->getHost();
-		
-		$filename = escapeshellarg( $filename );
-		return $host->runCommands( "cat $filename" );
-	} // }}}
+    function fileExists($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-	function fileModificationDate( $filename ) // {{{
-	{
-		$host = $this->getHost();
+        $eFile = escapeshellarg($filename);
+        $output = $this->shellExec("ls $eFile");
 
-		$root = escapeshellarg( $filename );
+        return ! empty($output);
+    } // }}}
 
-		$data = $host->runCommands( "ls -l $root" );
+    function fileGetContents($filename) // {{{
+    {
+        $host = $this->getHost();
+        $filename = escapeshellarg($filename);
 
-		if( preg_match( "/\d{4}-\d{2}-\d{2}/", $data, $parts ) )
-			return $parts[0];
-		else
-			return null;
-	} // }}}
+        return $host->runCommands("cat $filename");
+    } // }}}
 
-	function runPHP( $localFile, $args = array() ) // {{{
-	{
-		$host = $this->getHost();
+    function fileModificationDate($filename) // {{{
+    {
+        $host = $this->getHost();
+        $root = escapeshellarg($filename);
+        $data = $host->runCommands("ls -l $root");
 
-		$remoteName = md5( $localFile );
-		$remoteFile = $this->instance->getWorkPath( $remoteName );
+        if (preg_match('/\d{4}-\d{2}-\d{2}/', $data, $matches))
+            return $matches[0];
+        else
+            return null;
+    } // }}}
 
-		$host->sendFile( $localFile, $remoteFile );
-		$arg = implode( ' ', array_map( 'escapeshellarg', $args ) );
-		$output = $host->runCommands(
-			"{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
-			"rm {$remoteFile}" );
+    function runPHP($localFile, $args = array()) // {{{
+    {
+        $host = $this->getHost();
 
-		return $output;
-	} // }}}
+        $remoteName = md5($localFile);
+        $remoteFile = $this->instance->getWorkPath($remoteName);
 
-	function downloadFile( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+        $host->sendFile($localFile, $remoteFile);
+        $arg = implode(' ', array_map('escapeshellarg', $args));
+        $output = $host->runCommands(
+            "{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
+            "rm {$remoteFile}"
+        );
 
-		$dot = strrpos( $filename, '.' );
-		$ext = substr( $filename, $dot );
+        return $output;
+    } // }}}
 
-		$local = tempnam( TEMP_FOLDER, 'trim' );
+    function downloadFile($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-		$host = $this->getHost();
-		$host->receiveFile( $filename, $local );
+        $dot = strrpos($filename, '.');
+        $ext = substr($filename, $dot);
 
-		rename( $local, $local . $ext );
-		chmod( $local . $ext, 0644 );
+        $local = tempnam(TEMP_FOLDER, 'trim');
 
-		return $local . $ext;
-	} // }}}
+        $host = $this->getHost();
+        $host->receiveFile($filename, $local);
 
-	function uploadFile( $filename, $remoteLocation ) // {{{
-	{
-		$host = $this->getHost();
-		if( $remoteLocation{0} == '/' )
-			$host->sendFile( $filename, $remoteLocation );
-		else
-			$host->sendFile( $filename, $this->instance->getWebPath( $remoteLocation ) );
-	} // }}}
+        rename($local, $local . $ext);
+        chmod($local . $ext, 0644 );
 
-	function deleteFile( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+        return $local . $ext;
+    } // }}}
 
-		$path = escapeshellarg( $filename );
+    function uploadFile( $filename, $remoteLocation ) // {{{
+    {
+        $host = $this->getHost();
+        if ($remoteLocation{0} == '/')
+            $host->sendFile($filename, $remoteLocation);
+        else
+            $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
+    } // }}}
 
-		$host = $this->getHost();
-		$host->runCommands( "rm $path" );
-	} // }}}
+    function deleteFile($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-	function moveFile( $remoteSource, $remoteTarget ) // {{{
-	{
-		if( $remoteSource{0} != '/' )
-			$remoteSource = $this->instance->getWebPath( $remoteSource );
-		if( $remoteTarget{0} != '/' )
-			$remoteTarget = $this->instance->getWebPath( $remoteTarget );
+        $path = escapeshellarg($filename);
 
-		$a = escapeshellarg( $remoteSource );
-		$b = escapeshellarg( $remoteTarget );
+        $host = $this->getHost();
+        $host->runCommands("rm $path");
+    } // }}}
 
-		$this->shellExec( "mv $a $b" );
-	} // }}}
+    function moveFile($remoteSource, $remoteTarget) // {{{
+    {
+        if ($remoteSource{0} != '/')
+            $remoteSource = $this->instance->getWebPath($remoteSource);
+        if ($remoteTarget{0} != '/' )
+            $remoteTarget = $this->instance->getWebPath($remoteTarget);
 
-	function chdir( $location ) // {{{
-	{
-		$this->location = $location;
-	} // }}}
+        $a = escapeshellarg($remoteSource);
+        $b = escapeshellarg($remoteTarget);
 
-	function setenv( $var, $value ) // {{{
-	{
-		$this->env[$var] = $value;
-	} // }}}
+        $this->shellExec("mv $a $b");
+    } // }}}
 
-	function shellExec( $commands, $output = false ) // {{{
-	{
-		if( ! is_array( $commands ) )
-			$commands = func_get_args();
+    function chdir($location) // {{{
+    {
+        $this->location = $location;
+    } // }}}
 
-		$host = $this->getHost();
-		if( $this->location )
-			$host->chdir( $this->location );
-		foreach( $this->env as $key => $value )
-			$host->setenv( $key, $value );
+    function setenv($var, $value) // {{{
+    {
+        $this->env[$var] = $value;
+    } // }}}
 
-		return $host->runCommands( $commands, $output );
-	} // }}}
+    function shellExec($commands, $output = false) // {{{
+    {
+        if (! is_array($commands))
+            $commands = func_get_args();
 
-	function openShell($workingDir = '') // {{{
-	{
-		$host = $this->getHost();
-		$host->openShell($workingDir);
-	} // }}}
+        $host = $this->getHost();
+        if ($this->location)
+            $host->chdir($this->location);
 
-	function hasExecutable( $command ) // {{{
-	{
-		$command = escapeshellcmd( $command );
-		$exists = $this->shellExec( "which $command" );
+        foreach ($this->env as $key => $value)
+            $host->setenv($key, $value);
 
-		return ! empty( $exists );
-	} // }}}
+        return $host->runCommands($commands, $output);
+    } // }}}
 
-	function localizeFolder( $remoteLocation, $localMirror ) // {{{
-	{
-		$host = $this->getHost();
-		return $host->rsync( $remoteLocation, $localMirror );
-	} // }}}
+    function openShell($workingDir = '') // {{{
+    {
+        $host = $this->getHost();
+        $host->openShell($workingDir);
+    } // }}}
+
+    function hasExecutable($command) // {{{
+    {
+        $command = escapeshellcmd($command);
+        $exists = $this->shellExec("which $command");
+
+        return ! empty($exists);
+    } // }}}
+
+    function localizeFolder($remoteLocation, $localMirror) // {{{
+    {
+        $host = $this->getHost();
+        return $host->rsync($remoteLocation, $localMirror);
+    } // }}}
 }
 
 class Access_FTP extends Access implements Mountable
 {
-	private $lastMount;
+    private $lastMount;
 
-	function __construct( Instance $instance )
-	{
-		parent::__construct( $instance, 'ftp' );
-		$this->port = 21;
-	}
+    function __construct(Instance $instance)
+    {
+        parent::__construct($instance, 'ftp');
+        $this->port = 21;
+    }
 
-	// TODO: change directory using FTP
-	function openShell($workingDir = '') // {{{
-	{
-		echo "User: {$this->user}, Pass: {$this->password}\n";
-		passthru( "ftp {$this->host} {$this->port}" );
-	} // }}}
+    // TODO: change directory using FTP
+    function openShell($workingDir = '') // {{{
+    {
+        echo "User: {$this->user}, Pass: {$this->password}\n";
+        passthru("ftp {$this->host} {$this->port}");
+    } // }}}
 
-	private function getHost()
-	{
-		return new FTP_Host( $this->host, $this->user, $this->password, $this->port );
-	}
+    private function getHost()
+    {
+        return new FTP_Host($this->host, $this->user, $this->password, $this->port);
+    }
 
-	function firstConnect() // {{{
-	{
-		$conn = $this->getHost();
+    function firstConnect() // {{{
+    {
+        $conn = $this->getHost();
 
-		return $conn->connect();
-	} // }}}
+        return $conn->connect();
+    } // }}}
 
-	function getInterpreterPath($instance2 = null) // {{{
-	{
-		if (  $instance2 instanceof Instance ) {
-			$this->instance = $instance2;
-		}
-		$result = $this->runPHP( dirname(__FILE__) . '/../scripts/checkversion.php', array($this->instance->webroot) );
+    function getInterpreterPath($instance2 = null) // {{{
+    {
+        if ($instance2 instanceof Instance)
+            $this->instance = $instance2;
 
-		if( preg_match( '/^[5-9]\./', $result ) ) {
-			return 'mod_php';
-		}
-	} // }}}
+        $result = $this->runPHP(
+            dirname(__FILE__) . '/../scripts/checkversion.php',
+            array($this->instance->webroot)
+        );
 
-	function getSVNPath(){ // {{{
-		return 1;
-	} // }}}
+        if (preg_match('/^[5-9]\./', $result))
+            return 'mod_php';
+    } // }}}
 
-	function getInterpreterVersion($interpreter) // {{{
-        {
-                return 99999;
-        } // }}}
+    function getSVNPath(){ // {{{
+        return 1;
+    } // }}}
 
-	function getDistributionName($interpreter){ // {{{
-		return 'Unknown';
-	} // }}}
+    function getInterpreterVersion($interpreter) // {{{
+    {
+        return 99999;
+    } // }}}
 
-	function fileExists( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+    function getDistributionName($interpreter){ // {{{
+        return 'Unknown';
+    } // }}}
 
-		$ftp = $this->getHost();
-		return $ftp->fileExists( $filename );
-	} // }}}
+    function fileExists($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-	function fileGetContents( $filename ) // {{{
-	{
-		$ftp = $this->getHost();
-		return $ftp->getContent( $filename );
-	} // }}}
+        $ftp = $this->getHost();
+        return $ftp->fileExists($filename);
+    } // }}}
 
-	function fileModificationDate( $filename )
-	{
-	}
+    function fileGetContents($filename) // {{{
+    {
+        $ftp = $this->getHost();
+        return $ftp->getContent($filename);
+    } // }}}
 
-	function runPHP( $localFile, $args = array() ) // {{{
-	{
-		foreach( $args as & $potentialPath ) {
-			if( $potentialPath{0} == '/' ) {
-				$potentialPath = $this->obtainRelativePathTo( $potentialPath, $this->instance->webroot );
-			}
-		}
-		$host = $this->getHost();
+    function fileModificationDate($filename)
+    {
+    }
 
-		$remoteName = 'trim_' . md5( $localFile ) . '.php';
-		$remoteFile = $this->instance->getWebPath( $remoteName );
+    function runPHP($localFile, $args = array()) // {{{
+    {
+        foreach ($args as & $potentialPath) {
+            if ($potentialPath{0} == '/') {
+                $potentialPath = $this->obtainRelativePathTo(
+                    $potentialPath, $this->instance->webroot
+                );
+            }
+        }
+        $host = $this->getHost();
 
-		array_unshift( $args, null );
-		$arg = http_build_query( $args, '', '&' );
+        $remoteName = 'trim_' . md5($localFile) . '.php';
+        $remoteFile = $this->instance->getWebPath($remoteName);
 
-		$host->sendFile( $localFile, $remoteFile );
-		$output = file_get_contents( $this->instance->getWebUrl( $remoteName ) . '?' . $arg );
+        array_unshift($args, null);
+        $arg = http_build_query($args, '', '&');
 
-		$host->removeFile( $remoteFile );
+        $host->sendFile($localFile, $remoteFile);
+        $output = file_get_contents($this->instance->getWebUrl($remoteName) . '?' . $arg);
 
-		return $output;
-	} // }}}
+        $host->removeFile($remoteFile);
 
-	function downloadFile( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+        return $output;
+    } // }}}
 
-		$dot = strrpos( $filename, '.' );
-		$ext = substr( $filename, $dot );
+    function downloadFile($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-		$local = tempnam( TEMP_FOLDER, 'trim' );
+        $dot = strrpos($filename, '.');
+        $ext = substr($filename, $dot);
 
-		$host = $this->getHost();
-		$host->receiveFile( $filename, $local );
+        $local = tempnam(TEMP_FOLDER, 'trim');
 
-		rename( $local, $local . $ext );
-		chmod( $local . $ext, 0644 );
+        $host = $this->getHost();
+        $host->receiveFile($filename, $local);
 
-		return $local . $ext;
-	} // }}}
+        rename($local, $local . $ext);
+        chmod($local . $ext, 0644);
 
-	function uploadFile( $filename, $remoteLocation ) // {{{
-	{
-		$host = $this->getHost();
-		if( $remoteLocation{0} == '/' )
-			$host->sendFile( $filename, $remoteLocation );
-		else
-			$host->sendFile( $filename, $this->instance->getWebPath( $remoteLocation ) );
-	} // }}}
+        return $local . $ext;
+    } // }}}
 
-	function moveFile( $remoteSource, $remoteTarget ) // {{{
-	{
-		if( $remoteSource{0} != '/' )
-			$remoteSource = $this->instance->getWebPath( $remoteSource );
-		if( $remoteTarget{0} != '/' )
-			$remoteTarget = $this->instance->getWebPath( $remoteTarget );
+    function uploadFile($filename, $remoteLocation) // {{{
+    {
+        $host = $this->getHost();
+        if ($remoteLocation{0} == '/')
+            $host->sendFile($filename, $remoteLocation);
+        else
+            $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
+    } // }}}
 
-		$host = $this->getHost();
-		$host->rename( $remoteSource, $remoteTarget );
-	} // }}}
+    function moveFile($remoteSource, $remoteTarget) // {{{
+    {
+        if ($remoteSource{0} != '/')
+            $remoteSource = $this->instance->getWebPath($remoteSource);
+        if ($remoteTarget{0} != '/')
+            $remoteTarget = $this->instance->getWebPath($remoteTarget);
 
-	function deleteFile( $filename ) // {{{
-	{
-		if( $filename{0} != '/' )
-			$filename = $this->instance->getWebPath( $filename );
+        $host = $this->getHost();
+        $host->rename($remoteSource, $remoteTarget);
+    } // }}}
 
-		$host = $this->getHost();
-		$host->removeFile( $filename );
-	} // }}}
+    function deleteFile($filename) // {{{
+    {
+        if ($filename{0} != '/')
+            $filename = $this->instance->getWebPath($filename);
 
-	function localizeFolder( $remoteLocation, $localMirror ) // {{{
-	{
-		if( $remoteLocation{0} != '/' ) {
-			$remoteLocation = $this->instance->getWebPath( $remoteLocation );
-		}
+        $host = $this->getHost();
+        $host->removeFile($filename);
+    } // }}}
 
-		$compress = in_array( 'zlib', $this->instance->getExtensions() );
+    function localizeFolder($remoteLocation, $localMirror) // {{{
+    {
+        if ($remoteLocation{0} != '/')
+            $remoteLocation = $this->instance->getWebPath($remoteLocation);
 
-		$name = md5(time()) . '.tar';
-		if( $compress ) {
-			$name .= '.gz';
-		}
+        $compress = in_array('zlib', $this->instance->getExtensions());
 
-		$remoteTar = $this->instance->getWebPath( $name );
-		$this->runPHP( dirname(__FILE__) . '/../scripts/package_tar.php', array($remoteTar, $remoteLocation) );
+        $name = md5(time()) . '.tar';
+        if($compress) $name .= '.gz';
 
-		$localized = $this->downloadFile( $remoteTar );
-		$this->deleteFile( $remoteTar );
+        $remoteTar = $this->instance->getWebPath($name);
+        $this->runPHP(
+            dirname(__FILE__) . '/../scripts/package_tar.php',
+            array($remoteTar, $remoteLocation)
+        );
 
-		$current = getcwd();
-		if( ! file_exists( $localMirror ) ) {
-			mkdir( $localMirror );
-		}
-		
-		chdir( $localMirror );
+        $localized = $this->downloadFile($remoteTar);
+        $this->deleteFile($remoteTar);
 
-		$eLoc = escapeshellarg( $localized );
-		if( $compress ) {
-			passthru( "tar -zxf $eLoc" );
-		} else {
-			`tar -xf $eLoc`;
-		}
+        $current = getcwd();
+        if (! file_exists($localMirror))
+            mkdir($localMirror);
+        
+        chdir($localMirror);
 
-		chdir( $current );
-	} // }}}
+        $eLoc = escapeshellarg($localized);
+        if ($compress)
+            passthru("tar -zxf $eLoc");
+        else
+            `tar -xf $eLoc`;
 
-	static function obtainRelativePathTo( $targetFolder, $originFolder ) // {{{
-	{
-		$parts = array();
-		while( ( 0 !== strpos( $targetFolder, $originFolder ) ) 
-			&& $originFolder != '/' 
-			&& $originFolder != '' ) {
-			$originFolder = dirname( $originFolder );
-			$parts [] = '..';
-		}
+        chdir($current);
+    } // }}}
 
-		$out = null;
-		if( strpos( $targetFolder, $originFolder ) === false ) {
-			// Target is under the origin
-			$relative = substr( $targetFolder, strlen( $originFolder ) );
-			$out = ltrim( implode( '/', $parts ) . '/' . ltrim( $relative, '/' ), '/' );
-		}
+    static function obtainRelativePathTo($targetFolder, $originFolder) // {{{
+    {
+        $parts = array();
+        while ((0 !== strpos($targetFolder, $originFolder)) 
+            && $originFolder != '/' && $originFolder != '') {
+            $originFolder = dirname($originFolder);
+            $parts[] = '..';
+        }
 
-		if( empty( $out ) ) {
-			$out = '.';
-		}
+        $out = null;
+        if (strpos($targetFolder, $originFolder) === false) {
+            // Target is under the origin
+            $relative = substr($targetFolder, strlen($originFolder));
+            $out = ltrim(implode('/', $parts) . '/' . ltrim($relative, '/' ), '/');
+        }
 
-		return $out;
-	} // }}}
+        if (empty($out)) $out = '.';
 
-	function mount( $target ) // {{{
-	{
-		if( $this->lastMount )
-			return false;
+        return $out;
+    } // }}}
 
-		$ftp = $this->getHost();
-		$pwd = $ftp->getPWD();
-		$toRoot = preg_replace( "/\w+/", '..', $pwd );
+    function mount($target) // {{{
+    {
+        if ($this->lastMount)
+            return false;
 
-		$this->lastMount = $target;
+        $ftp = $this->getHost();
+        $pwd = $ftp->getPWD();
+        $toRoot = preg_replace('/\w+/', '..', $pwd);
 
-		$remote = escapeshellarg( "ftp://{$this->user}:{$this->password}@{$this->host}$toRoot" );
-		$local = escapeshellarg( $target );
+        $this->lastMount = $target;
 
-		$cmd = "curlftpfs $remote $local";
-		shell_exec($cmd);
+        $remote = escapeshellarg("ftp://{$this->user}:{$this->password}@{$this->host}$toRoot");
+        $local = escapeshellarg($target);
 
-		return true;
-	} // }}}
+        $cmd = "curlftpfs $remote $local";
+        shell_exec($cmd);
 
-	function umount() // {{{
-	{
-		if( $this->lastMount ) {
-			$loc = escapeshellarg( $this->lastMount );
-			`sudo umount $loc`;
-			$this->lastMount = null;
-		}
-	} // }}}
+        return true;
+    } // }}}
 
-	function synchronize( $source, $mirror, $keepFolderName = false ) // {{{
-	{
-		$source = rtrim( $source, '/' ) . ($keepFolderName ? '' : '/');
-		$mirror = rtrim( $mirror, '/' ) . '/';
+    function umount() // {{{
+    {
+        if ($this->lastMount) {
+            $loc = escapeshellarg($this->lastMount);
+            `sudo umount $loc`;
+            $this->lastMount = null;
+        }
+    } // }}}
 
-		$source = escapeshellarg( $source );
-		$target = escapeshellarg( $mirror );
-		$tmp = escapeshellarg( RSYNC_FOLDER );
-		$cmd = "rsync -rDu --no-p --no-g --size-only --exclude .svn --exclude copyright.txt --exclude changelog.txt --temp-dir=$tmp $source $target";
-		passthru($cmd);
-	} // }}}
+    function synchronize($source, $mirror, $keepFolderName = false) // {{{
+    {
+        $source = rtrim($source, '/') . ($keepFolderName ? '' : '/');
+        $mirror = rtrim($mirror, '/') . '/';
 
-	function copyLocalFolder( $localFolder, $remoteFolder = '' ) // {{{
-	{
-		if( $remoteFolder{0} != '/' ) {
-			$remoteFolder = $this->instance->getWebPath( $remoteFolder );
-		}
+        $source = escapeshellarg($source);
+        $target = escapeshellarg($mirror);
+        $tmp = escapeshellarg(RSYNC_FOLDER);
+        $cmd = 'rsync -rDu --no-p --no-g --size-only ' .
+            '--exclude .svn --exclude copyright.txt --exclude changelog.txt ' .
+            "--temp-dir=$tmp $source $target";
+        passthru($cmd);
+    } // }}}
 
-		$compress = in_array( 'zlib', $this->instance->getExtensions() );
+    function copyLocalFolder($localFolder, $remoteFolder = '') // {{{
+    {
+        if ($remoteFolder{0} != '/')
+            $remoteFolder = $this->instance->getWebPath($remoteFolder);
 
-		$current = getcwd();
-		chdir( $localFolder );
+        $compress = in_array('zlib', $this->instance->getExtensions());
 
-		$temp = TEMP_FOLDER;
-		$name = md5(time()) . '.tar';
-		`chmod 777 db`;
-		`tar --exclude=.svn -cf $temp/$name *`;
-		if( $compress ) {
-			`gzip -5 $temp/$name`;
-			$name .= '.gz';
-		}
+        $current = getcwd();
+        chdir($localFolder);
 
-		chdir( $current );
+        $temp = TEMP_FOLDER;
+        $name = md5(time()) . '.tar';
+        `chmod 777 db`;
+        `tar --exclude=.svn -cf $temp/$name *`;
+        if ($compress) {
+            `gzip -5 $temp/$name`;
+            $name .= '.gz';
+        }
 
-		$this->uploadFile( "$temp/$name", $name );
-		unlink( "$temp/$name" );
+        chdir($current);
 
-		$this->runPHP( dirname(__FILE__) . '/../scripts/extract_tar.php', array($name, $remoteFolder) );
+        $this->uploadFile("$temp/$name", $name);
+        unlink("$temp/$name");
 
-		$this->deleteFile( $name );
-	} // }}}
+        $this->runPHP(
+            dirname(__FILE__) . '/../scripts/extract_tar.php',
+            array($name, $remoteFolder)
+        );
+
+        $this->deleteFile($name);
+    } // }}}
 }
+
+// vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

@@ -1,28 +1,28 @@
 <?php
+// Copyright (c) 2016, Avan.Tech, et. al.
 // Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-include_once dirname(__FILE__) . "/../../src/env_setup.php";
-include_once dirname(__FILE__) . "/../../src/clean.php";
-
+include_once dirname(__FILE__) . '/../../src/env_setup.php';
+include_once dirname(__FILE__) . '/../../src/clean.php';
 
 $instances = Instance::getInstances();
 
-echo "Note: Only instances running Tiki can have profiles applied.\n\n";
+info("Note: Only Tiki instances can have profiles applied.\n");
 
-$selection = selectInstances( $instances, "Which instances do you want to apply a profile on?\n" );
+$selection = selectInstances($instances, "Which instances do you want to apply a profile on?\n");
 
-if( ! $repository = readline( 'Repository: [profiles.tiki.org] ' ) ) {
-	$repository = 'profiles.tiki.org';
-}
+$repository = promptUser('Repository', 'profiles.tiki.org');
 
-while( ! $profile = trim( readline( 'Profile: ' ) ) );
+$profile = promptUser('Profile');
 
-foreach( $selection as $instance )
-{
-	info( "Applying profile on {$instance->name}" );
-	$instance->getApplication()->installProfile( $repository, $profile );
+foreach ($selection as $instance) {
+    info("Applying profile on {$instance->name}");
+
+    $instance->getApplication()->installProfile($repository, $profile);
 }
 
 perform_archive_cleanup();
+
+// vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
