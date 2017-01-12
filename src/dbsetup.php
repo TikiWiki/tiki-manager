@@ -29,6 +29,8 @@ function perform_instance_installation(Instance $instance)
 
             preg_match('/(\d+\.|trunk)/', $version->branch, $matches);
             if (array_key_exists(0, $matches)) {
+                // TODO: This is Tiki-specific, not applicable to other apps (ex: wordpress).
+                // Logic should be moved in to app-specific class.
                 if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) &&
                     ($instance->phpversion < 50500)) {
                     // Nothing to do, this match is incompatible...

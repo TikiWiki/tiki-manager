@@ -190,7 +190,12 @@ class Application_Wordpress extends Application
             return;
         }
 
-        // TODO : Handle fallback
+        // TODO: Handle fallback
+    }
+
+    function performActualUpgrade(Version $version, $abort_on_conflict)
+    {
+        // TODO: implement...
     }
 
     function getFileLocations()

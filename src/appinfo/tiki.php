@@ -305,7 +305,7 @@ class Application_Tiki extends Application
                         "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
                         'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
                     ));
-                    // FIXME: Again, not sure what to do with the output form the commands
+                    // FIXME: Again, not sure what to do with the output from the commands
                     return;
                 }
 
@@ -359,7 +359,52 @@ class Application_Tiki extends Application
             return;
         }
 
-        // TODO : Handle fallback
+        // TODO: Handle fallback
+    } // }}}
+
+    function performActualUpgrade(Version $version, $abort_on_conflict) // {{{
+    {
+        switch ($this->getInstallType()) {
+        case 'svn':
+        case 'tarball':
+            $access = $this->instance->getBestAccess('scripting');
+
+            if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
+                $access->shellExec(
+                    "rm -Rf " . escapeshellarg( $this->instance->getWebPath('temp/cache'))
+                );
+
+                $svn = new RC_SVN(SVN_TIKIWIKI_URI);
+                $svn->updateInstanceTo($this->instance, $version->branch);
+                $access->shellExec('chmod 0777 temp temp/cache');
+
+                if ($this->instance->isModernTiki()) {
+
+                    info('Updating svn, composer, perms & database...');
+
+                    $access->chdir($this->instance->webroot);
+
+                    $ret = $access->shellExec(array(
+                        'sh doc/devtools/svnup.sh', // does svn up, composer, perms & database
+                        "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
+                        'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
+                    ));
+                }
+
+                info('Updating database schema...');
+
+                $access->runPHP(
+                    dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
+                    array($this->instance->webroot)
+                );
+
+                info('Fixing permissions...');
+
+                $this->fixPermissions();
+                $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
+                return;
+            }
+        }
     } // }}}
 
     private function formatBranch($version) // {{{

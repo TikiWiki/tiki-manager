@@ -347,6 +347,14 @@ function query($query, $params = null) // {{{
             $query = str_replace($key, 'NULL', $query);
         elseif (is_int($value))
             $query = str_replace($key, (int) $value, $query);
+        elseif (is_array($value)) {
+            error("Unsupported query parameter type: array\n");
+            printf("Query\n\"%s\"\nParamters:\n", $query);
+            var_dump($params);
+            printf("Backtrace:\n");
+            debug_print_backtrace();
+            exit(1);
+        }
         else
             $query = str_replace($key, "'$value'", $query);
     }

@@ -306,8 +306,8 @@ class Instance
         if (empty($this->access))
             $this->access = Access::getAccessFor($this);
         
-        // TODO : Add intelligence as more access types get added
-        // types :
+        // TODO: Add intelligence as more access types get added
+        // types:
         //      scripting
         //      filetransfer
         return reset($this->access);
@@ -334,6 +334,16 @@ class Instance
     function getWorkPath($relativePath) // {{{
     {
         return "{$this->tempdir}/$relativePath";
+    } // }}}
+
+    function createWorkPath($access = null) // {{{
+    {
+        if (is_null($access))
+            $access = $this->getBestAccess('scripting');
+
+        echo $access->shellExec(
+            "mkdir -p {$this->tempdir}"
+        );
     } // }}}
 
     function detectPHP() // {{{
@@ -441,8 +451,11 @@ class Instance
         $error_flag = 0;
 
         $access = $this->getBestAccess('scripting');
+        $this->createWorkPath($access);
+
         if ($this->getApplication() == null)
             die(error('No application installed for this instance.'));
+
         $locations = $this->getApplication()->getFileLocations();
         $locations = array_merge($locations, $this->getExtraBackups());
 
@@ -515,7 +528,7 @@ class Instance
 
     function restore($src_app, $archive, $clone = false)
     {
-        info(sprintf("Uploading archive : %s", basename($archive)));
+        info(sprintf("Uploading : %s", basename($archive)));
 
         $base = basename($archive);
         list($basetardir, $trash) = explode('_', $base, 2);

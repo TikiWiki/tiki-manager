@@ -55,6 +55,8 @@ abstract class Application
 
     abstract function performActualUpdate(Version $version);
 
+    abstract function performActualUpgrade(Version $version, $abort_on_conflict);
+
     abstract function extractTo(Version $version, $folder);
 
     abstract function getFileLocations();
@@ -130,6 +132,11 @@ abstract class Application
             'mod' => $modF,
             'del' => $delF,
         );
+    } // }}}
+
+    function performUpgrade(Instance $instance, $version, $abort_on_conflict = true) // {{{
+    {
+        $this->performActualUpgrade($version, $abort_on_conflict);
     } // }}}
 
     function registerCurrentInstallation() // {{{
