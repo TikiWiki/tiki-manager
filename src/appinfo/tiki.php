@@ -393,9 +393,9 @@ class Application_Tiki extends Application
 
                 info('Updating database schema...');
 
-                $access->runPHP(
-                    dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                    array($this->instance->webroot)
+                $access->chdir($this->instance->webroot);
+                $access->shellExec(
+                    "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
                 );
 
                 info('Fixing permissions...');
