@@ -103,6 +103,6 @@ clean:
 		while [ "$$answer" != "yes" -a "$$answer" != "no" ]; do\
 			read -p "Are you sure (yes, no)? " answer;\
 		done;\
-	if [ "$$answer" == "yes" ]; then\
+	if [ "$$answer" = "yes" ]; then\
 		rm -rf cache/* backup/* logs/* data/trim.db;\
 	fi
