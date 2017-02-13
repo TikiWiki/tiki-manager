@@ -557,9 +557,9 @@ class Instance
             list($hash, $location) = explode('    ', $line, 2);
             $base = basename($location);
 
-            if ($clone)
+            if ($clone) {
                 $location = $this->webroot;
-            else {
+            } else {
                 echo "Previous host used: $location\n";
                 $location = promptUser('New location', $this->webroot);
             }
