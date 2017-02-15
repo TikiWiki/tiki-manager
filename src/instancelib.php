@@ -507,7 +507,7 @@ class Instance
         $return_val = -1;
         $tar = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
 
-        $command = 'nice -n 19 tar -cjf ' . escapeshellarg($tar) . " {$backup_directory}";
+        $command = 'nice -n 19 tar -cjf ' . escapeshellarg($tar) . ' ' . escapeshellarg($backup_directory);
         exec($command, $output, $return_var);
 
         $error_flag += $return_var;

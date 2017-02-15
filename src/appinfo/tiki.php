@@ -634,7 +634,7 @@ LOCAL
             $localName = $access->downloadFile($remoteFile);
             $access->deleteFile($remoteFile);
 
-            `zcat $localName > $target`;
+            `zcat $localName > '$target'`;
             unlink($localName);
         }
         else {
