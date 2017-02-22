@@ -662,8 +662,12 @@ LOCAL
         $path = $this->instance->getWebPath('templates_c/*[!index].php');
 
         // FIXME: Not FTP compatible
-        if (($access = $this->instance->getBestAccess('scripting')) instanceof ShellPrompt)
-            $access->shellExec("rm $path");
+        if (
+        		($access = $this->instance->getBestAccess('scripting')) instanceof ShellPrompt
+        		&& strlen($path) > 5 // Be especially careful not to remove '/' in case we get an unexpected value.
+        		) {
+            $access->shellExec("rm --force $path"); // --force ignores prompting if files are write-protected and will silence the warning in case no file matches.
+        }
     }
 }
 
