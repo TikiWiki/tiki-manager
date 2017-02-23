@@ -662,7 +662,13 @@ LOCAL
         $access = $this->instance->getBestAccess('scripting');
         // FIXME: Not FTP compatible
         if ($access instanceof ShellPrompt) {
-	        $path = $this->instance->getWebPath('templates_c/*[!index].php');
+        	// templates_c/ moved to temp/ in Tiki 17.
+	        if (is_dir($this->instance->getWebPath('templates_c/'))) {
+		        $path = $this->instance->getWebPath('templates_c/*[!index].php');
+	        } else {
+		        $path = $this->instance->getWebPath('temp/templates_c/*[!index].php');
+	        }
+	        
         	if (strlen($path) < 5) {
         		// Be especially careful not to remove '/' in case getWebPath() returns an unexpected value.
         		throw new UnexpectedValueException();
