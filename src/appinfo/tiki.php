@@ -659,13 +659,14 @@ LOCAL
 
     function removeTemporaryFiles()
     {
-        $path = $this->instance->getWebPath('templates_c/*[!index].php');
-
+        $access = $this->instance->getBestAccess('scripting');
         // FIXME: Not FTP compatible
-        if (
-        		($access = $this->instance->getBestAccess('scripting')) instanceof ShellPrompt
-        		&& strlen($path) > 5 // Be especially careful not to remove '/' in case we get an unexpected value.
-        		) {
+        if ($access instanceof ShellPrompt) {
+	        $path = $this->instance->getWebPath('templates_c/*[!index].php');
+        	if (strlen($path) < 5) {
+        		// Be especially careful not to remove '/' in case getWebPath() returns an unexpected value.
+        		throw new UnexpectedValueException();
+        	}
             $access->shellExec("rm --force $path"); // --force ignores prompting if files are write-protected and will silence the warning in case no file matches.
         }
     }
