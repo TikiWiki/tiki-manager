@@ -36,18 +36,18 @@ echo "This will enable the TRIM administration web panel.\n";
 if ('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
 
 $ret_var = -1;
-$out = '/etc/httpd/';
+$out = '/etc/httpd/'; // What does this do?
 $cmd = 'dirname $(find /etc/httpd -name httpd.conf)';
 exec($cmd, $out, $ret_var);
 
-$d_httpd = promptUser('Apache httpd.conf directory', $out[0]);
-$base = dirname($d_httpd);
+$httpdConfDirectory = promptUser('Apache httpd.conf directory', $out[0]);
+$base = dirname($httpdConfDirectory);
 $cmd = 'dirname $(find '. $base .
     ' -name httpd.conf -exec grep ^Include {} \; | ' .
     'cut -d' . "' '" . ' -f2) | sort | head -n1';
 exec($cmd, $out, $ret_var);
 
-$d_httpd_optional = promptUser(
+$httpdExtraConfigurationFilesDirectory = promptUser(
     'Apache httpd.conf IncludeOptional directory', "{$base}/{$out[1]}");
 
 //$folder = promptUser('TRIM location', '/var/www/webtrim');
@@ -79,7 +79,7 @@ CONFIG
 
 $web = realpath(dirname(__FILE__) . '/../www');
 
-file_put_contents("{$d_httpd_optional}/webtrim.conf", <<<CONFIG
+file_put_contents($httpdExtraConfigurationFilesDirectory . "/webtrim.conf", <<<CONFIG
 Alias /webtrim $web
 
 <Directory $web/>
