@@ -48,11 +48,11 @@ $cmd = 'dirname $(find '. $base .
 exec($cmd, $out, $ret_var);
 
 $httpdExtraConfigurationFilesDirectory = promptUser(
-    'Apache httpd.conf IncludeOptional directory', "{$base}/{$out[1]}");
+    'Apache IncludeOptional (extra configuration files) directory', "{$base}/{$out[1]}");
 
 //$folder = promptUser('TRIM location', '/var/www/webtrim');
 
-$user = $pass = '';
+$pass = '';
 $user = promptUser('Desired username');
 
 while (empty($pass)) {
@@ -63,6 +63,7 @@ while (empty($pass)) {
 $restrict = promptUser('Restrict use to localhost', 'no');
 $restrict = (strtolower($restrict{0}) == 'n') ? 'false' : 'true';
 
+// Why would sudo be used if we are root?
 $sudo = promptUser('Use sudo for permission changing commands', 'no');
 $prefix = (strtolower($sudo{0}) == 'y') ? 'sudo' : '';
 
