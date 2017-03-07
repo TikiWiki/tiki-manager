@@ -35,17 +35,17 @@ INFO;
 echo "This will enable the TRIM administration web panel.\n";
 if ('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
 
-$ret_var = -1;
 $out = '/etc/httpd/'; // What does this do?
-$cmd = 'dirname $(find /etc/httpd -name httpd.conf)';
-exec($cmd, $out, $ret_var);
 
+// Should we not simply prompt for the directory of extra configuration files? Chealer 2017-03-07
+$cmd = 'dirname $(find /etc/httpd -name httpd.conf)';
+exec($cmd, $out);
 $httpdConfDirectory = promptUser('Apache httpd.conf directory', $out[0]);
 $base = dirname($httpdConfDirectory);
 $cmd = 'dirname $(find '. $base .
     ' -name httpd.conf -exec grep ^Include {} \; | ' .
     'cut -d' . "' '" . ' -f2) | sort | head -n1';
-exec($cmd, $out, $ret_var);
+exec($cmd, $out);
 
 $httpdExtraConfigurationFilesDirectory = promptUser(
     'Apache IncludeOptional (extra configuration files) directory', "{$base}/{$out[1]}");
