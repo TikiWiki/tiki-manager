@@ -82,16 +82,8 @@ copysshkey:
 	@$(PHP) scripts/copysshkey.php
 
 clone:
+# The argument ("clone") is ignored since 2017-03-24. Could be removed or replaced.
 	@$(PHP) scripts/clone.php clone
-
-mirror:
-	@$(PHP) scripts/clone.php mirror
-
-cloneandupdate:
-	@$(PHP) scripts/clone.php update
-
-cloneandupgrade:
-	@$(PHP) scripts/clone.php upgrade
 
 debug:
 	@$(PHP) scripts/debug.php

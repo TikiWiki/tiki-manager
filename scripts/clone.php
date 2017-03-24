@@ -7,25 +7,9 @@
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/dbsetup.php';
 
-define('ARG_MODE_CLONE',
-    $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'clone');
-define('ARG_MODE_CLONE_UPDATE',
-    $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'update');
-define('ARG_MODE_CLONE_UPGRADE',
-    $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'upgrade');
-define('ARG_MODE_MIRROR',
-    $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'mirror');
-
-if (! ARG_MODE_CLONE && ! ARG_MODE_CLONE_UPDATE &&
-    ! ARG_MODE_CLONE_UPGRADE && ! ARG_MODE_MIRROR ) {
-    echo color("No mode supplied (clone, update, upgrade, or mirror).\n", 'red');
-    exit(1);
-}
-
-if (ARG_MODE_MIRROR || ARG_MODE_CLONE_UPGRADE) {
-    echo color("Clone-and-update not supported (yet).\n", 'red');
-    exit(1);
-}
+/*
+ * TODO: Allow defining whether the data, the code or both should be copied. Since there is possibly no safe default which is sure not to go against the user's expectation, there should be a mandatory argument ("code", "data" or "both"). 
+ */
 
 $instances = Instance::getInstances();
 
