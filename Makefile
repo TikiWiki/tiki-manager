@@ -9,10 +9,10 @@ BASH = bash
 # No changes should be required from here
 default:
 	@echo "Valid options are:"
-	@echo "  access, backup, blank, clean, check, clone, cloneandupdate,"
-	@echo "  cloneandupgrade, convert, copysshkey, delete, detect, enablewww,"
-	@echo "  fix, instance, mirror, profile, report, restore, update, upgrade,"
-	@echo "  verify, viewdb, watch"
+	@echo "  access, backup, blank, clean, check, clone, cloneandupgrade,"
+	@echo "  convert, copysshkey, delete, detect, enablewww, fix, instance,"
+	@echo "  profile, report, restore, update, upgrade, verify, viewdb,"
+	@echo "  watch"
 
 help: default
 
@@ -82,8 +82,10 @@ copysshkey:
 	@$(PHP) scripts/copysshkey.php
 
 clone:
-# The argument ("clone") is ignored since 2017-03-24. Could be removed or replaced.
 	@$(PHP) scripts/clone.php clone
+
+cloneandupgrade:
+	@$(PHP) scripts/clone.php upgrade
 
 debug:
 	@$(PHP) scripts/debug.php
