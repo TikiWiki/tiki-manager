@@ -503,7 +503,8 @@ class Application_Tiki extends Application
             array($this->instance->webroot)
         );
 
-        $folders = array($this->instance->webroot);
+        $folders['app'] = array($this->instance->webroot);
+
         foreach (explode("\n", $out ) as $line) {
             $line = trim($line);
             if (empty($line)) continue;
@@ -514,7 +515,7 @@ class Application_Tiki extends Application
                 $line = "{$this->instance->webroot}/$line";
 
             if (! empty($line))
-                $folders[] = $line;
+                $folders['data'][] = $line;
         }
 
         return $folders;
@@ -673,7 +674,8 @@ LOCAL
         		// Be especially careful not to remove '/' in case getWebPath() returns an unexpected value.
         		throw new UnexpectedValueException();
         	}
-            $access->shellExec("rm --force $path"); // --force ignores prompting if files are write-protected and will silence the warning in case no file matches.
+            // --force ignores prompting if files are write-protected and will silence the warning in case no file matches.
+            $access->shellExec("rm --force $path");
         }
     }
 }

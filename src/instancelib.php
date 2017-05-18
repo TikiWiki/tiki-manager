@@ -457,7 +457,7 @@ class Instance
             die(error('No application installed for this instance.'));
 
         $locations = $this->getApplication()->getFileLocations();
-        $locations = array_merge($locations, $this->getExtraBackups());
+        $locations['data'] = array_merge($locations['data'], $this->getExtraBackups());
 
         $backup_directory = "{$this->id}-{$this->name}";
         $approot = BACKUP_FOLDER . "/$backup_directory";
@@ -472,11 +472,13 @@ class Instance
 
         // Bring all remote files locally
         info('Downloading files locally...');
-        foreach ($locations as $remote) {
-            $hash = md5($remote);
-            $locmirror = "{$approot}/{$hash}";
-            $error_flag += $access->localizeFolder($remote, $locmirror);
-            `echo "$hash    $remote" >> $approot/manifest.txt`;
+        foreach ($locations as $type => $remotes) {
+            foreach ($remotes as $remote) {
+                $hash = md5($remote);
+                $locmirror = "{$approot}/{$hash}";
+                $error_flag += $access->localizeFolder($remote, $locmirror);
+                `echo "$hash    $type    $remote" >> $approot/manifest.txt`;
+            }
         }
 
         if ($error_flag) {
@@ -554,8 +556,9 @@ class Instance
             $line = trim($line);
             if (empty($line)) continue;
 
-            list($hash, $location) = explode('    ', $line, 2);
-            $base = basename($location);
+            list($hash, $type, $location) = explode('    ', $line, 3);
+            $src_path = $location;
+            $src_base = basename($location);
 
             if ($clone) {
                 $location = $this->webroot;
@@ -564,14 +567,15 @@ class Instance
                 $location = promptUser('New location', $this->webroot);
             }
 
-            info('Copying files...');
+            $dst_path = ($type == 'app') ? $location : $src_path;
+            info(sprintf('Copying %s files (%s -> %s)...', $type, $src_path, $dst_path));
 
             $out = $access->shellExec(
                 sprintf('mkdir -p %s',
-                    escapeshellarg(rtrim($location, '/'))),
+                    escapeshellarg(rtrim($dst_path, '/'))),
                 sprintf('rsync -a %s %s --exclude db/local.php',
-                    escapeshellarg($this->getWorkPath("restore/{$basetardir}/$hash/$base/")),
-                    escapeshellarg(rtrim($location, '/') . '/'))
+                    escapeshellarg($this->getWorkPath("restore/{$basetardir}/$hash/$src_base/")),
+                    escapeshellarg(rtrim($dst_path, '/') . '/'))
             );
 
             trim_output("REMOTE $out");

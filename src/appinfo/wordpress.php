@@ -201,7 +201,7 @@ class Application_Wordpress extends Application
     function getFileLocations()
     {
         $access = $this->instance->getBestAccess('scripting');
-        $folders = array($this->instance->webroot);
+        $folders['app'] = array($this->instance->webroot);
         
         return $folders;
     }
