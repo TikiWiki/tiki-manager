@@ -8,9 +8,9 @@ include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/dbsetup.php';
 
 define('ARG_MODE_CLONE',
-    $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'clone');
+    $_SERVER['argc'] >= 2 && $_SERVER['argv'][1] == 'clone');
 define('ARG_MODE_CLONE_UPGRADE',
-    $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'upgrade');
+    $_SERVER['argc'] >= 2 && $_SERVER['argv'][1] == 'upgrade');
 
 // TODO: This function is mostly a copy of the code found in src/dbsetup.php:
 // perform_instance_installation().  It should be called from an app-aware method
@@ -75,12 +75,8 @@ if (! isset($_SERVER['argv'][2])) {
     $src_selection = selectInstances(
         $instances, "Select the source instance:\n" );
 }
-else {
-    $src_selection = getEntries(
-        $instances,
-        implode(' ', array_slice($_SERVER['argv'], 2))
-    );
-}
+else
+    $src_selection = getEntries($instances, $_SERVER['argv'][2]);
 
 $instances_pruned = array();
 foreach ($instances as $instance) {
@@ -101,21 +97,14 @@ if (! isset($_SERVER['argv'][3])) {
     $dst_selection = selectInstances(
         $instances, "Select the destination instance(s):\n" );
 }
-else {
-    $dst_selection = getEntries(
-        $instances,
-        implode(' ', array_slice($_SERVER['argv'], 3))
-    );
-}
+else
+    $dst_selection = getEntries($instances, $_SERVER['argv']);
 
 if (ARG_MODE_CLONE_UPGRADE) {
-    if (! isset($_SERVER['argv'][3])) {
+    if (! isset($_SERVER['argv'][4]))
         $upgrade_version = getUpgradeVersion($src_selection[0]);
-    }
-    else {
-        // TODO: This should be sanity checked.
-        $upgrade_version = buildFake('svn', $_SERVER['argv'][3]);
-    }
+    else
+        $upgrade_version = Version::buildFake('svn', $_SERVER['argv'][4]);
 }
 
 info("Creating snapshot of: {$src_selection[0]->name}");
