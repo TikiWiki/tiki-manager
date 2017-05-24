@@ -547,6 +547,10 @@ LOCAL
 );
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
+        $access->shellExec("chmod 0664 {$this->instance->webroot}/db/local.php");
+        // TODO: Hard-coding: 'apache:apache'
+        // TODO: File ownership under the webroot should be configurable per instance.
+        $access->shellExec("chown apache:apache {$this->instance->webroot}/db/local.php");
 
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
 
