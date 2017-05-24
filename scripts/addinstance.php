@@ -30,7 +30,7 @@ if ($type != 'local') {
     $d_name = $host;
 }
 else if ($type == 'local') {
-    $user = 'trim';
+    $user = posix_getpwuid(posix_geteuid())['name'];
     $pass = '';
     $host = 'localhost';
     $port = 0;
@@ -87,11 +87,11 @@ info("You are running : $d_linux");
 switch ($d_linux) {
 case "ClearOS":
     $d_webroot = ($user == 'root' || $user == 'apache') ?
-        "/var/www/virtual/$host/" : "/home/$user/public_html";
+        "/var/www/virtual/$host/html/" : "/home/$user/public_html/";
     break;
 default:
     $d_webroot = ($user == 'root' || $user == 'apache') ?
-        '/var/www/html/' : "/home/$user/public_html";
+        '/var/www/html/' : "/home/$user/public_html/";
 }
 
 if ($type != 'ftp') {
