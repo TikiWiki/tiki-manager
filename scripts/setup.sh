@@ -26,6 +26,9 @@ elif [ -f /etc/redhat-release ]; then
 elif [ -f /etc/gentoo-release ]; then
     AUSER=apache
     AGROUP=apache
+elif [ -f /etc/clearos-release ]; then
+    AUSER=apache
+    AGROUP=apache
 else
     UNAME=`uname | cut -c 1-6`
     if [ "$UNAME" = "CYGWIN" ]; then
