@@ -10,7 +10,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET')
 if ($root = $_SERVER['argv'][1])
     chdir($root);
 
-if (file_exists('installer/shell.php')) {
+if (file_exists('installer/shell.php') && !file_exists('console.php')) {
     $local_php = 'db/local.php';
 
     require_once('installer/installlib.php');
