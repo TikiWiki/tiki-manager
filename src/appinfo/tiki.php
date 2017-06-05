@@ -270,52 +270,26 @@ class Application_Tiki extends Application
             $access = $this->instance->getBestAccess('scripting');
 
             if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
-                if ($this->instance->isModernTiki()) {
 
-                    info('Updating svn, composer, perms & database...');
-
-                    $access->chdir($this->instance->webroot);
-                    $verification = $access->shellExec(
-                        array(
-                            "cd {$this->instance->webroot} && " .
-                            'svn merge --dry-run --revision BASE:HEAD . --allow-mixed-revisions'
-                        ), true
-                    );
-
-                    // [root@trimserver trimlatest]# svn merge --dry-run --revision BASE:HEAD .   --allow-mixed-revisions
-                    // --- Merging r58507 into '.':
-                    // U    Makefile
-                    // [root@trimserver trimlatest]# nano Makefile
-                    // [root@trimserver trimlatest]# svn merge --dry-run --revision BASE:HEAD .   --allow-mixed-revisions
-                    // --- Merging r58507 into '.':
-                    // C    Makefile
-                    // Summary of conflicts:
-                    //  Text conflicts: 1
-                    // [root@trimserver trimlatest]#
-
-                    if (strlen(trim($verification)) > 0 && preg_match('/conflicts:/i', $verification)) {
-                            echo "SVN MERGE: $verification\n";
-                            warning('It seems there are some conflicts, you may want to review them.');
-                            if ('yes' == strtolower(
-                               promptUser('Do you want to abort?', '', array('yes', 'no')))) exit;
-                    }
-
-                    $ret = $access->shellExec(array(
-                        'sh doc/devtools/svnup.sh', // does svn up, composer, perms & database
-                        "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
-                        'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
-                    ));
-                    // FIXME: Again, not sure what to do with the output from the commands
-                    return;
-                }
+                info('Updating svn...');
 
                 $access->shellExec(
-                    "rm -Rf " . escapeshellarg( $this->instance->getWebPath('temp/cache'))
+                  "rm -Rf " . escapeshellarg( $this->instance->getWebPath('temp/cache'))
                 );
 
                 $svn = new RC_SVN(SVN_TIKIWIKI_URI);
                 $svn->updateInstanceTo($this->instance, $version->branch);
                 $access->shellExec('chmod 0777 temp temp/cache');
+
+                if ($this->instance->isModernTiki()) {
+                    info('Updating composer');
+
+                    $ret = $access->shellExec(array(
+                      "sh setup.sh composer",
+                      "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
+                    ));
+                }
+
             }
             elseif ($access instanceof Mountable) {
                 $folder = cache_folder($this, $version);
@@ -345,7 +319,7 @@ class Application_Tiki extends Application
             $cvs = new RC_CVS('pserver', 'anonymous', 'tikiwiki.cvs.sourceforge.net', '/cvsroot/tikiwiki', 'tikiwiki');
             $cvs->updateInstanceTo($this->instance, $version->branch);
 
-            info('Updating database schema.');
+            info('Updating database schema...');
 
             $access->runPHP(
                 dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
@@ -370,6 +344,9 @@ class Application_Tiki extends Application
             $access = $this->instance->getBestAccess('scripting');
 
             if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
+
+                info('Upgrading svn...');
+
                 $access->shellExec(
                     "rm -Rf " . escapeshellarg( $this->instance->getWebPath('temp/cache'))
                 );
@@ -379,23 +356,19 @@ class Application_Tiki extends Application
                 $access->shellExec('chmod 0777 temp temp/cache');
 
                 if ($this->instance->isModernTiki()) {
-
-                    info('Updating svn, composer, perms & database...');
-
-                    $access->chdir($this->instance->webroot);
+                    info('Updating composer...');
 
                     $ret = $access->shellExec(array(
-                        'sh doc/devtools/svnup.sh', // does svn up, composer, perms & database
+                        "sh setup.sh composer",
                         "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
-                        'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
                     ));
                 }
 
                 info('Updating database schema...');
 
-                $access->chdir($this->instance->webroot);
-                $access->shellExec(
-                    "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
+                $access->runPHP(
+                  dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
+                  array($this->instance->webroot)
                 );
 
                 info('Fixing permissions...');
