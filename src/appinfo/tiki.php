@@ -21,28 +21,34 @@ class Application_Tiki extends Application
     function getVersions() // {{{
     {
         $versions = array();
-        $versions[] = 'svn:trunk';
-        $versions[] = 'cvs:REL-1-9-11';
         $versions[] = 'cvs:BRANCH-1-9';
+        $versions[] = 'cvs:REL-1-9-11';
 
         $base = SVN_TIKIWIKI_URI;
+        $versionsTemp = array();
         foreach (explode("\n", `svn ls $base/tags`) as $line) {
             $line = trim($line);
             if (empty($line)) continue;
 
             if (substr($line, -1) == '/' && ctype_digit($line{0}))
-                $versions[] = 'svn:tags/' . substr($line, 0, -1);
+                $versionsTemp[] = 'svn:tags/' . substr($line, 0, -1);
         }
+        sort($versionsTemp, SORT_NATURAL);
+        $versions = array_merge($versions, $versionsTemp);
 
+        $versionsTemp = array();
         foreach (explode("\n", `svn ls $base/branches`) as $line) {
             $line = trim($line);
             if (empty($line)) continue;
 
             if (substr($line, -1) == '/' && ctype_digit($line{0}))
-                $versions[] = 'svn:branches/' . substr($line, 0, -1);
+                $versionsTemp[] = 'svn:branches/' . substr($line, 0, -1);
         }
+        sort($versionsTemp, SORT_NATURAL);
+        $versions = array_merge($versions, $versionsTemp);
 
-        sort($versions, SORT_NATURAL);
+        // Trunk as last option
+        $versions[] = 'svn:trunk';
 
         $versions_sorted = array();
         foreach ($versions as $version) {
