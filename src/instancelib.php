@@ -36,7 +36,7 @@ INNER JOIN (
         instance_id
     ) t ON t.version = version.version_id
 WHERE
-    type = 'cvs' OR type = 'svn' OR type = 'tarball'
+    type = 'svn' OR type = 'tarball'
 ;");
 
 define('SQL_SELECT_LATEST_VERSION', "

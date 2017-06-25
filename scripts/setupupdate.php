@@ -24,7 +24,7 @@ $entry = sprintf(
     $minute, $hour, php(), $path, $which
 );
 
-warning("NOTE: Only CVS and SVN instances can be updated.\n");
+warning("NOTE: Only SVN instances can be updated.\n");
 echo "Which instances do you want to update?\n";
 
 $instances = Instance::getUpdatableInstances();

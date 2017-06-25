@@ -113,7 +113,7 @@ class Application_Wordpress extends Application
 
         $branch = '';
         while (empty($branch)) {
-            $branch = readline("No version found. Which tag should be used? (Ex.: (CVS) REL-1-9-10 or (Subversion) branches/1.10) ");
+            $branch = readline("No version found. Which tag should be used? (Ex.: (Subversion) branches/1.10) ");
         }
 
         return $this->branch = $branch;

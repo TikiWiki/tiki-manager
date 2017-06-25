@@ -5,7 +5,6 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 define('SVN_TIKIWIKI_URI', 'https://svn.code.sf.net/p/tikiwiki/code');
-define('CVS_TIKIWIKI_URI', ':pserver:anonymous@tikiwiki.cvs.sourceforge.net:/cvsroot/tikiwiki');
 
 class Application_Tiki extends Application
 {
@@ -21,8 +20,6 @@ class Application_Tiki extends Application
     function getVersions() // {{{
     {
         $versions = array();
-        $versions[] = 'cvs:BRANCH-1-9';
-        $versions[] = 'cvs:REL-1-9-11';
 
         $base = SVN_TIKIWIKI_URI;
         $versionsTemp = array();
@@ -76,9 +73,7 @@ class Application_Tiki extends Application
             return $this->installType;
 
         $access = $this->instance->getBestAccess('filetransfer');
-        if ($access->fileExists($this->instance->getWebPath('CVS')))
-            return $this->installType = 'cvs';
-        elseif ($access->fileExists($this->instance->getWebPath('.svn/entries')))
+        if ($access->fileExists($this->instance->getWebPath('.svn/entries')))
             return $this->installType = 'svn';
         else
             return $this->installType = 'tarball';
@@ -173,7 +168,7 @@ class Application_Tiki extends Application
         else {
             $branch = '';
             while (empty($branch))
-                $branch = readline("No version found. Which tag should be used? (Ex.: (CVS) REL-1-9-10 or (Subversion) branches/1.10)");
+                $branch = readline("No version found. Which tag should be used? (Ex.: (Subversion) branches/1.10) ");
         }
 
         return $this->branch = $branch;
@@ -203,26 +198,6 @@ class Application_Tiki extends Application
             `svn export $branch $local`;
 
             return $local;
-        } elseif ($version->type == 'cvs') {
-            $cur = `pwd`;
-            chdir(TEMP_FOLDER);
-
-            $folder = md5($filename);
-            mkdir($folder);
-            $path = "/$filename";
-            $path = str_replace('/./', '/', $path);
-            $epath = escapeshellarg($path);
-
-            $uri = CVS_TIKIWIKI_URI;
-            `cvs -z3 -d{$uri} co -r {$version->branch} -d {$folder} tikiwiki{$epath} 2>> logs/trim.output`;
-
-            rename("$folder$path", $local);
-
-            `rm -Rf $folder 2>> logs/trim.output`;
-
-            chdir(trim($cur));
-            
-            return $local;
         }
     } // }}}
 
@@ -234,37 +209,15 @@ class Application_Tiki extends Application
             $branch = escapeshellarg($branch);
             return "svn co $branch $folder";
         }
-        elseif ($version->type == 'cvs') {
-            $base = basename($folder);
-            $uri = CVS_TIKIWIKI_URI;
-            return "cd $folder; cd ..;cvs -z3 -d{$uri} co -r {$version->branch} -d {$base} tikiwiki 2>> logs/trim.output";
-        }
     } // }}}
 
     function extractTo(Version $version, $folder) // {{{
     {
-        if ($version->type == 'svn' || $version->type == 'tarball') {
-            if (file_exists($folder))
-                `svn up --non-interactive $folder`;
-            else {
-                $command = $this->getExtractCommand($version, $folder);
-                `$command`;
-            }
-        }
-        elseif ($version->type == 'cvs') {
-            $cur = `pwd`;
-
-            if (file_exists($folder)) {
-                chdir($folder);
-                `cvs up -d`;
-            }
-            else {
-                chdir($folder);
-                $command = $this->getExtractCommand($version, $folder);
-                `$command`;
-            }
-
-            chdir(trim($cur));
+        if (file_exists($folder))
+            `svn up --non-interactive $folder`;
+        else {
+            $command = $this->getExtractCommand($version, $folder);
+            `$command`;
         }
     } // }}}
 
@@ -302,28 +255,6 @@ class Application_Tiki extends Application
                 $this->extractTo($version, $folder);
                 $access->copyLocalFolder($folder);
             }
-
-            info('Updating database schema...');
-
-            $access->runPHP(
-                dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                array($this->instance->webroot)
-            );
-
-            info('Fixing permissions...');
-
-            $this->fixPermissions();
-            $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
-            return;
-
-        case 'cvs':
-            $access = $this->instance->getBestAccess('scripting');
-
-            if (! $access instanceof ShellPrompt || ! $access->hasExecutable('cvs'))
-                break;
-
-            $cvs = new RC_CVS('pserver', 'anonymous', 'tikiwiki.cvs.sourceforge.net', '/cvsroot/tikiwiki', 'tikiwiki');
-            $cvs->updateInstanceTo($this->instance, $version->branch);
 
             info('Updating database schema...');
 
@@ -390,8 +321,6 @@ class Application_Tiki extends Application
     {
         if (substr($version, 0, 4) == '1.9.')
             return 'REL-' . str_replace('.', '-', $version);
-        elseif ($this->getInstallType() == 'cvs')
-            return 'BRANCH-1-10';
         elseif ($this->getInstallType() == 'svn')
             return "tags/$version";
         elseif ($this->getInstallType() == 'tarball')

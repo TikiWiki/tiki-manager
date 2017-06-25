@@ -16,7 +16,7 @@ $instances = Instance::getUpdatableInstances();
 if (ARG_AUTO)
     $selection = getEntries($instances, implode(' ', array_slice($_SERVER['argv'], 2 )));
 else {
-    warning("\nWARNING: Only CVS and SVN instances can be updated.\n");
+    warning("\nWARNING: Only SVN instances can be updated.\n");
     echo "Which instances do you want to update?\n";
 
     printInstances($instances);

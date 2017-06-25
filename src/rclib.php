@@ -95,37 +95,4 @@ class RC_SVN
     }
 }
 
-class RC_CVS
-{
-    private $protocol;
-    private $user;
-    private $host;
-    private $root;
-    private $module;
-
-    function __construct($protocol, $user, $host, $root, $module)
-    {
-        $this->protocol = $protocol;
-        $this->user = $user;
-        $this->host = $host;
-        $this->root = $root;
-        $this->module = $module;
-    }
-
-    function updateInstanceTo(Instance $instance, $tag)
-    {
-        $access = $instance->getBestAccess('scripting');
-        if (! $access instanceof ShellPrompt) return false;
-        
-        info('Performing CVS update on remote host.');
-
-        $rep = escapeshellarg(":{$this->protocol}:{$this->user}@{$this->host}:{$this->root}");
-        $access->chdir($instance->webroot);
-        $access->setenv('CVS_RSH', 'ssh');
-        $access->shellExec( 
-            "cvs -d$rep up -d -r " . escapeshellarg($tag)
-        );
-    }
-}
-
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
