@@ -119,6 +119,7 @@ $app = $src_selection[0]->getApplication();
 
 foreach ($dst_selection as $dst_instance) {
     info("Initiating clone of {$src_selection[0]->name} to {$dst_instance->name}");
+    $dst_instance->lock();
     $dst_instance->restore($src_selection[0]->app, $archive, true);
 
     if (ARG_MODE_CLONE_UPGRADE) {
@@ -126,6 +127,7 @@ foreach ($dst_selection as $dst_instance) {
         $app = $dst_instance->getApplication();
         $app->performUpgrade($dst_instance, $upgrade_version, false);
     }
+    $dst_instance->unlock();
 }
 
 exit(0);
