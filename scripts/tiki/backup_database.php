@@ -29,10 +29,22 @@ if ($host_tiki) {
     }
 }
 
+$dbArgs = implode(' ', $args);
+
+// Check out many non-InnoDB tables exist in the table
+$command = "mysql $dbArgs -BN -e \"SELECT count(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$dbs_tiki' AND engine <> 'InnoDB'\"";
+$numTables = exec($command);
+
+if ($numTables === '0') {
+    $args[] = "--single-transaction";
+} else {
+    $args[] = "--lock-tables";
+}
+
 $args[] = $dbs_tiki;
 
 $args = implode(' ', $args);
-$command = "mysqldump --quick $args | gzip -5 > " . escapeshellarg($outputFile);
+$command = "mysqldump --quick --create-options --extended-insert $args | gzip -5 > " . escapeshellarg($outputFile);
 
 exec($command);
 chmod($outputFile, 0777);
