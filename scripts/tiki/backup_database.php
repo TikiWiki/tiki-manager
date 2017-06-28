@@ -31,7 +31,7 @@ if ($host_tiki) {
 
 $dbArgs = implode(' ', $args);
 
-// Check out many non-InnoDB tables exist in the table
+// Find out how many non-InnoDB tables exist in the schema
 $command = "mysql $dbArgs -BN -e \"SELECT count(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$dbs_tiki' AND engine <> 'InnoDB'\"";
 $numTables = exec($command);
 
