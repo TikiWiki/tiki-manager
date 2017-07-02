@@ -47,38 +47,42 @@ class SSH_Host
 
     private function getExtHandle()
     {
-        if (! function_exists('ssh2_connect'))
-            return false;
-
         $host = $this->host;
         $user = $this->user;
         $port = $this->port;
 
         $key = "$user@$host:$port";
-        
+
         if (isset(self::$resources[$key]))
             return self::$resources[$key];
 
-        $handle = @ssh2_connect($host, $port);
-        
-        if (! $handle)
-            return self::$resources[$key] = false;
+        $handle = new \phpseclib\Net\SSH2($host, $port);
 
-        if (! @ssh2_auth_pubkey_file($handle, $user, SSH_PUBLIC_KEY, SSH_KEY))
+        if (!$handle) {
             return self::$resources[$key] = false;
+        };
+
+        $password = new \phpseclib\Crypt\RSA();
+        $password->setPrivateKey(file_get_contents(SSH_KEY));
+        $password->setPublicKey(file_get_contents(SSH_PUBLIC_KEY));
+
+        if (!$handle->login($user, $password)) {
+            return self::$resources[$key] = false;
+        };
 
         return self::$resources[$key] = $handle;
     }
 
     function setupKey($publicKeyFile)
     {
-        if (function_exists('ssh2_connect')) {
-            // Check key presence first if possible
-            if ($this->getExtHandle()) return;
-            else
-                // Pretend this check never happened, connection will be
-                // succesful after key set-up
-                unset(self::$resources["{$this->user}@{$this->host}:{$this->port}"]);
+        // Check key presence first if possible
+        if ($this->getExtHandle()) {
+            return;
+        }
+        else {
+            // Pretend this check never happened, connection will be
+            // succesful after key set-up
+            unset(self::$resources["{$this->user}@{$this->host}:{$this->port}"]);
         }
 
         $file = escapeshellarg($publicKeyFile);
@@ -99,7 +103,7 @@ class SSH_Host
         if (! is_array($commands))
             $commands = func_get_args();
 
-        if ($handle = self::getExtHandle($this->host, $this->user)) {
+        if ($handle = self::getExtHandle()) {
             $content = '';
 
             foreach ($commands as $line) {
@@ -109,10 +113,9 @@ class SSH_Host
                 foreach ($this->env as $key => $value)
                     $line .= "export $key=" . escapeshellarg($value) . "; $line";
 
-                $stream = ssh2_exec($handle, $line, null);
-                stream_set_blocking($stream, true);
+                $result = $handle->exec($line, null);
 
-                $content .= stream_get_contents($stream);
+                $content .= $result;
             }
 
             return trim($content);
@@ -148,8 +151,9 @@ class SSH_Host
 
     function sendFile($localFile, $remoteFile)
     {
-        if ($handle = self::getExtHandle($this->host, $this->user)) {
-            if (! ssh2_scp_send($handle, $localFile, $remoteFile, 0644)) {
+        if ($handle = self::getExtHandle()) {
+            $scpHandle = new \phpseclib\Net\SCP($handle);
+            if (! $scpHandle->put($remoteFile, file_get_contents($localFile), 0644)) {
                 error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
             }
         }
@@ -168,8 +172,9 @@ class SSH_Host
 
     function receiveFile($remoteFile, $localFile)
     {
-        if ($handle = self::getExtHandle($this->host, $this->user)) {
-            if (! ssh2_scp_recv($handle, $remoteFile, $localFile)) {
+        if ($handle = self::getExtHandle()) {
+            $scpHandle = new \phpseclib\Net\SCP($handle);
+            if (! $scpHandle->get($remoteFile, $localFile)) {
                 error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
             }
         }

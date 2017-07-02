@@ -82,6 +82,11 @@ function error($text)
     echo color("$text\n", 'red');
 }
 
+// vendor libs managed by the user using composer (if any)
+if (file_exists(dirname(__FILE__) . '/../vendor/autoload.php')) {
+    require_once dirname(__FILE__) . '/../vendor/autoload.php';
+}
+
 include dirname(__FILE__) . '/ftplib.php';
 include dirname(__FILE__) . '/sshlib.php';
 include dirname(__FILE__) . '/locallib.php';
@@ -116,37 +121,38 @@ if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
     define('SSH_KEY', getenv('HOME') . '/.ssh/id_rsa');
     define('SSH_PUBLIC_KEY', getenv('HOME') . '/.ssh/id_rsa.pub');
 }
-elseif (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
-    file_exists(getenv('HOME') . '/.ssh/id_dsa.pub')) {
 
-    define('SSH_KEY', getenv('HOME').'/.ssh/id_dsa');
-    define('SSH_PUBLIC_KEY', getenv('HOME').'/.ssh/id_dsa.pub');
+if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
+    file_exists(getenv('HOME') . '/.ssh/id_dsa.pub') &&
+    !defined(SSH_KEY) &&
+    !defined(SSH_PUBLIC_KEY)) {
 
     warning(
-        sprintf('TRIM is using a ssh-dsa key which have been deprecated in ' .
-            'openssh-7.0. It is recommended that you remove it (%s and %s). ' .
-            "After that, run 'make copysshkey' and TRIM will create a new " .
-            'RSA key. Copy the new key to all your instances.',
+        sprintf('Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
+            'because DSA was deprecated in openssh-7.0. ' .
+            'If you need a new RSA key, run \'make copysshkey\' and TRIM will create a new one.' .
+            'Copy the new key to all your instances.',
             SSH_KEY, SSH_PUBLIC_KEY
         )
     );
 }
-elseif (file_exists("$root/data/id_dsa") &&
-    file_exists("$root/data/id_dsa.pub")) {
 
-    define('SSH_KEY', "$root/data/id_dsa" );
-    define('SSH_PUBLIC_KEY', "$root/data/id_dsa.pub");
+if (file_exists("$root/data/id_dsa") &&
+    file_exists("$root/data/id_dsa.pub") &&
+    !defined(SSH_KEY) &&
+    !defined(SSH_PUBLIC_KEY)) {
 
     warning(
-        sprintf('TRIM is using a ssh-dsa key which have been deprecated in ' .
-            'openssh-7.0. It is recommended that you remove it (%s and %s). ' .
-            "After that, run 'make copysshkey' and TRIM will create a new " .
-            'RSA key. Copy the new key to all your instances.',
+        sprintf('Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
+            'because DSA was deprecated in openssh-7.0. ' .
+            'If you need a new RSA key, run \'make copysshkey\' and TRIM will create a new one.' .
+            'Copy the new key to all your instances.',
             SSH_KEY, SSH_PUBLIC_KEY
         )
     );
 }
-else {
+
+if (!defined(SSH_KEY) && !defined(SSH_PUBLIC_KEY)) {
     define('SSH_KEY', "$root/data/id_rsa");
     define('SSH_PUBLIC_KEY', "$root/data/id_rsa.pub");
 }

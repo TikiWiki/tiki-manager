@@ -1,0 +1,11 @@
+# TRIM Ignore 
+# Ignore caches, logs and other working directories
+backup/
+cache/
+data/
+logs/
+tmp/
+# Ignore vendor folders, they are managed by composer
+/vendor/
+# Ignore PhpStorm
+.idea/

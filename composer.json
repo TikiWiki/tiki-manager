@@ -1,0 +1,19 @@
+{
+  "name": "tiki/tiki-trim",
+  "description": "Tiki Wiki CMS Groupware",
+  "license": "LGPL-2.1",
+  "homepage": "https://tiki.org",
+  "minimum-stability": "stable",
+  "require": {
+    "phpseclib/phpseclib": "^2.0"
+  },
+  "config": {
+    "process-timeout": 5000
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://composer.tiki.org"
+    }
+  ]
+}
