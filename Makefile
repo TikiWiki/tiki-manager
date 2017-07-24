@@ -87,9 +87,6 @@ clone:
 cloneandupgrade:
 	@$(PHP) scripts/clone.php upgrade
 
-debug:
-	@$(PHP) scripts/debug.php
-
 clean:
 	@echo 'WARNING!'
 	@echo "You are about to delete all state, backup, cache, and log files!"
