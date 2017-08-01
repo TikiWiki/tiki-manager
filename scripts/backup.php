@@ -21,8 +21,7 @@ if (! isset($_SERVER['argv'][1])) {
 foreach ($selection as $instance) {
     info("Performing backup for {$instance->name}");
     $instance->backup();
+    perform_archive_cleanup($instance->id, $instance->name);
 }
-
-perform_archive_cleanup();
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

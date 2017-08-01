@@ -4,17 +4,19 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-function perform_archive_cleanup()
+function perform_archive_cleanup($instance_id, $instance_name)
 {
-    $files = glob(ARCHIVE_FOLDER . '/*.tar.bz2');
+    $backup_directory = "{$instance_id}-{$instance_name}";
+
+    $files = glob(ARCHIVE_FOLDER . "/$backup_directory" . '/*.tar.bz2');
 
     foreach ($files as $file) {
 
         $name = basename($file);
 
-        if (preg_match('/^(\d+)_(\d{4})-(\d{2})-(\d{2})_(\d{2}):(\d{2}):(\d{2})\.tar\.bz2$/', $name, $matches)) {
+        if (preg_match('/^(\d+)-(.*)_(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})\.tar\.bz2$/', $name, $matches)) {
 
-            list($match, $instance, $year, $month, $date, $hour, $minute, $second) = $matches;
+            list($match, $instance_id, $instance_name , $year, $month, $date, $hour, $minute, $second) = $matches;
 
             // Preserve one backup per month, the one on the first
             if ($date == '01') continue;

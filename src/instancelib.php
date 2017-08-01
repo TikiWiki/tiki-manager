@@ -457,6 +457,9 @@ class Instance
             die(error('No application installed for this instance.'));
 
         $locations = $this->getApplication()->getFileLocations();
+        if (!isset($locations['data'])){
+            $locations['data'] = array();
+        }
         $locations['data'] = array_merge($locations['data'], $this->getExtraBackups());
 
         $backup_directory = "{$this->id}-{$this->name}";
@@ -473,6 +476,9 @@ class Instance
         // Bring all remote files locally
         info('Downloading files locally...');
         foreach ($locations as $type => $remotes) {
+            if (!is_array($remotes)){
+                continue;
+            }
             foreach ($remotes as $remote) {
                 $hash = md5($remote);
                 $locmirror = "{$approot}/{$hash}";

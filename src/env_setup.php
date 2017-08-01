@@ -124,8 +124,8 @@ if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
 
 if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
     file_exists(getenv('HOME') . '/.ssh/id_dsa.pub') &&
-    !defined(SSH_KEY) &&
-    !defined(SSH_PUBLIC_KEY)) {
+    !defined('SSH_KEY') &&
+    !defined('SSH_PUBLIC_KEY')) {
 
     warning(
         sprintf('Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
@@ -139,8 +139,8 @@ if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
 
 if (file_exists("$root/data/id_dsa") &&
     file_exists("$root/data/id_dsa.pub") &&
-    !defined(SSH_KEY) &&
-    !defined(SSH_PUBLIC_KEY)) {
+    !defined('SSH_KEY') &&
+    !defined('SSH_PUBLIC_KEY')) {
 
     warning(
         sprintf('Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
@@ -152,7 +152,7 @@ if (file_exists("$root/data/id_dsa") &&
     );
 }
 
-if (!defined(SSH_KEY) && !defined(SSH_PUBLIC_KEY)) {
+if (!defined('SSH_KEY') && !defined('SSH_PUBLIC_KEY')) {
     define('SSH_KEY', "$root/data/id_rsa");
     define('SSH_PUBLIC_KEY', "$root/data/id_rsa.pub");
 }
