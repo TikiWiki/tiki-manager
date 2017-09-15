@@ -30,7 +30,13 @@ if ($type != 'local') {
     $d_name = $host;
 }
 else if ($type == 'local') {
-    $user = posix_getpwuid(posix_geteuid())['name'];
+    if (function_exists('posix_getpwuid')) {
+        $user = posix_getpwuid(posix_geteuid())['name'];
+    } elseif (!empty($_SERVER['USER'])) {
+        $user = $_SERVER['USER'];
+    } else {
+        $user = '';
+    }
     $pass = '';
     $host = 'localhost';
     $port = 0;
