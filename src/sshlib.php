@@ -153,7 +153,7 @@ class SSH_Host
     {
         if ($handle = self::getExtHandle()) {
             $scpHandle = new \phpseclib\Net\SCP($handle);
-            if (! $scpHandle->put($remoteFile, file_get_contents($localFile), 0644)) {
+            if (! $scpHandle->put($remoteFile, file_get_contents($localFile), \phpseclib\Net\SCP::SOURCE_STRING)) {
                 error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
             }
         }
