@@ -237,6 +237,10 @@ class Access_Local extends Access implements ShellPrompt
                 if (! in_array(basename($interpreter), array('svn')))
                     continue;
 
+                if (strpos($interpreter, ' ') !== false) {
+                    $interpreter = "'" . trim($interpreter) . "'"; // wrap command if contains spaces
+                }
+
                 $versionInfo = $host->runCommands("$interpreter --version");
                 if (preg_match("/svn, version (\d+\.\d+\.\d+)/", $versionInfo, $matches))
                     $valid[$matches[1]] = $interpreter;
