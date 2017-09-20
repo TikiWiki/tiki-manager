@@ -58,7 +58,10 @@ class SSH_Host
 
         $handle = new \phpseclib\Net\SSH2($host, $port);
 
-        if (!$handle) {
+
+        if (!$handle
+            || strpos(strtoupper(php_uname('s')), 'CYGWIN') !== false //Temp Fix: phpseclib is not working ok in cygwin
+        ) {
             return self::$resources[$key] = false;
         };
 
