@@ -92,8 +92,9 @@ info("You are running : $d_linux");
 
 switch ($d_linux) {
 case "ClearOS":
+    $host = preg_replace("/[\\\\\/?%*:|\"<>]+/", '-', $instance->name);
     $d_webroot = ($user == 'root' || $user == 'apache') ?
-        "/var/www/virtual/$host/html/" : "/home/$user/public_html/";
+        "/var/www/virtual/{$host}/html/" : "/home/$user/public_html/";
     break;
 default:
     $d_webroot = ($user == 'root' || $user == 'apache') ?
