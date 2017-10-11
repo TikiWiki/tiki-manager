@@ -505,7 +505,13 @@ class Instance
         $current = getcwd();
         chdir(BACKUP_FOLDER);
 
-        $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
+        if ($this->detectDistribution() === 'ClearOS') {
+            $archiveLocation = dirname($this->webroot) . '/backups';
+            symlink($archiveLocation,  ARCHIVE_FOLDER . "/{$backup_directory}");
+        } else {
+            $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
+        }
+
         if (! file_exists($archiveLocation))
             mkdir($archiveLocation, 0755, true);
 
