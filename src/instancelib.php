@@ -559,7 +559,15 @@ class Instance
         }
 
         if (! file_exists($archiveLocation)) {
-            mkdir($archiveLocation, 0775, true);
+            $backup_user = $instance->getProp('backup_perm');
+            $backup_group = $instance->getProp('backup_group');
+            $backup_perm = intval($instance->getProp('backup_perm') ?: 0775);
+
+            mkdir($archiveLocation, $backup_perm, true);
+            chown($archiveLocation, $backup_user);
+            chgrp($archiveLocation, $backup_group);
+
+            unset($backup_perm, $backup_user, $backup_group);
         }
 
         info('Creating archive...');
