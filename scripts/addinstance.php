@@ -92,11 +92,17 @@ info("You are running : $d_linux");
 
 switch ($d_linux) {
 case "ClearOS":
+    $backup_user = @posix_getpwuid(posix_geteuid())['name'];
+    $backup_group = 'allusers';
+    $backup_perm = 02775;
     $host = preg_replace("/[\\\\\/?%*:|\"<>]+/", '-', $instance->name);
     $d_webroot = ($user == 'root' || $user == 'apache') ?
         "/var/www/virtual/{$host}/html/" : "/home/$user/public_html/";
     break;
 default:
+    $backup_user = @posix_getpwuid(posix_geteuid())['name'];
+    $backup_group = @posix_getgrgid(posix_getegid())['name'];
+    $backup_perm = 0755;
     $d_webroot = ($user == 'root' || $user == 'apache') ?
         '/var/www/html/' : "/home/$user/public_html/";
 }
@@ -112,9 +118,17 @@ if ($access instanceof ShellPrompt)
 else
     echo die(color("Shell access is required to create the working directory. You will need to create it manually.\n", 'yellow'));
 
+$backup_user = promptUser('Backup owner', $backup_user);
+$backup_group = promptUser('Backup group', $backup_group);
+$backup_perm = promptUser('Backup file permissions', decoct($backup_perm));
+
 $instance->weburl = rtrim($weburl, '/');
 $instance->webroot = rtrim($webroot, '/');
 $instance->tempdir = rtrim($tempdir, '/');
+
+$instance->backup_user = trim($backup_user);
+$instance->backup_group = trim($backup_group);
+$instance->backup_perm = octdec($backup_perm);
 
 $instance->save();
 echo color("Instance information saved.\n", 'green');
