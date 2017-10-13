@@ -184,6 +184,28 @@ WHERE
     instance_id = :id
 ;");
 
+define('SQL_GET_INSTANCE_PROPERTY', "
+SELECT value FROM
+    property
+WHERE
+    instance_id = :id AND key = :key
+;");
+
+define('SQL_SET_INSTANCE_PROPERTY', "
+REPLACE INTO
+    property
+VALUES
+    (:id, :key, :value)
+;");
+
+define('SQL_DELETE_ALL_INSTANCE_PROPERTIES', "
+DELETE FROM
+    property
+WHERE
+    instance_id = :id;
+;");
+
+
 class Instance
 {
     private $id;
@@ -269,6 +291,16 @@ class Instance
 
         $rowid = rowid();
         if (! $this->id && $rowid) $this->id = $rowid;
+
+        if(!empty($this->backup_user)) {
+            $this->setProp('backup_user', $this->backup_user);
+        }
+        if(!empty($this->backup_group)) {
+            $this->setProp('backup_group', $this->backup_group);
+        }
+        if(!empty($this->backup_perm)) {
+            $this->setProp('backup_perm', $this->backup_perm);
+        }
     } // }}}
 
     function delete() // {{{
@@ -280,6 +312,7 @@ class Instance
         query(SQL_DELETE_REPORT_CONTENT, array(':id' => $this->id));
         query(SQL_DELETE_REPORT_RECEIVER, array( ':id' => $this->id));
         query(SQL_DELETE_VERSION, array(':id' => $this->id));
+        query(SQL_DELETE_ALL_INSTANCE_PROPERTIES, array(':id' => $this->id));
     } // }}}
 
     function registerAccessMethod($type, $host, $user, $password = null, $port = null) // {{{
@@ -334,6 +367,19 @@ class Instance
     function getWorkPath($relativePath) // {{{
     {
         return "{$this->tempdir}/$relativePath";
+    } // }}}
+
+    function getProp($key) { // {{{
+        $result = query(SQL_GET_INSTANCE_PROPERTY, array(':id' => $this->id, ':key' => $key));
+        return $result->fetchObject('key');
+    } // }}}
+
+    function setProp($key, $value) { // {{{
+        $result = query(SQL_SET_INSTANCE_PROPERTY, array(
+            ':id' => $this->id,
+            ':key' => $key,
+            ':value' => $value
+        ));
     } // }}}
 
     function createWorkPath($access = null) // {{{
@@ -512,8 +558,9 @@ class Instance
             $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
         }
 
-        if (! file_exists($archiveLocation))
-            mkdir($archiveLocation, 0755, true);
+        if (! file_exists($archiveLocation)) {
+            mkdir($archiveLocation, 0775, true);
+        }
 
         info('Creating archive...');
 

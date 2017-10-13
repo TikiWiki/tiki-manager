@@ -342,6 +342,17 @@ case 3:
 
         UPDATE info SET value = '4' WHERE name = 'version';
     ");
+case 4:
+    $db->exec("
+        CREATE TABLE property (
+            instance_id INTEGER NOT NULL,
+            key VARCHAR(50) NOT NULL,
+            value VARCHAR(200) NOT NULL,
+            UNIQUE( instance_id, key )
+                ON CONFLICT REPLACE
+        );
+        UPDATE info SET value = '5' WHERE name = 'version';
+    ");
 } // }}}
 
 // Database access
