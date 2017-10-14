@@ -371,7 +371,10 @@ class Instance
 
     function getProp($key) { // {{{
         $result = query(SQL_GET_INSTANCE_PROPERTY, array(':id' => $this->id, ':key' => $key));
-        return $result->fetchObject('key');
+        $result = $result->fetchObject();
+        if ( $result && $result->value ) {
+            return $result->value;
+        }
     } // }}}
 
     function setProp($key, $value) { // {{{
@@ -552,18 +555,21 @@ class Instance
         chdir(BACKUP_FOLDER);
 
         if ($this->detectDistribution() === 'ClearOS') {
-            $archiveLocation = dirname($this->webroot) . '/backups';
-            symlink($archiveLocation,  ARCHIVE_FOLDER . "/{$backup_directory}");
+            $archiveLocation = dirname($this->webroot) . '/backup';
+            $archiveLocationLink = ARCHIVE_FOLDER . "/{$backup_directory}";
+            `ln -sf $archiveLocation $archiveLocationLink`;
         } else {
             $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
         }
 
         if (! file_exists($archiveLocation)) {
-            $backup_user = $instance->getProp('backup_perm');
-            $backup_group = $instance->getProp('backup_group');
-            $backup_perm = intval($instance->getProp('backup_perm') ?: 0775);
 
-            mkdir($archiveLocation, $backup_perm, true);
+            $backup_user = $this->getProp('backup_user');
+            $backup_group = $this->getProp('backup_group');
+            $backup_perm = intval($this->getProp('backup_perm') ?: 0775);
+
+            mkdir($archiveLocation);
+            chmod($archiveLocation, $backup_perm);
             chown($archiveLocation, $backup_user);
             chgrp($archiveLocation, $backup_group);
 
