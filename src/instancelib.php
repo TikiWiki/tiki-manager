@@ -557,7 +557,7 @@ class Instance
         if ($this->detectDistribution() === 'ClearOS') {
             $archiveLocation = dirname($this->webroot) . '/backup';
             $archiveLocationLink = ARCHIVE_FOLDER . "/{$backup_directory}";
-            `ln -sf $archiveLocation $archiveLocationLink`;
+            `ln -nsf $archiveLocation $archiveLocationLink`;
         } else {
             $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
         }
