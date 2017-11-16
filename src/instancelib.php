@@ -553,6 +553,7 @@ class Instance
 
         // Bring all remote files locally
         info('Downloading files locally...');
+        $errorList = [];
         foreach ($locations as $type => $remotes) {
             if (!is_array($remotes)){
                 continue;
@@ -560,7 +561,11 @@ class Instance
             foreach ($remotes as $remote) {
                 $hash = md5($remote);
                 $locmirror = "{$approot}/{$hash}";
-                $error_flag += $access->localizeFolder($remote, $locmirror);
+                $error = $access->localizeFolder($remote, $locmirror);
+                $error_flag += $error;
+                if ($error) {
+                    $errorList[] = ['remote' => $remote, 'code' => $error];
+                }
                 `echo "$hash    $type    $remote" >> $approot/manifest.txt`;
             }
         }
@@ -568,7 +573,17 @@ class Instance
         if ($error_flag) {
             // Do something
             $message = "Backup has failed while downloading files into TRIM.\r\n";
-            $message .= "{$this->name}";
+            $message .= "{$this->name}\r\n";
+            $message .= "\r\nList of failures:\r\n\r\n";
+            foreach ($errorList as $errorInstance) {
+                $message .= "* " . $errorInstance['remote']. ": code " . $errorInstance['code'] . "\r\n";
+            }
+            if ($access instanceof Access_SSH || $access instanceof Access_Local) {
+                $message .= "\r\n";
+                $message .= '<a href="https://lxadm.com/Rsync_exit_codes">Rsync Exit Codes</a>';
+                $message .= "\r\n";
+            }
+
             mail($this->contact, 'TRIM backup error', $message);
             return null;
         }
@@ -622,7 +637,8 @@ class Instance
 
         if ($error_flag) {
             $message = "Your TRIM backup has failed packing files into TRIM.\r\n";
-            $message .= "{$this->name}";
+            $message .= "{$this->name}\r\n";
+            $message .= "TAR exit code: $return_var\r\n";
             mail($this->contact , 'TRIM backup error', $message);
             return null;
         }
