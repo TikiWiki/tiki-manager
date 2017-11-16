@@ -82,6 +82,32 @@ function error($text)
     echo color("$text\n", 'red');
 }
 
+$autoload = dirname(__FILE__) . '/../vendor/autoload.php';
+$composerPhar = dirname(__FILE__) . '/../composer.phar';
+$composerPharInstall = dirname(__FILE__) . '/../src/composer-setup.php';
+if (!file_exists($autoload)) {
+    info('Composer autoload file not found, attempting to run composer...');
+    if (!file_exists($composerPhar)) {
+        info('Composer phar file not found, attempting to download composer...');
+        $signature = trim(
+            file_get_contents("https://composer.github.io/installer.sig")
+        );
+        copy('https://getcomposer.org/installer', $composerPharInstall);
+        $actualSignature = hash_file('SHA384', $composerPharInstall);
+        if ($signature != $actualSignature) {
+            unlink($composerPharInstall);
+            echo "Error downloading composer";
+            exit;
+        }
+        shell_exec('php ' . $composerPharInstall . ' --quiet');
+        unlink($composerPharInstall);
+        info('Composer phar file downloaded.');
+    }
+    shell_exec('php ' . $composerPhar . ' install');
+    info('Composer install finished.');
+    echo "\n";
+}
+
 // vendor libs managed by the user using composer (if any)
 if (file_exists(dirname(__FILE__) . '/../vendor/autoload.php')) {
     require_once dirname(__FILE__) . '/../vendor/autoload.php';
