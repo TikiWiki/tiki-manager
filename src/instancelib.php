@@ -85,6 +85,18 @@ VALUES
     (:id, :name, :contact, :web, :url, :temp, :phpexec, :app)
 ;");
 
+define('SQL_UPDATE_INSTANCE', "
+UPDATE instance
+SET
+    name = :name,
+    contact = :contact,
+    webroot = :web,
+    weburl = :url,
+    tempdir = :temp
+WHERE
+    instance_id = :id
+;");
+
 define('SQL_INSERT_BACKUP', "
 INSERT INTO
     backup
@@ -302,6 +314,23 @@ class Instance
             $this->setProp('backup_perm', $this->backup_perm);
         }
     } // }}}
+
+    /**
+     * Update the instance information
+     */
+    public function update()
+    {
+        $params = [
+            ':id'      => $this->id,
+            ':name'    => $this->name,
+            ':contact' => $this->contact,
+            ':web'     => $this->webroot,
+            ':url'     => $this->weburl,
+            ':temp'    => $this->tempdir
+        ];
+
+        query(SQL_UPDATE_INSTANCE, $params);
+    }
 
     function delete() // {{{
     {

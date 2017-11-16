@@ -10,9 +10,9 @@ BASH = bash
 default:
 	@echo "Valid options are:"
 	@echo "  access, backup, blank, clean, check, clone, cloneandupgrade,"
-	@echo "  convert, copysshkey, delete, detect, enablewww, fix, instance,"
-	@echo "  profile, report, restore, update, upgrade, verify, viewdb,"
-	@echo "  watch"
+	@echo "  convert, copysshkey, delete, detect, editinstance, enablewww, "
+	@echo "  fix, instance, profile, report, restore, update, upgrade,"
+	@echo "  verify, viewdb, watch"
 
 help: default
 
@@ -21,6 +21,9 @@ help: default
 # Use this to add a remote installation
 instance:
 	@$(PHP) scripts/addinstance.php
+
+editinstance:
+	@$(PHP) scripts/editinstance.php
 
 blank:
 	@$(PHP) scripts/addinstance.php blank
