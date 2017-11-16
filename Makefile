@@ -9,7 +9,7 @@ BASH = bash
 # No changes should be required from here
 default:
 	@echo "Valid options are:"
-	@echo "  access, backup, blank, clean, check, clone, cloneandupgrade,"
+	@echo "  access, backup, blank, clean, check, cli, clone, cloneandupgrade,"
 	@echo "  convert, copysshkey, delete, detect, editinstance, enablewww, "
 	@echo "  fix, instance, profile, report, restore, update, upgrade,"
 	@echo "  verify, viewdb, watch"
@@ -65,6 +65,9 @@ restore:
 
 fix:
 	@$(PHP) scripts/tiki/fixperms.php
+
+cli:
+	@$(PHP) scripts/tiki/cli.php
 
 detect:
 	@$(PHP) scripts/detect.php
