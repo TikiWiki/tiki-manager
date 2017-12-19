@@ -606,12 +606,12 @@ class Instance
             $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
         }
 
+
+        $backup_user = $this->getProp('backup_user');
+        $backup_group = $this->getProp('backup_group');
+        $backup_perm = intval($this->getProp('backup_perm') ?: 0775);
+
         if (! file_exists($archiveLocation)) {
-
-            $backup_user = $this->getProp('backup_user');
-            $backup_group = $this->getProp('backup_group');
-            $backup_perm = intval($this->getProp('backup_perm') ?: 0775);
-
             mkdir($archiveLocation);
             chmod($archiveLocation, $backup_perm);
             chown($archiveLocation, $backup_user);
@@ -620,12 +620,12 @@ class Instance
             unset($backup_perm, $backup_user, $backup_group);
         }
 
-        info('Creating archive...');
 
         $output = array();
         $return_val = -1;
         $tar = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
 
+        info("Creating archive at {$tar}");
         $command = 'nice -n 19 tar -cjf ' . escapeshellarg($tar) . ' ' . escapeshellarg($backup_directory);
         exec($command, $output, $return_var);
 
@@ -641,7 +641,12 @@ class Instance
             $message .= "TAR exit code: $return_var\r\n";
             mail($this->contact , 'TRIM backup error', $message);
             return null;
-        }
+        } 
+
+        info("Assigning permissions ({$backup_user}:{$backup_group} {$backup_perm})");
+        chmod($tar, $backup_perm);
+        chown($tar, $backup_user);
+        chgrp($tar, $backup_group);
 
         return $tar;
     } // }}}
