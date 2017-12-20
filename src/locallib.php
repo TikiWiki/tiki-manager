@@ -87,8 +87,9 @@ class Local_Host
         }
 
         if ($return_var != 0) {
-            info("RSYNC exit code: $return_var");
-            echo $output;
+            warning($command);
+            error("RSYNC exit code: $return_var");
+            error($output);
         }
         return $return_var;
     }
