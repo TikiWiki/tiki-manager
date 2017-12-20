@@ -616,8 +616,6 @@ class Instance
             chmod($archiveLocation, $backup_perm);
             chown($archiveLocation, $backup_user);
             chgrp($archiveLocation, $backup_group);
-
-            unset($backup_perm, $backup_user, $backup_group);
         }
 
 
