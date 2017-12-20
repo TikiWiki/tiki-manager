@@ -619,7 +619,7 @@ class Instance
 
         $backup_user = $this->getProp('backup_user');
         $backup_group = $this->getProp('backup_group');
-        $backup_perm = intval($this->getProp('backup_perm') ?: 0775);
+        $backup_perm = intval($this->getProp('backup_perm') ?: 0770);
 
         if (! file_exists($archiveLocation)) {
             mkdir($archiveLocation);
