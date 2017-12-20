@@ -651,7 +651,7 @@ class Instance
             return null;
         } 
 
-        info("Assigning permissions ({$backup_user}:{$backup_group} {$backup_perm})");
+        info("Assigning permissions ({$backup_user}:{$backup_group} " . octdec($backup_perm) . ")");
         chmod($tar, $backup_perm);
         chown($tar, $backup_user);
         chgrp($tar, $backup_group);
