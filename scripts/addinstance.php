@@ -94,7 +94,7 @@ switch ($d_linux) {
 case "ClearOS":
     $backup_user = @posix_getpwuid(posix_geteuid())['name'];
     $backup_group = 'allusers';
-    $backup_perm = 02775;
+    $backup_perm = 02770;
     $host = preg_replace("/[\\\\\/?%*:|\"<>]+/", '-', $instance->name);
     $d_webroot = ($user == 'root' || $user == 'apache') ?
         "/var/www/virtual/{$host}/html/" : "/home/$user/public_html/";
@@ -102,7 +102,7 @@ case "ClearOS":
 default:
     $backup_user = @posix_getpwuid(posix_geteuid())['name'];
     $backup_group = @posix_getgrgid(posix_getegid())['name'];
-    $backup_perm = 0755;
+    $backup_perm = 02750;
     $d_webroot = ($user == 'root' || $user == 'apache') ?
         '/var/www/html/' : "/home/$user/public_html/";
 }
