@@ -330,6 +330,16 @@ class Instance
         ];
 
         query(SQL_UPDATE_INSTANCE, $params);
+
+        if(!empty($this->backup_user)) {
+            $this->setProp('backup_user', $this->backup_user);
+        }
+        if(!empty($this->backup_group)) {
+            $this->setProp('backup_group', $this->backup_group);
+        }
+        if(!empty($this->backup_perm)) {
+            $this->setProp('backup_perm', $this->backup_perm);
+        }
     }
 
     function delete() // {{{

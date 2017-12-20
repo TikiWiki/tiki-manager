@@ -28,13 +28,20 @@ foreach ($selection as $instance) {
     $weburl = promptUser("Web URL", $instance->weburl);
     $tempdir = promptUser("Working directory", $instance->tempdir);
 
+    $backup_user = promptUser('Backup owner', $instance->getProp('backup_user'));
+    $backup_group = promptUser('Backup group', $instance->getProp('backup_group'));
+    $backup_perm = intval($instance->getProp('backup_perm') ?: 0775);
+    $backup_perm = promptUser('Backup file permissions', decoct($backup_perm));
+
     $instance->name = $host;
     $instance->contact = $contact;
     $instance->webroot = rtrim($webroot, '/');
     $instance->weburl = rtrim($weburl, '/');
     $instance->tempdir = rtrim($tempdir, '/');
+    $instance->backup_user = $backup_user;
+    $instance->backup_group = $backup_group;
+    $instance->backup_perm = octdec($backup_perm);
 
     $instance->update();
-
     echo color("Instance information saved.\n", 'green');
 }
