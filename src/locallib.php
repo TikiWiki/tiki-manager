@@ -77,11 +77,19 @@ class Local_Host
             escapeshellarg($remoteLocation), escapeshellarg($localMirror));
 
         $ph = popen($command, 'r');
-        if (is_resource($ph))
-            $return_var = pclose($ph);
 
-        if ($return_var != 0)
+        $output = '';
+        if (is_resource($ph)) {
+            while( !feof($ph) ) {
+                $output .= fread($ph, 8192);
+            }
+            $return_var = pclose($ph);
+        }
+
+        if ($return_var != 0) {
             info("RSYNC exit code: $return_var");
+            echo $output;
+        }
         return $return_var;
     }
 }
