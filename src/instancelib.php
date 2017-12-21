@@ -679,7 +679,7 @@ class Instance
 
         $current = trim(`pwd`);
         chdir(TEMP_FOLDER);
-        `tar -jxvf $archive $basetardir/manifest.txt`;
+        exec(debug("tar -jxvf $archive $basetardir/manifest.txt"));
         $manifest = file_get_contents("{$basetardir}/manifest.txt");
         chdir($current);
 

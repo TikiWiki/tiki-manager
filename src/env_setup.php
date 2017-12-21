@@ -4,6 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+
+define('TRIM_DEBUG', getenv('TRIM_DEBUG') === 'true');
+
 if (! function_exists('readline')) {
     function readline($prompt)
     {
@@ -21,7 +24,7 @@ function color($string, $color)
         'green' => 32,
         'yellow' => 33,
         'cyan' => 36,
-        'pink' => '1;45',
+        'pink' => '1;35',
     );
 
     if (! isset($avail[$color]))
@@ -68,26 +71,57 @@ function getPassword($stars = false)
     return $password;
 }
 
-function info($text)
+function prefix($text, $prefix)
 {
-    echo color("$text\n", 'cyan');
-}
-
-function warning($text)
-{
-    echo color("$text\n", 'yellow');
-}
-
-function error($text)
-{
-    echo color("$text\n", 'red');
-}
-
-function debug($text)
-{
-    if(getenv('TRIM_DEBUG') === 'true') {
-        echo color("$text\n", 'pink');
+    if(!is_string($text)) {
+        return $text;
     }
+    if(is_string($prefix) && !empty($prefix)) {
+        return preg_replace('/^/m', "{$prefix} \$1", $text);
+    }
+    return $text;
+}
+
+function stringfy($sub)
+{
+    if(is_string($sub)) {
+        return $sub;
+    }
+    return var_export($sub, true);
+}
+
+function info($text, $prefix=null)
+{
+    $output = prefix(stringfy($text), $prefix) . "\n";
+    echo color("$text\n", 'cyan');
+    return $text;
+}
+
+function warning($text, $prefix=null)
+{
+    $output = prefix(stringfy($text), $prefix) . "\n";
+    echo color("$text\n", 'yellow');
+    return $text;
+}
+
+function error($text, $prefix=null)
+{
+    $output = prefix(stringfy($text), $prefix) . "\n";
+    echo color("$text\n", 'red');
+    return $text;
+}
+
+function debug($text, $prefix=null, $hr='')
+{
+    if(TRIM_DEBUG) {
+        $prefix = '[debug]:' . ($prefix ? " {$prefix}" : '');
+        $output = prefix(stringfy($text), $prefix) . "\n";
+        echo color($output, 'pink');
+    }
+    if (is_string($hr) && !empty($hr)) {
+        echo "$hr";
+    }
+    return $text;
 }
 
 $autoload = dirname(__FILE__) . '/../vendor/autoload.php';
@@ -137,6 +171,8 @@ include dirname(__FILE__) . '/reportlib.php';
 include dirname(__FILE__) . '/ext/Password.php';
 
 $root = realpath(dirname(__FILE__) . '/..');
+debug('Running TRIM at ' . $root);
+
 define('DB_FILE', "$root/data/trim.db");
 define('SSH_CONFIG', "$root/data/ssh_config");
 define('CACHE_FOLDER', "$root/cache");
@@ -147,7 +183,6 @@ define('BACKUP_FOLDER', "$root/backup");
 define('ARCHIVE_FOLDER', "$root/backup/archive");
 define('TRIM_OUTPUT', "$root/logs/trim.output");
 define('TRIM_TEMP', '/tmp/trim_temp');
-define('TRIM_DEBUG', false);
 
 if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
     file_exists(getenv('HOME') . '/.ssh/id_rsa.pub')) {

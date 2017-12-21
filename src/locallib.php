@@ -32,20 +32,30 @@ class Local_Host
         foreach ($this->env as $name => $value)
             array_unshift($commands, "export $name=$value");
 
-        $fullcommand = implode(
-            ($output ? ' 2>/dev/null' : ' 2>> /tmp/trim.output') . ' && ',
-            $commands
-        );
-        $fullcommand .= ($output ? ' 2>/dev/null' : ' 2>> /tmp/trim.output');
+        $contents = '';
+        foreach ($commands as $cmd) {
+            $cmd .= ' 2>&1';
 
-        $contents = array();
-        $ph = popen($fullcommand, 'r');
-        if (is_resource($ph)) {
-            $contents = trim(stream_get_contents($ph));
-            trim_output("LOCAL $contents");
+            debug($cmd);
+            $ph = popen($cmd, 'r');
 
-            if (($rc = pclose($ph)) != 0)
-                warning(sprintf('%s [%d]', $fullcommand, $rc));
+            $result = '';
+            if (is_resource($ph)) {
+                $result = trim(stream_get_contents($ph));
+                $code = pclose($ph);
+
+                trim_output("LOCAL $result");
+                if ($code != 0) {
+                    if($output) {
+                        warning(sprintf('%s [%d]', $cmd, $code));
+                        error($result, $prefix='    ');
+                    }
+                } else {
+                    $contents .= (!empty($contents) ? "\n" : '') . $result;
+                }
+
+                debug($result, $prefix="({$code})>>", "\n\n");
+            }
         }
 
         return $contents;
@@ -53,14 +63,14 @@ class Local_Host
 
     function sendFile($localFile, $remoteFile)
     {
-        $command = sprintf('rsync -a %s %s',
+        $command = sprintf('rsync -av %s %s',
             escapeshellarg($localFile), escapeshellarg($remoteFile));
         $this->runCommands($command);
     }
 
     function receiveFile($remoteFile, $localFile)
     {
-        $command = sprintf('rsync -a %s %s',
+        $command = sprintf('rsync -av %s %s',
             escapeshellarg($remoteFile), escapeshellarg($localFile));
         $this->runCommands($command);
     }
@@ -75,14 +85,11 @@ class Local_Host
         $return_val = -1;
         $command = sprintf('rsync -aL --delete %s %s 2>&1',
             escapeshellarg($remoteLocation), escapeshellarg($localMirror));
+        debug($command);
 
         $ph = popen($command, 'r');
-
-        $output = '';
         if (is_resource($ph)) {
-            while( !feof($ph) ) {
-                $output .= fread($ph, 8192);
-            }
+            $output = trim(stream_get_contents($ph));;
             $return_var = pclose($ph);
         }
 
@@ -91,6 +98,8 @@ class Local_Host
             error("RSYNC exit code: $return_var");
             error($output);
         }
+
+        debug($output, $prefix="({$return_var})>>", "\n\n");
         return $return_var;
     }
 }
