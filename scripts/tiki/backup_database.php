@@ -9,8 +9,14 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET')
 
 $root = $_SERVER['argv'][1];
 $outputFile = $_SERVER['argv'][2];
+$db_config = "{$root}/db/local.php";
 
-include "{$root}/db/local.php";
+if (!file_exists($db_config)) {
+    file_put_contents('php://stderr', "File does not exist: '{$db_config}'");
+    exit(1);
+}
+
+include "{$db_config}";
 
 $args = array();
 if ($user_tiki)
