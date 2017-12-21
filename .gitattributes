@@ -1,4 +1,0 @@
-. svn-properties=svn:ignore=.phpenv
-. svn-properties=svn:ignore=composer.phar
-. svn-properties=svn:ignore=logs
-. svn-properties=svn:ignore=vendor
