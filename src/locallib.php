@@ -26,6 +26,10 @@ class Local_Host
         if (! is_array($commands))
             $commands = func_get_args();
 
+        if ($output && !is_string($output)) {
+            array_pop($commands);
+        }
+
         if ($this->location)
             array_unshift($commands, 'cd ' . escapeshellarg($this->location));
 
