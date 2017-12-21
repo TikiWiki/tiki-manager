@@ -530,6 +530,7 @@ LOCAL
         $root = $this->instance->webroot;
 
         // FIXME: Not FTP compatible (arguments)
+        debug("Loading '$remoteFile' into '{$database->dbname}'");
         $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
             array($root, $remoteFile));

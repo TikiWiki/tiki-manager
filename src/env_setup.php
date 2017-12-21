@@ -21,6 +21,7 @@ function color($string, $color)
         'green' => 32,
         'yellow' => 33,
         'cyan' => 36,
+        'pink' => '1;45',
     );
 
     if (! isset($avail[$color]))
@@ -80,6 +81,13 @@ function warning($text)
 function error($text)
 {
     echo color("$text\n", 'red');
+}
+
+function debug($text)
+{
+    if(getenv('TRIM_DEBUG') === 'true') {
+        echo color("$text\n", 'pink');
+    }
 }
 
 $autoload = dirname(__FILE__) . '/../vendor/autoload.php';
