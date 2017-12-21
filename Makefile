@@ -103,3 +103,15 @@ clean:
 	if [ "$$answer" = "yes" ]; then\
 		rm -rf cache/* backup/* logs/* data/trim.db;\
 	fi
+
+clean-files:
+	@echo 'WARNING!'
+	@echo "You are about to delete backup, cache, and log files!"
+	@unset answer;\
+		while [ "$$answer" != "yes" -a "$$answer" != "no" ]; do\
+			read -p "Are you sure (yes, no)? " answer;\
+		done;\
+	if [ "$$answer" = "yes" ]; then\
+		find backup -type l -exec readlink -f {} \; | xargs rm -f\
+		rm -rf cache/* backup/* logs/*;\
+	fi
