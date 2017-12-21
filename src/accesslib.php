@@ -332,8 +332,8 @@ class Access_Local extends Access implements ShellPrompt
         $host->sendFile($localFile, $remoteFile);
         $arg = implode(' ', array_map('escapeshellarg', $args));
         $output = $host->runCommands(
-            "{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
-            "rm {$remoteFile}"
+            "{$this->instance->phpexec} -d memory_limit=256M {$remoteFile} {$arg}",
+            "rm -v {$remoteFile}"
         );
 
         return $output;
@@ -375,7 +375,7 @@ class Access_Local extends Access implements ShellPrompt
         $path = escapeshellarg($filename);
 
         $host = $this->getHost();
-        $host->runCommands("rm $path");
+        $host->runCommands("rm -v $path");
     } // }}}
 
     function moveFile($remoteSource, $remoteTarget) // {{{
@@ -388,7 +388,7 @@ class Access_Local extends Access implements ShellPrompt
         $a = escapeshellarg($remoteSource);
         $b = escapeshellarg($remoteTarget);
 
-        $this->shellExec("mv $a $b");
+        $this->shellExec("mv -v $a $b");
     } // }}}
 
     function chdir($location) // {{{
