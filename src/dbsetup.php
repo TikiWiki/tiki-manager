@@ -180,10 +180,22 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             $db_new = new Database($instance, $adapter);
             $db_new->host = $db->host;
 
-            $prefix = promptUser(
-                'Prefix to use for username and database', 'tiki');
+            $max_username_length = $adapter->getMaxUsernameLength($instance) ?: 16;
+            $max_prefix_length = $max_username_length - 5; // strlen('_user') == 5;
 
-            $db_new->createAccess($prefix);
+            $ok = false;
+            $prefix = 'tiki';
+
+            while(!$ok) {
+                warning("Prefix is a string with maximum of $max_prefix_length chars");
+                $prefix = promptUser('Prefix to use for username and database', $prefix);
+
+                if(strlen($prefix) <= $max_prefix_length) {
+                    $ok = $db_new->createAccess($prefix);
+                } else {
+                    $prefix = substr($prefix, 0, $max_prefix_length);
+                }
+            }
             $db = $db_new;
         }
 

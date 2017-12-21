@@ -11,6 +11,8 @@ class Local_Host
     private $location;
     private $env = array();
 
+    private $last_command_exit_code = 0;
+
     function chdir($location)
     {
         $this->location = $location;
@@ -21,7 +23,11 @@ class Local_Host
         $this->env[$var] = $value;
     }
 
-    function runCommands($commands, $output = false)
+    function hasErrors() {
+        return $this->last_command_exit_code !== 0;
+    }
+
+    function runCommands($commands, $output=false)
     {
         if (! is_array($commands))
             $commands = func_get_args();
@@ -47,6 +53,7 @@ class Local_Host
             if (is_resource($ph)) {
                 $result = trim(stream_get_contents($ph));
                 $code = pclose($ph);
+                $this->last_command_exit_code = $code;
 
                 trim_output("LOCAL $result");
                 if ($code != 0) {

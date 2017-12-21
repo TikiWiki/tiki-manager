@@ -68,10 +68,10 @@ class Database
         $this->user = "{$prefix}_user";
         $this->dbname = "{$prefix}_db";
 
-        $this->adapter->createDatabase($this->instance, $this->dbname);
-        $this->adapter->createUser($this->instance, $this->user, $this->pass);
-        $this->adapter->grantRights($this->instance, $this->user, $this->dbname);
-        $this->adapter->finalize($this->instance);
+        return $this->adapter->createUser($this->instance, $this->user, $this->pass)
+            && $this->adapter->createDatabase($this->instance, $this->dbname)
+            && $this->adapter->grantRights($this->instance, $this->user, $this->dbname)
+            && $this->adapter->finalize($this->instance);
     } // }}}
 }
 
@@ -121,11 +121,25 @@ class Database_Adapter_Mysql implements Database_Adapter
         $this->args = implode(' ', $args);
     } // }}}
 
+    function getMaxUsernameLength(Instance $instance) {
+        $access = $instance->getBestAccess('scripting');
+        $sql = "'"
+            . 'SELECT CHARACTER_MAXIMUM_LENGTH'
+            . ' FROM information_schema.COLUMNS'
+            . ' WHERE TABLE_NAME="user"'
+            .   ' AND TABLE_SCHEMA="mysql"'
+            .   ' AND COLUMN_NAME="User"'
+            . "'";
+        $cmd = "mysql {$this->args} -N -s -e {$sql}";
+        return $access->shellExec($cmd, $output=true);
+    }
+
     function createDatabase(Instance $instance, $name) // {{{
     {
         // FIXME : Not safemode compatible
         $access = $instance->getBestAccess('scripting');
-        $access->shellExec("mysqladmin {$this->args} create $name");
+        $access->shellExec("mysqladmin {$this->args} create $name", $output=true);
+        return $access->host->hasErrors() === false;
     } // }}}
 
     function createUser(Instance $instance, $username, $password) // {{{
@@ -136,7 +150,8 @@ class Database_Adapter_Mysql implements Database_Adapter
         $query = escapeshellarg("CREATE USER '$u'@'{$this->host}' IDENTIFIED BY '$p';");
 
         $access = $instance->getBestAccess('scripting');
-        $access->shellExec("echo $query | mysql {$this->args}");
+        $access->shellExec("echo $query | mysql {$this->args}", $output=true);
+        return $access->host->hasErrors() === false;
     } // }}}
 
     function grantRights(Instance $instance, $username, $database) // {{{
@@ -147,7 +162,8 @@ class Database_Adapter_Mysql implements Database_Adapter
         $query = escapeshellarg("GRANT ALL ON `$d`.* TO '$u'@'{$this->host}';");
 
         $access = $instance->getBestAccess('scripting');
-        $access->shellExec("echo $query | mysql {$this->args}");
+        $access->shellExec("echo $query | mysql {$this->args}", $output=true);
+        return $access->host->hasErrors() === false;
     } // }}}
 
     function finalize(Instance $instance) // {{{
@@ -155,6 +171,7 @@ class Database_Adapter_Mysql implements Database_Adapter
         // FIXME : Not FTP compatible
         $access = $instance->getBestAccess('scripting');
         $access->shellExec("mysqladmin {$this->args} reload");
+        return $access->host->hasErrors() === false;
     } // }}}
 
     function getSupportedExtensions() // {{{
