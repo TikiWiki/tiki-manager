@@ -331,10 +331,8 @@ class Access_Local extends Access implements ShellPrompt
 
         $host->sendFile($localFile, $remoteFile);
         $arg = implode(' ', array_map('escapeshellarg', $args));
-        $output = $host->runCommands(
-            "{$this->instance->phpexec} -d memory_limit=256M {$remoteFile} {$arg}",
-            "rm -v {$remoteFile}"
-        );
+        $output = $host->runCommands("{$this->instance->phpexec} -d memory_limit=256M {$remoteFile} {$arg}");
+        $host->runCommands("rm -v {$remoteFile}");
 
         return $output;
     } // }}}
