@@ -29,11 +29,11 @@ class Local_Host
 
     function runCommands($commands, $output=false)
     {
-        if (! is_array($commands))
-            $commands = func_get_args();
-
-        if ($output && !is_string($output)) {
-            array_pop($commands);
+        if (! is_array($commands)) {
+            // TODO: There several calls to this function, each one with different
+            //       parameters combination. It is hard to know when $output is a
+            //       flag or a command
+            $commands = array_filter(func_get_args(), 'is_string');
         }
 
         if ($this->location)
