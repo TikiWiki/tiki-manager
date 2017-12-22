@@ -608,26 +608,46 @@ class Instance
         $current = getcwd();
         chdir(BACKUP_FOLDER);
 
-        if ($this->detectDistribution() === 'ClearOS') {
-            $archiveLocation = dirname($this->webroot) . '/backup';
-            $archiveLocationLink = ARCHIVE_FOLDER . "/{$backup_directory}";
-            `ln -nsf $archiveLocation $archiveLocationLink`;
-        } else {
-            $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
-        }
+        $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
 
+        if ($this->detectDistribution() === 'ClearOS') {
+            if(is_link($archiveLocation)) {
+                if (!file_exists(readlink($archiveLocation))) {
+                    warning('Found broken link on backup folder, removing it ...');
+                    $access->shellExec('rm -fv ' . escapeshellarg($archiveLocation), true);
+                } else {
+                    warning(
+                        "Found symlink on backup folder. Moving backups to TRIM folder and"
+                        . " and symlinking it on the opposite direction."
+                    );
+
+                    $realArchiveLocation = readlink($archiveLocation);
+                    $access->shellExec('rm -fv ' . escapeshellarg($archiveLocation), true);
+                    $access->shellExec('mv ' . escapeshellarg($realArchiveLocation) . ' ' . escapeshellarg($archiveLocation), true);
+
+                    debug("Symlinking $archiveLocation to $realArchiveLocation");
+                    $access->shellExec('ln -nsf ' . escapeshellarg($archiveLocation) . ' ' . escapeshellarg($realArchiveLocation));
+                    unset($realArchiveLocation);
+                }
+            } else {
+                $archiveLocationLink = dirname($this->webroot) . '/backup';
+                debug("Symlinking $archiveLocation to $archiveLocationLink");
+                $access->shellExec('ln -nsf ' . escapeshellarg($archiveLocation) . ' ' . escapeshellarg($archiveLocationLink));
+            }
+        }
 
         $backup_user = $this->getProp('backup_user');
         $backup_group = $this->getProp('backup_group');
         $backup_perm = intval($this->getProp('backup_perm') ?: 0770);
 
-        if (! file_exists($archiveLocation)) {
-            mkdir($archiveLocation);
-            chmod($archiveLocation, $backup_perm);
-            chown($archiveLocation, $backup_user);
-            chgrp($archiveLocation, $backup_group);
+        if (!file_exists($archiveLocation)) {
+            mkdir($archiveLocation, $backup_perm, true);
         }
 
+        info("Assigning permissions to '{$archiveLocation}' ({$backup_user}:{$backup_group} " . decoct($backup_perm) . ")");
+        chmod($archiveLocation, $backup_perm);
+        chown($archiveLocation, $backup_user);
+        chgrp($archiveLocation, $backup_group);
 
         $output = array();
         $return_val = -1;
