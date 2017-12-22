@@ -117,9 +117,10 @@ function debug($text, $prefix=null, $hr='')
         $prefix = '[debug]:' . ($prefix ? " {$prefix}" : '');
         $output = prefix(stringfy($text), $prefix) . "\n";
         echo color($output, 'pink');
-    }
-    if (is_string($hr) && !empty($hr)) {
-        echo "$hr";
+
+        if (is_string($hr) && !empty($hr)) {
+            echo "$hr";
+        }
     }
     return $text;
 }
