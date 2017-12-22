@@ -131,14 +131,14 @@ class Database_Adapter_Mysql implements Database_Adapter
             .   ' AND COLUMN_NAME="User"'
             . "'";
         $cmd = "mysql {$this->args} -N -s -e {$sql}";
-        return $access->shellExec($cmd, $output=true);
+        return $access->shellExec($cmd, true);
     }
 
     function createDatabase(Instance $instance, $name) // {{{
     {
         // FIXME : Not safemode compatible
         $access = $instance->getBestAccess('scripting');
-        $access->shellExec("mysqladmin {$this->args} create $name", $output=true);
+        $access->shellExec("mysqladmin {$this->args} create $name", true);
         return $access->host->hasErrors() === false;
     } // }}}
 
@@ -150,7 +150,7 @@ class Database_Adapter_Mysql implements Database_Adapter
         $query = escapeshellarg("CREATE USER '$u'@'{$this->host}' IDENTIFIED BY '$p';");
 
         $access = $instance->getBestAccess('scripting');
-        $access->shellExec("echo $query | mysql {$this->args}", $output=true);
+        $access->shellExec("echo $query | mysql {$this->args}", true);
         return $access->host->hasErrors() === false;
     } // }}}
 
@@ -162,7 +162,7 @@ class Database_Adapter_Mysql implements Database_Adapter
         $query = escapeshellarg("GRANT ALL ON `$d`.* TO '$u'@'{$this->host}';");
 
         $access = $instance->getBestAccess('scripting');
-        $access->shellExec("echo $query | mysql {$this->args}", $output=true);
+        $access->shellExec("echo $query | mysql {$this->args}", true);
         return $access->host->hasErrors() === false;
     } // }}}
 
