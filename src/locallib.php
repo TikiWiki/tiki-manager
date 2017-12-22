@@ -30,11 +30,13 @@ class Local_Host
     function runCommands($commands, $output=false)
     {
         if (! is_array($commands)) {
-            // TODO: There several calls to this function, each one with different
-            //       parameters combination. It is hard to know when $output is a
-            //       flag or a command
-            $commands = array_filter(func_get_args(), 'is_string');
+            $commands = func_get_args();
         }
+
+        // TODO: There several calls to this function, each one with different
+        //       parameters combination. It is hard to know when $output is a
+        //       flag or a command. We have to change all calls to this function
+        $commands = array_filter($commands, 'is_string');
 
         if ($this->location)
             array_unshift($commands, 'cd ' . escapeshellarg($this->location));
