@@ -150,6 +150,7 @@ class Access_Local extends Access implements ShellPrompt
 {
     private $location;
     private $env = array();
+    private $hostlib = null;
 
     function __construct(Instance $instance)
     {
@@ -158,10 +159,10 @@ class Access_Local extends Access implements ShellPrompt
 
     private function getHost()
     {
-        if(!(is_object($this->hostInstance) && $this->hostInstance instanceof Local_Host)){
-            $this->hostInstance = new Local_Host();
+        if(!(is_object($this->hostlib) && $this->hostlib instanceof Local_Host)){
+            $this->hostlib = new Local_Host();
         }
-        return $this->hostInstance;
+        return $this->hostlib;
     }
 
     function firstConnect() // {{{

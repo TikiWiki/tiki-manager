@@ -106,94 +106,75 @@ class Database_Adapter_Dummy implements Database_Adapter
 class Database_Adapter_Mysql implements Database_Adapter
 {
     private $args;
-    private $host;
+    private $hostname;
 
-    function __construct($host, $masterUser, $masterPassword) // {{{
+    function __construct($hostname, $username, $password) // {{{
     {
-        $args = array();
-        $this->host = $host;
-        
-        $args[] = "-h " . escapeshellarg($host);
-        $args[] = "-u " . escapeshellarg($masterUser);
-        if ($masterPassword)
-            $args[] = '-p' . escapeshellarg($masterPassword);
-
-        $this->args = implode(' ', $args);
+        $this->hostname = $hostname;
+        $this->con = new PDO("mysql:host=$hostname", $username, $password); 
     } // }}}
 
     function getMaxUsernameLength(Instance $instance) {
-        $access = $instance->getBestAccess('scripting');
-        $sql = "'"
-            . 'SELECT CHARACTER_MAXIMUM_LENGTH'
+        $sql = 'SELECT CHARACTER_MAXIMUM_LENGTH'
             . ' FROM information_schema.COLUMNS'
             . ' WHERE TABLE_NAME="user"'
             .   ' AND TABLE_SCHEMA="mysql"'
-            .   ' AND COLUMN_NAME="User"'
-            . "'";
-        $cmd = "mysql {$this->args} -N -s -e {$sql}";
-        return $access->shellExec($cmd, true);
+            .   ' AND COLUMN_NAME="User"';
+
+        $result = $this->con->query($sql);
+        $return = $result ? $result->fetchColumn(0) : false;
+        debug($sql, '[PDO]');
+        debug($return, '[PDO]');
+        return $return;
     }
 
     function createDatabase(Instance $instance, $name) // {{{
     {
-        // FIXME : Not safemode compatible
-        $access = $instance->getBestAccess('scripting');
-        $access->shellExec("mysqladmin {$this->args} create $name", true);
-        return $access->host->hasErrors() === false;
+        $sql = sprintf("CREATE DATABASE `%s`;", $name);
+        $statement = $this->con->prepare($sql);
+        $result = $statement->execute();
+        if(!$result) {
+            warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
+        }
+        return $result;
     } // }}}
 
     function createUser(Instance $instance, $username, $password) // {{{
     {
-        // FIXME : Not FTP compatible
-        $u = $this->escapeMysqlString($username);
-        $p = $this->escapeMysqlString($password);
-        $query = escapeshellarg("CREATE USER '$u'@'{$this->host}' IDENTIFIED BY '$p';");
-
-        $access = $instance->getBestAccess('scripting');
-        $access->shellExec("echo $query | mysql {$this->args}", true);
-        return $access->host->hasErrors() === false;
+        $statement = $this->con->prepare("CREATE USER ?@? IDENTIFIED BY ?;");
+        $result = $statement->execute(array($username, $this->hostname, $password));
+        if(!$result) {
+            warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
+        }
+        return $result;
     } // }}}
 
     function grantRights(Instance $instance, $username, $database) // {{{
     {
-        // FIXME : Not FTP compatible
-        $u = $this->escapeMysqlString($username);
-        $d = $this->escapeMysqlString($database);
-        $query = escapeshellarg("GRANT ALL ON `$d`.* TO '$u'@'{$this->host}';");
-
-        $access = $instance->getBestAccess('scripting');
-        $access->shellExec("echo $query | mysql {$this->args}", true);
-        return $access->host->hasErrors() === false;
+        $sql = sprintf("GRANT ALL ON `%s`.* TO ?@?;", $database);
+        $statement = $this->con->prepare($sql);
+        $result = $statement->execute(array($username, $this->hostname));
+        if(!$result) {
+            warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
+        }
+        return $result;
     } // }}}
 
     function finalize(Instance $instance) // {{{
     {
-        // FIXME : Not FTP compatible
-        $access = $instance->getBestAccess('scripting');
-        $access->shellExec("mysqladmin {$this->args} reload");
-        return $access->host->hasErrors() === false;
+        $sql = "FLUSH PRIVILEGES;";
+        $statement = $this->con->prepare("FLUSH PRIVILEGES;");
+        $result = $statement->execute();
+        if(!$result) {
+            warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
+        }
+        return $result;
     } // }}}
 
     function getSupportedExtensions() // {{{
     {
         return array('mysqli', 'mysql', 'pdo_mysql');
     } // }}}
-
-    protected function escapeMysqlString($string)
-    {
-        if (function_exists('mysql_escape_string')){
-            return mysql_escape_string($string);
-        }
-
-        // Fallback for new versions of PHP where DB connection is required
-        // See:
-        // http://php.net/manual/en/function.mysql-real-escape-string.php#101248
-        // https://dev.mysql.com/doc/refman/5.5/en/mysql-real-escape-string.html
-        // https://github.com/mysql/mysql-server/blob/71f48ab393bce80a59e5a2e498cd1f46f6b43f9a/mysys/charset.c
-        $search = array("\\",  "\x00", "\n",  "\r",  "'",  '"', "\x1a");
-        $replace = array("\\\\","\\0","\\n", "\\r", "\\'", '\"', "\\Z");
-        return str_replace($search, $replace, $string);
-    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
