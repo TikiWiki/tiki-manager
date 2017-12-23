@@ -158,10 +158,10 @@ class Access_Local extends Access implements ShellPrompt
 
     private function getHost()
     {
-        if(!$this->host){
-            $this->host = new Local_Host();
+        if(!(is_object($this->hostInstance) && $this->hostInstance instanceof Local_Host)){
+            $this->hostInstance = new Local_Host();
         }
-        return $this->host;
+        return $this->hostInstance;
     }
 
     function firstConnect() // {{{
