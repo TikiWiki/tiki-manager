@@ -654,8 +654,10 @@ class Instance
         $tar = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
 
         info("Creating archive at {$tar}");
-        $command = 'nice -n 19 tar -cjf ' . escapeshellarg($tar) . ' ' . escapeshellarg($backup_directory);
+        $command = 'nice -n 19 tar -cjpf ' . escapeshellarg($tar) . ' ' . escapeshellarg($backup_directory);
+        debug($command);
         exec($command, $output, $return_var);
+        debug($output, $prefix="({$return_var})>>", "\n\n");
 
         $error_flag += $return_var;
         if ($return_var != 0)
@@ -692,14 +694,14 @@ class Instance
 
         echo $access->shellExec(
             "mkdir -p {$this->tempdir}/restore",
-            "tar -jx -C {$this->tempdir}/restore -f " . escapeshellarg($remote)
+            "tar -jxp -C {$this->tempdir}/restore -f " . escapeshellarg($remote)
         );
 
         info('Reading manifest...');
 
         $current = trim(`pwd`);
         chdir(TEMP_FOLDER);
-        exec(debug("tar -jxvf $archive $basetardir/manifest.txt"));
+        exec(debug("tar -jxf $archive $basetardir/manifest.txt"));
         $manifest = file_get_contents("{$basetardir}/manifest.txt");
         chdir($current);
 
