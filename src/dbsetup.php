@@ -180,7 +180,7 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             $db->pass = getPassword(true); print "\n";
             $ok = perform_database_connectivity_test($instance, $db);
         }
-        $ok && debug('Connected into MySQL with adminstrative privileges');
+        debug('Connected to MySQL with adminstrative privileges');
 
         if (strtolower($type{0}) == 'n')
             $db->dbname = promptUser('Database name', 'tiki_db');
