@@ -6,14 +6,32 @@
 
 # This file is a replacement for setup.sh in test in 1.9 version
 
-DIRS="backups db dump img/wiki img/wiki_up img/trackers modules/cache temp temp/cache templates_c templates styles maps whelp mods files tiki_tests/tests"
+DIRS=(
+    "backups"
+    "db"
+    "dump"
+    "files"
+    "img/trackers"
+    "img/wiki_up"
+    "img/wiki"
+    "maps"
+    "mods"
+    "modules/cache"
+    "styles"
+    "temp"
+    "temp/cache"
+    "templates_c"
+    "templates"
+    "tiki_tests/tests"
+    "whelp"
+)
 
 if [ -d 'lib/Galaxia' ]; then
     DIRS=$DIRS" lib/Galaxia/processes"
 fi
 
-AUSER=nobody
-AGROUP=nobody
+AUSER=$(grep -Eo -m1 '^(apache|www-data|httpd?)' /etc/passwd || echo 'nobody')
+AGROUP=$(grep -Eo -m1 '^(apache|www-data|httpd?)' /etc/group || echo 'nobody')
 VIRTUALS=""
 USER=`whoami`
 
@@ -34,45 +52,34 @@ else
     fi
 fi
 
-COMMAND=fix
+echo "Checking dirs : "
+for dir in $DIRS; do
+    echo -n "  $dir ... "
+    if [ ! -d $dir ]; then
+        mkdir -vp $dir
+    fi
+done
 
-if [ "$COMMAND" = 'fix' ]; then
-    AUSER=$USER
-    AGROUP=$REPLY
-
-    echo "Checking dirs : "
-    for dir in $DIRS; do
-        echo -n "  $dir ... "
-        if [ ! -d $dir ]; then
-            echo -n " Creating directory"
-            mkdir -p $dir
-        fi
-    done
-
-    echo -n "Fix global perms ..."
-    chown -R $AUSER:$AGROUP .
-    echo -n " chowned ..."
+echo -n "Changing `pwd` owner to ${AUSER}:${AGROUP} ..."
+chown -R $AUSER:$AGROUP .
+echo " chowned ..."
 
 #   find . ! -regex '.*^\(devtools\).*' -type f -exec chmod 644 {} \;   
-#   echo -n " files perms fixed ..."
-#   find . -type d -exec chmod 755 {} \;
-#   echo " dirs perms fixed ... done"
+echo -n "Fixing permissions ..."
+find . \( -type d -or -name "*.sh" \) -exec chmod 755 {} \;
+find . -type f -exec chmod 644 {} \;
+echo " ... done"
 
-    chmod -R u=rwX,go=rX .
-
-    echo " done."
-
-    echo -n "Fix special dirs ..."
-    if [ "$USER" = 'root' ]; then
-        chmod -R g+w $DIRS
-    else
-        chmod -R go+w $DIRS
-    fi
-
-#   chmod 664 robots.txt tiki-install.php
-    echo " done."
-
+echo -n "Fix special dirs ..."
+if [ "$USER" = 'root' ]; then
+    chmod -R g+w "${DIRS[@]}"
+    ls -ld "${DIRS[@]}"
+else
+    chmod -R go+w "${DIRS[@]}"
+    ls -ld "${DIRS[@]}"
 fi
+
+echo " done."
 
 exit 0
 
