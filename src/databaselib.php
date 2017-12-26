@@ -107,6 +107,7 @@ class Database_Adapter_Mysql implements Database_Adapter
 {
     private $args;
     private $hostname;
+    private $con;
 
     function __construct($hostname, $username, $password) // {{{
     {
