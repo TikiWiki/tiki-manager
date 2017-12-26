@@ -327,79 +327,22 @@ class Application_Tiki extends Application
             return "tags/$version";
     } // }}}
 
-    function fixPermissions() // {{{
+    function fixPermissions($ower_id=null, $group_id=null) // {{{
     {
         $access = $this->instance->getBestAccess('scripting');
 
         if ($access instanceof ShellPrompt) {
+            $webroot = $this->instance->webroot;
             $access->chdir($this->instance->webroot);
 
-            if ($this->instance->isModernTiki())
-                $ret = $access->shellExec("sh setup.sh -n fix");    // does composer as well
-            else {
+            if ($this->instance->isModernTiki()) {
+                $ret = $access->shellExec("cd $webroot && sh setup.sh -n fix");    // does composer as well
+            } else {
                 warning('Old Tiki detected, running bundled TRIM setup.sh script.');
                 $filename = $this->instance->getWorkPath('setup.sh');
                 $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
                 $ret = $access->shellExec('bash ' . escapeshellarg($filename));
             }
-        }
-        elseif ($access instanceof Mountable) {
-
-            // XXX: ... not supported for some reason?
-            return;
-            // XXX: ... not supported for some reason?
-
-            $target = MOUNT_FOLDER . $this->instance->webroot;
-            $cwd = getcwd();
-
-            $access->mount(MOUNT_FOLDER);
-            chdir($target);
-
-            // This code was taken from the installer.
-            $dirs = array (
-                'backups',
-                'dump',
-                'img/wiki',
-                'img/wiki_up',
-                'img/trackers',
-                'modules/cache',
-                'temp',
-                'temp/cache',
-                'templates_c',
-                'templates',
-                'styles',
-                'whelp'
-            );
-
-            $ret = "";
-            foreach ($dirs as $dir) {
-                $dir = $dir;
-
-                // Create directories as needed
-                if (! is_dir($dir))
-                    mkdir($dir,02775);
-
-                chmod($dir,02775);
-            }
-
-            $dirs = array(
-                'db'
-            );
-
-            $ret = "";
-            foreach ($dirs as $dir) {
-                $dir = $dir;
-
-                // Create directories as needed
-                if (! is_dir($dir))
-                    mkdir($dir,02775);
-
-                chmod($dir,02777);
-            }
-
-            $access->umount();
-
-            chdir($cwd);
         }
     } // }}}
 
