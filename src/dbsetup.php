@@ -154,23 +154,33 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             'WARNING: Creating databases and users requires ' .
             'root privileges on MySQL.'
         );
-        $type = strtolower(
-            promptUser(
-                'Should a new database and user be created now (both)?',
-                'yes', array('yes', 'no')
-            )
-        );
 
-        do {
-            $db = new Database($instance, $adapter);
+        $type = 'y';
+        if (empty(getenv('NEW_DB_PREFIX'))) {
+            $type = strtolower(
+                promptUser(
+                    'Should a new database and user be created now (both)?',
+                    'yes', array('yes', 'no')
+                )
+            );
+        }
+
+        $db = new Database($instance, $adapter);
+        $db->host = getenv('MYSQL_HOST') ?: 'localhost';
+        $db->user = getenv('MYSQL_ROOT_USER') ?: 'root';
+        $db->pass = getenv('MYSQL_ROOT_PASSWORD') ?: '';
+        $ok = perform_database_connectivity_test($instance, $db);
+
+        while (!$ok) {
             $db->host = strtolower(
                 promptUser('Database host', 'localhost'));
             $db->user = strtolower(
                 promptUser('Database user', 'root'));
             print 'Database password : ';
             $db->pass = getPassword(true); print "\n";
+            $ok = perform_database_connectivity_test($instance, $db);
         }
-        while (! perform_database_connectivity_test($instance, $db));
+        $ok && debug('Connected into MySQL with adminstrative privileges');
 
         if (strtolower($type{0}) == 'n')
             $db->dbname = promptUser('Database name', 'tiki_db');
@@ -183,8 +193,14 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             $max_username_length = $adapter->getMaxUsernameLength($instance) ?: 16;
             $max_prefix_length = $max_username_length - 5; // strlen('_user') == 5;
 
-            $ok = false;
             $prefix = 'tiki';
+
+            $ok = false;
+            if (!empty(getenv('NEW_DB_PREFIX'))) {
+                $prefix = getenv('NEW_DB_PREFIX') ?: $prefix;
+                $ok = $db_new->createAccess($prefix);
+                $ok && debug("Got prefix '{$prefix}' from environment");
+            }
 
             while(!$ok) {
                 warning("Prefix is a string with maximum of $max_prefix_length chars");
@@ -196,14 +212,17 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
                     $prefix = substr($prefix, 0, $max_prefix_length);
                 }
             }
+
             $db = $db_new;
         }
 
         $types = $db->getUsableExtensions();
+        $type = getenv('MYSQL_DRIVER');
+        $db->type = $type;
 
-        if (count($types) == 1)
+        if (count($types) == 1) {
             $db->type = reset($types);
-        else {
+        } else if(empty($type)) {
             echo "Which extension should be used?\n";
             foreach ($types as $key => $name)
                 echo "[$key] $name\n";
