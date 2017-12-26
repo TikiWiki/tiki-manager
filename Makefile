@@ -20,13 +20,13 @@ help: default
 
 # Use this to add a remote installation
 instance:
-	@$(PHP) scripts/addinstance.php
+	@$(PHP) scripts/addinstance.php $(ARGS)
 
 editinstance:
-	@$(PHP) scripts/editinstance.php
+	@$(PHP) scripts/editinstance.php $(ARGS)
 
 blank:
-	@$(PHP) scripts/addinstance.php blank
+	@$(PHP) scripts/addinstance.php blank $(ARGS)
 
 viewdb:
 ifndef SQLITE_VERSION
@@ -35,63 +35,63 @@ endif
 	@$(SQLITE) data/trim.db
 
 check:
-	@$(PHP) scripts/check.php
+	@$(PHP) scripts/check.php $(ARGS)
 
 verify:
-	@$(PHP) scripts/check.php
+	@$(PHP) scripts/check.php $(ARGS)
 
 watch:
-	@$(PHP) scripts/setupwatch.php
+	@$(PHP) scripts/setupwatch.php $(ARGS)
 
 # Use this to update version within the same branch, no major versions changes
 update:
-	@$(PHP) scripts/update.php
+	@$(PHP) scripts/update.php $(ARGS)
 
 # Use this to update major releases
 upgrade:
 	@$(PHP) scripts/update.php switch
 
 convert:
-	@$(PHP) scripts/tiki/convert.php
+	@$(PHP) scripts/tiki/convert.php $(ARGS)
 
 access:
-	@$(PHP) scripts/access.php
+	@$(PHP) scripts/access.php $(ARGS)
 
 backup:
 	@$(BASH) scripts/backup.sh $(PHP)
 
 restore:
-	@$(PHP) scripts/restore.php
+	@$(PHP) scripts/restore.php $(ARGS)
 
 fix:
-	@$(PHP) scripts/tiki/fixperms.php
+	@$(PHP) scripts/tiki/fixperms.php $(ARGS)
 
 cli:
-	@$(PHP) scripts/tiki/cli.php
+	@$(PHP) scripts/tiki/cli.php $(ARGS)
 
 detect:
-	@$(PHP) scripts/detect.php
+	@$(PHP) scripts/detect.php $(ARGS)
 
 enablewww:
-	@$(PHP) scripts/enablewww.php
+	@$(PHP) scripts/enablewww.php $(ARGS)
 
 delete:
-	@$(PHP) scripts/delete.php
+	@$(PHP) scripts/delete.php $(ARGS)
 
 profile:
-	@$(PHP) scripts/tiki/profile.php
+	@$(PHP) scripts/tiki/profile.php $(ARGS)
 
 report:
-	@$(PHP) scripts/tiki/report.php
+	@$(PHP) scripts/tiki/report.php $(ARGS)
 
 copysshkey:
-	@$(PHP) scripts/copysshkey.php
+	@$(PHP) scripts/copysshkey.php $(ARGS)
 
 clone:
-	@$(PHP) scripts/clone.php clone
+	@$(PHP) scripts/clone.php clone $(ARGS)
 
 cloneandupgrade:
-	@$(PHP) scripts/clone.php upgrade
+	@$(PHP) scripts/clone.php upgrade $(ARGS)
 
 clean:
 	@echo 'WARNING!'
