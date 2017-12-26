@@ -52,8 +52,8 @@ function getUpgradeVersion($instance)
     }
 
     if ($found_incompatibilities) {
-        echo "If some versions are not offered, it's likely because the host " .
-            "server doesn't meet the requirements for that version (ex: PHP version is too old)\n";
+        warning("If some versions are not offered, it's likely because the host " .
+            "server doesn't meet the requirements for that version (ex: PHP version is too old)");
     }
 
     $input = promptUser('>>> ');
