@@ -327,7 +327,7 @@ class Application_Tiki extends Application
             return "tags/$version";
     } // }}}
 
-    function fixPermissions($ower_id=null, $group_id=null) // {{{
+    function fixPermissions() // {{{
     {
         $access = $this->instance->getBestAccess('scripting');
 
@@ -336,12 +336,12 @@ class Application_Tiki extends Application
             $access->chdir($this->instance->webroot);
 
             if ($this->instance->isModernTiki()) {
-                $ret = $access->shellExec("cd $webroot && sh setup.sh -n fix");    // does composer as well
+                $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
             } else {
                 warning('Old Tiki detected, running bundled TRIM setup.sh script.');
                 $filename = $this->instance->getWorkPath('setup.sh');
                 $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
-                $ret = $access->shellExec('bash ' . escapeshellarg($filename));
+                $ret = $access->shellExec("cd $webroot && bash " . escapeshellarg($filename));
             }
         }
     } // }}}
