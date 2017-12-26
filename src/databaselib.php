@@ -163,7 +163,6 @@ class Database_Adapter_Mysql implements Database_Adapter
 
     function finalize(Instance $instance) // {{{
     {
-        $sql = "FLUSH PRIVILEGES;";
         $statement = $this->con->prepare("FLUSH PRIVILEGES;");
         $result = $statement->execute();
         if(!$result) {
