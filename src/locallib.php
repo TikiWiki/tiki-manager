@@ -15,6 +15,7 @@ class Local_Host
 
     function chdir($location)
     {
+        chdir($location);
         $this->location = $location;
     }
 
