@@ -58,7 +58,7 @@ access:
 	@$(PHP) scripts/access.php $(ARGS)
 
 backup:
-	@$(BASH) scripts/backup.sh $(PHP)
+	@$(BASH) scripts/backup.sh "$(PHP)" "$(ARGS)"
 
 restore:
 	@$(PHP) scripts/restore.php $(ARGS)

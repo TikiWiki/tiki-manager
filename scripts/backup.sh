@@ -12,7 +12,7 @@ if [ $RETVAL -eq 0 ]; then
     echo
 	cpulimit -l${LIMIT} $1 scripts/backup.php
 else
-	$@ scripts/backup.php
+	$1 scripts/backup.php $2
 fi
 
 # vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
