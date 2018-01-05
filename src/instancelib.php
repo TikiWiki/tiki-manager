@@ -758,8 +758,6 @@ class Instance
         perform_database_setup($this,
             "{$this->tempdir}/restore/{$basetardir}/database_dump.sql");
 
-        $version->collectChecksumFromInstance($this);
-
         if ($this->app == 'tiki')
             $this->getApplication()->fixPermissions();
 
@@ -774,6 +772,8 @@ class Instance
         info("Fixing permissions for {$this->name}");
 
         $this->getApplication()->fixPermissions();
+
+        $version->collectChecksumFromInstance($this);
     } // }}}
 
     function getExtraBackups() // {{{
@@ -899,7 +899,7 @@ class Version
         $missingFiles = array();
 
         foreach (explode("\n", $output) as $line) {
-            if (empty($line) || strpos($line, ':./vendor/') !== false)
+            if (empty($line) || preg_match(',:\./vendor(_bundled|_custom|_extra)?/,', $line))
                 continue;
 
             list($hash, $filename) = explode(':', $line);
@@ -926,6 +926,7 @@ class Version
 
     function collectChecksumFromSource(Instance $instance) // {{{
     {
+        debug("Collect Checksum From Source");
         $app = $instance->getApplication();
 
         $folder = cache_folder($app, $this);
@@ -942,6 +943,7 @@ class Version
 
     function collectChecksumFromInstance(Instance $instance) // {{{
     {
+        debug("Collect Checksum From Instance");
         $app = $instance->getApplication();
         $app->beforeChecksumCollect();
 
