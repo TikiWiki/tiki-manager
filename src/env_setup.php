@@ -115,11 +115,23 @@ function debug($text, $prefix=null, $hr='')
 {
     if(TRIM_DEBUG) {
         $prefix = '[debug]:' . ($prefix ? " {$prefix}" : '');
-        $output = prefix(stringfy($text), $prefix) . "\n";
+        $output = "\n";
+
+        if (getenv('TRIM_DEBUG_TRACE') === 'true') {
+            ob_start();
+            debug_print_backtrace();
+            $output .= prefix(ob_get_clean(), $prefix) . "\n";
+        }
+
+        $output .= prefix(stringfy($text), $prefix) . "\n";
         echo color($output, 'pink');
 
         if (is_string($hr) && !empty($hr)) {
             echo "$hr";
+        }
+
+        if (getenv('TRIM_DEBUG_LOG')) {
+            file_put_contents(getenv('TRIM_DEBUG_LOG'), "$output\n", FILE_APPEND);
         }
     }
     return $text;
