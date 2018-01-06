@@ -887,6 +887,8 @@ class Version
         $app->beforeChecksumCollect();
 
         $access = $instance->getBestAccess('scripting');
+        $access->shellExec("{$instance->phpexec} {$instance->webroot}/console.php cache:clear");
+
         $output = $access->runPHP(
             dirname(__FILE__) . '/../scripts/generate_md5_list.php',
             array($instance->webroot)
