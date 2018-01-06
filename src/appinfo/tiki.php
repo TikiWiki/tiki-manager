@@ -283,10 +283,7 @@ class Application_Tiki extends Application
             if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
 
                 info('Upgrading svn...');
-
-                $access->shellExec(
-                    "rm -Rf " . escapeshellarg( $this->instance->getWebPath('temp/cache'))
-                );
+                $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear");
 
                 $svn = new RC_SVN(SVN_TIKIWIKI_URI);
                 $svn->updateInstanceTo($this->instance, $version->branch);
