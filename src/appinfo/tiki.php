@@ -98,12 +98,10 @@ class Application_Tiki extends Application
         $this->installed = true;
 
         $version = $this->registerCurrentInstallation();
-        $version->collectChecksumFromSource($this->instance);
-
-        $this->fixPermissions();
+        $this->fixPermissions(); // it also runs composer!
 
         if (! $access->fileExists($this->instance->getWebPath('.htaccess'))) {
-            $access->moveFile(
+            $access->uploadFile(
                 $this->instance->getWebPath('_htaccess'),
                 $this->instance->getWebPath('.htaccess')
             );
@@ -113,6 +111,8 @@ class Application_Tiki extends Application
             $access->shellExec('touch ' .
                 escapeshellarg($this->instance->getWebPath('db/lock')));
         }
+
+        $version->collectChecksumFromInstance($this->instance);
     } // }}}
 
     function getBranch() // {{{
