@@ -899,9 +899,6 @@ class Version
         $missingFiles = array();
 
         foreach (explode("\n", $output) as $line) {
-            if (empty($line) || preg_match(',:\./vendor(_bundled|_custom|_extra)?/,', $line))
-                continue;
-
             list($hash, $filename) = explode(':', $line);
 
             if (! isset($known[$filename]))
