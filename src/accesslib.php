@@ -173,53 +173,50 @@ class Access_Local extends Access implements ShellPrompt
     function getInterpreterPath($instance2 = null) // {{{
     {
         $host = $this->getHost();
-        
-        $sets = array(
-            array('which php', 'which php5', 'which php4'),
+
+        $attempts = array(
+            "command php -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
+            "command php7 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
+            "command php5 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
+            "which php4"
         );
 
-        foreach ($sets as $attempt) {
+        // Get possible paths
+        $phps = $host->runCommands($attempts);
+        $phps = explode("\n", $phps);
 
-            // Get possible paths
-            $phps = $host->runCommands($attempt);
-            $phps = explode("\n", $phps);
-
-            // Check different versions
-            $valid = array();
-            foreach ($phps as $interpreter) {
-                if (! in_array(basename($interpreter), array('php', 'php5')))
-                    continue;
-
-                $versionInfo = $host->runCommands("$interpreter -v");
-                if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
-                    $valid[$matches[1]] = $interpreter;
-            }
-
-            // Handle easy cases
-            if (count($valid) == 0)
+        // Check different versions
+        $valid = array();
+        foreach ($phps as $interpreter) {
+            if (! in_array(basename($interpreter), array('php', 'php5')))
                 continue;
-            if (count($valid) == 1)
-                return reset($valid);
 
-            // List available options for user
-            echo "Multiple PHP interpreters available on host :\n";
-            $counter = 0;
-            krsort($valid);
-            $versions = array_keys($valid);
-            foreach ($valid as $version => $path) {
-                echo "[$counter] $path ($version)\n";
-                $counter++;
-            }
-
-            // Ask user
-            $counter--;
-            $selection = -1;
-            while (! array_key_exists($selection, $versions))
-                $selection = readline("Which version do you want to use? (0-$counter) : ");
-
-            $version = $versions[$selection];
-            return $valid[$version];
+            $versionInfo = $host->runCommands("$interpreter -v");
+            if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
+                $valid[$matches[1]] = $interpreter;
         }
+
+        if (count($valid) == 1)
+            return reset($valid);
+
+        // List available options for user
+        echo "Multiple PHP interpreters available on host :\n";
+        $counter = 0;
+        krsort($valid);
+        $versions = array_keys($valid);
+        foreach ($valid as $version => $path) {
+            echo "[$counter] $path ($version)\n";
+            $counter++;
+        }
+
+        // Ask user
+        $counter--;
+        $selection = -1;
+        while (! array_key_exists($selection, $versions))
+            $selection = readline("Which version do you want to use? (0-$counter) : ");
+
+        $version = $versions[$selection];
+        return $valid[$version];
     } // }}}
 
     function getSVNPath() // {{{
