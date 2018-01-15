@@ -114,7 +114,7 @@ function error($text, $prefix=null)
 function debug($text, $prefix=null, $hr='')
 {
     if(TRIM_DEBUG) {
-        $prefix = '[debug]:' . ($prefix ? " {$prefix}" : '');
+        $prefix = '[' . date('Y-m-d H:i:s') . '][debug]:' . ($prefix ? " {$prefix}" : '');
         $output = "\n";
 
         if (getenv('TRIM_DEBUG_TRACE') === 'true') {

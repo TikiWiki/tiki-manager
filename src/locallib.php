@@ -49,7 +49,7 @@ class Local_Host
         foreach ($commands as $cmd) {
             $cmd .= ' 2>&1';
 
-            debug($cmd);
+            debug(var_export($this->env, true) . "\n" . $cmd);
             $ph = popen($cmd, 'r');
 
             $result = '';
