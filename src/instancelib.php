@@ -438,6 +438,9 @@ class Instance
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
+
+        $path_env = getenv('PATH');
+
         if (strlen($path) > 0) {
             $version = $access->getInterpreterVersion($path);
             $this->phpversion = $version;
@@ -445,6 +448,13 @@ class Instance
 
             $this->phpexec = $path;
             $this->save();
+
+            // even passing full path to php binary, we need to fix PATH
+            // so scripts like setup.sh can use correct php version
+            $bin_folder = dirname($path);
+            if(strpos($path_env, $bin_folder) === false) {
+                $access->setenv('PATH', "${bin_folder}:${path_env}");
+            }
 
             return $version;
         }
