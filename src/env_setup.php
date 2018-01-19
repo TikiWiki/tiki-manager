@@ -260,8 +260,8 @@ if (! in_array('sqlite', PDO::getAvailableDrivers()))
     die(error("The SQLite PHP extension is not available. Install to continue."));
 
 // Check for required system dependencies
-$ssh = `which ssh`;
-$kg = `which ssh-keygen`;
+$ssh = `export PATH; which ssh`;
+$kg = `export PATH; which ssh-keygen`;
 if (empty($ssh) || empty($kg)) {
     die(error("SSH tools not installed on current machine. " .
         "Make sure 'ssh' and 'ssh-keygen' and are installed.\n"));
