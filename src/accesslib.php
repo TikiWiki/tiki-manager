@@ -159,10 +159,35 @@ class Access_Local extends Access implements ShellPrompt
 
     private function getHost()
     {
+        static $changeLocation = null;
+
         if(!(is_object($this->hostlib) && $this->hostlib instanceof Local_Host)){
             $this->hostlib = new Local_Host();
         }
-        return $this->hostlib;
+        $host = $this->hostlib;
+
+        // change cwd before executing commands, for instance in CoreOS it may influence what
+        // php interpreter version is used to execute commands, if the dir is not available
+        // try the parent directory
+        if ($changeLocation === null && !empty($this->instance->webroot)) {
+            $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
+            if ($output == "EXISTS") {
+                $changeLocation = $this->instance->webroot;
+            } else {
+                $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
+                if ($output == "EXISTS") {
+                    $changeLocation = dirname($this->instance->webroot);
+                }
+            }
+            if ($changeLocation === null) {
+                $changeLocation = false;
+            }
+        }
+        if ($changeLocation) {
+            $host->chdir($changeLocation);
+        }
+
+        return $host;
     }
 
     function firstConnect() // {{{
@@ -453,7 +478,32 @@ class Access_SSH extends Access implements ShellPrompt
 
     private function getHost()
     {
-        return new SSH_Host($this->host, $this->user, $this->port);
+        static $changeLocation = null;
+
+        $host = new SSH_Host($this->host, $this->user, $this->port);
+
+        // change cwd before executing commands, for instance in CoreOS it may influence what
+        // php interpreter version is used to execute commands, if the dir is not available
+        // try the parent directory
+        if ($changeLocation === null && !empty($this->instance->webroot)) {
+            $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
+            if ($output == "EXISTS") {
+                $changeLocation = $this->instance->webroot;
+            } else {
+                $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
+                if ($output == "EXISTS") {
+                    $changeLocation = dirname($this->instance->webroot);
+                }
+            }
+            if ($changeLocation === null) {
+                $changeLocation = false;
+            }
+        }
+        if ($changeLocation) {
+            $host->chdir($changeLocation);
+        }
+
+        return $host;
     }
 
     function firstConnect() // {{{
