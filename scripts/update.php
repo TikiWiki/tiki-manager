@@ -40,6 +40,10 @@ foreach ($selection as $instance) {
     $matches_a = array();
     preg_match('/(\d+\.|trunk)/', $contents, $matches_a);
 
+    if (!is_array($matches_a) || count($matches_a) === 0) {
+        $matches_a = array(0);
+    }
+
     if (ARG_SWITCH) {
         $versions = array();
         $versions_raw = $app->getVersions();
