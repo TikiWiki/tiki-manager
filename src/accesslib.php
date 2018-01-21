@@ -175,6 +175,7 @@ class Access_Local extends Access implements ShellPrompt
         $host = $this->getHost();
 
         $attempts = array(
+            'command -v php 2>/dev/null',
             "command php -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
             "command php7 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
             "command php5 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
@@ -188,12 +189,16 @@ class Access_Local extends Access implements ShellPrompt
         // Check different versions
         $valid = array();
         foreach ($phps as $interpreter) {
-            if (! in_array(basename($interpreter), array('php', 'php5')))
+            if ('php' !== substr(basename($interpreter), 0, 3)) {
                 continue;
+            }
 
             $versionInfo = $host->runCommands("$interpreter -v");
-            if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
-                $valid[$matches[1]] = $interpreter;
+            if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches)) {
+                if (empty($valid[$matches[1]])) {
+                    $valid[$matches[1]] = $interpreter;
+                }
+            }
         }
 
         if (count($valid) == 1)
