@@ -20,9 +20,6 @@ help: default
 
 .PHONY: backup
 
-teste:
-	@echo $(PHP)
-
 # Use this to add a remote installation
 instance:
 	@$(PHP) scripts/addinstance.php $(ARGS)
@@ -120,3 +117,8 @@ clean-files:
 		find backup -type l -exec readlink -f {} \; | xargs rm -f\
 		rm -rf cache/* backup/* logs/*;\
 	fi
+
+list-make-vars:
+	$(foreach v, $(shell sed -En '/^\w+\s*=/s/\s*=.*$$//p' Makefile), \
+	  $(info $(v) = $($(v))))
+	@echo
