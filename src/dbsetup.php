@@ -156,7 +156,8 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
         );
 
         $type = 'y';
-        if (empty(getenv('NEW_DB_PREFIX'))) {
+        $new_db_prefix = getenv('NEW_DB_PREFIX');
+        if (empty($new_db_prefix)) {
             $type = strtolower(
                 promptUser(
                     'Should a new database and user be created now (both)?',
@@ -196,8 +197,8 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             $prefix = 'tiki';
 
             $ok = false;
-            if (!empty(getenv('NEW_DB_PREFIX'))) {
-                $prefix = getenv('NEW_DB_PREFIX') ?: $prefix;
+            if (!empty($new_db_prefix)) {
+                $prefix = $new_db_prefix ?: $prefix;
                 $ok = $db_new->createAccess($prefix);
                 $ok && debug("Got prefix '{$prefix}' from environment");
             }

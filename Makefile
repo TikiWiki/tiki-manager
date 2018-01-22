@@ -5,6 +5,8 @@ PHP = php -d memory_limit=256M
 SQLITE = sqlite3
 SQLITE_VERSION := $(shell $(SQLITE) --version 2> /dev/null)
 BASH = bash
+-include data/trim.cfg
+
 
 # No changes should be required from here
 default:
@@ -17,6 +19,9 @@ default:
 help: default
 
 .PHONY: backup
+
+teste:
+	@echo $(PHP)
 
 # Use this to add a remote installation
 instance:
