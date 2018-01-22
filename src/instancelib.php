@@ -664,7 +664,11 @@ class Instance
         $tar = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
 
         info("Creating archive at {$tar}");
-        $command = 'nice -n 19 tar -cjpf ' . escapeshellarg($tar) . ' ' . escapeshellarg($backup_directory);
+        $command = 'nice -n 19 tar -cjp'
+            . ' -C ' . BACKUP_FOLDER
+            . ' -f ' . escapeshellarg($tar)
+            . ' '    . escapeshellarg($backup_directory);
+
         debug($command);
         exec($command, $output, $return_var);
         debug($output, $prefix="({$return_var})>>", "\n\n");
