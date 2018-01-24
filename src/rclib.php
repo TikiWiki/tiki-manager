@@ -23,11 +23,14 @@ class RC_SVN
         if (isset($info['root']) && $info['root'] != $this->repository)
             return false;
 
-        info('Performing SVN update on remote host.');
 
-        $full = "{$this->repository}/$path";
-        $escaped = escapeshellarg($full);
+        $full_svn_path = "{$this->repository}/$path";
+        $full_svn_path_escaped = escapeshellarg($full_svn_path);
 
+        $current_svn_path = $access->shellExec("svn info --show-item url --no-newline {$instance->webroot}");
+        $current_svn_path_escaped = escapeshellarg($current_svn_path);
+
+        info("Updating SVN to '{$full_svn_path}'");
         $verification = $access->shellExec(
             array(
                 "cd {$instance->webroot} && svn merge --dry-run --revision BASE:HEAD . --allow-mixed-revisions"
@@ -41,17 +44,17 @@ class RC_SVN
             echo "SVN MERGE: $verification\n";
 
             if ('yes' == strtolower(promptUser(
-                'It seems there are some conflicts, you may want to review them. Do you want to abort?',
+                'It seems there are some conflicts. Type "yes" to exit and solve manually or "no" to discard changes. Exit?',
                 'yes', array('yes', 'no') )))
                 exit;
         }
-        
-        if (! isset($info['url']) || $info['url'] == $full)
+
+        if (! isset($info['url']) || $info['url'] == $full_svn_path)
             $access->shellExec('svn up --non-interactive ' . escapeshellarg($instance->webroot));
         else {
-            $access->shellExec( 
+            $access->shellExec(
                 'svn up --non-interactive ' . escapeshellarg( $instance->getWebPath('temp')),
-                "svn switch --non-interactive $escaped " . escapeshellarg($instance->webroot)
+                "svn switch --accept tf --non-interactive --relocate {$current_svn_path_escaped} {$full_svn_path_escaped} " . escapeshellarg($instance->webroot)
             );
         }
     }
