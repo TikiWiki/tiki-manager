@@ -232,19 +232,22 @@ class Application_Tiki extends Application
 
                 info('Updating svn...');
 
-                $access->shellExec(
-                  "rm -Rf " . escapeshellarg( $this->instance->getWebPath('temp/cache'))
-                );
+                $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
+                $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
+                $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
+
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all");
+                $access->shellExec("svn revert -R {$escaped_cache_path}");
 
                 $svn = new RC_SVN(SVN_TIKIWIKI_URI);
                 $svn->updateInstanceTo($this->instance, $version->branch);
-                $access->shellExec('chmod 0777 temp temp/cache');
+                $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
 
                 if ($this->instance->isModernTiki()) {
                     info('Updating composer');
 
                     $ret = $access->shellExec(array(
-                      "sh setup.sh composer",
+                      "sh {$escaped_root_path}/setup.sh composer",
                       "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
                     ));
                 }
