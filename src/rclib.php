@@ -27,9 +27,6 @@ class RC_SVN
         $full_svn_path = "{$this->repository}/$path";
         $full_svn_path_escaped = escapeshellarg($full_svn_path);
 
-        $current_svn_path = $access->shellExec("svn info --show-item url --no-newline {$instance->webroot}");
-        $current_svn_path_escaped = escapeshellarg($current_svn_path);
-
         info("Updating SVN to '{$full_svn_path}'");
         $verification = $access->shellExec(
             array(
@@ -54,7 +51,7 @@ class RC_SVN
         else {
             $access->shellExec(
                 'svn up --non-interactive ' . escapeshellarg( $instance->getWebPath('temp')),
-                "svn switch --accept tf --non-interactive --relocate {$current_svn_path_escaped} {$full_svn_path_escaped} " . escapeshellarg($instance->webroot)
+                "svn switch --accept tf --non-interactive {$full_svn_path_escaped} " . escapeshellarg($instance->webroot)
             );
         }
     }
