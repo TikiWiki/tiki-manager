@@ -124,5 +124,5 @@ list-make-vars:
 	@echo
 
 shell:
-	@$(PHP) vendor/bin/psysh src/psysh_conf.php
+	$(PHP) -d date.timezone=UTC ./vendor/bin/psysh src/psysh_conf.php
 
