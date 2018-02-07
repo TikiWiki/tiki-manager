@@ -122,3 +122,7 @@ list-make-vars:
 	$(foreach v, $(shell sed -En '/^\w+\s*=/s/\s*=.*$$//p' Makefile), \
 	  $(info $(v) = $($(v))))
 	@echo
+
+shell:
+	@$(PHP) vendor/bin/psysh src/psysh_conf.php
+
