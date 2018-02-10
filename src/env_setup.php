@@ -7,6 +7,13 @@
 
 define('TRIM_DEBUG', getenv('TRIM_DEBUG') === 'true');
 
+define('INTERACTIVE',
+    php_sapi_name() === 'cli'
+    && getenv('NONINTERACTIVE') !== 'true'
+    && !in_array(getenv('TERM'), array('dumb', false, ''))
+    && preg_match(',^/dev/,', exec('tty'))
+);
+
 if (! function_exists('readline')) {
     function readline($prompt)
     {
@@ -547,6 +554,10 @@ function printInstances(array $instances)
 
 function promptUser($prompt, $default = false, $values = array())
 {
+    if(!INTERACTIVE) {
+        return $default;
+    }
+
     if (is_array($values) && count($values))
         $prompt .= ' (' . implode(', ', $values) . ')';
     if ($default !== false && strlen($default))

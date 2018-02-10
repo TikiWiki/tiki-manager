@@ -5,6 +5,11 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 include_once dirname(__FILE__) . '/../src/env_setup.php';
+
+if(!INTERACTIVE) {
+    return;
+}
+
 include_once dirname(__FILE__) . '/../src/check.php';
 
 echo "\nInstances you can verify:\n";
