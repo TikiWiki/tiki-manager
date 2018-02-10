@@ -6,6 +6,9 @@
 
 function handleCheckResult($instance, $version, $array)
 {
+    if(!INTERACTIVE) {
+        return; // skip
+    }
     // $new, $mod, $del
     extract($array);
 
