@@ -42,7 +42,8 @@ class RC_SVN
 
             if ('yes' == strtolower(promptUser(
                 'It seems there are some conflicts. Type "yes" to exit and solve manually or "no" to discard changes. Exit?',
-                'yes', array('yes', 'no') )))
+                INTERACTIVE ? 'yes' : 'no',
+                array('yes', 'no') )))
                 exit;
         }
 
@@ -51,7 +52,7 @@ class RC_SVN
         else {
             $access->shellExec(
                 'svn up --non-interactive ' . escapeshellarg( $instance->getWebPath('temp')),
-                "svn switch --accept tf --non-interactive {$full_svn_path_escaped} " . escapeshellarg($instance->webroot)
+                "svn switch --force --accept theirs-full --non-interactive {$full_svn_path_escaped} " . escapeshellarg($instance->webroot)
             );
         }
     }
