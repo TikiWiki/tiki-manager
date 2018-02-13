@@ -740,7 +740,7 @@ class Instance
             $out = $access->shellExec(
                 sprintf('mkdir -p %s',
                     escapeshellarg(rtrim($dst_path, '/'))),
-                sprintf('rsync -a %s %s --exclude db/local.php',
+                sprintf('rsync -a %s %s --exclude db/local.php --delete',
                     escapeshellarg($this->getWorkPath("restore/{$basetardir}/$hash/$src_base/")),
                     escapeshellarg(rtrim($dst_path, '/') . '/'))
             );

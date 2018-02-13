@@ -237,7 +237,8 @@ class Application_Tiki extends Application
                 $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
 
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all");
-                $access->shellExec("svn revert -R {$escaped_cache_path}");
+                $access->shellExec("svn revert --non-interactive -R {$escaped_cache_path}");
+                $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
 
                 $svn = new RC_SVN(SVN_TIKIWIKI_URI);
                 $svn->updateInstanceTo($this->instance, $version->branch);
@@ -517,6 +518,8 @@ LOCAL
     function removeTemporaryFiles()
     {
         $access = $this->instance->getBestAccess('scripting');
+        $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
+
         // FIXME: Not FTP compatible
         if ($access instanceof ShellPrompt) {
         	// templates_c/ moved to temp/ in Tiki 17.
@@ -532,6 +535,7 @@ LOCAL
         	}
             // --force ignores prompting if files are write-protected and will silence the warning in case no file matches.
             $access->shellExec("rm --force $path");
+            $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
         }
     }
 }
