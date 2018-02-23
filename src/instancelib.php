@@ -549,10 +549,11 @@ class Instance
         $error_flag = 0;
 
         $access = $this->getBestAccess('scripting');
-        $this->createWorkPath($access);
 
         if ($this->getApplication() == null)
             die(error('No application installed for this instance.'));
+
+        $this->createWorkPath($access);
 
         $locations = $this->getApplication()->getFileLocations();
         if (!isset($locations['data'])){
