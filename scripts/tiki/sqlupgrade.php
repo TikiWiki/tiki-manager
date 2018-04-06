@@ -28,7 +28,7 @@ else {
         fwrite(STDERR, getcwd() . "/db/ directory not found");
         exit(1);
     }
-    $command = PHP_BINARY . '-d memory_limit=256M console.php -n database:update';
+    $command = PHP_BINARY . ' -d memory_limit=256M console.php -n database:update';
 
     $match = null;
     $db_files = glob('db/*local.php');
