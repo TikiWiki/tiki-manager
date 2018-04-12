@@ -55,6 +55,7 @@ class RC_SVN
                 "svn switch --force --accept theirs-full --non-interactive {$full_svn_path_escaped} " . escapeshellarg($instance->webroot)
             );
         }
+        $access->shellExec('svn  --non-interactive ' . escapeshellarg($instance->webroot));
     }
 
     private function getRepositoryInfo($instance, $access)

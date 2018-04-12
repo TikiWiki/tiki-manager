@@ -528,21 +528,10 @@ LOCAL
 
         // FIXME: Not FTP compatible
         if ($access instanceof ShellPrompt) {
-        	// templates_c/ moved to temp/ in Tiki 17.
-	        if (is_dir($this->instance->getWebPath('templates_c/'))) {
-		        $path = $this->instance->getWebPath('templates_c/*[!index].php');
-	        } else {
-		        $path = $this->instance->getWebPath('temp/templates_c/*[!index].php');
-	        }
-	        
-        	if (strlen($path) < 5) {
-        		// Be especially careful not to remove '/' in case getWebPath() returns an unexpected value.
-        		throw new UnexpectedValueException();
-        	}
-            // --force ignores prompting if files are write-protected and will silence the warning in case no file matches.
-            $access->shellExec("rm --force $path");
+            $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear --all");
             $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
         }
+
     }
 }
 
