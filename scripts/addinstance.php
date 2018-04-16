@@ -78,15 +78,6 @@ if (! $instance->detectSVN()) {
     die(color("Subversion not detected on the remote server\n", 'red'));
 }
 
-if (! $instance->detectPHP()) {
-    die(color("PHP Interpreter could not be found on remote host.\n", 'red'));
-}
-else {
-    if ($instance->phpversion < 50300) {
-        die(color("PHP Interpreter version is less than 5.3.\n", 'red'));
-    }
-}
-
 $d_linux = $instance->detectDistribution();
 info("You are running : $d_linux");
 
@@ -129,6 +120,15 @@ $instance->tempdir = rtrim($tempdir, '/');
 $instance->backup_user = trim($backup_user);
 $instance->backup_group = trim($backup_group);
 $instance->backup_perm = octdec($backup_perm);
+
+if (! $instance->detectPHP()) {
+    die(color("PHP Interpreter could not be found on remote host.\n", 'red'));
+}
+else {
+    if ($instance->phpversion < 50300) {
+        die(color("PHP Interpreter version is less than 5.3.\n", 'red'));
+    }
+}
 
 $instance->save();
 echo color("Instance information saved.\n", 'green');
