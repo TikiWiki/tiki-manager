@@ -813,7 +813,7 @@ class Instance
 
     function getArchives() // {{{
     {
-        return array_reverse(glob(ARCHIVE_FOLDER . "/{$this->id}*/{$this->id}*_*.tar.bz2"));
+        return array_reverse(glob(ARCHIVE_FOLDER . "/{$this->id}-*/{$this->id}*_*.tar.bz2"));
     } // }}}
 
     function lock() // {{{
