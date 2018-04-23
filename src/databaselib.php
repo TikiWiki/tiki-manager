@@ -29,6 +29,8 @@ class Database
     public $dbname;
     public $type;
 
+    public $dbLocalContent = "";
+
     function __construct(Instance $instance, Database_Adapter $adapter) // {{{
     {
         $this->instance = $instance;

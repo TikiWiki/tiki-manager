@@ -145,6 +145,8 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
                     ));
                 }
             }
+
+            $db->dbLocalContent = file_get_contents($localFile);
         }
         unlink($localFile);
     }
