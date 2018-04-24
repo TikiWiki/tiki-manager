@@ -7,7 +7,7 @@ if( ! file_exists( $authFile ) )
 
 ob_start();
 require $authFile;
-require dirname(__FILE__) . '/../src/env_setup.php';
+require TRIMPATH . '/src/env_setup.php';
 ob_end_clean();
 
 if( RESTRICT && ( $_SERVER['HTTP_HOST'] != 'localhost' || $_SERVER['REMOTE_ADDR'] != '127.0.0.1' ) )
@@ -35,13 +35,17 @@ function html( $string )
 
 function url( $relative )
 {
-	return PRIOR . $relative;
+	if (PRIOR == 'PRIOR') {
+		return $relative;
+	} else {
+		return PRIOR . $relative;
+	}
 }
 
 if( empty( $op ) )
 	$op = 'list';
 
-if( ! in_array( $op, array( 'list', 'view', 'edit', 'delete' ) ) )
+if( ! in_array( $op, array( 'backup', 'blank', 'clone', 'delete', 'edit', 'fix', 'import', 'list', 'manage', 'restore', 'update', 'view', 'watch', 'logout' ) ) )
 	die( "Unknown operation." );
 
 if( in_array( $op, array( 'view', 'edit' ) ) && $id == 0 )

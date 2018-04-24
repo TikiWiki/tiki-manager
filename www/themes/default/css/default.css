@@ -1,0 +1,516 @@
+/*
+==========================================================================
+TRIM Variables
+==========================================================================
+*/
+/*
+==========================================================================
+TRIM Mixins
+==========================================================================
+*/
+.regular {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  font-style: normal;
+}
+.bold {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  font-style: normal;
+}
+/*
+==========================================================================
+TRIM Global Classes
+==========================================================================
+*/
+.clearfix {
+  *zoom: 1;
+}
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  display: table;
+}
+.clearfix:after {
+  clear: both;
+}
+.center {
+  text-align: center;
+}
+.bold {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  font-style: normal;
+}
+.top {
+  vertical-align: top;
+}
+.left {
+  float: left;
+}
+.right {
+  float: right;
+}
+/*
+==========================================================================
+TRIM Base Styles
+==========================================================================
+*/
+html,
+body {
+  height: 100%;
+}
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  font-style: normal;
+}
+body > .container {
+  min-height: 100vh;
+  margin-bottom: -50px;
+  padding-top: 70px;
+  padding-bottom: 30px;
+}
+body > .container:after {
+  content: "";
+  display: block;
+  height: 50px;
+}
+h1 {
+  margin-bottom: 35px;
+}
+h3 {
+  margin-bottom: 20px;
+}
+h4 {
+  font-weight: bold;
+}
+table th {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  font-style: normal;
+}
+header .navbar {
+  background-color: #222;
+  color: #9d9d9d;
+}
+header .navbar .navbar-header .icon-bar {
+  background-color: #9d9d9d;
+}
+header .navbar .navbar-brand {
+  color: #9d9d9d;
+}
+header .navbar .navbar-brand:hover {
+  background-color: transparent;
+  color: #d0d0d0;
+}
+header .navbar .navbar-nav + .navbar-nav {
+  float: right;
+}
+header .navbar .navbar-nav > li > a {
+  background-color: #222;
+  color: #9d9d9d;
+}
+header .navbar .navbar-nav > li > a:hover,
+header .navbar .navbar-nav > li > a:focus {
+  background-color: transparent;
+  color: #d0d0d0;
+}
+header .navbar .navbar-nav > .open > a,
+header .navbar .navbar-nav > .open > a:hover,
+header .navbar .navbar-nav .open > a:focus {
+  background-color: #000000;
+  color: #fff;
+}
+footer {
+  height: 50px;
+  padding: 17px 0 7px;
+  font-size: 0.85em;
+  text-align: center;
+  background-color: #222;
+  color: #9d9d9d;
+}
+/*
+==========================================================================
+TRIM Main Styles
+==========================================================================
+*/
+.trim-login form {
+  padding: 30px 15px 15px;
+  text-align: left;
+}
+.trim-login label {
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 5px;
+  text-align: left;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  font-style: normal;
+}
+.trim-instance-main-list,
+.trim-instance-list,
+.trim-restore,
+.trim-clone {
+  width: 85%;
+  margin: 0 auto;
+}
+.trim-instance-main-list ul,
+.trim-instance-list ul,
+.trim-restore ul,
+.trim-clone ul {
+  padding: 0;
+  list-style-type: none;
+}
+.trim-instance-main-list ul li,
+.trim-instance-list ul li,
+.trim-restore ul li,
+.trim-clone ul li {
+  position: relative;
+  margin: 15px 0;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+.trim-instance-main-list ul li a,
+.trim-instance-list ul li a,
+.trim-restore ul li a,
+.trim-clone ul li a {
+  font-size: 1.5em;
+  text-decoration: none;
+}
+.trim-instance-main-list ul li > a,
+.trim-instance-list ul li > a,
+.trim-restore ul li > a,
+.trim-clone ul li > a {
+  display: inline-block;
+  width: 100%;
+  padding: 20px;
+}
+.trim-instance-main-list ul li span,
+.trim-instance-list ul li span,
+.trim-restore ul li span,
+.trim-clone ul li span {
+  font-size: 0.75em;
+  color: #888;
+}
+.trim-instance-main-list ul li:hover,
+.trim-instance-list ul li:hover,
+.trim-restore ul li:hover,
+.trim-clone ul li:hover {
+  background-color: #eee;
+}
+.trim-instance-main-list ul li .contact,
+.trim-instance-list ul li .contact,
+.trim-restore ul li .contact,
+.trim-clone ul li .contact {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  width: 100%;
+  padding: 0 20px;
+}
+.trim-instance-main-list ul li .contact a,
+.trim-instance-list ul li .contact a,
+.trim-restore ul li .contact a,
+.trim-clone ul li .contact a {
+  font-size: 1.1em;
+}
+.trim-instance-main-list ul li .contact a:hover,
+.trim-instance-list ul li .contact a:hover,
+.trim-restore ul li .contact a:hover,
+.trim-clone ul li .contact a:hover {
+  text-decoration: underline;
+}
+.trim-instance-main-list ul li .buttons,
+.trim-instance-list ul li .buttons,
+.trim-restore ul li .buttons,
+.trim-clone ul li .buttons {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.trim-instance-main-list ul li .buttons a,
+.trim-instance-list ul li .buttons a,
+.trim-restore ul li .buttons a,
+.trim-clone ul li .buttons a {
+  margin-left: 10px;
+  font-size: 2em;
+}
+.trim-instance-main-list ul li .buttons .fa-times,
+.trim-instance-list ul li .buttons .fa-times,
+.trim-restore ul li .buttons .fa-times,
+.trim-clone ul li .buttons .fa-times {
+  color: orangered;
+}
+.trim-instance-main-list ul li .buttons .fa-times:hover,
+.trim-instance-list ul li .buttons .fa-times:hover,
+.trim-restore ul li .buttons .fa-times:hover,
+.trim-clone ul li .buttons .fa-times:hover {
+  color: #b33000;
+}
+.trim-instance-main-list ul.archive li,
+.trim-instance-list ul.archive li,
+.trim-restore ul.archive li,
+.trim-clone ul.archive li {
+  margin: 10px 0;
+  text-align: center;
+  border: none;
+}
+.trim-instance-main-list ul.archive li:hover,
+.trim-instance-list ul.archive li:hover,
+.trim-restore ul.archive li:hover,
+.trim-clone ul.archive li:hover {
+  background-color: transparent;
+}
+.trim-instance-main-list ul.archive li a,
+.trim-instance-list ul.archive li a,
+.trim-restore ul.archive li a,
+.trim-clone ul.archive li a {
+  padding: 10px;
+  font-size: 1em;
+  width: auto;
+}
+.trim-instance-main-list ul.archive li span,
+.trim-instance-list ul.archive li span,
+.trim-restore ul.archive li span,
+.trim-clone ul.archive li span {
+  font-size: 1em;
+  color: #fff;
+}
+.trim-instance-main-list ul.archive li span.fa-times,
+.trim-instance-list ul.archive li span.fa-times,
+.trim-restore ul.archive li span.fa-times,
+.trim-clone ul.archive li span.fa-times {
+  margin-right: 5px;
+  font-size: 1.5em;
+}
+.trim-instance-main-list .alert,
+.trim-instance-list .alert,
+.trim-restore .alert,
+.trim-clone .alert {
+  margin: 0 20px 20px;
+}
+.trim-instance-main-list .alert .message,
+.trim-instance-list .alert .message,
+.trim-restore .alert .message,
+.trim-clone .alert .message {
+  font-size: 1em;
+  color: #337ab7;
+}
+.trim-instance-main-list .new,
+.trim-instance-list .new,
+.trim-restore .new,
+.trim-clone .new,
+.trim-instance-main-list .blank,
+.trim-instance-list .blank,
+.trim-restore .blank,
+.trim-clone .blank {
+  margin: 0 10px;
+}
+.trim-instance-main-list .panel-heading,
+.trim-instance-list .panel-heading,
+.trim-restore .panel-heading,
+.trim-clone .panel-heading {
+  padding: 0;
+}
+.trim-instance-main-list .panel-heading a,
+.trim-instance-list .panel-heading a,
+.trim-restore .panel-heading a,
+.trim-clone .panel-heading a {
+  display: block;
+  padding: 20px;
+  text-align: left;
+  font-size: 1.5em;
+  text-decoration: none;
+  color: #337ab7;
+}
+.trim-instance-main-list .panel-heading a:hover,
+.trim-instance-list .panel-heading a:hover,
+.trim-restore .panel-heading a:hover,
+.trim-clone .panel-heading a:hover {
+  background-color: #eee;
+}
+.trim-instance-main-list .panel-heading span,
+.trim-instance-list .panel-heading span,
+.trim-restore .panel-heading span,
+.trim-clone .panel-heading span {
+  font-size: 0.75em;
+  color: #888;
+}
+.trim-instance-main-list .panel-group,
+.trim-instance-list .panel-group,
+.trim-restore .panel-group,
+.trim-clone .panel-group {
+  padding-bottom: 20px;
+}
+.trim-instance-main-list .panel-group .panel,
+.trim-instance-list .panel-group .panel,
+.trim-restore .panel-group .panel,
+.trim-clone .panel-group .panel {
+  border-radius: 0;
+}
+.trim-instance-main-list .panel-title,
+.trim-instance-list .panel-title,
+.trim-restore .panel-title,
+.trim-clone .panel-title {
+  background-color: #eee;
+}
+.trim-instance-main-list .panel-title.collapsed,
+.trim-instance-list .panel-title.collapsed,
+.trim-restore .panel-title.collapsed,
+.trim-clone .panel-title.collapsed {
+  background-color: #fff;
+}
+.trim-instance-main-list ul li > a {
+  padding: 20px 20px 30px 45px;
+}
+.trim-instance-main-list ul li > a.nolock {
+  padding-left: 20px;
+}
+.trim-instance-main-list .lock {
+  position: absolute;
+  left: 20px;
+  top: 12px;
+}
+.trim-instance-main-list .lock a {
+  font-size: 2.15em;
+}
+.trim-instance-main-list .lock span {
+  color: orange;
+}
+.trim-instance-main-list .lock span:hover {
+  color: darkorange;
+}
+.trim-instance-view {
+  width: 85%;
+  margin: 0 auto;
+}
+.trim-instance-view h2 {
+  display: inline;
+}
+.trim-instance-view table {
+  margin-top: 20px;
+}
+.trim-instance-view table td {
+  text-align: left;
+  word-break: break-word;
+}
+.trim-instance-view .archives {
+  padding: 10px 0;
+}
+.trim-instance-view .archives h2 {
+  margin-bottom: 20px;
+}
+.trim-instance-view .archives ul {
+  list-style-type: none;
+}
+.trim-instance-view .update {
+  float: right;
+  font-size: 1.4em;
+  text-decoration: none;
+}
+.trim-instance-view .left {
+  margin-right: 10px;
+}
+.trim-instance-view .right {
+  margin-left: 10px;
+}
+.trim-instance-edit,
+.trim-instance-new {
+  width: 85%;
+  margin: 0 auto;
+}
+.trim-instance-edit table,
+.trim-instance-new table {
+  margin-top: 20px;
+}
+.trim-instance-edit table > tbody > tr > th,
+.trim-instance-new table > tbody > tr > th {
+  vertical-align: middle;
+}
+.trim-instance-edit table span,
+.trim-instance-new table span {
+  display: block;
+  font-size: 0.85em;
+}
+.trim-instance-edit .cancel,
+.trim-instance-new .cancel,
+.trim-instance-edit .save,
+.trim-instance-new .save {
+  margin: 0px 10px;
+}
+#trimModal pre {
+  max-height: 500px;
+  background: black;
+  color: gray;
+  white-space: pre-wrap;
+}
+#trimModal span {
+  display: block;
+}
+#trimModal .cyan {
+  color: cyan;
+}
+#trimModal .orange {
+  color: orange;
+}
+#trimModal .red {
+  color: red;
+}
+/*
+==========================================================================
+TRIM Responsiveness
+==========================================================================
+*/
+@media (max-width: 767px) {
+  .navbar-fixed-top .navbar-collapse {
+    max-height: 500px;
+  }
+  .dropdown-menu > li > a {
+    color: #777;
+  }
+  .navbar-nav .open .dropdown-menu > li > a {
+    padding: 5px 30px;
+  }
+  .trim-instance-list ul,
+  .trim-restore ul,
+  .trim-clone ul {
+    width: 100%;
+  }
+  .trim-instance-list ul li,
+  .trim-restore ul li,
+  .trim-clone ul li {
+    margin: 15px 0;
+    text-align: center;
+  }
+  .trim-instance-list ul li > a,
+  .trim-restore ul li > a,
+  .trim-clone ul li > a {
+    padding: 20px 20px 10px;
+  }
+  .trim-instance-list ul li .buttons,
+  .trim-restore ul li .buttons,
+  .trim-clone ul li .buttons {
+    position: static;
+    padding: 10px 20px 20px;
+  }
+  .trim-restore ul li > a,
+  .trim-clone ul li > a {
+    padding: 20px;
+  }
+  .trim-instance-view,
+  .trim-instance-edit {
+    width: 100%;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .trim-instance-list ul,
+  .trim-restore ul,
+  .trim-clone ul {
+    width: 100%;
+  }
+  .trim-instance-view,
+  .trim-instance-edit {
+    width: 100%;
+  }
+}
