@@ -6,7 +6,10 @@
   "minimum-stability": "stable",
   "require": {
     "phpseclib/phpseclib": "^2.0",
-    "psy/psysh": "@stable"
+    "psy/psysh": "@stable",
+    "twitter/bootstrap": "^3.3.7",
+    "fortawesome/font-awesome": "^4.7.0",
+    "components/jquery": "^3.3.1"
   },
   "config": {
     "process-timeout": 5000

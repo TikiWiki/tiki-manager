@@ -17,7 +17,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 	$locations = array_map( 'trim', $locations );
 	$instance->setExtraBackups( $locations );
 
-	header( "Location: " . url( "list" ) );
+	header( "Location: " . html( url( "view/{$instance->id}" ) ) );
 	exit;
 }
 

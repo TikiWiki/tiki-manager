@@ -4,8 +4,8 @@
 			</div>
 		</footer>
 
-		<script src="/vendor/jquery/jquery-3.1.1.min.js"></script>
-		<script src="/vendor/bootstrap/js/bootstrap.min.js"></script>
+		<script src="/vendor/components/jquery/jquery.min.js"></script>
+		<script src="/vendor/twitter/bootstrap/dist/js/bootstrap.min.js"></script>
 		<script src="/themes/trim.js"></script>
 	</body>
 </html>

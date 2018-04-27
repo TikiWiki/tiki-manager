@@ -36,7 +36,7 @@ echo "This will enable the TRIM administration web panel.\n";
 if ('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
 
 $webTrimDirectory = promptUser('WWW Trim directory (ex: /var/www/virtual/webtrim.example.com/html)');
-$cmd = 'cp -a www/. ' . $webTrimDirectory;
+$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -aR vendor ' . $webTrimDirectory;
 exec($cmd);
 
 $pass = '';
