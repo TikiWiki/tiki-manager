@@ -753,14 +753,11 @@ class Instance
                 )
             );
 
-            $hooks->add_action('instance_unlock', function($instance) use ($access, $syncpaths) {
-                $access->shellExec(
-                    sprintf('rsync -v %s %s',
-                        "{$syncpaths->from}/.htaccess",
-                        "{$syncpaths->to}/.htaccess"
-                    )
-                );
-            });
+            $access->shellExec(sprintf('rsync -v %s %s%s',
+                "{$syncpaths->from}/.htaccess",
+                "{$syncpaths->to}/.htaccess",
+                $this->isLocked() ? '.bak' : ''
+            ));
 
             trim_output("REMOTE $out");
         }
@@ -787,11 +784,9 @@ class Instance
         $this->getApplication()->fixPermissions();
         $version->collectChecksumFromInstance($this);
 
-        $hooks->add_action('instance_unlock', function($instance) use ($access) {
-            echo $access->shellExec(
-                "rm -Rf {$instance->tempdir}/restore"
-            );
-        });
+        echo $access->shellExec(
+            "rm -Rf {$this->tempdir}/restore"
+        );
     } // }}}
 
     function getExtraBackups() // {{{
