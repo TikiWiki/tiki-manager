@@ -231,6 +231,7 @@ class Instance
     public $app;
 
     private $access = array();
+    private $locked = false;
 
     function getId() // {{{
     {
@@ -698,6 +699,7 @@ class Instance
 
     function restore($src_app, $archive, $clone = false)
     {
+        $hooks = TRIM_Hooks::getInstance();
         info(sprintf("Uploading : %s", basename($archive)));
 
         $base = basename($archive);
@@ -738,13 +740,27 @@ class Instance
             $dst_path = ($type == 'app') ? $location : $src_path;
             info(sprintf('Copying %s files (%s -> %s)...', $type, $src_path, $dst_path));
 
-            $out = $access->shellExec(
-                sprintf('mkdir -p %s',
-                    escapeshellarg(rtrim($dst_path, '/'))),
-                sprintf('rsync -a %s %s --exclude db/local.php --delete',
-                    escapeshellarg($this->getWorkPath("restore/{$basetardir}/$hash/$src_base/")),
-                    escapeshellarg(rtrim($dst_path, '/') . '/'))
+            $syncpaths = (object) array(
+                'from' => escapeshellarg($this->getWorkPath("restore/{$basetardir}/$hash/$src_base")),
+                'to'   => escapeshellarg(rtrim($dst_path, '/'))
             );
+
+            $out = $access->shellExec(
+                sprintf('mkdir -p %s', $syncpaths->to),
+                sprintf('rsync -a %s %s --exclude .htaccess --exclude db/local.php --delete',
+                    "{$syncpaths->from}/",
+                    "{$syncpaths->to}/"
+                )
+            );
+
+            $hooks->add_action('instance_unlock', function($instance) use ($access, $syncpaths) {
+                $access->shellExec(
+                    sprintf('rsync -v %s %s',
+                        "{$syncpaths->from}/.htaccess",
+                        "{$syncpaths->to}/.htaccess"
+                    )
+                );
+            });
 
             trim_output("REMOTE $out");
         }
@@ -766,17 +782,16 @@ class Instance
 
         info('Cleaning up...');
 
-        echo $access->shellExec(
-            "rm -Rf {$this->tempdir}/restore"
-        );
-
         perform_instance_installation($this);
-
         info("Fixing permissions for {$this->name}");
-
         $this->getApplication()->fixPermissions();
-
         $version->collectChecksumFromInstance($this);
+
+        $hooks->add_action('instance_unlock', function($instance) use ($access) {
+            echo $access->shellExec(
+                "rm -Rf {$instance->tempdir}/restore"
+            );
+        });
     } // }}}
 
     function getExtraBackups() // {{{
@@ -804,24 +819,31 @@ class Instance
         return array_reverse(glob(ARCHIVE_FOLDER . "/{$this->id}-*/{$this->id}*_*.tar.bz2"));
     } // }}}
 
+    function isLocked() { // {{{
+        return $this->locked;
+    } // }}}
+
     function lock() // {{{
     {
+        $hooks = TRIM_Hooks::getInstance();
         info('Locking website...');
 
         $access = $this->getBestAccess('scripting');
-        if (! $access->fileExists($this->getWebPath('maintenance.php')))
-            $access->uploadFile(dirname(__FILE__) . '/../scripts/maintenance.php', 'maintenance.php');
+        $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.php', 'maintenance.php');
 
         if ($access->fileExists($this->getWebPath('.htaccess')))
             $access->moveFile('.htaccess', '.htaccess.bak');
 
-        $access->uploadFile(dirname(__FILE__) . '/../scripts/maintenance.htaccess', '.htaccess');
+        $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.htaccess', '.htaccess');
 
-        return true;
+        $this->locked = true;
+        $hooks->run_actions('instance_lock', $this);
+        return $this->locked;
     } // }}}
 
     function unlock() // {{{
     {
+        $hooks = TRIM_Hooks::getInstance();
         info('Unlocking website...');
 
         $access = $this->getBestAccess('scripting');
@@ -829,6 +851,9 @@ class Instance
 
         if ($access->fileExists('.htaccess.bak'))
             $access->moveFile('.htaccess.bak', '.htaccess');
+
+        $this->locked = false;
+        $hooks->run_actions('instance_unlock', $this);
     } // }}}
 
     function __get($name) // {{{
