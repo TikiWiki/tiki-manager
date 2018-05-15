@@ -198,6 +198,7 @@ include dirname(__FILE__) . '/backupreportlib.php';
 include dirname(__FILE__) . '/reportlib.php';
 
 include dirname(__FILE__) . '/ext/Password.php';
+include dirname(__FILE__) . '/ext/hook.php';
 
 debug('Running TRIM at ' . TRIM_ROOT);
 define('DB_FILE', TRIM_ROOT . "/data/trim.db");
