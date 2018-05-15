@@ -12,12 +12,10 @@
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
 					<?php $version = $instance->getLatestVersion() ?>
-					<li>
-						<a href="" title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="backup">
-							<?php echo html( $instance->name ) ?> <span>&nbsp;<?php echo html( "{$instance->app} ({$version->type}, {$version->branch})" ) ?></span>
-						</a>
+					<li title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="backup">
+						<?php require "include/layout/url.php"; ?>
 						<div class="buttons fa">
-							<a href="" class="fa-floppy-o" title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="backup"></a>
+							<a href="javascript:void(0);" class="fa-floppy-o" title="Backup this instance"></a>
 						</div>
 					</li>
 				<?php endif; ?>

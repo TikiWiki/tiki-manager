@@ -12,12 +12,10 @@
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
 					<?php $version = $instance->getLatestVersion() ?>
-					<li>
-						<a href="" title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="watch">
-							<?php echo html( $instance->name ) ?> <span>&nbsp;<?php echo html( "{$instance->app} ({$version->type}, {$version->branch})" ) ?></span>
-						</a>
+					<li title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="watch">
+						<?php require "include/layout/url.php"; ?>
 						<div class="buttons fa">
-							<a href="" class="fa-eye" title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="watch"></a>
+							<a href="javascript:void(0);" class="fa-eye" title="Watch this instance"></a>
 						</div>
 					</li>
 				<?php endif; ?>

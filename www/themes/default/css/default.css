@@ -149,60 +149,46 @@ TRIM Main Styles
   font-style: normal;
 }
 .trim-instance-main-list,
-.trim-instance-list,
-.trim-restore,
-.trim-clone {
+.trim-instance-list {
   width: 85%;
   margin: 0 auto;
 }
 .trim-instance-main-list ul,
-.trim-instance-list ul,
-.trim-restore ul,
-.trim-clone ul {
+.trim-instance-list ul {
   padding: 0;
   list-style-type: none;
 }
 .trim-instance-main-list ul li,
-.trim-instance-list ul li,
-.trim-restore ul li,
-.trim-clone ul li {
+.trim-instance-list ul li {
   position: relative;
   margin: 15px 0;
+  padding: 20px;
   border: 1px solid #ddd;
   text-align: left;
+  cursor: pointer;
 }
 .trim-instance-main-list ul li a,
-.trim-instance-list ul li a,
-.trim-restore ul li a,
-.trim-clone ul li a {
+.trim-instance-list ul li a {
   font-size: 1.5em;
   text-decoration: none;
 }
 .trim-instance-main-list ul li > a,
-.trim-instance-list ul li > a,
-.trim-restore ul li > a,
-.trim-clone ul li > a {
+.trim-instance-list ul li > a {
   display: inline-block;
   width: 100%;
   padding: 20px;
 }
 .trim-instance-main-list ul li span,
-.trim-instance-list ul li span,
-.trim-restore ul li span,
-.trim-clone ul li span {
+.trim-instance-list ul li span {
   font-size: 0.75em;
   color: #888;
 }
 .trim-instance-main-list ul li:hover,
-.trim-instance-list ul li:hover,
-.trim-restore ul li:hover,
-.trim-clone ul li:hover {
+.trim-instance-list ul li:hover {
   background-color: #eee;
 }
 .trim-instance-main-list ul li .contact,
-.trim-instance-list ul li .contact,
-.trim-restore ul li .contact,
-.trim-clone ul li .contact {
+.trim-instance-list ul li .contact {
   position: absolute;
   bottom: 2px;
   left: 0;
@@ -210,113 +196,98 @@ TRIM Main Styles
   padding: 0 20px;
 }
 .trim-instance-main-list ul li .contact a,
-.trim-instance-list ul li .contact a,
-.trim-restore ul li .contact a,
-.trim-clone ul li .contact a {
+.trim-instance-list ul li .contact a {
   font-size: 1.1em;
 }
 .trim-instance-main-list ul li .contact a:hover,
-.trim-instance-list ul li .contact a:hover,
-.trim-restore ul li .contact a:hover,
-.trim-clone ul li .contact a:hover {
+.trim-instance-list ul li .contact a:hover {
   text-decoration: underline;
 }
+.trim-instance-main-list ul li .url,
+.trim-instance-list ul li .url {
+  display: inline-block;
+}
+.trim-instance-main-list ul li .url a:hover,
+.trim-instance-list ul li .url a:hover {
+  text-decoration: underline;
+}
+.trim-instance-main-list ul li .url a:hover span,
+.trim-instance-list ul li .url a:hover span {
+  text-decoration: none;
+}
+.trim-instance-main-list ul li .url span,
+.trim-instance-list ul li .url span {
+  font-size: 1.125em;
+}
 .trim-instance-main-list ul li .buttons,
-.trim-instance-list ul li .buttons,
-.trim-restore ul li .buttons,
-.trim-clone ul li .buttons {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+.trim-instance-list ul li .buttons {
+  float: right;
 }
 .trim-instance-main-list ul li .buttons a,
-.trim-instance-list ul li .buttons a,
-.trim-restore ul li .buttons a,
-.trim-clone ul li .buttons a {
+.trim-instance-list ul li .buttons a {
   margin-left: 10px;
   font-size: 2em;
 }
 .trim-instance-main-list ul li .buttons .fa-times,
-.trim-instance-list ul li .buttons .fa-times,
-.trim-restore ul li .buttons .fa-times,
-.trim-clone ul li .buttons .fa-times {
+.trim-instance-list ul li .buttons .fa-times {
   color: orangered;
 }
 .trim-instance-main-list ul li .buttons .fa-times:hover,
-.trim-instance-list ul li .buttons .fa-times:hover,
-.trim-restore ul li .buttons .fa-times:hover,
-.trim-clone ul li .buttons .fa-times:hover {
+.trim-instance-list ul li .buttons .fa-times:hover {
   color: #b33000;
 }
 .trim-instance-main-list ul.archive li,
-.trim-instance-list ul.archive li,
-.trim-restore ul.archive li,
-.trim-clone ul.archive li {
+.trim-instance-list ul.archive li {
   margin: 10px 0;
   text-align: center;
   border: none;
 }
 .trim-instance-main-list ul.archive li:hover,
-.trim-instance-list ul.archive li:hover,
-.trim-restore ul.archive li:hover,
-.trim-clone ul.archive li:hover {
+.trim-instance-list ul.archive li:hover {
   background-color: transparent;
 }
 .trim-instance-main-list ul.archive li a,
-.trim-instance-list ul.archive li a,
-.trim-restore ul.archive li a,
-.trim-clone ul.archive li a {
+.trim-instance-list ul.archive li a {
   padding: 10px;
   font-size: 1em;
   width: auto;
 }
 .trim-instance-main-list ul.archive li span,
-.trim-instance-list ul.archive li span,
-.trim-restore ul.archive li span,
-.trim-clone ul.archive li span {
+.trim-instance-list ul.archive li span {
   font-size: 1em;
   color: #fff;
 }
 .trim-instance-main-list ul.archive li span.fa-times,
-.trim-instance-list ul.archive li span.fa-times,
-.trim-restore ul.archive li span.fa-times,
-.trim-clone ul.archive li span.fa-times {
+.trim-instance-list ul.archive li span.fa-times {
   margin-right: 5px;
   font-size: 1.5em;
 }
+.trim-instance-main-list ul.destination span,
+.trim-instance-list ul.destination span {
+  color: #337ab7;
+  font-size: 1.5em;
+}
 .trim-instance-main-list .alert,
-.trim-instance-list .alert,
-.trim-restore .alert,
-.trim-clone .alert {
+.trim-instance-list .alert {
   margin: 0 20px 20px;
 }
 .trim-instance-main-list .alert .message,
-.trim-instance-list .alert .message,
-.trim-restore .alert .message,
-.trim-clone .alert .message {
+.trim-instance-list .alert .message {
   font-size: 1em;
   color: #337ab7;
 }
 .trim-instance-main-list .new,
 .trim-instance-list .new,
-.trim-restore .new,
-.trim-clone .new,
 .trim-instance-main-list .blank,
-.trim-instance-list .blank,
-.trim-restore .blank,
-.trim-clone .blank {
+.trim-instance-list .blank {
   margin: 0 10px;
 }
 .trim-instance-main-list .panel-heading,
-.trim-instance-list .panel-heading,
-.trim-restore .panel-heading,
-.trim-clone .panel-heading {
+.trim-instance-list .panel-heading {
   padding: 0;
 }
 .trim-instance-main-list .panel-heading a,
-.trim-instance-list .panel-heading a,
-.trim-restore .panel-heading a,
-.trim-clone .panel-heading a {
+.trim-instance-list .panel-heading a {
   display: block;
   padding: 20px;
   text-align: left;
@@ -325,40 +296,28 @@ TRIM Main Styles
   color: #337ab7;
 }
 .trim-instance-main-list .panel-heading a:hover,
-.trim-instance-list .panel-heading a:hover,
-.trim-restore .panel-heading a:hover,
-.trim-clone .panel-heading a:hover {
+.trim-instance-list .panel-heading a:hover {
   background-color: #eee;
 }
 .trim-instance-main-list .panel-heading span,
-.trim-instance-list .panel-heading span,
-.trim-restore .panel-heading span,
-.trim-clone .panel-heading span {
+.trim-instance-list .panel-heading span {
   font-size: 0.75em;
   color: #888;
 }
 .trim-instance-main-list .panel-group,
-.trim-instance-list .panel-group,
-.trim-restore .panel-group,
-.trim-clone .panel-group {
+.trim-instance-list .panel-group {
   padding-bottom: 20px;
 }
 .trim-instance-main-list .panel-group .panel,
-.trim-instance-list .panel-group .panel,
-.trim-restore .panel-group .panel,
-.trim-clone .panel-group .panel {
+.trim-instance-list .panel-group .panel {
   border-radius: 0;
 }
 .trim-instance-main-list .panel-title,
-.trim-instance-list .panel-title,
-.trim-restore .panel-title,
-.trim-clone .panel-title {
+.trim-instance-list .panel-title {
   background-color: #eee;
 }
 .trim-instance-main-list .panel-title.collapsed,
-.trim-instance-list .panel-title.collapsed,
-.trim-restore .panel-title.collapsed,
-.trim-clone .panel-title.collapsed {
+.trim-instance-list .panel-title.collapsed {
   background-color: #fff;
 }
 .trim-instance-main-list ul li > a {
@@ -367,13 +326,11 @@ TRIM Main Styles
 .trim-instance-main-list ul li > a.nolock {
   padding-left: 20px;
 }
-.trim-instance-main-list .lock {
-  position: absolute;
-  left: 20px;
-  top: 12px;
+.trim-instance-main-list .url {
+  padding-bottom: 10px;
 }
-.trim-instance-main-list .lock a {
-  font-size: 2.15em;
+.trim-instance-main-list .lock {
+  display: inline-block;
 }
 .trim-instance-main-list .lock span {
   color: orange;
@@ -472,45 +429,50 @@ TRIM Responsiveness
   .navbar-nav .open .dropdown-menu > li > a {
     padding: 5px 30px;
   }
-  .trim-instance-list ul,
-  .trim-restore ul,
-  .trim-clone ul {
+  .trim-instance-main-list,
+  .trim-instance-list {
     width: 100%;
   }
-  .trim-instance-list ul li,
-  .trim-restore ul li,
-  .trim-clone ul li {
-    margin: 15px 0;
-    text-align: center;
+  .trim-instance-main-list ul li,
+  .trim-instance-list ul li {
+    overflow: hidden;
   }
-  .trim-instance-list ul li > a,
-  .trim-restore ul li > a,
-  .trim-clone ul li > a {
-    padding: 20px 20px 10px;
+  .trim-instance-main-list ul li .url,
+  .trim-instance-list ul li .url {
+    display: block;
   }
-  .trim-instance-list ul li .buttons,
-  .trim-restore ul li .buttons,
-  .trim-clone ul li .buttons {
-    position: static;
-    padding: 10px 20px 20px;
+  .trim-instance-main-list ul li .buttons,
+  .trim-instance-list ul li .buttons {
+    padding-top: 10px;
   }
-  .trim-restore ul li > a,
-  .trim-clone ul li > a {
-    padding: 20px;
+  .trim-instance-main-list.restore ul li .buttons,
+  .trim-instance-list.restore ul li .buttons,
+  .trim-instance-main-list.clone ul li .buttons,
+  .trim-instance-list.clone ul li .buttons {
+    padding-top: 0;
+  }
+  .trim-instance-main-list.restore ul li .buttons a,
+  .trim-instance-list.restore ul li .buttons a,
+  .trim-instance-main-list.clone ul li .buttons a,
+  .trim-instance-list.clone ul li .buttons a {
+    padding-top: 10px;
+  }
+  .trim-instance-main-list .new,
+  .trim-instance-list .new,
+  .trim-instance-main-list .blank,
+  .trim-instance-list .blank {
+    margin: 10px;
+  }
+  .trim-instance-main-list ul li .buttons {
+    padding: 0 0 10px;
   }
   .trim-instance-view,
-  .trim-instance-edit {
+  .trim-instance-edit,
+  .trim-instance-new {
     width: 100%;
   }
-}
-@media (min-width: 768px) and (max-width: 991px) {
-  .trim-instance-list ul,
-  .trim-restore ul,
-  .trim-clone ul {
+  .trim-instance-view .left {
     width: 100%;
-  }
-  .trim-instance-view,
-  .trim-instance-edit {
-    width: 100%;
+    margin: 0 0 10px;
   }
 }

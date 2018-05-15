@@ -7,6 +7,7 @@ TRIM Variables
 ==========================================================================
 */
 @header-height: 70px;
+@link-color:#337ab7;
 @main-nav-bg-color: #222;
 @main-nav-color: #9d9d9d;
 @main-nav-hover-bg-color: transparent;
@@ -123,12 +124,13 @@ TRIM Main Styles
 	label { display:inline-block; max-width:100%; margin-bottom:5px; text-align:left; .bold(); }
 }
 
-.trim-instance-main-list, .trim-instance-list, .trim-restore, .trim-clone {
+.trim-instance-main-list, .trim-instance-list {
 	width:85%; margin:0 auto;
 	ul {
 		padding:0; list-style-type:none;
 		li {
-			position:relative; margin:15px 0; border:1px solid #ddd; text-align:left;
+			position:relative; margin:15px 0; padding:20px;
+			border:1px solid #ddd; text-align:left; cursor:pointer;
 			a { font-size:1.5em; text-decoration:none; }
 			> a { display:inline-block; width:100%; padding:20px; }
 			span { font-size:0.75em; color:#888; }
@@ -140,8 +142,16 @@ TRIM Main Styles
 					&:hover { text-decoration:underline; }
 				}
 			}
+			.url {
+				display:inline-block;
+				a:hover {
+					text-decoration:underline;
+					span { text-decoration:none; }
+				}
+				span { font-size:1.125em; }
+			}
 			.buttons {
-				position:absolute; top:20px; right:20px;
+				float:right;
 				a { margin-left:10px; font-size:2em; }
 				.fa-times {
 					color:orangered;
@@ -159,17 +169,21 @@ TRIM Main Styles
 				span.fa-times { margin-right:5px; font-size:1.5em; }
 			}
 		}
+		&.destination {
+			span { color:@link-color; font-size:1.5em; }
+		}
 	}
+
 	.alert {
 		margin:0 20px 20px;
-		.message { font-size:1em; color:#337ab7; }
+		.message { font-size:1em; color:@link-color; }
 	}
 	.new, .blank { margin:0 10px; }
 	.panel-heading {
 		padding:0;
 		a {
 			display:block; padding:20px; text-align:left; font-size:1.5em; text-decoration:none;
-			color:#337ab7;
+			color:@link-color;
 			&:hover { background-color:#eee; }
 		}
 		span { font-size:0.75em; color:#888; }
@@ -189,9 +203,9 @@ TRIM Main Styles
 		padding:20px 20px 30px 45px;
 		&.nolock { padding-left:20px; }
 	}
+	.url { padding-bottom:10px; }
 	.lock {
-		position:absolute; left:20px; top:12px;
-		a { font-size:2.15em; }
+		display:inline-block;
 		span {
 			color:orange;
 			&:hover { color:darkorange; }
@@ -254,30 +268,36 @@ TRIM Responsiveness
 	.dropdown-menu > li > a { color:#777; }
 	.navbar-nav .open .dropdown-menu > li > a { padding:5px 30px; }
 
-	.trim-instance-list, .trim-restore, .trim-clone {
+	.trim-instance-main-list, .trim-instance-list {
+		width:100%;
 		ul {
-			width:100%;
 			li {
-				margin:15px 0; text-align:center;
-				> a { padding:20px 20px 10px; }
-				.buttons { position:static; padding:10px 20px 20px; }
+				overflow:hidden;
+				.url { display:block; }
+				.buttons { padding-top:10px; }
 			}
 		}
+		&.restore, &.clone {
+			ul li .buttons {
+				padding-top:0;
+				a { padding-top:10px; }
+			}
+		}
+		.new, .blank { margin:10px; }
 	}
-	.trim-restore, .trim-clone {
-		ul li > a { padding:20px; }
+	.trim-instance-main-list {
+		ul li .buttons { padding:0 0 10px; }
 	}
-	.trim-instance-view, .trim-instance-edit { width:100%; }
+	.trim-instance-view, .trim-instance-edit, .trim-instance-new { width:100%; }
+	.trim-instance-view {
+		.left { width:100%; margin:0 0 10px; }
+	}
 }
 
 
 
 // tablet
 @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
-	.trim-instance-list, .trim-restore, .trim-clone {
-		ul { width:100%; }
-	}
-	.trim-instance-view, .trim-instance-edit { width:100%; }
 }
 
 

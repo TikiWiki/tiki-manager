@@ -56,10 +56,10 @@ foreach( Instance::getInstances() as $instance ) {
 			<ul class="destination clearfix">
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if (! $instance->getApplication()): ?>
-					<li>
-						<a href="javascript:void(0);" title="Restore this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>"><?php echo html( $instance->name ) ?></a>
+					<li title="Restore this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>">
+						<span><?php echo html( $instance->name ) ?></span>
 						<div class="buttons fa">
-							<a href="javascript:void(0);" class="hide fa-check" title="Restore this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>"></a>
+							<a href="javascript:void(0);" class="hide fa-check" title="Restore this instance"></a>
 						</div>
 					</li>
 				<?php endif; ?>

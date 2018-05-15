@@ -13,10 +13,8 @@
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
 					<?php $version = $instance->getLatestVersion() ?>
-					<li>
-						<a href="javascript:void(0);" title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="clone">
-							<?php echo html( $instance->name ) ?> <span>&nbsp;<?php echo html( "{$instance->app} ({$version->type}, {$version->branch})" ) ?></span>
-						</a>
+					<li title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="clone">
+						<?php require "include/layout/url.php"; ?>
 						<div class="buttons fa">
 							<a href="javascript:void(0);" class="hide fa-check" title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>"></a>
 						</div>
@@ -30,10 +28,8 @@
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
 					<?php $version = $instance->getLatestVersion() ?>
-					<li>
-						<a href="javascript:void(0);" title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="clone">
-							<?php echo html( $instance->name ) ?> <span>&nbsp;<?php echo html( "{$instance->app} ({$version->type}, {$version->branch})" ) ?></span>
-						</a>
+					<li title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="clone">
+						<?php require "include/layout/url.php"; ?>
 						<div class="buttons fa">
 							<a href="javascript:void(0);" class="hide fa-check" title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>"></a>
 						</div>

@@ -15,28 +15,30 @@
 					$lock = (md5_file(TRIMPATH . '/scripts/maintenance.htaccess') == md5_file($instance->getWebPath('.htaccess')));
 					$blank = (! $instance->getApplication())
 				?>
-				<li>
-					<a href="<?php echo html( url( "view/{$instance->id}" ) ) ?>" <?php if ($blank) { echo "class='nolock'"; } ?>>
-						<?php echo html( $instance->name ) ?>&nbsp;
-						<span><?php
+				<li data-href="<?php echo html( url( "view/{$instance->id}" ) ) ?>">
+					<!-- <a href="<?php echo html( url( "view/{$instance->id}" ) ) ?>" <?php if ($blank) { echo "class='nolock'"; } ?>>&nbsp;</a> -->
+					<div class="url">
+						<?php if (! $blank): ?>
+						<div class="lock">
+							<?php if ($lock): ?>
+							<a href="javascript:void(0);" title="This instance is locked. Click to unlock." data-id="<?php echo html( "{$instance->id}" ) ?>"><span class="fa fa-lock"></span></a>
+							<?php else: ?>
+							<a href="javascript:void(0);" title="This instance is unlocked. Click to lock." data-id="<?php echo html( "{$instance->id}" ) ?>"><span class="fa fa-unlock"></span></a>
+							<?php endif; ?>
+						</div>
+						<?php endif; ?>
+
+						<a href="<?php echo html( "{$instance->weburl}" ) ?>" title="Visit website" target="_blank"><?php echo html( $instance->name ) ?></a>
+						<span>&nbsp;
+						<?php
 							if ($blank) { echo "(blank)"; }
 							else { echo html( "{$instance->app} ({$version->type}, {$version->branch})" ); }
-						?></span>
-					</a>
-
-					<?php if (! $blank): ?>
-					<div class="lock">
-						<?php if ($lock): ?>
-						<a href="javascript:void(0);" title="This instance is locked. Click to unlock." data-id="<?php echo html( "{$instance->id}" ) ?>"><span class="fa fa-lock"></span></a>
-						<?php else: ?>
-						<a href="javascript:void(0);" title="This instance is unlocked. Click to lock." data-id="<?php echo html( "{$instance->id}" ) ?>"><span class="fa fa-unlock"></span></a>
-						<?php endif; ?>
+						?>
+						</span>
 					</div>
-					<?php endif; ?>
 
 					<div class="contact">
 						<span class="left">contact: <a href="mailto:<?php echo html( "{$instance->contact}" ) ?>"><?php echo html( "{$instance->contact}" ) ?></a></span>
-						<?php if (! $blank): ?><span class="right">url: <a href="<?php echo html( "{$instance->weburl}" ) ?>" target="_blank"><?php echo html( "{$instance->weburl}" ) ?></a></span><?php endif; ?>
 					</div>
 
 					<div class="buttons fa">

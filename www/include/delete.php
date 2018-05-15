@@ -29,12 +29,10 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 			<ul class="clearfix">
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php $version = $instance->getLatestVersion() ?>
-				<li>
-					<a href="javascript:void(0);" title="Delete this instance" data-toggle="modal" data-target="#deleteInstance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>">
-						<?php echo html( $instance->name ) ?> <span>&nbsp;<?php echo html( "{$instance->app} ({$version->type}, {$version->branch})" ) ?></span>
-					</a>
+				<li title="Delete this instance" data-toggle="modal" data-target="#deleteInstance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>">
+					<?php require "include/layout/url.php"; ?>
 					<div class="buttons fa">
-						<a href="javascript:void(0);" class="fa-times" title="Delete this instance" data-toggle="modal" data-target="#deleteInstance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>"></a>
+						<a href="javascript:void(0);" class="fa-times" title="Delete this instance"></a>
 					</div>
 				</li>
 			<?php endforeach; ?>

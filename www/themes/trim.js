@@ -26,10 +26,13 @@ $(document).ready(function () {
         $('.trim-instance-new input[name=type]').val($(this).find("option:selected").attr('value'));
     });
 
+    $('.trim-instance-main-list li').click(function (event) {
+        if (event.target.localName === 'li') window.location.href = $(this).attr('data-href');
+    });
 
     // restoring
-    $('.trim-instance-list.restore ul.archive li > a').on('click', function () {
-        $('.trim-instance-list.restore ul.archive li > a').each(function () {
+    $('.trim-instance-list.restore ul.archive li').on('click', function () {
+        $('.trim-instance-list.restore ul.archive li').each(function () {
             $(this).css('background-color', 'transparent');
             $(this).find('span.fa').addClass('hide');
         });
@@ -42,13 +45,13 @@ $(document).ready(function () {
         }
     });
 
-    $('.trim-instance-list.restore ul.destination li > a').click(function () {
-        $('.trim-instance-list.restore ul.destination li > a').each(function () {
+    $('.trim-instance-list.restore ul.destination li').click(function () {
+        $('.trim-instance-list.restore ul.destination li').each(function () {
             $(this).css('background-color', 'transparent');
-            $(this).parent().find('.buttons a').addClass('hide');
+            $(this).find('.buttons a').addClass('hide');
         });
         $(this).css('background-color', 'greenyellow');
-        $(this).parent().find('.buttons a').removeClass('hide');
+        $(this).find('.buttons a').removeClass('hide');
         $('.restore.btn').attr('data-id', $(this).data('id'));
         $('.restore.btn').attr('data-name', $(this).data('name'));
         if (($('.restore.btn').attr('data-sourceid')) && ($('.restore.btn').attr('data-id'))) {
@@ -65,12 +68,12 @@ $(document).ready(function () {
         });
     }
 
-    $('.trim-instance-list.clone ul.source li > a').on('click', function () {
+    $('.trim-instance-list.clone ul.source li').on('click', function () {
         var id = $(this).data('id');
-        clonecolors('.trim-instance-list.clone ul.source li > a');
-        clonecolors('.trim-instance-list.clone ul.destination li > a');
+        clonecolors('.trim-instance-list.clone ul.source li');
+        clonecolors('.trim-instance-list.clone ul.destination li');
         $(this).css('background-color', 'greenyellow');
-        $(this).parent().find('.buttons a').removeClass('hide');
+        $(this).find('.buttons a').removeClass('hide');
         $('.clone.btn').attr('data-sourceid', id);
         $('.clone.btn').attr('data-sourcename', $(this).data('name'));
         $('.clone.btn').attr('data-id', '');
@@ -78,17 +81,17 @@ $(document).ready(function () {
         $('.trim-instance-list.clone ul.destination').removeClass('hide');
         $('.trim-instance-list.clone ul.destination li').each(function () {
             $(this).removeClass('hide');
-            if ($(this).find('a').data('id') == id) $(this).addClass('hide');
+            if ($(this).data('id') == id) $(this).addClass('hide');
         });
         if (($('.clone.btn').attr('data-sourceid')) && ($('.clone.btn').attr('data-id'))) {
             $('.clone.btn').prop('disabled', false);
         }
     });
 
-    $('.trim-instance-list.clone ul.destination li > a').on('click', function () {
-        clonecolors('.trim-instance-list.clone ul.destination li > a');
+    $('.trim-instance-list.clone ul.destination li').on('click', function () {
+        clonecolors('.trim-instance-list.clone ul.destination li');
         $(this).css('background-color', 'greenyellow');
-        $(this).parent().find('.buttons a').removeClass('hide');
+        $(this).find('.buttons a').removeClass('hide');
         $('.clone.btn').attr('data-id', $(this).data('id'));
         $('.clone.btn').attr('data-name', $(this).data('name'));
         if (($('.clone.btn').attr('data-sourceid')) && ($('.clone.btn').attr('data-id'))) {
@@ -125,6 +128,10 @@ $(document).ready(function () {
 
 
     // modals
+    $('.trim-instance-list li .url a').click(function (event) {
+        event.stopPropagation();
+    });
+
     $('#trimModal').on('hidden.bs.modal', function (event) {
         window.location.reload();
     });
