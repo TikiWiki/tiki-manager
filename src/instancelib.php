@@ -655,10 +655,20 @@ class Instance
             mkdir($archiveLocation, $backup_perm, true);
         }
 
-        info("Assigning permissions to '{$archiveLocation}' ({$backup_user}:{$backup_group} " . decoct($backup_perm) . ")");
-        chmod($archiveLocation, $backup_perm);
-        chown($archiveLocation, $backup_user);
-        chgrp($archiveLocation, $backup_group);
+        if ($backup_perm) {
+            info("Setting permissions on '{$archiveLocation}' to " . decoct($backup_perm) . "");
+            chmod($archiveLocation, $backup_perm);
+        }
+
+        if ($backup_user) {
+            info("Changing '{$archiveLocation}' owner to {$backup_user}");
+            chown($archiveLocation, $backup_user);
+        }
+
+        if ($backup_group) {
+            info("Changing '{$archiveLocation}' group to {$backup_group}");
+            chgrp($archiveLocation, $backup_group);
+        }
 
         $output = array();
         $return_val = -1;
@@ -688,10 +698,20 @@ class Instance
             return null;
         } 
 
-        info("Assigning permissions ({$backup_user}:{$backup_group} " . decoct($backup_perm) . ")");
-        chmod($tar, $backup_perm);
-        chown($tar, $backup_user);
-        chgrp($tar, $backup_group);
+        if ($backup_perm) {
+            info("Setting permissions on '{$tar}' to " . decoct($backup_perm) . "");
+            chmod($tar, $backup_perm);
+        }
+
+        if ($backup_user) {
+            info("Changing '{$tar}' owner to {$backup_user}");
+            chown($tar, $backup_user);
+        }
+
+        if ($backup_group) {
+            info("Changing '{$tar}' group to {$backup_group}");
+            chgrp($tar, $backup_group);
+        }
 
         return $tar;
     } // }}}
