@@ -699,7 +699,6 @@ class Instance
 
     function restore($src_app, $archive, $clone = false)
     {
-        $hooks = TRIM_Hooks::getInstance();
         info(sprintf("Uploading : %s", basename($archive)));
 
         $base = basename($archive);
@@ -820,7 +819,6 @@ class Instance
 
     function lock() // {{{
     {
-        $hooks = TRIM_Hooks::getInstance();
         info('Locking website...');
 
         $access = $this->getBestAccess('scripting');
@@ -832,13 +830,11 @@ class Instance
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.htaccess', '.htaccess');
 
         $this->locked = true;
-        $hooks->run_actions('instance_lock', $this);
         return $this->locked;
     } // }}}
 
     function unlock() // {{{
     {
-        $hooks = TRIM_Hooks::getInstance();
         info('Unlocking website...');
 
         $access = $this->getBestAccess('scripting');
@@ -848,7 +844,6 @@ class Instance
             $access->moveFile('.htaccess.bak', '.htaccess');
 
         $this->locked = false;
-        $hooks->run_actions('instance_unlock', $this);
     } // }}}
 
     function __get($name) // {{{
