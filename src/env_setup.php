@@ -6,6 +6,7 @@
 
 
 define('TRIM_DEBUG', getenv('TRIM_DEBUG') === 'true');
+define('TRIM_ROOT', realpath(dirname(__DIR__)));
 
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     define('INTERACTIVE', php_sapi_name() === 'cli'
@@ -198,18 +199,16 @@ include dirname(__FILE__) . '/reportlib.php';
 
 include dirname(__FILE__) . '/ext/Password.php';
 
-$root = realpath(dirname(__FILE__) . '/..');
-debug('Running TRIM at ' . $root);
-
-define('DB_FILE', "$root/data/trim.db");
-define('SSH_CONFIG', "$root/data/ssh_config");
-define('CACHE_FOLDER', "$root/cache");
-define('TEMP_FOLDER', "$root/tmp");
-define('RSYNC_FOLDER', "$root/tmp/rsync");
-define('MOUNT_FOLDER', "$root/tmp/mount");
-define('BACKUP_FOLDER', "$root/backup");
-define('ARCHIVE_FOLDER', "$root/backup/archive");
-define('TRIM_OUTPUT', "$root/logs/trim.output");
+debug('Running TRIM at ' . TRIM_ROOT);
+define('DB_FILE', TRIM_ROOT . "/data/trim.db");
+define('SSH_CONFIG', TRIM_ROOT . "/data/ssh_config");
+define('CACHE_FOLDER', TRIM_ROOT . "/cache");
+define('TEMP_FOLDER', TRIM_ROOT . "/tmp");
+define('RSYNC_FOLDER', TRIM_ROOT . "/tmp/rsync");
+define('MOUNT_FOLDER', TRIM_ROOT . "/tmp/mount");
+define('BACKUP_FOLDER', TRIM_ROOT . "/backup");
+define('ARCHIVE_FOLDER', TRIM_ROOT . "/backup/archive");
+define('TRIM_OUTPUT', TRIM_ROOT . "/logs/trim.output");
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
     define('TRIM_TEMP', getenv('TEMP')."\\trim_temp");
 else
@@ -238,8 +237,8 @@ if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
     );
 }
 
-if (file_exists("$root/data/id_dsa") &&
-    file_exists("$root/data/id_dsa.pub") &&
+if (file_exists(TRIM_ROOT . "/data/id_dsa") &&
+    file_exists(TRIM_ROOT . "/data/id_dsa.pub") &&
     !defined('SSH_KEY') &&
     !defined('SSH_PUBLIC_KEY')) {
 
@@ -254,8 +253,8 @@ if (file_exists("$root/data/id_dsa") &&
 }
 
 if (!defined('SSH_KEY') && !defined('SSH_PUBLIC_KEY')) {
-    define('SSH_KEY', "$root/data/id_rsa");
-    define('SSH_PUBLIC_KEY', "$root/data/id_rsa.pub");
+    define('SSH_KEY', TRIM_ROOT . "/data/id_rsa");
+    define('SSH_PUBLIC_KEY', TRIM_ROOT . "/data/id_rsa.pub");
 }
 
 if (array_key_exists('EDITOR', $_ENV))
