@@ -60,7 +60,8 @@ class RC_SVN
 
     private function getRepositoryInfo($instance, $access)
     {
-        $remoteText = $access->shellExec('svn info ' . escapeshellarg($instance->webroot), 'sleep 1');
+        $remoteText = $access->shellExec('svn info ' . escapeshellarg($instance->webroot));
+		sleep(1);
         if (empty($remoteText)) return array();
 
         $info = array();

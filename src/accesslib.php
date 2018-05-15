@@ -157,6 +157,15 @@ class Access_Local extends Access implements ShellPrompt
         parent::__construct($instance, 'local');
     }
 
+    private function isLocalPath($pathname) {
+        if($pathname{0} == '/') return true;
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' && preg_match("|^[a-zA-Z]:[/\\\\]|", $pathname))
+            return true;
+
+        return false;
+    }
+
     private function getHost()
     {
         static $changeLocation = null;
@@ -170,17 +179,24 @@ class Access_Local extends Access implements ShellPrompt
         // php interpreter version is used to execute commands, if the dir is not available
         // try the parent directory
         if ($changeLocation === null && !empty($this->instance->webroot)) {
-            $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
-            if ($output == "EXISTS") {
-                $changeLocation = $this->instance->webroot;
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                if(chdir($this->instance->webroot))
+                    $changeLocation = $this->instance->webroot;
+                else if(chdir(dirname($this->instance->webroot)))
+                        $changeLocation = dirname($this->instance->webroot);
             } else {
-                $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
+                $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
                 if ($output == "EXISTS") {
-                    $changeLocation = dirname($this->instance->webroot);
+                    $changeLocation = $this->instance->webroot;
+                } else {
+                    $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
+                    if ($output == "EXISTS") {
+                        $changeLocation = dirname($this->instance->webroot);
+                    }
                 }
-            }
-            if ($changeLocation === null) {
-                $changeLocation = false;
+                if ($changeLocation === null) {
+                    $changeLocation = false;
+                }
             }
         }
         if ($changeLocation) {
@@ -199,13 +215,21 @@ class Access_Local extends Access implements ShellPrompt
     {
         $host = $this->getHost();
 
-        $attempts = array(
-            'command -v php 2>/dev/null',
-            "command php -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
-            "command php7 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
-            "command php5 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
-            "which php4"
-        );
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $attempts = array(
+                "where php.exe",
+                "where php5.exe",
+                "where php7.exe"
+            );
+        } else {
+            $attempts = array(
+                'command -v php 2>/dev/null',
+                "command php -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
+                "command php7 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
+                "command php5 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
+                "which php4"
+            );
+        }
 
         // Get possible paths
         $phps = $host->runCommands($attempts);
@@ -253,9 +277,17 @@ class Access_Local extends Access implements ShellPrompt
     {
         $host = $this->getHost();
         
-        $sets = array(
-            array('which svn'),
-        );
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $svn_name='svn.exe';
+            $sets = array(
+                array('where svn'),
+            );
+        } else {
+            $svn_name='svn';
+            $sets = array(
+                array('which svn'),
+            );
+        }
 
         foreach ($sets as $attempt) {
             // Get possible paths
@@ -265,11 +297,11 @@ class Access_Local extends Access implements ShellPrompt
             // Check different versions
             $valid = array();
             foreach ($svns as $interpreter) {
-                if (! in_array(basename($interpreter), array('svn')))
+                if (! in_array(basename($interpreter), array($svn_name)))
                     continue;
 
                 if (strpos($interpreter, ' ') !== false) {
-                    $interpreter = "'" . trim($interpreter) . "'"; // wrap command if contains spaces
+                    $interpreter = '"' . trim($interpreter) . '"'; // wrap command if contains spaces
                 }
 
                 $versionInfo = $host->runCommands("$interpreter --version");
@@ -307,50 +339,38 @@ class Access_Local extends Access implements ShellPrompt
     function getInterpreterVersion($interpreter) // {{{
     {
         $host = $this->getHost();
-        $versionInfo = $host->runCommands("$interpreter -r 'echo PHP_VERSION_ID;'");
+        $versionInfo = $host->runCommands("$interpreter -r \"echo PHP_VERSION_ID;\"");
         return $versionInfo;
     } // }}}
 
     function getDistributionName($interpreter){ // {{{
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+            return "Windows";
+
         $host = $this->getHost();
         $command = file_get_contents(
             sprintf('%s/getlinuxdistro.php', dirname(__FILE__)));
-        $linuxName = $host->runCommands("$interpreter -r '$command'");
+        $linuxName = $host->runCommands("$interpreter -r \"$command\"");
 
         return $linuxName;
     } // }}}
 
     function fileExists($filename) // {{{
     {
-        if ($filename{0} != '/')
+        if (!$this->isLocalPath($filename))
             $filename = $this->instance->getWebPath($filename);
 
-        $eFile = escapeshellarg($filename);
-        $output = $this->shellExec("ls $eFile");
-
-        return ! empty($output);
+        return file_exists($filename);
     } // }}}
 
     function fileGetContents($filename) // {{{
     {
-        $host = $this->getHost();
-        
-        $filename = escapeshellarg($filename);
-        return $host->runCommands("cat $filename");
+        return file_get_contents($filename);
     } // }}}
 
     function fileModificationDate($filename) // {{{
     {
-        $host = $this->getHost();
-
-        $root = escapeshellarg($filename);
-
-        $data = $host->runCommands("ls -l $root");
-
-        if (preg_match("/\d{4}-\d{2}-\d{2}/", $data, $matches))
-            return $matches[0];
-        else
-            return null;
+        return date("Y-m-d", filemtime($filename));
     } // }}}
 
     function runPHP($localFile, $args = array()) // {{{
@@ -363,14 +383,14 @@ class Access_Local extends Access implements ShellPrompt
         $host->sendFile($localFile, $remoteFile);
         $arg = implode(' ', array_map('escapeshellarg', $args));
         $output = $host->runCommands("{$this->instance->phpexec} -d memory_limit=256M {$remoteFile} {$arg}");
-        $host->runCommands("rm -v {$remoteFile}");
+        unlink($remoteFile);
 
         return $output;
     } // }}}
 
     function downloadFile($filename) // {{{
     {
-        if ($filename{0} != '/')
+        if (!$this->isLocalPath($filename))
             $filename = $this->instance->getWebPath($filename);
 
         $dot = strrpos($filename, '.');
@@ -390,7 +410,7 @@ class Access_Local extends Access implements ShellPrompt
     function uploadFile($filename, $remoteLocation) // {{{
     {
         $host = $this->getHost();
-        if ($remoteLocation{0} == '/')
+        if ($this->isLocalPath($remoteLocation))
             $host->sendFile($filename, $remoteLocation);
         else
             $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
@@ -401,23 +421,17 @@ class Access_Local extends Access implements ShellPrompt
         if ($filename{0} != '/')
             $filename = $this->instance->getWebPath($filename);
 
-        $path = escapeshellarg($filename);
-
-        $host = $this->getHost();
-        $host->runCommands("rm -v $path");
+        unlink($filename);
     } // }}}
 
     function moveFile($remoteSource, $remoteTarget) // {{{
     {
-        if ($remoteSource{0} != '/')
+        if (!$this->isLocalPath($remoteSource))
             $remoteSource = $this->instance->getWebPath($remoteSource);
-        if ($remoteTarget{0} != '/')
+        if (!$this->isLocalPath($remoteTarget))
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
 
-        $a = escapeshellarg($remoteSource);
-        $b = escapeshellarg($remoteTarget);
-
-        $this->shellExec("mv -v $a $b");
+        rename($remoteSource, $remoteTarget);
     } // }}}
 
     function chdir($location) // {{{
@@ -453,7 +467,11 @@ class Access_Local extends Access implements ShellPrompt
     function hasExecutable($command) // {{{
     {
         $command = escapeshellcmd($command);
-        $exists = $this->shellExec("which $command");
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $exists = $this->shellExec("where $command");
+        } else {
+            $exists = $this->shellExec("which $command");
+        }
 
         return ! empty($exists);
     } // }}}
@@ -526,6 +544,7 @@ class Access_SSH extends Access implements ShellPrompt
         return true;
     } // }}}
 
+// FIXME: Expect all remote to be Unix-like machines
     function getInterpreterPath($instance2 = null) // {{{
     {
         $host = $this->getHost();
@@ -533,6 +552,7 @@ class Access_SSH extends Access implements ShellPrompt
         $sets = array(
             array('which php', 'which php5', 'which php4'),
         );
+        $php_name = array('php', 'php5');
 
         foreach ($sets as $attempt) {
 
@@ -583,8 +603,9 @@ class Access_SSH extends Access implements ShellPrompt
         $host = $this->getHost();
         
         $sets = array(
-            array('which svn'),
+                array('which svn'),
         );
+        $svn_name='svn';
 
         foreach ($sets as $attempt) {
             // Get possible paths
@@ -594,7 +615,7 @@ class Access_SSH extends Access implements ShellPrompt
             // Check different versions
             $valid = array();
             foreach ($svns as $interpreter) {
-                if (! in_array(basename($interpreter), array('svn')))
+                if (! in_array(basename($interpreter), array($svn_name)))
                     continue;
 
                 $versionInfo = $host->runCommands("$interpreter --version");
@@ -650,10 +671,7 @@ class Access_SSH extends Access implements ShellPrompt
         if ($filename{0} != '/')
             $filename = $this->instance->getWebPath($filename);
 
-        $eFile = escapeshellarg($filename);
-        $output = $this->shellExec("ls $eFile");
-
-        return ! empty($output);
+        return file_exists($filename);
     } // }}}
 
     function fileGetContents($filename) // {{{
@@ -715,7 +733,7 @@ class Access_SSH extends Access implements ShellPrompt
     function uploadFile( $filename, $remoteLocation ) // {{{
     {
         $host = $this->getHost();
-        if ($remoteLocation{0} == '/')
+        if ($remoteLocation{0} == '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
             $host->sendFile($filename, $remoteLocation);
         else
             $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
@@ -723,7 +741,7 @@ class Access_SSH extends Access implements ShellPrompt
 
     function deleteFile($filename) // {{{
     {
-        if ($filename{0} != '/')
+        if ($filename{0} != '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
             $filename = $this->instance->getWebPath($filename);
 
         $path = escapeshellarg($filename);
@@ -734,9 +752,9 @@ class Access_SSH extends Access implements ShellPrompt
 
     function moveFile($remoteSource, $remoteTarget) // {{{
     {
-        if ($remoteSource{0} != '/')
+        if ($remoteSource{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN')
             $remoteSource = $this->instance->getWebPath($remoteSource);
-        if ($remoteTarget{0} != '/' )
+        if ($remoteTarget{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN')
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
 
         $a = escapeshellarg($remoteSource);

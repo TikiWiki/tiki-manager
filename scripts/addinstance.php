@@ -78,6 +78,15 @@ if (! $instance->detectSVN()) {
     die(color("Subversion not detected on the remote server\n", 'red'));
 }
 
+if (! $instance->detectPHP()) {
+    die(color("PHP Interpreter could not be found on remote host.\n", 'red'));
+}
+else {
+    if ($instance->phpversion < 50300) {
+        die(color("PHP Interpreter version is less than 5.3.\n", 'red'));
+    }
+}
+
 $d_linux = $instance->detectDistribution();
 info("You are running : $d_linux");
 
@@ -90,6 +99,11 @@ case "ClearOS":
     $d_webroot = ($user == 'root' || $user == 'apache') ?
         "/var/www/virtual/{$host}/html/" : "/home/$user/public_html/";
     break;
+case "Windows":
+	$backup_user = $backup_group = "Administrator";
+	$backup_perm = 02750;
+	$d_webroot = 'D:\\www\\';
+	break;
 default:
     $backup_user = @posix_getpwuid(posix_geteuid())['name'];
     $backup_group = @posix_getgrgid(posix_getegid())['name'];
@@ -104,9 +118,10 @@ if ($type != 'ftp') {
 }
 $tempdir = promptUser('Working directory', TRIM_TEMP);
 
-if ($access instanceof ShellPrompt)
-    $access->shellExec("mkdir -p $tempdir");
-else
+if ($access instanceof ShellPrompt) {
+    if(!is_dir($tempdir))
+		mkdir($tempdir, 0777, true);
+} else
     echo die(color("Shell access is required to create the working directory. You will need to create it manually.\n", 'yellow'));
 
 $backup_user = promptUser('Backup owner', $backup_user);
@@ -120,15 +135,6 @@ $instance->tempdir = rtrim($tempdir, '/');
 $instance->backup_user = trim($backup_user);
 $instance->backup_group = trim($backup_group);
 $instance->backup_perm = octdec($backup_perm);
-
-if (! $instance->detectPHP()) {
-    die(color("PHP Interpreter could not be found on remote host.\n", 'red'));
-}
-else {
-    if ($instance->phpversion < 50300) {
-        die(color("PHP Interpreter version is less than 5.3.\n", 'red'));
-    }
-}
 
 $instance->save();
 echo color("Instance information saved.\n", 'green');

@@ -7,12 +7,17 @@
 
 define('TRIM_DEBUG', getenv('TRIM_DEBUG') === 'true');
 
-define('INTERACTIVE',
-    php_sapi_name() === 'cli'
-    && getenv('NONINTERACTIVE') !== 'true'
-    && !in_array(getenv('TERM'), array('dumb', false, ''))
-    && preg_match(',^/dev/,', exec('tty'))
-);
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    define('INTERACTIVE', php_sapi_name() === 'cli'
+        && getenv('NONINTERACTIVE') !== 'true');
+} else {
+    define('INTERACTIVE',
+        php_sapi_name() === 'cli'
+        && getenv('NONINTERACTIVE') !== 'true'
+        && !in_array(getenv('TERM'), array('dumb', false, ''))
+        && preg_match(',^/dev/,', exec('tty'))
+    );
+}
 
 if (! function_exists('readline')) {
     function readline($prompt)
@@ -26,6 +31,9 @@ if (! function_exists('readline')) {
 
 function color($string, $color)
 {
+//    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+//        return;
+
     $avail = array(
         'red' => 31,
         'green' => 32,
@@ -202,7 +210,11 @@ define('MOUNT_FOLDER', "$root/tmp/mount");
 define('BACKUP_FOLDER', "$root/backup");
 define('ARCHIVE_FOLDER', "$root/backup/archive");
 define('TRIM_OUTPUT', "$root/logs/trim.output");
-define('TRIM_TEMP', '/tmp/trim_temp');
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+    define('TRIM_TEMP', getenv('TEMP')."\\trim_temp");
+else
+    define('TRIM_TEMP', '/tmp/trim_temp');
+
 
 if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
     file_exists(getenv('HOME') . '/.ssh/id_rsa.pub')) {
@@ -267,8 +279,14 @@ if (! in_array('sqlite', PDO::getAvailableDrivers()))
     die(error("The SQLite PHP extension is not available. Install to continue."));
 
 // Check for required system dependencies
-$ssh = `export PATH; which ssh`;
-$kg = `export PATH; which ssh-keygen`;
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    $ssh = 'where ssh';
+    $kg = 'where ssh-keygen';
+} else {
+    $ssh = `export PATH; which ssh`;
+    $kg = `export PATH; which ssh-keygen`;
+}
+
 if (empty($ssh) || empty($kg)) {
     die(error("SSH tools not installed on current machine. " .
         "Make sure 'ssh' and 'ssh-keygen' and are installed.\n"));
@@ -579,7 +597,11 @@ function promptUser($prompt, $default = false, $values = array())
 
 function php() // {{{
 {
-    $paths = `whereis php 2>> logs/trim.output`;
+
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+        $paths = `where php`;
+    else
+        $paths = `whereis php 2>> logs/trim.output`;
     $phps = explode(' ', $paths);
 
     // Check different versions
