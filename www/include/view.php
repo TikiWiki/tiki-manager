@@ -94,7 +94,7 @@
 			</tr>
 		</table>
 
-		<p class="clearfix">
+		<p class="bottom-nav clearfix">
 			<a href="<?php echo html( url( '' ) ) ?>" class="left btn btn-default">
 				<span class="fa fa-angle-double-left"></span>
 				Back to list

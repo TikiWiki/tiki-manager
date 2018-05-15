@@ -239,6 +239,7 @@ TRIM Main Styles
 .trim-instance-main-list ul.archive li,
 .trim-instance-list ul.archive li {
   margin: 10px 0;
+  padding: 0;
   text-align: center;
   border: none;
 }
@@ -249,8 +250,9 @@ TRIM Main Styles
 .trim-instance-main-list ul.archive li a,
 .trim-instance-list ul.archive li a {
   padding: 10px;
-  font-size: 1em;
   width: auto;
+  font-size: 1em;
+  white-space: normal;
 }
 .trim-instance-main-list ul.archive li span,
 .trim-instance-list ul.archive li span {
@@ -260,11 +262,6 @@ TRIM Main Styles
 .trim-instance-main-list ul.archive li span.fa-times,
 .trim-instance-list ul.archive li span.fa-times {
   margin-right: 5px;
-  font-size: 1.5em;
-}
-.trim-instance-main-list ul.destination span,
-.trim-instance-list ul.destination span {
-  color: #337ab7;
   font-size: 1.5em;
 }
 .trim-instance-main-list .alert,
@@ -315,6 +312,7 @@ TRIM Main Styles
 .trim-instance-main-list .panel-title,
 .trim-instance-list .panel-title {
   background-color: #eee;
+  line-height: normal;
 }
 .trim-instance-main-list .panel-title.collapsed,
 .trim-instance-list .panel-title.collapsed {
@@ -337,6 +335,10 @@ TRIM Main Styles
 }
 .trim-instance-main-list .lock span:hover {
   color: darkorange;
+}
+.trim-instance-list ul.restore span {
+  color: #337ab7;
+  font-size: 1.5em;
 }
 .trim-instance-view {
   width: 85%;
@@ -433,18 +435,6 @@ TRIM Responsiveness
   .trim-instance-list {
     width: 100%;
   }
-  .trim-instance-main-list ul li,
-  .trim-instance-list ul li {
-    overflow: hidden;
-  }
-  .trim-instance-main-list ul li .url,
-  .trim-instance-list ul li .url {
-    display: block;
-  }
-  .trim-instance-main-list ul li .buttons,
-  .trim-instance-list ul li .buttons {
-    padding-top: 10px;
-  }
   .trim-instance-main-list.restore ul li .buttons,
   .trim-instance-list.restore ul li .buttons,
   .trim-instance-main-list.clone ul li .buttons,
@@ -463,16 +453,32 @@ TRIM Responsiveness
   .trim-instance-list .blank {
     margin: 10px;
   }
-  .trim-instance-main-list ul li .buttons {
-    padding: 0 0 10px;
+  .trim-instance-list ul li .buttons {
+    padding-top: 10px;
   }
   .trim-instance-view,
   .trim-instance-edit,
   .trim-instance-new {
     width: 100%;
   }
-  .trim-instance-view .left {
-    width: 100%;
-    margin: 0 0 10px;
+  .trim-instance-view h2 {
+    display: block;
+    margin-top: 0;
+  }
+  .trim-instance-view .bottom-nav {
+    text-align: center;
+  }
+  .trim-instance-view .bottom-nav .left,
+  .trim-instance-view .bottom-nav .right {
+    float: none;
+    margin: 0 10px 10px 0;
+  }
+}
+@media (max-width: 991px) {
+  .trim-instance-main-list ul li {
+    overflow: hidden;
+  }
+  .trim-instance-main-list ul li .buttons {
+    padding-bottom: 10px;
   }
 }

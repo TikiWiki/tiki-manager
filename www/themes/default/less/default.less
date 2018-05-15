@@ -161,16 +161,13 @@ TRIM Main Styles
 		}
 		&.archive {
 			li {
-				margin:10px 0; text-align:center; border:none;
+				margin:10px 0; padding:0; text-align:center; border:none;
 				&:hover { background-color:transparent; }
 
-				a { padding:10px; font-size:1em; width:auto; }
+				a { padding:10px; width:auto; font-size:1em; white-space:normal; }
 				span { font-size:1em; color:#fff; }
 				span.fa-times { margin-right:5px; font-size:1.5em; }
 			}
-		}
-		&.destination {
-			span { color:@link-color; font-size:1.5em; }
 		}
 	}
 
@@ -193,7 +190,7 @@ TRIM Main Styles
 		.panel { border-radius:0; }
 	}
 	.panel-title {
-		background-color:#eee;
+		background-color:#eee; line-height:normal;
 		&.collapsed { background-color:#fff; }
 	}
 }
@@ -211,6 +208,10 @@ TRIM Main Styles
 			&:hover { color:darkorange; }
 		}
 	}
+}
+
+.trim-instance-list {
+	ul.restore span { color:@link-color; font-size:1.5em; }
 }
 
 .trim-instance-view {
@@ -260,23 +261,12 @@ TRIM Responsiveness
 
 // mobile
 @media (max-width: @screen-xs-max) {
-	body {
-		> .container { } //min-height:450px; }
-	}
-	header { } //height:@header-height - 20; }
 	.navbar-fixed-top .navbar-collapse { max-height:500px; }
 	.dropdown-menu > li > a { color:#777; }
 	.navbar-nav .open .dropdown-menu > li > a { padding:5px 30px; }
 
 	.trim-instance-main-list, .trim-instance-list {
 		width:100%;
-		ul {
-			li {
-				overflow:hidden;
-				.url { display:block; }
-				.buttons { padding-top:10px; }
-			}
-		}
 		&.restore, &.clone {
 			ul li .buttons {
 				padding-top:0;
@@ -285,19 +275,29 @@ TRIM Responsiveness
 		}
 		.new, .blank { margin:10px; }
 	}
-	.trim-instance-main-list {
-		ul li .buttons { padding:0 0 10px; }
+	.trim-instance-list {
+		ul li .buttons { padding-top:10px; }
 	}
 	.trim-instance-view, .trim-instance-edit, .trim-instance-new { width:100%; }
 	.trim-instance-view {
-		.left { width:100%; margin:0 0 10px; }
+		h2 { display:block; margin-top:0; }
+		.bottom-nav {
+			text-align:center;
+			.left, .right { float:none; margin:0 10px 10px 0; }
+		}
 	}
 }
 
 
 
 // tablet
-@media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
+@media (max-width: @screen-sm-max) {
+	.trim-instance-main-list {
+		ul li {
+			overflow:hidden;
+			.buttons { padding-bottom:10px; }
+		}
+	}
 }
 
 
