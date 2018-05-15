@@ -40,16 +40,18 @@ abstract class Access
 
     static function getClassFor($type) // {{{
     {
-        if ($type == 'local')
-            return 'Access_Local';
-        elseif ($type == 'ssh')
-            return 'Access_SSH';
-        elseif ($type == 'ssh::nokey')
-            return 'Access_SSH';
-        elseif ($type == 'ftp')
-            return 'Access_FTP';
-        else
-            die(error("Unknown type: $type"));
+        $types = array(
+            'ftp'        => 'Access_FTP',
+            'local'      => 'Access_Local',
+            'ssh::nokey' => 'Access_SSH',
+            'ssh'        => 'Access_SSH',
+        );
+
+        if (!empty($types[$type])) {
+            return $types[$type];
+        }
+
+        throw new Exception("Unknown type: $type", 1);
     } // }}}
 
     static function getAccessFor(Instance $instance) // {{{
