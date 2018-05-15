@@ -231,7 +231,6 @@ class Instance
     public $app;
 
     private $access = array();
-    private $locked = false;
 
     function getId() // {{{
     {
@@ -814,11 +813,17 @@ class Instance
     } // }}}
 
     function isLocked() { // {{{
-        return $this->locked;
+        $access = $this->getBestAccess('scripting');
+        $trim_htaccess = file_get_contents(TRIM_ROOT . '/scripts/maintenance.htaccess');
+        $dest_htaccess = $access->fileGetContents($this->getWebPath('.htaccess'));
+        return trim($trim_htaccess) === trim($dest_htaccess);
     } // }}}
 
     function lock() // {{{
     {
+        if ($this->isLocked()) {
+            return true;
+        }
         info('Locking website...');
 
         $access = $this->getBestAccess('scripting');
@@ -828,22 +833,23 @@ class Instance
             $access->moveFile('.htaccess', '.htaccess.bak');
 
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.htaccess', '.htaccess');
-
-        $this->locked = true;
-        return $this->locked;
+        return $this->isLocked();
     } // }}}
 
     function unlock() // {{{
     {
-        info('Unlocking website...');
+        if(!$this->isLocked()) {
+            return true;
+        }
 
+        info('Unlocking website...');
         $access = $this->getBestAccess('scripting');
         $access->deleteFile('.htaccess');
 
         if ($access->fileExists('.htaccess.bak'))
             $access->moveFile('.htaccess.bak', '.htaccess');
 
-        $this->locked = false;
+        return !$this->isLocked();
     } // }}}
 
     function __get($name) // {{{
