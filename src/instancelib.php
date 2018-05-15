@@ -747,18 +747,6 @@ class Instance
             );
 
             trim_output("REMOTE $out");
-/*
-            if ($svn_update) {
-                info('Updating from SVN...');
-
-                $out = $access->shellExec(
-                    sprintf('svn update %s',
-                        escapeshellarg( rtrim($location, '/')))
-                );
-
-                trim_output("REMOTE $out");
-            }
- */
         }
 
         $this->app = $src_app;
