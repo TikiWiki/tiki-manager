@@ -1,6 +1,6 @@
 		<footer>
 			<div class="container">
-				<p><?php echo TITLE; ?> - &copy; <?php echo date('Y'); ?> Avan.Tech</p>
+				<p><?php echo TITLE; ?></p>
 			</div>
 		</footer>
 
