@@ -766,9 +766,9 @@ class Instance
             $out = $access->shellExec(
                 sprintf('mkdir -p %s', $syncpaths->to),
                 sprintf('rsync -a %s %s %s --delete',
+                    $type === 'app' ? "--exclude .htaccess --exclude db/local.php" : '',
                     "{$syncpaths->from}/",
-                    "{$syncpaths->to}/",
-                    $type === 'app' ? "--exclude .htaccess --exclude db/local.php" : ''
+                    "{$syncpaths->to}/"
                 )
             );
 
