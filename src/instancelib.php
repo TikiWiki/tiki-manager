@@ -765,16 +765,17 @@ class Instance
 
             $out = $access->shellExec(
                 sprintf('mkdir -p %s', $syncpaths->to),
-                sprintf('rsync -a %s %s --exclude .htaccess --exclude db/local.php --delete',
+                sprintf('rsync -a %s %s %s --delete',
                     "{$syncpaths->from}/",
-                    "{$syncpaths->to}/"
+                    "{$syncpaths->to}/",
+                    $type === 'app' ? "--exclude .htaccess --exclude db/local.php" : ''
                 )
             );
 
             $access->shellExec(sprintf('rsync -v %s %s%s',
                 "{$syncpaths->from}/.htaccess",
                 "{$syncpaths->to}/.htaccess",
-                $this->isLocked() ? '.bak' : ''
+                $type === 'app' && $this->isLocked() ? '.bak' : ''
             ));
 
             trim_output("REMOTE $out");
