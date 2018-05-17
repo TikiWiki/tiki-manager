@@ -17,7 +17,7 @@ class Application_Tiki extends Application
         return 'tiki';
     }
 
-    function getVersions() // {{{
+    function getVersions()
     {
         $versions = array();
 
@@ -54,9 +54,9 @@ class Application_Tiki extends Application
         }
 
         return $versions_sorted;
-    } // }}}
+    }
 
-    function isInstalled() // {{{
+    function isInstalled()
     {
         if (! is_null($this->installed))
             return $this->installed;
@@ -65,9 +65,9 @@ class Application_Tiki extends Application
 
         return $this->installed = $access->fileExists(
             $this->instance->getWebPath('tiki-setup.php'));
-    } // }}}
+    }
 
-    function getInstallType() // {{{
+    function getInstallType()
     {
         if (! is_null($this->installType))
             return $this->installType;
@@ -77,9 +77,9 @@ class Application_Tiki extends Application
             return $this->installType = 'svn';
         else
             return $this->installType = 'tarball';
-    } // }}}
+    }
 
-    function install(Version $version) // {{{
+    function install(Version $version)
     {
         $access = $this->instance->getBestAccess('scripting');
         $host = $access->getHost();
@@ -117,9 +117,9 @@ class Application_Tiki extends Application
         }
 
         $version->collectChecksumFromInstance($this->instance);
-    } // }}}
+    }
 
-    function getBranch() // {{{
+    function getBranch()
     {
         if ($this->branch)
             return $this->branch;
@@ -176,17 +176,17 @@ class Application_Tiki extends Application
         }
 
         return $this->branch = $branch;
-    } // }}}
+    }
 
-    function getUpdateDate() // {{{
+    function getUpdateDate()
     {
         $access = $this->instance->getBestAccess('filetransfer');
         $date = $access->fileModificationDate($this->instance->getWebPath('tiki-setup.php'));
 
         return $date;
-    } // }}}
+    }
 
-    function getSourceFile(Version $version, $filename) // {{{
+    function getSourceFile(Version $version, $filename)
     {
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
@@ -203,9 +203,9 @@ class Application_Tiki extends Application
 
             return $local;
         }
-    } // }}}
+    }
 
-    private function getExtractCommand($version, $folder) // {{{
+    private function getExtractCommand($version, $folder)
     {
         if ($version->type == 'svn' || $version->type == 'tarball') {
             $branch = SVN_TIKIWIKI_URI . "/{$version->branch}";
@@ -213,9 +213,9 @@ class Application_Tiki extends Application
             $branch = escapeshellarg($branch);
             return "svn co $branch $folder";
         }
-    } // }}}
+    }
 
-    function extractTo(Version $version, $folder) // {{{
+    function extractTo(Version $version, $folder)
     {
         if (file_exists($folder)) {
             `svn revert --recursive  $folder`;
@@ -226,9 +226,9 @@ class Application_Tiki extends Application
             $command = $this->getExtractCommand($version, $folder);
             `$command`;
         }
-    } // }}}
+    }
 
-    function performActualUpdate(Version $version) // {{{
+    function performActualUpdate(Version $version)
     {
         switch ($this->getInstallType()) {
         case 'svn':
@@ -288,9 +288,9 @@ class Application_Tiki extends Application
         }
 
         // TODO: Handle fallback
-    } // }}}
+    }
 
-    function performActualUpgrade(Version $version, $abort_on_conflict) // {{{
+    function performActualUpgrade(Version $version, $abort_on_conflict)
     {
         switch ($this->getInstallType()) {
         case 'svn':
@@ -329,9 +329,9 @@ class Application_Tiki extends Application
                 return;
             }
         }
-    } // }}}
+    }
 
-    private function formatBranch($version) // {{{
+    private function formatBranch($version)
     {
         if (substr($version, 0, 4) == '1.9.')
             return 'REL-' . str_replace('.', '-', $version);
@@ -339,9 +339,9 @@ class Application_Tiki extends Application
             return "tags/$version";
         elseif ($this->getInstallType() == 'tarball')
             return "tags/$version";
-    } // }}}
+    }
 
-    function fixPermissions() // {{{
+    function fixPermissions()
     {
         $access = $this->instance->getBestAccess('scripting');
 
@@ -358,9 +358,9 @@ class Application_Tiki extends Application
                 $ret = $access->shellExec("cd $webroot && bash " . escapeshellarg($filename));
             }
         }
-    } // }}}
+    }
 
-    function getFileLocations() // {{{
+    function getFileLocations()
     {
         $access = $this->instance->getBestAccess('scripting');
         $out = $access->runPHP(
@@ -384,19 +384,19 @@ class Application_Tiki extends Application
         }
 
         return $folders;
-    } // }}}
+    }
 
-    function requiresDatabase() // {{{
+    function requiresDatabase()
     {
         return true;
-    } // }}}
+    }
 
-    function getAcceptableExtensions() // {{{
+    function getAcceptableExtensions()
     {
         return array('mysqli', 'mysql');
-    } // }}}
+    }
 
-    function setupDatabase(Database $database) // {{{
+    function setupDatabase(Database $database)
     {
         $tmp = tempnam(TEMP_FOLDER, 'dblocal');
         file_put_contents($tmp, <<<LOCAL
@@ -464,9 +464,9 @@ LOCAL
 \$dbs_tiki='{$database->dbname}';
 \$client_charset = 'utf8';
 ";
-    } // }}}
+    }
 
-    function restoreDatabase(Database $database, $remoteFile) // {{{
+    function restoreDatabase(Database $database, $remoteFile)
     {
         $tmp = tempnam(TEMP_FOLDER, 'dblocal');
 
@@ -494,9 +494,9 @@ LOCAL
         $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
             array($root, $remoteFile));
-    } // }}}
+    }
 
-    function backupDatabase($target) // {{{
+    function backupDatabase($target)
     {
         $access = $this->instance->getBestAccess('scripting');
         if ($access instanceof ShellPrompt) {
@@ -516,12 +516,12 @@ LOCAL
                 dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php');
             file_put_contents($target, $data);
         }
-    } // }}}
+    }
 
-    function beforeChecksumCollect() // {{{
+    function beforeChecksumCollect()
     {
         $this->removeTemporaryFiles();
-    } // }}}
+    }
 
     function installProfile($domain, $profile) {
         $access = $this->instance->getBestAccess('scripting');

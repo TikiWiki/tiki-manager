@@ -11,22 +11,22 @@ class FTP_Host
     private $pass;
     private $conn;
 
-    function __construct($host, $user, $pass, $port) // {{{
+    function __construct($host, $user, $pass, $port)
     {
         $this->host = $host;
         $this->user = $user;
         $this->pass = $pass;
         $this->port = $port;
-    } // }}}
+    }
 
-    function __destruct() // {{{
+    function __destruct()
     {
         if ($this->conn) {
             ftp_close($this->conn);
         }
-    } // }}}
+    }
 
-    function connect() // {{{
+    function connect()
     {
         if ($this->conn) return;
 
@@ -40,9 +40,9 @@ class FTP_Host
         }
 
         return false;
-    } // }}}
+    }
 
-    function fileExists($filename) // {{{
+    function fileExists($filename)
     {
         $this->connect();
 
@@ -58,9 +58,9 @@ class FTP_Host
 
             return in_array($filename, $list) || in_array($base, $list);
         }
-    } // }}}
+    }
 
-    function getContent($filename) // {{{
+    function getContent($filename)
     {
         $this->connect();
 
@@ -73,44 +73,44 @@ class FTP_Host
 
             return $content;
         }
-    } // }}}
+    }
 
-    function sendFile($localFile, $remoteFile) // {{{
+    function sendFile($localFile, $remoteFile)
     {
         $this->connect();
         ftp_put($this->conn, $remoteFile, $localFile, FTP_BINARY);
         ftp_chmod($this->conn, 0644, $remoteFile);
-    } // }}}
+    }
 
-    function chmod($level, $remoteFile) // {{{
+    function chmod($level, $remoteFile)
     {
         $this->connect();
         ftp_chmod($this->conn, $level, $remoteFile);
-    } // }}}
+    }
 
-    function receiveFile($remoteFile, $localFile) // {{{
+    function receiveFile($remoteFile, $localFile)
     {
         $this->connect();
         ftp_get($this->conn, $localFile, $remoteFile, FTP_BINARY);
-    } // }}}
+    }
 
-    function removeFile($remoteFile) // {{{
+    function removeFile($remoteFile)
     {
         $this->connect();
         ftp_delete($this->conn, $remoteFile);
-    } // }}}
+    }
 
-    function getPWD() // {{{
+    function getPWD()
     {
         $this->connect();
         return ftp_pwd($this->conn);
-    } // }}}
+    }
 
-    function rename($from, $to) // {{{
+    function rename($from, $to)
     {
         $this->connect();
         return ftp_rename($this->conn, $from, $to);
-    } // }}}
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

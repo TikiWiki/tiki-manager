@@ -295,10 +295,10 @@ case 4:
         );
         UPDATE info SET value = '5' WHERE name = 'version';
     ");
-} // }}}
+}
 
 // Database access
-function query($query, $params = null) // {{{
+function query($query, $params = null)
 {
     if (is_null($params)) $params = array();
     foreach ($params as $key => $value) {
@@ -324,16 +324,16 @@ function query($query, $params = null) // {{{
     if (! $ret) echo "$query\n";
 
     return $ret;
-} // }}}
+}
 
-function rowid() // {{{
+function rowid()
 {
     global $db;
     return $db->lastInsertId();
-} // }}}
+}
 
 // Tools
-function findDigits($selection) // {{{
+function findDigits($selection)
 {
     // Accept ranges of type 2-10
     $selection = preg_replace_callback('/(\d+)-(\d+)/',
@@ -345,9 +345,9 @@ function findDigits($selection) // {{{
 
     preg_match_all('/\d+/', $selection, $matches, PREG_PATTERN_ORDER);
     return $matches[0];
-} // }}}
+}
 
-function getEntries($list, $selection) // {{{
+function getEntries($list, $selection)
 {
     if (! is_array($selection))
         $selection = findDigits($selection);
@@ -359,7 +359,7 @@ function getEntries($list, $selection) // {{{
     }
 
     return $output;
-} // }}}
+}
 
 /**
  * Ask the user to select one or more instances to perform
@@ -430,7 +430,7 @@ function promptUser($prompt, $default = false, $values = array())
     } while (true);
 }
 
-function php() // {{{
+function php()
 {
 
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
@@ -465,6 +465,6 @@ function php() // {{{
     // List available options for user
     krsort($valid);
     return reset($valid);
-} // }}}
+}
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

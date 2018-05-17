@@ -13,7 +13,7 @@ abstract class Application
         $this->instance = $instance;
     }
 
-    public static function getApplications(Instance $instance) // {{{
+    public static function getApplications(Instance $instance)
     {
         $objects = array();
 
@@ -35,7 +35,7 @@ abstract class Application
         }
 
         return $objects;
-    } // }}}
+    }
 
     abstract function getName();
 
@@ -73,11 +73,11 @@ abstract class Application
 
     abstract function removeTemporaryFiles();
 
-    function beforeChecksumCollect() // {{{
+    function beforeChecksumCollect()
     {
-    } // }}}
+    }
 
-    function performUpdate(Instance $instance, $version = null) // {{{
+    function performUpdate(Instance $instance, $version = null)
     {
         $current = $instance->getLatestVersion();
         $oldFiles = $current->getFileMap();
@@ -132,14 +132,14 @@ abstract class Application
             'mod' => $modF,
             'del' => $delF,
         );
-    } // }}}
+    }
 
-    function performUpgrade(Instance $instance, $version, $abort_on_conflict = true) // {{{
+    function performUpgrade(Instance $instance, $version, $abort_on_conflict = true)
     {
         $this->performActualUpgrade($version, $abort_on_conflict);
-    } // }}}
+    }
 
-    function registerCurrentInstallation() // {{{
+    function registerCurrentInstallation()
     {
         if (! $this->isInstalled())
             return null;
@@ -154,7 +154,7 @@ abstract class Application
         $update->save();
 
         return $update;
-    } // }}}
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

@@ -31,15 +31,15 @@ class Database
 
     public $dbLocalContent = "";
 
-    function __construct(Instance $instance, Database_Adapter $adapter) // {{{
+    function __construct(Instance $instance, Database_Adapter $adapter)
     {
         $this->instance = $instance;
         $this->adapter = $adapter;
 
         $this->locateExtensions();
-    } // }}}
+    }
 
-    private function locateExtensions() // {{{
+    private function locateExtensions()
     {
         $modules = $this->instance->getExtensions();
 
@@ -53,18 +53,18 @@ class Database
                 'pdo_sqlite',
             )
         );
-    } // }}}
+    }
 
-    function getUsableExtensions() // {{{
+    function getUsableExtensions()
     {
         return array_intersect(
             $this->instance->getApplication()->getAcceptableExtensions(),
             $this->extensions,
             $this->adapter->getSupportedExtensions()
         );
-    } // }}}
+    }
 
-    function createAccess($prefix) // {{{
+    function createAccess($prefix)
     {
         $this->pass = Text_Password::create(12, 'unpronounceable');
         $this->user = "{$prefix}_user";
@@ -74,35 +74,35 @@ class Database
             && $this->adapter->createDatabase($this->instance, $this->dbname)
             && $this->adapter->grantRights($this->instance, $this->user, $this->dbname)
             && $this->adapter->finalize($this->instance);
-    } // }}}
+    }
 }
 
 class Database_Adapter_Dummy implements Database_Adapter
 {
-    function __construct() // {{{
+    function __construct()
     {
-    } // }}}
+    }
 
-    function createDatabase(Instance $instance, $name) // {{{
+    function createDatabase(Instance $instance, $name)
     {
-    } // }}}
+    }
 
-    function createUser(Instance $instance, $username, $password) // {{{
+    function createUser(Instance $instance, $username, $password)
     {
-    } // }}}
+    }
 
-    function grantRights(Instance $instance, $username, $database) // {{{
+    function grantRights(Instance $instance, $username, $database)
     {
-    } // }}}
+    }
 
-    function finalize(Instance $instance) // {{{
+    function finalize(Instance $instance)
     {
-    } // }}}
+    }
 
-    function getSupportedExtensions() // {{{
+    function getSupportedExtensions()
     {
         return array('mysqli', 'mysql', 'pdo_mysql', 'sqlite', 'pdo_sqlite');
-    } // }}}
+    }
 }
 
 class Database_Adapter_Mysql implements Database_Adapter
@@ -111,11 +111,11 @@ class Database_Adapter_Mysql implements Database_Adapter
     private $hostname;
     private $con;
 
-    function __construct($hostname, $username, $password) // {{{
+    function __construct($hostname, $username, $password)
     {
         $this->hostname = $hostname;
         $this->con = new PDO("mysql:host=$hostname", $username, $password); 
-    } // }}}
+    }
 
     function getMaxUsernameLength(Instance $instance) {
         $sql = 'SELECT CHARACTER_MAXIMUM_LENGTH'
@@ -131,7 +131,7 @@ class Database_Adapter_Mysql implements Database_Adapter
         return $return;
     }
 
-    function createDatabase(Instance $instance, $name) // {{{
+    function createDatabase(Instance $instance, $name)
     {
         $sql = sprintf("CREATE DATABASE `%s`;", $name);
         $statement = $this->con->prepare($sql);
@@ -140,9 +140,9 @@ class Database_Adapter_Mysql implements Database_Adapter
             warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
         }
         return $result;
-    } // }}}
+    }
 
-    function createUser(Instance $instance, $username, $password) // {{{
+    function createUser(Instance $instance, $username, $password)
     {
         $statement = $this->con->prepare("CREATE USER ?@? IDENTIFIED BY ?;");
         $result = $statement->execute(array($username, $this->hostname, $password));
@@ -150,9 +150,9 @@ class Database_Adapter_Mysql implements Database_Adapter
             warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
         }
         return $result;
-    } // }}}
+    }
 
-    function grantRights(Instance $instance, $username, $database) // {{{
+    function grantRights(Instance $instance, $username, $database)
     {
         $sql = sprintf("GRANT ALL ON `%s`.* TO ?@?;", $database);
         $statement = $this->con->prepare($sql);
@@ -161,9 +161,9 @@ class Database_Adapter_Mysql implements Database_Adapter
             warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
         }
         return $result;
-    } // }}}
+    }
 
-    function finalize(Instance $instance) // {{{
+    function finalize(Instance $instance)
     {
         $statement = $this->con->prepare("FLUSH PRIVILEGES;");
         $result = $statement->execute();
@@ -171,12 +171,12 @@ class Database_Adapter_Mysql implements Database_Adapter
             warning(vsprintf("[%s:%d] %s", $statement->errorInfo()));
         }
         return $result;
-    } // }}}
+    }
 
-    function getSupportedExtensions() // {{{
+    function getSupportedExtensions()
     {
         return array('mysqli', 'mysql', 'pdo_mysql');
-    } // }}}
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

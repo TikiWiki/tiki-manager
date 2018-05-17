@@ -76,7 +76,7 @@ function handleCheckResult($instance, $version, $array)
             }
             break;
         }
-    } // }}}
+    }
 
     // Modified {{{
     $input = 'p';
@@ -186,7 +186,7 @@ function handleCheckResult($instance, $version, $array)
             query('COMMIT');
             break;
         }
-    } // }}}
+    }
 
     // Deleted {{{
     $input = 'p';
@@ -246,7 +246,7 @@ function handleCheckResult($instance, $version, $array)
             }
             break;
         }
-    } // }}}
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

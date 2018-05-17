@@ -232,12 +232,12 @@ class Instance
 
     private $access = array();
 
-    function getId() // {{{
+    function getId()
     {
         return $this->id;
-    } // }}}
+    }
 
-    static function getInstances() // {{{
+    static function getInstances()
     {
         $result = query(SQL_SELECT_INSTANCE);
 
@@ -246,18 +246,18 @@ class Instance
             $instances[$instance->getId()] = $instance;
 
         return $instances;
-    } // }}}
+    }
 
-    function getInstance($id) // {{{
+    function getInstance($id)
     {
         $result = query(SQL_SELECT_INSTANCE_BY_ID, array(':id' => $id));
 
         $instance = $result->fetchObject('Instance');
 
         return $instance;
-    } // }}}
+    }
 
-    static function getUpdatableInstances() // {{{
+    static function getUpdatableInstances()
     {
         $result = query(SQL_SELECT_UPDATABLE_INSTANCE);
 
@@ -266,9 +266,9 @@ class Instance
             $instances[$instance->id] = $instance;
 
         return $instances;
-    } // }}}
+    }
 
-    function getRestorableInstances() // {{{
+    function getRestorableInstances()
     {
         $dp = opendir(BACKUP_FOLDER);
 
@@ -284,9 +284,9 @@ class Instance
 
         closedir($dp);
         return $backups;
-    } // }}}
+    }
 
-    function save() // {{{
+    function save()
     {
         $params = array(
             ':id' => $this->id,
@@ -313,7 +313,7 @@ class Instance
         if(!empty($this->backup_perm)) {
             $this->setProp('backup_perm', $this->backup_perm);
         }
-    } // }}}
+    }
 
     /**
      * Update the instance information
@@ -342,7 +342,7 @@ class Instance
         }
     }
 
-    function delete() // {{{
+    function delete()
     {
         query(SQL_DELETE_ACCESS, array(':id' => $this->id));
         query(SQL_DELETE_BACKUP, array(':id' => $this->id));
@@ -352,9 +352,9 @@ class Instance
         query(SQL_DELETE_REPORT_RECEIVER, array( ':id' => $this->id));
         query(SQL_DELETE_VERSION, array(':id' => $this->id));
         query(SQL_DELETE_ALL_INSTANCE_PROPERTIES, array(':id' => $this->id));
-    } // }}}
+    }
 
-    function registerAccessMethod($type, $host, $user, $password = null, $port = null) // {{{
+    function registerAccessMethod($type, $host, $user, $password = null, $port = null)
     {
         if (! $class = Access::getClassFor($type)) return;
 
@@ -371,9 +371,9 @@ class Instance
             $this->access[] = $access;
             return $access;
         }
-    } // }}}
+    }
 
-    function getBestAccess($type) // {{{
+    function getBestAccess($type)
     {
         if (empty($this->access))
             $this->access = Access::getAccessFor($this);
@@ -383,9 +383,9 @@ class Instance
         //      scripting
         //      filetransfer
         return reset($this->access);
-    } // }}}
+    }
 
-    function getWebUrl($relativePath) // {{{
+    function getWebUrl($relativePath)
     {
         $weburl = rtrim($this->weburl, '/');
         
@@ -393,38 +393,38 @@ class Instance
         $path = str_replace('/./', '/', $path);
 
         return $path;
-    } // }}}
+    }
 
-    function getWebPath($relativePath) // {{{
+    function getWebPath($relativePath)
     {
         $path = "{$this->webroot}/$relativePath";
         $path = str_replace('/./', '/', $path);
 
         return $path;
-    } // }}}
+    }
 
-    function getWorkPath($relativePath) // {{{
+    function getWorkPath($relativePath)
     {
         return "{$this->tempdir}/$relativePath";
-    } // }}}
+    }
 
-    function getProp($key) { // {{{
+    function getProp($key) {
         $result = query(SQL_GET_INSTANCE_PROPERTY, array(':id' => $this->id, ':key' => $key));
         $result = $result->fetchObject();
         if ( $result && $result->value ) {
             return $result->value;
         }
-    } // }}}
+    }
 
-    function setProp($key, $value) { // {{{
+    function setProp($key, $value) {
         $result = query(SQL_SET_INSTANCE_PROPERTY, array(
             ':id' => $this->id,
             ':key' => $key,
             ':value' => $value
         ));
-    } // }}}
+    }
 
-    function createWorkPath($access = null) // {{{
+    function createWorkPath($access = null)
     {
         if (is_null($access))
             $access = $this->getBestAccess('scripting');
@@ -432,9 +432,9 @@ class Instance
         echo $access->shellExec(
             "mkdir -p {$this->tempdir}"
         );
-    } // }}}
+    }
 
-    function detectPHP() // {{{
+    function detectPHP()
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
@@ -460,9 +460,9 @@ class Instance
         }
 
         return false;
-    } // }}}
+    }
 
-    function detectSVN() // {{{
+    function detectSVN()
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getSVNPath();
@@ -471,25 +471,25 @@ class Instance
             return $path;
 
         return false;
-    } // }}}
+    }
 
-    function detectDistribution() // {{{
+    function detectDistribution()
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath();
         return $access->getDistributionName($path);
-    } // }}}
+    }
 
-    function getExtensions() // {{{
+    function getExtensions()
     {
         $access = $this->getBestAccess('scripting');
         $content = $access->runPHP(dirname(__FILE__) . '/../scripts/get_extensions.php');
         $modules = explode("\n", $content);
 
         return $modules;
-    } // }}}
+    }
 
-    function findApplication() // {{{
+    function findApplication()
     {
         foreach (Application::getApplications($this) as $app) {
             if ($app->isInstalled()) {
@@ -499,21 +499,21 @@ class Instance
         }
 
         return null;
-    } // }}}
+    }
 
-    function createVersion() // {{{
+    function createVersion()
     {
         return new Version( $this->id );
-    } // }}}
+    }
 
-    function getLatestVersion() // {{{
+    function getLatestVersion()
     {
         $result = query(SQL_SELECT_LATEST_VERSION, array(':id' => $this->id));
 
         $object = $result->fetchObject('Version');
 
         return $object;
-    } // }}}
+    }
 
     /**
      * Modern in this context means it uses composer and has console.php for shell access which arrived in Tiki 11,
@@ -530,7 +530,7 @@ class Instance
         return false;
     }
 
-    function getApplication() // {{{
+    function getApplication()
     {
         if (empty($this->app))
             return false;
@@ -542,9 +542,9 @@ class Instance
             require_once "$dir/{$this->app}.php";
 
         return new $class($this);
-    } // }}}
+    }
 
-    function backup() // {{{
+    function backup()
     {
         $error_flag = 0;
 
@@ -714,7 +714,7 @@ class Instance
         }
 
         return $tar;
-    } // }}}
+    }
 
     function restore($src_app, $archive, $clone = false)
     {
@@ -805,9 +805,9 @@ class Instance
         echo $access->shellExec(
             "rm -Rf {$this->tempdir}/restore"
         );
-    } // }}}
+    }
 
-    function getExtraBackups() // {{{
+    function getExtraBackups()
     {
         $result = query(SQL_SELECT_BACKUP_LOCATION, array(':id' => $this->id));
 
@@ -815,9 +815,9 @@ class Instance
         while ($str = $result->fetchColumn()) $list[] = $str;
 
         return $list;
-    } // }}}
+    }
 
-    function setExtraBackups( $paths ) // {{{
+    function setExtraBackups( $paths )
     {
         query(SQL_DELETE_BACKUP, array(':id' => $this->id));
 
@@ -825,21 +825,21 @@ class Instance
             if (! empty($path))
                 query(SQL_INSERT_BACKUP, array(':id' => $this->id, ':loc' => $path));
         }
-    } // }}}
+    }
 
-    function getArchives() // {{{
+    function getArchives()
     {
         return array_reverse(glob(ARCHIVE_FOLDER . "/{$this->id}-*/{$this->id}*_*.tar.bz2"));
-    } // }}}
+    }
 
-    function isLocked() { // {{{
+    function isLocked() {
         $access = $this->getBestAccess('scripting');
         $trim_htaccess = file_get_contents(TRIM_ROOT . '/scripts/maintenance.htaccess');
         $dest_htaccess = $access->fileGetContents($this->getWebPath('.htaccess'));
         return trim($trim_htaccess) === trim($dest_htaccess);
-    } // }}}
+    }
 
-    function lock() // {{{
+    function lock()
     {
         if ($this->isLocked()) {
             return true;
@@ -854,9 +854,9 @@ class Instance
 
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.htaccess', '.htaccess');
         return $this->isLocked();
-    } // }}}
+    }
 
-    function unlock() // {{{
+    function unlock()
     {
         if(!$this->isLocked()) {
             return true;
@@ -870,13 +870,13 @@ class Instance
             $access->moveFile('.htaccess.bak', '.htaccess');
 
         return !$this->isLocked();
-    } // }}}
+    }
 
-    function __get($name) // {{{
+    function __get($name)
     {
         if (isset($this->$name))
             return $this->$name;
-    } // }}}
+    }
 }
 
 class Version
@@ -887,12 +887,12 @@ class Version
     public $branch;
     public $date;
 
-    function __construct($instanceId = null) // {{{
+    function __construct($instanceId = null)
     {
         $this->instanceId = $instanceId;
-    } // }}}
+    }
 
-    public static function buildFake($type, $branch) // {{{{
+    public static function buildFake($type, $branch)
     {
         $v = new self;
         $v->type = $type;
@@ -900,9 +900,9 @@ class Version
         $v->date = date('Y-m-d');
 
         return $v;
-    } // }}}
+    }
 
-    function save() // {{{
+    function save()
     {
         $params = array(
             ':id' => $this->id,
@@ -916,16 +916,16 @@ class Version
 
         $rowid = rowid();
         if (! $this->id && $rowid) $this->id = $rowid;
-    } // }}}
+    }
 
-    function hasChecksums() // {{{
+    function hasChecksums()
     {
         $result = query(SQL_SELECT_FILE_COUNT_BY_VERSION, array(':id' => $this->id));
 
         return ($result->fetchColumn() > 0);
-    } // }}}
+    }
 
-    function performCheck(Instance $instance) // {{{
+    function performCheck(Instance $instance)
     {
         $app = $instance->getApplication();
         $app->beforeChecksumCollect();
@@ -964,9 +964,9 @@ class Version
             'mod' => $modifiedFiles,
             'del' => $missingFiles,
         );
-    } // }}}
+    }
 
-    function collectChecksumFromSource(Instance $instance) // {{{
+    function collectChecksumFromSource(Instance $instance)
     {
         debug("Collect Checksum From Source");
         $app = $instance->getApplication();
@@ -981,9 +981,9 @@ class Version
         ob_end_clean();
 
         $this->saveHashDump($content, $app);
-    } // }}}
+    }
 
-    function collectChecksumFromInstance(Instance $instance) // {{{
+    function collectChecksumFromInstance(Instance $instance)
     {
         debug("Collect Checksum From Instance");
         $app = $instance->getApplication();
@@ -996,33 +996,33 @@ class Version
         );
         
         $this->saveHashDump($output, $app);
-    } // }}}
+    }
 
-    function replicateChecksum(Version $old) // {{{
+    function replicateChecksum(Version $old)
     {
         query(SQL_INSERT_FILE_REPLICATE,
             array(':new' => $this->id, ':old' => $old->id));
-    } // }}}
+    }
 
-    function recordFile($hash, $filename, Application $app) // {{{
+    function recordFile($hash, $filename, Application $app)
     {
         query(SQL_INSERT_FILE,
             array(':version' => $this->id, ':path' => $filename, ':hash' => $hash));
-    } // }}}
+    }
 
-    function removeFile($filename) // {{{
+    function removeFile($filename)
     {
         query(SQL_DELETE_FILE,
             array(':v' => $this->id, ':p' => $filename));
-    } // }}}
+    }
 
-    function replaceFile($hash, $filename, Application $app) // {{{
+    function replaceFile($hash, $filename, Application $app)
     {
         $this->removeFile($filename);
         $this->recordFile($hash, $filename, $app);
-    } // }}}
+    }
 
-    function getFileMap() // {{{
+    function getFileMap()
     {
         $map = array();
         $result = query(SQL_SELECT_FILE_MAP, array(':v' => $this->id));
@@ -1033,9 +1033,9 @@ class Version
         }
 
         return $map;
-    } // }}}
+    }
 
-    private function saveHashDump($output, Application $app) // {{{
+    private function saveHashDump($output, Application $app)
     {
         query('BEGIN TRANSACTION');
 
@@ -1049,7 +1049,7 @@ class Version
         }
 
         query('COMMIT');
-    } // }}}
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
