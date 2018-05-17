@@ -17,9 +17,17 @@ if (file_exists($next))
     chdir($next);
 
 $diriterator = new RecursiveDirectoryIterator('.');
-$objiterator = new RecursiveIteratorIterator($diriterator, RecursiveIteratorIterator::SELF_FIRST);
+$objiterator = new RecursiveIteratorIterator(
+    $diriterator,
+    RecursiveIteratorIterator::SELF_FIRST
+);
 
+$ignore_pattern = '#^\./(\.git|\.svn|\.temp)/#';
 foreach($objiterator as $name => $object) {
+    if (preg_match($ignore_pattern, $name)) {
+        continue;
+    }
+
     if ($object->getType() === 'file' && is_readable($name)) {
         printf("%s:%s\n", md5_file($name), $name);
     }

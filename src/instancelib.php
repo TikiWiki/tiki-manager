@@ -992,7 +992,7 @@ class Version
 
         $access = $instance->getBestAccess('scripting');
         $output = $access->runPHP(
-            dirname(__FILE__) . '/../scripts/generate_md5_list.php',
+            TIKI_ROOT . '/scripts/generate_md5_list.php',
             array($instance->webroot)
         );
         
