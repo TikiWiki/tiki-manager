@@ -207,8 +207,14 @@ class SSH_Host
         passthru($command);
     }
 
-    function rsync($remoteLocation, $localMirror)
+    function rsync($args=array())
     {
+        $return_val = -1;
+
+        if(empty($args['src']) || empty($args['dest'])) {
+            return $return_val;
+        }
+
         $key = SSH_KEY;
         $user = $this->user;
         $host = $this->host;
@@ -217,9 +223,8 @@ class SSH_Host
         if ($this->port != 22) $port = " -p {$this->port} ";
 
         $output = array();
-        $return_val = -1;
         $command = 'rsync -aL --delete -e ' .
-            "\"ssh $port -i $key -l $user\" $user@$host:$remoteLocation '$localMirror'";
+            "\"ssh $port -i $key -l $user\" $user@$host:{$args['src']} '{$args['dest']}'";
         exec($command, $output, $return_var);
         if ($return_var != 0)
             info("RSYNC exit code: $return_var");

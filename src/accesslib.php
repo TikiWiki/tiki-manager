@@ -168,7 +168,7 @@ class Access_Local extends Access implements ShellPrompt
         return false;
     }
 
-    private function getHost()
+    public function getHost()
     {
         static $changeLocation = null;
 
@@ -481,7 +481,10 @@ class Access_Local extends Access implements ShellPrompt
     function localizeFolder($remoteLocation, $localMirror) // {{{
     {
         $host = $this->getHost();
-        return $host->rsync($remoteLocation, $localMirror);
+        return $host->rsync(array(
+            'src' => $remoteLocation, 
+            'dest' => $localMirror
+        ));
     } // }}}
 }
 
@@ -496,7 +499,7 @@ class Access_SSH extends Access implements ShellPrompt
         $this->port = 22;
     }
 
-    private function getHost()
+    public function getHost()
     {
         static $changeLocation = null;
 
@@ -807,7 +810,10 @@ class Access_SSH extends Access implements ShellPrompt
     function localizeFolder($remoteLocation, $localMirror) // {{{
     {
         $host = $this->getHost();
-        return $host->rsync($remoteLocation, $localMirror);
+        return $host->rsync(array(
+            'src' => $remoteLocation,
+            'dest' => $localMirror
+        ));
     } // }}}
 }
 
@@ -828,7 +834,7 @@ class Access_FTP extends Access implements Mountable
         passthru("ftp {$this->host} {$this->port}");
     } // }}}
 
-    private function getHost()
+    public function getHost()
     {
         return new FTP_Host($this->host, $this->user, $this->password, $this->port);
     }

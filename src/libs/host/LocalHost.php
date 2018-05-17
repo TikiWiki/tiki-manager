@@ -93,12 +93,20 @@ class Local_Host
     {
     }
 
-    function rsync($remoteLocation, $localMirror)
+    function rsync($args=array())
     {
-        $output = array();
         $return_val = -1;
-        $command = sprintf('rsync -aL --delete %s %s 2>&1',
-            escapeshellarg($remoteLocation), escapeshellarg($localMirror));
+
+        if(empty($args['src']) || empty($args['dest'])) {
+            return $return_val;
+        }
+
+        $output = array();
+        $command = sprintf(
+            'rsync -aL --delete %s %s 2>&1',
+            escapeshellarg($args['src']),
+            escapeshellarg($args['dest'])
+        );
         debug($command);
 
         $ph = popen($command, 'r');

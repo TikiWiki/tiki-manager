@@ -7,17 +7,8 @@
 function perform_instance_installation(Instance $instance)
 {
     if (! $app = $instance->findApplication()) {
-        echo "No applications were found on remote host.\n";
-        echo "Which one do you want to install? (none to skip - blank instance)\n";
-
         $apps = Application::getApplications($instance);
-        foreach ($apps as $key => $app)
-            echo "[$key] {$app->getName()}\n";
-
-        $selection = promptUser('>>> ', '');
-        $selection = getEntries($apps, $selection);
-        if (empty($selection))
-            die(error('No instance to install.'));
+        $selection = getEntries($apps, 0);
 
         echo "Which version do you want to install? (none to skip - blank instance)\n";
 

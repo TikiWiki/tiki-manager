@@ -82,14 +82,18 @@ class Application_Tiki extends Application
     function install(Version $version) // {{{
     {
         $access = $this->instance->getBestAccess('scripting');
+        $host = $access->getHost();
+
+        $folder = cache_folder($this, $version);
+        $this->extractTo($version, $folder);
+
         if ($access instanceof ShellPrompt) {
-            $access->shellExec(
-                $this->getExtractCommand($version, $this->instance->webroot));
+            $host->rsync(array(
+                'src' =>  rtrim($folder, '/') . '/',
+                'dest' => rtrim($this->instance->webroot, '/') . '/'
+            ));
         }
         else {
-            $folder = cache_folder($this, $version);
-            $this->extractTo($version, $folder);
-
             $access->copyLocalFolder($folder);
         }
 
@@ -213,8 +217,11 @@ class Application_Tiki extends Application
 
     function extractTo(Version $version, $folder) // {{{
     {
-        if (file_exists($folder))
+        if (file_exists($folder)) {
+            `svn revert --recursive  $folder`;
+            `svn cleanup --remove-ignored  --remove-unversioned  $folder`;
             `svn up --non-interactive $folder`;
+        }
         else {
             $command = $this->getExtractCommand($version, $folder);
             `$command`;

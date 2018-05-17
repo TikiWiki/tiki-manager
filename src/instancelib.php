@@ -243,7 +243,7 @@ class Instance
 
         $instances = array();
         while ($instance = $result->fetchObject('Instance'))
-            $instances[$instance->id] = $instance;
+            $instances[$instance->getId()] = $instance;
 
         return $instances;
     } // }}}
