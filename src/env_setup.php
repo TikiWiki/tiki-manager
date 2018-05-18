@@ -321,7 +321,8 @@ function query($query, $params = null)
     global $db;
     $ret = $db->query($query);
 
-    if (! $ret) echo "$query\n";
+    // TODO: log error
+    // if (! $ret) echo "$query\n";
 
     return $ret;
 }
