@@ -132,3 +132,63 @@ function debug($text, $prefix=null, $hr='')
     }
     return $text;
 }
+
+function get_username_by_id($id) {
+    $passwd = fopen('/etc/passwd', 'r');
+    while(false !== ($line = fgets($passwd))) {
+        list($name, $pass, $uid, $comment, $home, $shell) = explode(':', $line);
+
+        if($uid == "$id") {
+            fclose($passwd);
+            return $name;
+        }
+    }
+    fclose($passwd);
+}
+
+function get_groupname_by_id($id) {
+    $groups = fopen('/etc/group', 'r');
+    while(false !== ($line = fgets($groups))) {
+        list($name, $pass, $gid, $users) = explode(':', $line);
+
+        if($gid == "$id") {
+            fclose($groups);
+            return $name;
+        }
+    }
+    fclose($groups);
+}
+
+function secure_trim_data($should_set=false) {
+    $modes = array('---', '--x', '-w-', '-wx', 'r--', 'r-x', 'rw-', 'rwx');
+    $stat = stat(TRIM_DATA);
+
+    $cur_mode = $stat['mode'];
+    $exp_mode = (($cur_mode >> 6) << 6) | 0b111000000;
+
+    $owner_name = get_username_by_id($stat['uid']);
+    $group_name = get_groupname_by_id($stat['gid']);
+
+    if ($cur_mode & 0b111111) {
+        $chmod_success = $should_set && chmod(TRIM_DATA, $exp_mode);
+
+        if (!$chmod_success) {
+            error("Your TRIM data is unsafe! ");
+            error(sprintf(
+                '  Currently it is: d%s%s%s	%s:%s	%s',
+                $modes[ ($cur_mode >> 6) & 0b111 ],
+                $modes[ ($cur_mode >> 3) & 0b111 ],
+                $modes[ $cur_mode        & 0b111 ],
+                $owner_name,
+                $group_name,
+                TRIM_DATA
+            ));
+            error(sprintf(
+                '  Should be like:  drwx------	%s:%s	%s',
+                $owner_name,
+                $group_name,
+                TRIM_DATA
+            ));
+        }
+    }
+}

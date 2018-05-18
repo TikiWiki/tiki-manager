@@ -36,8 +36,10 @@ require_once TRIM_ROOT . '/src/reportlib.php';
 require_once TRIM_ROOT . '/src/ext/Password.php';
 
 debug('Running TRIM at ' . TRIM_ROOT);
-define('DB_FILE', TRIM_ROOT . "/data/trim.db");
-define('SSH_CONFIG', TRIM_ROOT . "/data/ssh_config");
+define('TRIM_DATA', TRIM_ROOT . "/data");
+define('DB_FILE', TRIM_DATA . "/trim.db");
+define('SSH_CONFIG', TRIM_DATA . "/ssh_config");
+
 define('CACHE_FOLDER', TRIM_ROOT . "/cache");
 define('TEMP_FOLDER', TRIM_ROOT . "/tmp");
 define('RSYNC_FOLDER', TRIM_ROOT . "/tmp/rsync");
@@ -45,10 +47,13 @@ define('MOUNT_FOLDER', TRIM_ROOT . "/tmp/mount");
 define('BACKUP_FOLDER', TRIM_ROOT . "/backup");
 define('ARCHIVE_FOLDER', TRIM_ROOT . "/backup/archive");
 define('TRIM_OUTPUT', TRIM_ROOT . "/logs/trim.output");
-if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     define('TRIM_TEMP', getenv('TEMP')."\\trim_temp");
-else
+} else {
     define('TRIM_TEMP', '/tmp/trim_temp');
+    secure_trim_data(true);
+}
 
 
 if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
