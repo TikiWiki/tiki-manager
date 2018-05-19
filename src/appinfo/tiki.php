@@ -198,14 +198,9 @@ class Application_Tiki extends Application
         $sourcefile = SVN_TIKIWIKI_URI . "/{$version->branch}/$filename";
         $sourcefile = str_replace('/./', '/', $sourcefile);
 
-        if ($version->type == 'svn') {
-            $branch = escapeshellarg($branch);
-            `svn export $branch $local`;
-        }
-        else {
-            $content = file_get_contents($sourcefile);
-            file_put_contents($local, $content);
-        }
+        $content = file_get_contents($sourcefile);
+        file_put_contents($local, $content);
+
         return $local;
     }
 
