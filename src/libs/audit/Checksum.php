@@ -110,6 +110,7 @@ class Audit_Checksum {
 
         if(!is_callable($callback)) {
             $callback = function($hash, $filename) use (&$result) {
+                $result[] = array($hash, $filename);
                 return array($hash, $filename);
             };
         }
@@ -133,10 +134,9 @@ class Audit_Checksum {
     }
 
     public function checksumLocalFolder($folder) {
-        require_once(self::CHECKSUM_SCRIPT);
         $current = getcwd();
         chdir($folder);
-        $result = calculate_folder_checksum('.');
+        $result = self::checksumFolder('.');
         chdir($current);
         return $result;
     }
@@ -145,7 +145,8 @@ class Audit_Checksum {
         $access = $this->getAccess();
 
         $result = $access->runPHP(__FILE__, array($folder));
-        $result = explode("\n", $result);
+        $result = trim($result);
+        $result = empty($result) ? array() : explode("\n", $result);
         $result = array_map(function($line){
             return explode(':', $line);
         }, $result);
