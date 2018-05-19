@@ -4,20 +4,29 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-include_once dirname(__FILE__) . '/../src/env_setup.php';
+include_once dirname(__DIR__) . '/src/env_setup.php';
+include_once dirname(__DIR__) . '/src/check.php';
 
-if(!INTERACTIVE) {
-    return;
+$selection = array_slice($_SERVER['argv'], 1);
+$selection = array_filter($selection, 'is_numeric');
+$selection = array_map('intval', $selection);
+$selection = array_filter($selection, 'is_numeric');
+$selection = array_map(array('Instance', 'getInstance'), $selection);
+$selection = array_filter($selection, 'is_object');
+
+if (empty($selection)) {
+    $instances = Instance::getInstances();
+    if(INTERACTIVE) {
+        echo "\nInstances you can verify:\n";
+        $selection = selectInstances($instances,
+            "You can select one, multiple, or blank for all.\n");
+        if (empty($selection)){
+            $selection = $instances;
+        }
+    } else {
+        $selection = $instances;
+    }
 }
-
-include_once dirname(__FILE__) . '/../src/check.php';
-
-echo "\nInstances you can verify:\n";
-
-$instances = Instance::getInstances();
-$selection = selectInstances($instances,
-    "You can select one, multiple, or blank for all.\n");
-if (! count($selection)) $selection = $instances;
 
 foreach ($selection as $instance) {
     $version = $instance->getLatestVersion();
