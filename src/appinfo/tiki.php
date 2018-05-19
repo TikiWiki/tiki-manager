@@ -195,14 +195,18 @@ class Application_Tiki extends Application
         rename($local, $local . $ext);
         $local .= $ext;
 
+        $sourcefile = SVN_TIKIWIKI_URI . "/{$version->branch}/$filename";
+        $sourcefile = str_replace('/./', '/', $sourcefile);
+
         if ($version->type == 'svn') {
-            $branch = SVN_TIKIWIKI_URI . "/{$version->branch}/$filename";
-            $branch = str_replace('/./', '/', $branch);
             $branch = escapeshellarg($branch);
             `svn export $branch $local`;
-
-            return $local;
         }
+        else {
+            $content = file_get_contents($sourcefile);
+            file_put_contents($local, $content);
+        }
+        return $local;
     }
 
     private function getExtractCommand($version, $folder)
