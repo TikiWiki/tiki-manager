@@ -60,7 +60,12 @@ class Audit_Checksum {
                 instance_id = :id
         );";
 
-    const CHECKSUM_IGNORE_PATTERN = '#(^\./temp|/\.git|/\.svn)/#';
+    const CHECKSUM_IGNORE_PATTERN = '#('
+            .'^\./temp'
+            .'|^\./modules/cache'
+            .'|/\.git'
+            .'|/\.svn'
+        .')/#'; // <- literal slash here
 
     private $instance;
     private $access;
