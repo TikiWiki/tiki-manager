@@ -208,7 +208,7 @@ class Instance
         return $instances;
     }
 
-    function getInstance($id)
+    static function getInstance($id)
     {
         $result = query(SQL_SELECT_INSTANCE_BY_ID, array(':id' => $id));
 
