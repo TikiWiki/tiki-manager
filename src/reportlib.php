@@ -113,10 +113,9 @@ class ReportManager
     protected function buildInstancesArray($ids)
     {
         $instances = array();
-        $instance = new Instance;
 
         foreach ($ids as $id)
-            $instances[$id] = $instance->getInstance($id);
+            $instances[$id] = Instance::getInstance($id);
 
         return $instances;
     }
