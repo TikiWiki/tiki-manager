@@ -25,6 +25,7 @@ require_once TRIM_ROOT . '/src/libs/helpers.php';
 require_once TRIM_ROOT . '/src/libs/host/LocalHost.php';
 require_once TRIM_ROOT . '/src/libs/host/FTPHost.php';
 require_once TRIM_ROOT . '/src/libs/host/SSHHost.php';
+require_once TRIM_ROOT . '/src/libs/audit/Checksum.php';
 require_once TRIM_ROOT . '/src/accesslib.php';
 require_once TRIM_ROOT . '/src/instancelib.php';
 require_once TRIM_ROOT . '/src/applicationlib.php';

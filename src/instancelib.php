@@ -503,14 +503,13 @@ class Instance
 
     function createVersion()
     {
-        return new Version( $this->id );
+        return new Version( $this );
     }
 
     function getLatestVersion()
     {
         $result = query(SQL_SELECT_LATEST_VERSION, array(':id' => $this->id));
-
-        $object = $result->fetchObject('Version');
+        $object = $result->fetchObject('Version', array($this));
 
         return $object;
     }
@@ -883,14 +882,15 @@ class Instance
 class Version
 {
     private $id;
-    private $instanceId;
+    private $instance;
     public $type;
     public $branch;
     public $date;
+    public $audit;
 
-    function __construct($instanceId = null)
+    function __construct($instance=null)
     {
-        $this->instanceId = $instanceId;
+        $this->instance = $instance;
     }
 
     public static function buildFake($type, $branch)
@@ -905,9 +905,14 @@ class Version
 
     function save()
     {
+        $instanceId = null;
+        if (is_object($this->instance)) {
+            $instanceId = $this->instance->getId();
+        }
+
         $params = array(
             ':id' => $this->id,
-            ':instance' => $this->instanceId,
+            ':instance' => $instanceId,
             ':type' => $this->type,
             ':branch' => $this->branch,
             ':date' => $this->date,
@@ -916,140 +921,76 @@ class Version
         query(SQL_INSERT_VERSION, $params);
 
         $rowid = rowid();
-        if (! $this->id && $rowid) $this->id = $rowid;
+
+        if (! $this->id && $rowid){
+            $this->id = $rowid;
+            $this->instance = Instance::getInstances()[ $rowid ];
+        }
+    }
+
+    function getAudit() {
+        if (empty($this->audit)) {
+            $this->audit = new Audit_Checksum($this->instance);
+        }
+        return $this->audit;
     }
 
     function hasChecksums()
     {
-        $result = query(SQL_SELECT_FILE_COUNT_BY_VERSION, array(':id' => $this->id));
-
-        return ($result->fetchColumn() > 0);
+        $audit = $this->getAudit();
+        return $audit->hasChecksums($this->id);
     }
 
     function performCheck(Instance $instance)
     {
         $app = $instance->getApplication();
         $app->beforeChecksumCollect();
-
-        $access = $instance->getBestAccess('scripting');
-
-        $output = $access->runPHP(
-            dirname(__FILE__) . '/../scripts/generate_md5_list.php',
-            array($instance->webroot)
-        );
-        
-        $known = $this->getFileMap();
-
-        $newFiles = array();
-        $modifiedFiles = array();
-        $missingFiles = array();
-
-        foreach (explode("\n", $output) as $line) {
-            list($hash, $filename) = explode(':', $line);
-
-            if (! isset($known[$filename]))
-                $newFiles[$filename] = $hash;
-            else {
-                if ($known[$filename] != $hash)
-                    $modifiedFiles[$filename] = $hash;
-
-                unset($known[$filename]);
-            }
-        }
-
-        foreach ($known as $filename => $hash)
-            $missingFiles[$filename] = $hash;
-
-        return array(
-            'new' => $newFiles,
-            'mod' => $modifiedFiles,
-            'del' => $missingFiles,
-        );
+        $audit = $this->getAudit();
+        return $audit->validate($this->id);
     }
 
     function collectChecksumFromSource(Instance $instance)
     {
-        debug("Collect Checksum From Source");
-        $app = $instance->getApplication();
-
-        $folder = cache_folder($app, $this);
-
-        $app->extractTo($this, $folder);
-
-        ob_start();
-        include dirname(__FILE__) . '/../scripts/generate_md5_list.php';
-        $content = ob_get_contents();
-        ob_end_clean();
-
-        $this->saveHashDump($content, $app);
+        $audit = $this->getAudit();
+        $result = $audit->checksumSource($this);
+        return $audit->saveChecksums($this->id, $result);
     }
 
     function collectChecksumFromInstance(Instance $instance)
     {
-        debug("Collect Checksum From Instance");
-        $app = $instance->getApplication();
-        $app->beforeChecksumCollect();
-
-        $access = $instance->getBestAccess('scripting');
-        $output = $access->runPHP(
-            TRIM_ROOT . '/scripts/generate_md5_list.php',
-            array($instance->webroot)
-        );
-        
-        $this->saveHashDump($output, $app);
+        $audit = $this->getAudit();
+        $result = $audit->checksumInstance();
+        return $audit->saveChecksums($this->id, $result);
     }
 
-    function replicateChecksum(Version $old)
+    function recordFile($hash, $filename)
     {
-        query(SQL_INSERT_FILE_REPLICATE,
-            array(':new' => $this->id, ':old' => $old->id));
-    }
-
-    function recordFile($hash, $filename, Application $app)
-    {
-        query(SQL_INSERT_FILE,
-            array(':version' => $this->id, ':path' => $filename, ':hash' => $hash));
+        $audit = $this->getAudit();
+        return $audit->addFile($this->id, $hash, $filename);
     }
 
     function removeFile($filename)
     {
-        query(SQL_DELETE_FILE,
-            array(':v' => $this->id, ':p' => $filename));
+        $audit = $this->getAudit();
+        return $audit->removeFile($this->id, $hash, $filename);
     }
 
     function replaceFile($hash, $filename, Application $app)
     {
-        $this->removeFile($filename);
-        $this->recordFile($hash, $filename, $app);
+        $audit = $this->getAudit();
+        return $audit->replaceFile($this->id, $hash, $filename);
     }
 
     function getFileMap()
     {
-        $map = array();
-        $result = query(SQL_SELECT_FILE_MAP, array(':v' => $this->id));
-
-        while ($row = $result->fetch()) {
-            extract($row);
-            $map[$path] = $hash;
-        }
-
-        return $map;
+        $audit = $this->getAudit();
+        return $audit->getChecksums($this->id);
     }
 
     private function saveHashDump($output, Application $app)
     {
-        query('BEGIN TRANSACTION');
-
-        $entries = explode("\n", $output);
-        foreach ($entries as $line) {
-            $parts = explode(':', $line);
-            if (count($parts) != 2) continue;
-
-            list($hash, $file) = $parts;
-            $this->recordFile($hash, $file, $app);
-        }
-
-        query('COMMIT');
+        $audit = $this->getAudit();
+        return $audit->saveChecksums($this->id);
     }
 }
 
