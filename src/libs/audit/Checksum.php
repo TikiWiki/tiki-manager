@@ -60,7 +60,7 @@ class Audit_Checksum {
                 instance_id = :id
         );";
 
-    const CHECKSUM_SCRIPT = TRIM_ROOT . '/scripts/generate_md5_list.php';
+    const CHECKSUM_IGNORE_PATTERN = '#(^\./temp|/\.git|/\.svn)/#';
 
     private $instance;
     private $access;
@@ -95,13 +95,41 @@ class Audit_Checksum {
     public function getChecksums($version_id)
     {
         $map = array();
-        $result = query(SQL_SELECT_FILE_MAP, array(':v' => $version_id));
+        $result = query(self::SQL_SELECT_FILE_MAP, array(':v' => $version_id));
 
         while ($row = $result->fetch()) {
             extract($row);
             $map[$path] = $hash;
         }
         return $map;
+    }
+
+    public static function checksumFolder($folder, $callback=null)
+    {
+        $result = array();
+
+        if(!is_callable($callback)) {
+            $callback = function($hash, $filename) use (&$result) {
+                return array($hash, $filename);
+            };
+        }
+
+        $diriterator = new RecursiveDirectoryIterator($folder);
+        $objiterator = new RecursiveIteratorIterator(
+            $diriterator,
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach($objiterator as $name => $object) {
+            if (preg_match(self::CHECKSUM_IGNORE_PATTERN, $name)) {
+                continue;
+            }
+
+            if ($object->getType() === 'file' && is_readable($name)) {
+                $callback(md5_file($name), $name);
+            }
+        }
+        return $result;
     }
 
     public function checksumLocalFolder($folder) {
@@ -116,7 +144,7 @@ class Audit_Checksum {
     public function checksumRemoteFolder($folder) {
         $access = $this->getAccess();
 
-        $result = $access->runPHP(self::CHECKSUM_SCRIPT, array($folder));
+        $result = $access->runPHP(__FILE__, array($folder));
         $result = explode("\n", $result);
         $result = array_map(function($line){
             return explode(':', $line);
@@ -160,7 +188,7 @@ class Audit_Checksum {
     public function removeFile($version_id, $filename)
     {
         $args = array(':v' => $version_id, ':p' => $filename);
-        return query(SQL_DELETE_FILE, $args);
+        return query(self::SQL_DELETE_FILE, $args);
     }
 
     public function replaceFile($version_id, $hash, $filename)
@@ -214,4 +242,26 @@ class Audit_Checksum {
 
         query('COMMIT');
     }
+}
+
+
+/**
+ * If this is called directly, treat it as command
+ */
+if (realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
+    call_user_func(function () {
+        $cur = getcwd();
+        if (array_key_exists('REQUEST_METHOD', $_SERVER))
+            $next = $_GET[1];
+
+        elseif (count($_SERVER['argv']) > 1)
+            $next = $_SERVER['argv'][1];
+
+        if (isset($next) && file_exists($next))
+            chdir($next);
+
+        $callback = function($md5, $filename){ printf("%s:%s\n", $md5, $filename); };
+        Audit_Checksum::checksumFolder('.', $callback);
+        chdir($cur);
+    });
 }

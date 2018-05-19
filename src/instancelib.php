@@ -63,24 +63,6 @@ WHERE
     instance_id = :id
 ");
 
-define('SQL_SELECT_FILE_MAP', "
-SELECT
-    path, hash
-FROM
-    file
-WHERE
-    version_id = :v
-    ;");
-
-define('SQL_SELECT_FILE_COUNT_BY_VERSION', "
-SELECT
-    COUNT(*)
-FROM
-    file
-WHERE
-    version_id = :id
-;");
-
 define('SQL_INSERT_INSTANCE', "
 INSERT OR REPLACE INTO
     instance
@@ -117,26 +99,6 @@ VALUES
     (:id, :instance, :type, :branch, :date)
 ;");
 
-define('SQL_INSERT_FILE', "
-INSERT INTO
-    file
-    (version_id, path, hash)
-VALUES
-    (:version, :path, :hash)
-;");
-
-define('SQL_INSERT_FILE_REPLICATE', "
-INSERT INTO
-    file
-    (version_id, path, hash)
-    SELECT
-        :new, path, hash
-    FROM
-        file
-    WHERE
-        version_id = :old
-;");
-
 define('SQL_DELETE_ACCESS', "
 DELETE FROM
     access
@@ -149,13 +111,6 @@ DELETE FROM
     backup
 WHERE
     instance_id = :id
-;");
-
-define('SQL_DELETE_FILE', "
-DELETE FROM
-    file
-WHERE
-    path = :p and version_id = :v
 ;");
 
 define('SQL_DELETE_FILE_BY_SELECT', "
