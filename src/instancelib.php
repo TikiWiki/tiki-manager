@@ -932,7 +932,7 @@ class Version
     function removeFile($filename)
     {
         $audit = $this->getAudit();
-        return $audit->removeFile($this->id, $hash, $filename);
+        return $audit->removeFile($this->id, $filename);
     }
 
     function replaceFile($hash, $filename, Application $app)
