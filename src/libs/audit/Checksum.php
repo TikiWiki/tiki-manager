@@ -60,6 +60,8 @@ class Audit_Checksum {
                 instance_id = :id
         );";
 
+    const CHECKSUM_SCRIPT = TRIM_ROOT . '/scripts/generate_md5_list.php';
+
     private $instance;
     private $access;
 
@@ -102,19 +104,37 @@ class Audit_Checksum {
         return $map;
     }
 
-    public function checksumFolder($folder) {
+    public function checksumLocalFolder($folder) {
+        require_once(self::CHECKSUM_SCRIPT);
+        $current = getcwd();
+        chdir($folder);
+        $result = calculate_folder_checksum('.');
+        chdir($current);
+        return $result;
+    }
+
+    public function checksumRemoteFolder($folder) {
         $access = $this->getAccess();
 
-        return $access->runPHP(
-            TRIM_ROOT . '/scripts/generate_md5_list.php',
-            array($folder)
-        );
+        $result = $access->runPHP(self::CHECKSUM_SCRIPT, array($folder));
+        $result = explode("\n", $result);
+        $result = array_map(function($line){
+            return explode(':', $line);
+        }, $result);
+
+        return $result;
     }
 
     public function checksumInstance()
     {
         $webroot = $this->instance->webroot;
-        $result = $this->checksumFolder($webroot);
+
+        if($this->instance === 'local') {
+            $result = $this->checksumLocalFolder($webroot);
+        } else {
+            $result = $this->checksumRemoteFolder($webroot);
+        }
+
         return $result;
     }
 
@@ -123,13 +143,8 @@ class Audit_Checksum {
         $app = $this->getApp();
         $folder = cache_folder($app, $version);
         $app->extractTo($version, $folder);
-
-        ob_start();
-        include TRIM_ROOT . '/scripts/generate_md5_list.php';
-        $content = ob_get_contents();
-        ob_end_clean();
-
-        return $content;
+        $result = $this->checksumLocalFolder($folder);
+        return $result;
     }
 
     public function addFile($version_id, $hash, $filename)
@@ -164,8 +179,8 @@ class Audit_Checksum {
         $known = $this->getChecksums($version_id);
         $current = $this->checksumInstance();
 
-        foreach (explode("\n", $current) as $line) {
-            list($hash, $filename) = explode(':', $line);
+        foreach ($current as $line) {
+            list($hash, $filename) = $line;
 
             if (! isset($known[$filename]))
                 $newFiles[$filename] = $hash;
@@ -187,15 +202,12 @@ class Audit_Checksum {
         );
     }
 
-    public function saveChecksums($version_id, $input)
+    public function saveChecksums($version_id, $entries)
     {
         query('BEGIN TRANSACTION');
 
-        $entries = explode("\n", $input);
-        foreach ($entries as $line) {
-            $parts = explode(':', $line);
+        foreach ($entries as $parts) {
             if (count($parts) != 2) continue;
-
             list($hash, $file) = $parts;
             $this->addFile($version_id, $hash, $file);
         }

@@ -6,18 +6,22 @@
 
 define('SQL_SELECT_INSTANCE', "
 SELECT
-    instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type
 FROM
-    instance
+    instance i
+INNER JOIN access a
+    ON i.instance_id=a.instance_id
 ;");
 
 define('SQL_SELECT_INSTANCE_BY_ID', "
 SELECT
-    instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type
 FROM
-    instance
+    instance i
+INNER JOIN access a
+    ON i.instance_id=a.instance_id
 WHERE
-    instance_id = :id
+    i.instance_id = :id
 ;");
 
 define('SQL_SELECT_UPDATABLE_INSTANCE', "
@@ -229,6 +233,7 @@ class Instance
     public $phpexec;
     public $phpversion;
     public $app;
+    public $type;
 
     private $access = array();
 
