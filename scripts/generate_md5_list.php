@@ -22,7 +22,7 @@ $objiterator = new RecursiveIteratorIterator(
     RecursiveIteratorIterator::SELF_FIRST
 );
 
-$ignore_pattern = '#^\./(\.git|\.svn|\.temp)/#';
+$ignore_pattern = '#(^\./temp|/\.git|/\.svn)/#';
 foreach($objiterator as $name => $object) {
     if (preg_match($ignore_pattern, $name)) {
         continue;
