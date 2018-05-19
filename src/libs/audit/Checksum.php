@@ -62,7 +62,7 @@ class Audit_Checksum {
 
     const CHECKSUM_IGNORE_PATTERN = '#('
             .'^\./temp'
-            .'|^\./modules/cache'
+            .'|^\./modules/cache/mod'
             .'|/\.git'
             .'|/\.svn'
         .')/#'; // <- literal slash here
