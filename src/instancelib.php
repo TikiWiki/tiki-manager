@@ -894,12 +894,13 @@ class Version
 
     function performCheck(Instance $instance)
     {
+        $access = $instance->getBestAccess('scripting');
         $app = $instance->getApplication();
         $app->beforeChecksumCollect();
         $folder = $instance->webroot;
         $result = $instance->type === 'local'
             ? (Audit_Checksum::checksumLocalFolder($folder))
-            : (Audit_Checksum::checksumRemoteFolder($folder));
+            : (Audit_Checksum::checksumRemoteFolder($folder, $access));
 
         return Audit_Checksum::validate($this->id, $result);
     }
@@ -913,10 +914,11 @@ class Version
 
     function collectChecksumFromInstance(Instance $instance)
     {
+        $access = $instance->getBestAccess('scripting');
         $folder = $instance->webroot;
         $result = $instance->type === 'local'
             ? (Audit_Checksum::checksumLocalFolder($folder))
-            : (Audit_Checksum::checksumRemoteFolder($folder));
+            : (Audit_Checksum::checksumRemoteFolder($folder, $access));
 
         return Audit_Checksum::saveChecksums($this->id, $result);
     }
