@@ -888,69 +888,63 @@ class Version
         return Instance::getInstance($this->instance);
     }
 
-    function getAudit() {
-        if (empty($this->audit)) {
-            $this->audit = new Audit_Checksum($this->getInstance());
-        }
-        return $this->audit;
-    }
-
     function hasChecksums()
     {
-        $audit = $this->getAudit();
-        return $audit->hasChecksums($this->id);
+        return Audit_Checksum::hasChecksums($this->id);
     }
 
     function performCheck(Instance $instance)
     {
         $app = $instance->getApplication();
         $app->beforeChecksumCollect();
-        $audit = $this->getAudit();
-        return $audit->validate($this->id);
+        $folder = $instance->webroot;
+        $result = $instance->type === 'local'
+            ? (Audit_Checksum::checksumLocalFolder($folder))
+            : (Audit_Checksum::checksumRemoteFolder($folder));
+
+        return Audit_Checksum::validate($this->id, $result);
     }
 
     function collectChecksumFromSource(Instance $instance)
     {
-        $audit = $this->getAudit();
-        $result = $audit->checksumSource($this);
-        return $audit->saveChecksums($this->id, $result);
+        $app = $instance->getApplication();
+        $result = Audit_Checksum::checksumSource($this, $app);
+        return Audit_Checksum::saveChecksums($this->id, $result);
     }
 
     function collectChecksumFromInstance(Instance $instance)
     {
-        $audit = $this->getAudit();
-        $result = $audit->checksumInstance();
-        return $audit->saveChecksums($this->id, $result);
+        $folder = $instance->webroot;
+        $result = $instance->type === 'local'
+            ? (Audit_Checksum::checksumLocalFolder($folder))
+            : (Audit_Checksum::checksumRemoteFolder($folder));
+
+        return Audit_Checksum::saveChecksums($this->id, $result);
     }
 
     function recordFile($hash, $filename)
     {
-        $audit = $this->getAudit();
-        return $audit->addFile($this->id, $hash, $filename);
+        return Audit_Checksum::addFile($this->id, $hash, $filename);
     }
 
     function removeFile($filename)
     {
-        $audit = $this->getAudit();
-        return $audit->removeFile($this->id, $filename);
+        return Audit_Checksum::removeFile($this->id, $filename);
     }
 
     function replaceFile($hash, $filename, Application $app)
     {
-        $audit = $this->getAudit();
-        return $audit->replaceFile($this->id, $hash, $filename);
+        return Audit_Checksum::replaceFile($this->id, $hash, $filename);
     }
 
     function getFileMap()
     {
-        $audit = $this->getAudit();
-        return $audit->getChecksums($this->id);
+        return Audit_Checksum::getChecksums($this->id);
     }
 
     private function saveHashDump($output, Application $app)
     {
-        $audit = $this->getAudit();
-        return $audit->saveChecksums($this->id);
+        return Audit_Checksum::saveChecksums($this->id);
     }
 }
 

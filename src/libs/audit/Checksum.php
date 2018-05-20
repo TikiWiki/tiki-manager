@@ -68,37 +68,14 @@ class Audit_Checksum {
             .'|/\.svn/'
         .')#';
 
-    private $instance;
-    private $access;
-
-    public function __construct($instance)
-    {
-        $this->instance = $instance;
-    }
-
-    public function getInstance()
-    {
-        return $this->instance;
-    }
-
-    public function getAccess()
-    {
-        return $this->instance->getBestAccess('scripting');
-    }
-
-    public function getApp()
-    {
-        return $this->instance->getApplication();
-    }
-
-    public function hasChecksums($version_id)
+    public static function hasChecksums($version_id)
     {
         $args = array(':id' => $version_id);
         $result = query(self::SQL_SELECT_FILE_COUNT_BY_VERSION, $args);
         return ($result->fetchColumn() > 0);
     }
 
-    public function getChecksums($version_id)
+    public static function getChecksums($version_id)
     {
         $map = array();
         $result = query(self::SQL_SELECT_FILE_MAP, array(':v' => $version_id));
@@ -139,7 +116,7 @@ class Audit_Checksum {
         return $result;
     }
 
-    public function checksumLocalFolder($folder) {
+    public static function checksumLocalFolder($folder) {
         $current = getcwd();
         chdir($folder);
         $result = self::checksumFolder('.');
@@ -147,9 +124,7 @@ class Audit_Checksum {
         return $result;
     }
 
-    public function checksumRemoteFolder($folder) {
-        $access = $this->getAccess();
-
+    public static function checksumRemoteFolder($folder, $access) {
         $result = $access->runPHP(__FILE__, array($folder));
         $result = trim($result);
         $result = empty($result) ? array() : explode("\n", $result);
@@ -160,29 +135,15 @@ class Audit_Checksum {
         return $result;
     }
 
-    public function checksumInstance()
+    public static function checksumSource($version, $app)
     {
-        $webroot = $this->instance->webroot;
-
-        if($this->instance->type === 'local') {
-            $result = $this->checksumLocalFolder($webroot);
-        } else {
-            $result = $this->checksumRemoteFolder($webroot);
-        }
-
-        return $result;
-    }
-
-    public function checksumSource($version)
-    {
-        $app = $this->getApp();
         $folder = cache_folder($app, $version);
         $app->extractTo($version, $folder);
-        $result = $this->checksumLocalFolder($folder);
+        $result = self::checksumLocalFolder($folder);
         return $result;
     }
 
-    public function addFile($version_id, $hash, $filename)
+    public static function addFile($version_id, $hash, $filename)
     {
         $args = array(
             ':version' => $version_id,
@@ -192,29 +153,28 @@ class Audit_Checksum {
         return query(self::SQL_INSERT_FILE, $args);
     }
 
-    public function removeFile($version_id, $filename)
+    public static function removeFile($version_id, $filename)
     {
         $args = array(':v' => $version_id, ':p' => $filename);
         return query(self::SQL_DELETE_FILE, $args);
     }
 
-    public function replaceFile($version_id, $hash, $filename)
+    public static function replaceFile($version_id, $hash, $filename)
     {
-        $this->removeFile($version_id, $filename);
-        return $this->addFile($version_id, $hash, $filename);
+        self::removeFile($version_id, $filename);
+        return self::addFile($version_id, $hash, $filename);
     }
 
-    public function validate($version_id)
+    public static function validate($version_id, $current_checksums=array())
     {
 
         $newFiles = array();
         $modifiedFiles = array();
         $missingFiles = array();
 
-        $known = $this->getChecksums($version_id);
-        $current = $this->checksumInstance();
+        $known = self::getChecksums($version_id);
 
-        foreach ($current as $line) {
+        foreach ($current_checksums as $line) {
             list($hash, $filename) = $line;
 
             if (! isset($known[$filename]))
@@ -237,14 +197,14 @@ class Audit_Checksum {
         );
     }
 
-    public function saveChecksums($version_id, $entries)
+    public static function saveChecksums($version_id, $entries)
     {
         query('BEGIN TRANSACTION');
 
         foreach ($entries as $parts) {
             if (count($parts) != 2) continue;
             list($hash, $file) = $parts;
-            $this->addFile($version_id, $hash, $file);
+            self::addFile($version_id, $hash, $file);
         }
 
         query('COMMIT');
