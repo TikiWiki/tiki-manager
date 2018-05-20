@@ -235,7 +235,7 @@ function handleCheckResult($instance, $version, $array)
         case 'd':
             $app = $instance->getApplication();
             $access = $instance->getBestAccess( 'filetransfer' );
-
+            query('BEGIN TRANSACTION');
             foreach ($files as $file) {
                 echo color("-- $file\n", 'red');
 
@@ -244,6 +244,7 @@ function handleCheckResult($instance, $version, $array)
                 $delFlat = array_diff($delFlat, (array)$file);
                 unset($del[$file]);
             }
+            query('COMMIT');
             break;
         }
     }
