@@ -61,11 +61,11 @@ class Audit_Checksum {
         );";
 
     const CHECKSUM_IGNORE_PATTERN = '#('
-            .'^\./temp'
+            .'^\./temp/'
             .'|^\./modules/cache/mod'
-            .'|/\.git'
-            .'|/\.svn'
-        .')/#'; // <- literal slash here
+            .'|/\.git/'
+            .'|/\.svn/'
+        .')#';
 
     private $instance;
     private $access;
@@ -163,7 +163,7 @@ class Audit_Checksum {
     {
         $webroot = $this->instance->webroot;
 
-        if($this->instance === 'local') {
+        if($this->instance->type === 'local') {
             $result = $this->checksumLocalFolder($webroot);
         } else {
             $result = $this->checksumRemoteFolder($webroot);
