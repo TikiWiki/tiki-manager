@@ -211,9 +211,7 @@ class Instance
     static function getInstance($id)
     {
         $result = query(SQL_SELECT_INSTANCE_BY_ID, array(':id' => $id));
-
         $instance = $result->fetchObject('Instance');
-
         return $instance;
     }
 
@@ -463,7 +461,7 @@ class Instance
 
     function createVersion()
     {
-        return new Version( $this );
+        return new Version( $this->getId() );
     }
 
     function getLatestVersion()
@@ -869,14 +867,9 @@ class Version
 
     function save()
     {
-        $instanceId = null;
-        if (is_object($this->instance)) {
-            $instanceId = $this->instance->getId();
-        }
-
         $params = array(
             ':id' => $this->id,
-            ':instance' => $instanceId,
+            ':instance' => $this->instance,
             ':type' => $this->type,
             ':branch' => $this->branch,
             ':date' => $this->date,
@@ -888,13 +881,16 @@ class Version
 
         if (! $this->id && $rowid){
             $this->id = $rowid;
-            $this->instance = Instance::getInstances()[ $rowid ];
         }
+    }
+
+    function getInstance() {
+        return Instance::getInstance($this->instance);
     }
 
     function getAudit() {
         if (empty($this->audit)) {
-            $this->audit = new Audit_Checksum($this->instance);
+            $this->audit = new Audit_Checksum($this->getInstance());
         }
         return $this->audit;
     }
