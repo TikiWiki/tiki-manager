@@ -794,9 +794,11 @@ class Instance
 
     function isLocked() {
         $access = $this->getBestAccess('scripting');
-        $trim_htaccess = file_get_contents(TRIM_ROOT . '/scripts/maintenance.htaccess');
-        $dest_htaccess = $access->fileGetContents($this->getWebPath('.htaccess'));
-        return trim($trim_htaccess) === trim($dest_htaccess);
+        $base_htaccess = TRIM_ROOT . '/scripts/maintenance.htaccess';
+        $curr_htaccess = $this->getWebPath('.htaccess');
+
+        return $access->fileExists($curr_htaccess)
+            && file_get_contents($base_htaccess) === $access->fileGetContents($curr_htaccess);
     }
 
     function lock()
