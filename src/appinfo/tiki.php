@@ -257,7 +257,7 @@ class Application_Tiki extends Application
                 $svn->updateInstanceTo($this->instance, $version->branch);
                 $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
 
-                if ($this->instance->isModernTiki()) {
+                if ($this->instance->hasConsole()) {
                     info('Updating composer');
 
                     $ret = $access->shellExec(array(
@@ -275,7 +275,7 @@ class Application_Tiki extends Application
 
             info('Updating database schema...');
 
-            if ($this->instance->isModernTiki()) {
+            if ($this->instance->hasConsole()) {
                 $ret = $access->shellExec(array(
                   "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
                 ));
@@ -312,7 +312,7 @@ class Application_Tiki extends Application
                 $svn->updateInstanceTo($this->instance, $version->branch);
                 $access->shellExec('chmod 0777 temp temp/cache');
 
-                if ($this->instance->isModernTiki()) {
+                if ($this->instance->hasConsole()) {
                     info('Updating composer...');
 
                     $ret = $access->shellExec(array(
@@ -355,7 +355,7 @@ class Application_Tiki extends Application
             $webroot = $this->instance->webroot;
             $access->chdir($this->instance->webroot);
 
-            if ($this->instance->isModernTiki()) {
+            if ($this->instance->hasConsole()) {
                 $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
             } else {
                 warning('Old Tiki detected, running bundled TRIM setup.sh script.');

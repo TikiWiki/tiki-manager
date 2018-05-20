@@ -478,7 +478,7 @@ class Instance
      *
      * @return bool
      */
-    function isModernTiki() {
+    function hasConsole() {
         $current = $this->getLatestVersion();
         preg_match('/(\d+)\.?/', $current->branch, $matches);
         if ($matches)
