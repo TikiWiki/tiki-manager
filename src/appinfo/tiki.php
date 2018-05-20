@@ -62,9 +62,9 @@ class Application_Tiki extends Application
             return $this->installed;
 
         $access = $this->instance->getBestAccess('filetransfer');
-
-        return $this->installed = $access->fileExists(
-            $this->instance->getWebPath('tiki-setup.php'));
+        $checkpath = $this->instance->getWebPath('tiki-setup.php');
+        $this->installed = $access->fileExists($checkpath);
+        return $this->installed;
     }
 
     function getInstallType()
@@ -73,10 +73,17 @@ class Application_Tiki extends Application
             return $this->installType;
 
         $access = $this->instance->getBestAccess('filetransfer');
-        if ($access->fileExists($this->instance->getWebPath('.svn/entries')))
-            return $this->installType = 'svn';
-        else
-            return $this->installType = 'tarball';
+        $checkpaths = array(
+            $this->instance->getWebPath('.svn/entries'),
+            $this->instance->getWebPath('.svn/wc.db')
+        );
+
+        foreach ($checkpaths as $path) {
+            if($access->fileExists($path)) {
+                return $this->installType = 'svn';
+            }
+        }
+        return $this->installType = 'tarball';
     }
 
     function install(Version $version)

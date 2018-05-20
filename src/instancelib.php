@@ -750,16 +750,15 @@ class Instance
         perform_database_setup($this,
             "{$this->tempdir}/restore/{$basetardir}/database_dump.sql");
 
-        if ($this->app == 'tiki')
-            $this->getApplication()->fixPermissions();
-
         info('Cleaning up...');
-
         perform_instance_installation($this);
-        info("Fixing permissions for {$this->name}");
-        $this->getApplication()->fixPermissions();
-        $version->collectChecksumFromInstance($this);
 
+        if ($this->app == 'tiki') {
+            info("Fixing permissions for {$this->name}");
+            $this->getApplication()->fixPermissions();
+        }
+
+        $version->collectChecksumFromInstance($this);
         echo $access->shellExec(
             "rm -Rf {$this->tempdir}/restore"
         );
