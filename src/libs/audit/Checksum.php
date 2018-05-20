@@ -63,6 +63,7 @@ class Audit_Checksum {
     const CHECKSUM_IGNORE_PATTERN = '#('
             .'^\./temp/'
             .'|^\./modules/cache/mod'
+            .'|^\./templates_c/'
             .'|/\.git/'
             .'|/\.svn/'
         .')#';
