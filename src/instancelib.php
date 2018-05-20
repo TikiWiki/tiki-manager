@@ -26,8 +26,8 @@ WHERE
 
 define('SQL_SELECT_UPDATABLE_INSTANCE', "
 SELECT
-    instance.instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app 
-FROM 
+    instance.instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app
+FROM
     instance
 INNER JOIN
     version ON instance.instance_id = version.instance_id
@@ -337,7 +337,7 @@ class Instance
     {
         if (empty($this->access))
             $this->access = Access::getAccessFor($this);
-        
+
         // TODO: Add intelligence as more access types get added
         // types:
         //      scripting
@@ -348,7 +348,7 @@ class Instance
     function getWebUrl($relativePath)
     {
         $weburl = rtrim($this->weburl, '/');
-        
+
         $path = "$weburl/$relativePath";
         $path = str_replace('/./', '/', $path);
 
@@ -655,7 +655,7 @@ class Instance
             $message .= "TAR exit code: $return_var\r\n";
             mail($this->contact , 'TRIM backup error', $message);
             return null;
-        } 
+        }
 
         if ($backup_perm) {
             info("Setting permissions on '{$tar}' to " . decoct($backup_perm) . "");
@@ -682,7 +682,7 @@ class Instance
         $base = basename($archive);
         list($basetardir, $trash) = explode('_', $base, 2);
         $remote = $this->getWorkPath($base);
-        
+
         $access = $this->getBestAccess('scripting');
         $access->uploadFile($archive, $remote);
 
@@ -748,7 +748,7 @@ class Instance
         $version->date = is_object($oldVersion) ? $oldVersion->date : NULL;
         $version->save();
         $this->save();
-        
+
         perform_database_setup($this,
             "{$this->tempdir}/restore/{$basetardir}/database_dump.sql");
 
@@ -808,6 +808,7 @@ class Instance
 
         $access = $this->getBestAccess('scripting');
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.php', 'maintenance.php');
+        $access->shellExec('touch maintenance.php');
 
         if ($access->fileExists($this->getWebPath('.htaccess')))
             $access->moveFile('.htaccess', '.htaccess.bak');
@@ -825,6 +826,7 @@ class Instance
         info('Unlocking website...');
         $access = $this->getBestAccess('scripting');
         $access->deleteFile('.htaccess');
+        $access->deleteFile('maintenance.php');
 
         if ($access->fileExists('.htaccess.bak'))
             $access->moveFile('.htaccess.bak', '.htaccess');
