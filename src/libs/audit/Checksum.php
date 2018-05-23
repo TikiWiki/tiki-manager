@@ -153,6 +153,16 @@ class Audit_Checksum {
         return query(self::SQL_INSERT_FILE, $args);
     }
 
+    public static function addFiles($version_id, $hashFiles=array())
+    {
+        query('BEGIN TRANSACTION');
+        foreach ($hashFiles as $hashFile) {
+            list($hash, $filename) = $hashFile;
+            self::addFile($version_id, $hash, $filename);
+        }
+        return query('COMMIT');
+    }
+
     public static function removeFile($version_id, $filename)
     {
         $args = array(':v' => $version_id, ':p' => $filename);
@@ -165,24 +175,39 @@ class Audit_Checksum {
         return self::addFile($version_id, $hash, $filename);
     }
 
+    public static function replaceFiles($version_id, $hashFiles)
+    {
+        query('BEGIN TRANSACTION');
+        foreach ($hashFiles as $hashFile) {
+            list($hash, $filename) = $hashFile;
+            self::replaceFile($version_id, $hash, $filename);
+        }
+        return query('COMMIT');
+    }
+
     public static function validate($version_id, $current_checksums=array())
     {
 
         $newFiles = array();
         $modifiedFiles = array();
         $missingFiles = array();
+        $pristineFiles = array();
 
         $known = self::getChecksums($version_id);
 
         foreach ($current_checksums as $line) {
             list($hash, $filename) = $line;
 
-            if (! isset($known[$filename]))
+            if (! isset($known[$filename])) {
                 $newFiles[$filename] = $hash;
+            }
             else {
-                if ($known[$filename] != $hash)
+                if ($known[$filename] != $hash){
                     $modifiedFiles[$filename] = $hash;
-
+                }
+                else {
+                    $pristineFiles[$filename] = $hash;
+                }
                 unset($known[$filename]);
             }
         }
@@ -194,6 +219,7 @@ class Audit_Checksum {
             'new' => $newFiles,
             'mod' => $modifiedFiles,
             'del' => $missingFiles,
+            'pri' => $pristineFiles,
         );
     }
 

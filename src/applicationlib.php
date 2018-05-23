@@ -80,7 +80,6 @@ abstract class Application
     function performUpdate(Instance $instance, $version = null)
     {
         $current = $instance->getLatestVersion();
-        $oldFiles = $current->getFileMap();
 
         if (is_null($version)) {
             // Simple update, copy from current
@@ -98,39 +97,43 @@ abstract class Application
             $new->date = $version->date;
             $new->save();
         }
+        info('Checking old instance checksums.');
+        $oldPristine = $current->performCheck($instance);
+        $oldPristine = $oldPristine['pri'] ?: array();
 
-        info('Obtaining latest checksum from source.');
+        info('Obtaining checksum from source.');
         $new->collectChecksumFromSource($instance);
-
         $this->performActualUpdate($new);
 
-        info('Obtaining remote checksums.');
-        $array = $new->performCheck($instance);
-        $newF = $modF = $delF = array();
+        info('Checking new instance checksums.');
+        $newDiff = $new->performCheck($instance);
 
-        foreach ($array['new'] as $file => $hash) {
-            // If unknown file was known in old version, accept it
-            if (array_key_exists($file, $oldFiles) && $oldFiles[$file] == $hash)
-                $new->recordFile($hash, $file, $this);
-            else
-                $newF[$file] = $hash;
+        $toSave = array();
+        foreach ($newDiff['new'] as $file => $hash) {
+            if (isset($oldPristine[$file])) {
+                $toSave[] = array($hash, $file);
+                unset($newDiff['new'][$file]);
+            }
         }
+        $new->recordFiles($toSave);
 
-        foreach ($array['mod'] as $file => $hash) {
+        $toSave = array();
+        foreach ($newDiff['mod'] as $file => $hash) {
             // If modified file was in the same state in previous version
-            if (array_key_exists($file, $oldFiles) && $oldFiles[$file] == $hash)
-                $new->replaceFile($hash, $file, $this);
-            else
-                $modF[$file] = $hash;
+            if (isset($oldPristine[$file])) {
+                $toSave[] = array($hash, $file);
+                unset($newDiff['mod'][$file]);
+            }
         }
+        $new->replaceFiles($toSave, $this);
 
         // Consider all missing files as conflicts
-        $delF = $array['del'];
+        $newDel = $newDiff['del'];
 
         return array(
-            'new' => $newF,
-            'mod' => $modF,
-            'del' => $delF,
+            'new' => $newDiff['new'],
+            'mod' => $newDiff['mod'],
+            'del' => $newDel,
         );
     }
 

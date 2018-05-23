@@ -954,6 +954,11 @@ class Version
         return Audit_Checksum::addFile($this->id, $hash, $filename);
     }
 
+    function recordFiles($hashFiles=array())
+    {
+        return Audit_Checksum::addFiles($this->id, $hashFiles);
+    }
+
     function removeFile($filename)
     {
         return Audit_Checksum::removeFile($this->id, $filename);
@@ -962,6 +967,11 @@ class Version
     function replaceFile($hash, $filename, Application $app)
     {
         return Audit_Checksum::replaceFile($this->id, $hash, $filename);
+    }
+
+    function replaceFiles($hashFiles=array(), $app=null)
+    {
+        return Audit_Checksum::replaceFiles($this->id, $hashFiles);
     }
 
     function getFileMap()
