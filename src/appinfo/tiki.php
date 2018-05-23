@@ -246,16 +246,18 @@ class Application_Tiki extends Application
             if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
 
                 info('Updating svn...');
+                $webroot = $this->instance->webroot;
 
                 $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
                 $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
                 $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
 
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all");
-                $access->shellExec("svn revert --non-interactive -R {$escaped_cache_path}");
-                $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
 
                 $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
+                $svn->revert($webroot, array('--recursive'));
+                $svn->cleanup($webroot);
+
                 $svn->updateInstanceTo($this->instance->webroot, $version->branch);
                 $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
 

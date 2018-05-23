@@ -20,12 +20,10 @@ class RC_SVN
         'update' => array(
             '--accept theirs-full',
             '--force',
-            '--quiet',
         ),
         'upgrade' => array(
             '--force',
             '--accept theirs-full',
-            '--quiet',
         )
     );
 

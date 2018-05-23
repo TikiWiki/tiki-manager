@@ -32,17 +32,21 @@ foreach ($selection as $instance) {
     $instance->detectPHP();
     $app = $instance->getApplication();
 
-    ob_start();
-    perform_instance_installation($instance);
-    $contents = $string = trim(preg_replace('/\s\s+/', ' ', ob_get_contents()));
-    ob_end_clean();
+    if (!$app->isInstalled()) {
+        ob_start();
+        perform_instance_installation($instance);
+        $contents = $string = trim(preg_replace('/\s\s+/', ' ', ob_get_contents()));
+        ob_end_clean();
 
-    $matches_a = array();
-    preg_match('/(\d+\.|trunk)/', $contents, $matches_a);
-
-    if (!is_array($matches_a) || count($matches_a) === 0) {
-        $matches_a = array(0);
+        $matches = array();
+        if(preg_match('/(\d+\.|trunk)/', $contents, $matches)) {
+            $branch_name = $matches[0];
+        }
     }
+
+    $version = $instance->getLatestVersion();
+    $branch_name = $version->getBranch();
+    $branch_version = $version->getBaseVersion();
 
     if (ARG_SWITCH) {
         $versions = array();
@@ -52,33 +56,29 @@ foreach ($selection as $instance) {
                 $versions[] = $version;
         }
 
-        echo "You are currently running: $contents\n";
+        echo "You are currently running: $branch_name\n";
         echo "Which version do you want to upgrade to?\n";
 
-        $i = 0;
+        $counter = 0;
         $found_incompatibilities = false;
         foreach ($versions as $key => $version) {
-            preg_match('/(\d+\.|trunk)/', $version->branch, $matches_b);
+            $base_version = $version->getBaseVersion();
 
-            if ((($matches_b[0] >= 13) || ($matches_b[0] == 'trunk')) &&
-                ($instance->phpversion < 50500) || ($matches_b[0] < $matches_a[0]))
-                $found_incompatibilities = true;
-            else {
-                $i++;
+            $compatible = 0;
+            $compatible |= $base_version >= 13;
+            $compatible &= $base_version >= $branch_version;
+            $compatible |= $base_version === 'trunk';
+            $compatible &= $instance->phpversion > 50500;
+            $found_incompatibilities |= !$compatible;
+
+            if ($compatible) {
+                $counter++;
                 echo "[$key] {$version->type} : {$version->branch}\n";
             }
         }
 
-        if ($i) {
-            $matches_c = array();
-            preg_match('/(\d+)(\d{2})(\d{2})$/', $instance->phpversion, $matches_c);
-
-            if (array_key_exists(1, $matches_c) &&
-                array_key_exists(2, $matches_c) &&
-                array_key_exists(3, $matches_c)) {
-                printf("We detected PHP release %d.%d.%d\n",
-                    $matches_c[1], $matches_c[2], $matches_c[3]);
-            }
+        if ($counter) {
+            printf("We detected PHP release %s\n", $instance->getPHPVersion());
     
             if ($found_incompatibilities) {
                 warning('WARNING: If some versions are not offered, ' .

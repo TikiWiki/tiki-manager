@@ -392,6 +392,14 @@ class Instance
         );
     }
 
+    function getPHPVersion()
+    {
+        $access = $this->getBestAccess('scripting');
+        $path = $access->getInterpreterPath($this);
+        $version = $access->shellExec("{$path} -r 'echo phpversion();'");
+        return $version;
+    }
+
     function detectPHP()
     {
         $access = $this->getBestAccess('scripting');
@@ -401,7 +409,7 @@ class Instance
 
         if (strlen($path) > 0) {
             $version = $access->getInterpreterVersion($path);
-            $this->phpversion = $version;
+            $this->phpversion = intval($version);
             if ($version <  50300) return false;
 
             $this->phpexec = $path;
@@ -480,11 +488,12 @@ class Instance
      */
     function hasConsole() {
         $current = $this->getLatestVersion();
-        preg_match('/(\d+)\.?/', $current->branch, $matches);
-        if ($matches)
-            return ((float)$matches[1] >= 11);
-
-        return false;
+        $hasConsole = $current->branch === 'trunk'
+            || (
+                preg_match('/(\d+)\.?/', $current->branch, $matches)
+                && floatval($matches[1]) >= 11
+            );
+        return $hasConsole;
     }
 
     function getApplication()
@@ -883,8 +892,25 @@ class Version
         }
     }
 
-    function getInstance() {
+    function getInstance()
+    {
         return Instance::getInstance($this->instance);
+    }
+
+    function getBranch() {
+        return $this->branch;
+    }
+
+    function getBaseVersion() {
+        $branch = $this->getBranch();
+        $result = null;
+        if (preg_match('/((\d+)(\.\d+)?|trunk)/', $branch, $matches)) {
+            $result = $matches[0];
+            $result = is_numeric($result)
+                ? floatval($result)
+                : $result;
+        }
+        return $result;
     }
 
     function hasChecksums()
