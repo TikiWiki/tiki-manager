@@ -132,8 +132,10 @@ class Application_Tiki extends Application
             return $this->branch;
 
         if ($this->getInstallType() == 'svn') {
-            $svn = new RC_SVN(SVN_TIKIWIKI_URI);
-            if ($branch = $svn->getRepositoryBranch($this->instance)) {
+            $access = $this->instance->getBestAccess('scripting');
+            $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
+            $webroot = $this->instance->webroot;
+            if ($branch = $svn->getRepositoryBranch($webroot)) {
                 info("Detected SVN : $branch");
                 return $this->branch = $branch;
             }
@@ -253,8 +255,8 @@ class Application_Tiki extends Application
                 $access->shellExec("svn revert --non-interactive -R {$escaped_cache_path}");
                 $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
 
-                $svn = new RC_SVN(SVN_TIKIWIKI_URI);
-                $svn->updateInstanceTo($this->instance, $version->branch);
+                $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
+                $svn->updateInstanceTo($this->instance->webroot, $version->branch);
                 $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
 
                 if ($this->instance->hasConsole()) {
@@ -308,8 +310,8 @@ class Application_Tiki extends Application
                 info('Upgrading svn...');
                 $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear");
 
-                $svn = new RC_SVN(SVN_TIKIWIKI_URI);
-                $svn->updateInstanceTo($this->instance, $version->branch);
+                $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
+                $svn->updateInstanceTo($this->instance->webroot, $version->branch);
                 $access->shellExec('chmod 0777 temp temp/cache');
 
                 if ($this->instance->hasConsole()) {
