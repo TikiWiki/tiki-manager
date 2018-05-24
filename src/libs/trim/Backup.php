@@ -290,6 +290,7 @@ class BackupCopyException extends Exception
     public function __construct ($errors='', $code=1, $previous=null)
     {
         $message = $this->formatMessage($errors);
+        parent::__construct($message, $code, $previous);
     }
 
     private function formatMessage($mixed)
@@ -306,14 +307,15 @@ class BackupCopyException extends Exception
 
         foreach ($mixed as $code => $errors) {
             $description = $this->RSYNC_ERRORS[$code];
-            $message .= $EOL . sprintf('!!! (%3d) %s', $code, $description);
+            $message .= $EOL . sprintf('!!! (CODE: %3d) %s', $code, $description);
 
             foreach ($errors as $error) {
                 $message .= $EOL . "* {$error}";
             }
+            $message .= $EOL;
         }
-        $message .= $EOL
-            . $EOL . '!! Reference'
+
+        $message .= $EOL . '!! Reference'
             . $EOL . '[https://lxadm.com/Rsync_exit_codes|Rsync Exit Codes]';
 
         return $message;
