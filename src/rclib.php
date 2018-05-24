@@ -122,7 +122,7 @@ class RC_SVN
         return $result;
     }
 
-    public function switch($path, $branch, $args=array())
+    public function svnSwitch($path, $branch, $args=array())
     {
         $branch = $this->getBranchUrl($branch);
         if(empty($args)) {
@@ -142,7 +142,7 @@ class RC_SVN
         $result = $this->revert($path, array(
             '--recursive'
         ));
-        $result = $this->switch($path, $branch, $args);
+        $result = $this->svnSwitch($path, $branch, $args);
         return $result;
     }
 
