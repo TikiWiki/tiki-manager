@@ -111,7 +111,7 @@ class Backup
 
         $success = $return_var === 0
             && file_exists($tarPath)
-            && file_size($tarPath) > 0;
+            && filesize($tarPath) > 0;
 
         return $success ? $tarPath : false;
     }
