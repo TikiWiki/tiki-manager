@@ -382,6 +382,8 @@ class Instance
         echo $access->shellExec(
             "mkdir -p {$this->tempdir}"
         );
+
+        return $this->tempdir;
     }
 
     function getPHPVersion()
@@ -504,173 +506,13 @@ class Instance
 
     function backup()
     {
-        $error_flag = 0;
-
-        $access = $this->getBestAccess('scripting');
-
-        if ($this->getApplication() == null)
-            die(error('No application installed for this instance.'));
-
-        $this->createWorkPath($access);
-
-        $locations = $this->getApplication()->getFileLocations();
-        if (!isset($locations['data'])){
-            $locations['data'] = array();
-        }
-        $locations['data'] = array_merge($locations['data'], $this->getExtraBackups());
-
-        $backup_directory = "{$this->id}-{$this->name}";
-        $approot = BACKUP_FOLDER . "/$backup_directory";
-        if (! file_exists($approot))
-            mkdir($approot, 0755, true);
-
-        if (file_exists("{$approot}/manifest.txt"))
-            `rm $approot/manifest.txt`;
-
-        $app = $this->getApplication();
-        $app->removeTemporaryFiles();
-
-        // Bring all remote files locally
-        info('Downloading files locally...');
-        $errorList = [];
-        foreach ($locations as $type => $remotes) {
-            if (!is_array($remotes)){
-                continue;
-            }
-            foreach ($remotes as $remote) {
-                $hash = md5($remote);
-                $locmirror = "{$approot}/{$hash}";
-                $error = $access->localizeFolder($remote, $locmirror);
-                $error_flag += $error;
-                if ($error) {
-                    $errorList[] = ['remote' => $remote, 'code' => $error];
-                }
-                `echo "$hash    $type    $remote" >> $approot/manifest.txt`;
-            }
-        }
-
-        if ($error_flag) {
-            // Do something
-            $message = "Backup has failed while downloading files into TRIM.\r\n";
-            $message .= "{$this->name}\r\n";
-            $message .= "\r\nList of failures:\r\n\r\n";
-            foreach ($errorList as $errorInstance) {
-                $message .= "* " . $errorInstance['remote']. ": code " . $errorInstance['code'] . "\r\n";
-            }
-            if ($access instanceof Access_SSH || $access instanceof Access_Local) {
-                $message .= "\r\n";
-                $message .= '<a href="https://lxadm.com/Rsync_exit_codes">Rsync Exit Codes</a>';
-                $message .= "\r\n";
-            }
-
-            mail($this->contact, 'TRIM backup error', $message);
-            return null;
-        }
-
-        info('Obtaining database dump...');
-
-        // There is not an easy way to get the return value
-        $target = "{$approot}/database_dump.sql";
-        $this->getApplication()->backupDatabase($target);
-
-        // Perform archiving
-        $current = getcwd();
-        chdir(BACKUP_FOLDER);
-
-        $archiveLocation = ARCHIVE_FOLDER . "/{$backup_directory}";
+        $backup = new Backup($this);
 
         if ($this->detectDistribution() === 'ClearOS') {
-            if(is_link($archiveLocation)) {
-                if (!file_exists(readlink($archiveLocation))) {
-                    warning('Found broken link on backup folder, removing it ...');
-                    $access->shellExec('rm -fv ' . escapeshellarg($archiveLocation), true);
-                } else {
-                    warning(
-                        "Found symlink on backup folder. Moving backups to TRIM folder and"
-                        . " and symlinking it on the opposite direction."
-                    );
-
-                    $realArchiveLocation = readlink($archiveLocation);
-                    $access->shellExec('rm -fv ' . escapeshellarg($archiveLocation), true);
-                    $access->shellExec('mv ' . escapeshellarg($realArchiveLocation) . ' ' . escapeshellarg($archiveLocation), true);
-
-                    debug("Symlinking $archiveLocation to $realArchiveLocation");
-                    $access->shellExec('ln -nsf ' . escapeshellarg($archiveLocation) . ' ' . escapeshellarg($realArchiveLocation));
-                    unset($realArchiveLocation);
-                }
-            } else {
-                $archiveLocationLink = dirname($this->webroot) . '/backup';
-                debug("Symlinking $archiveLocation to $archiveLocationLink");
-                $access->shellExec('ln -nsf ' . escapeshellarg($archiveLocation) . ' ' . escapeshellarg($archiveLocationLink));
-            }
+            $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
         }
 
-        $backup_user = $this->getProp('backup_user');
-        $backup_group = $this->getProp('backup_group');
-        $backup_perm = intval($this->getProp('backup_perm') ?: 0770);
-
-        if (!file_exists($archiveLocation)) {
-            mkdir($archiveLocation, $backup_perm, true);
-        }
-
-        if ($backup_perm) {
-            info("Setting permissions on '{$archiveLocation}' to " . decoct($backup_perm) . "");
-            chmod($archiveLocation, $backup_perm);
-        }
-
-        if ($backup_user) {
-            info("Changing '{$archiveLocation}' owner to {$backup_user}");
-            chown($archiveLocation, $backup_user);
-        }
-
-        if ($backup_group) {
-            info("Changing '{$archiveLocation}' group to {$backup_group}");
-            chgrp($archiveLocation, $backup_group);
-        }
-
-        $output = array();
-        $return_val = -1;
-        $tar = $archiveLocation . "/{$backup_directory}_" . date( 'Y-m-d_H-i-s' ) . '.tar.bz2';
-
-        info("Creating archive at {$tar}");
-        $command = 'nice -n 19 tar -cjp'
-            . ' -C ' . BACKUP_FOLDER
-            . ' -f ' . escapeshellarg($tar)
-            . ' '    . escapeshellarg($backup_directory);
-
-        debug($command);
-        exec($command, $output, $return_var);
-        debug($output, $prefix="({$return_var})>>", "\n\n");
-
-        $error_flag += $return_var;
-        if ($return_var != 0)
-            info("TAR exit code: $return_var");
-
-        chdir($current);
-
-        if ($error_flag) {
-            $message = "Your TRIM backup has failed packing files into TRIM.\r\n";
-            $message .= "{$this->name}\r\n";
-            $message .= "TAR exit code: $return_var\r\n";
-            mail($this->contact , 'TRIM backup error', $message);
-            return null;
-        }
-
-        if ($backup_perm) {
-            info("Setting permissions on '{$tar}' to " . decoct($backup_perm) . "");
-            chmod($tar, $backup_perm);
-        }
-
-        if ($backup_user) {
-            info("Changing '{$tar}' owner to {$backup_user}");
-            chown($tar, $backup_user);
-        }
-
-        if ($backup_group) {
-            info("Changing '{$tar}' group to {$backup_group}");
-            chgrp($tar, $backup_group);
-        }
-
+        $tar = $backup->create();
         return $tar;
     }
 
@@ -787,7 +629,8 @@ class Instance
 
     function getArchives()
     {
-        return array_reverse(glob(ARCHIVE_FOLDER . "/{$this->id}-*/{$this->id}*_*.tar.bz2"));
+        $backup = new Backup($this);
+        return $backup->getArchives();
     }
 
     function isLocked() {
