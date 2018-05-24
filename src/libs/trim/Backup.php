@@ -142,7 +142,7 @@ class Backup
         $backupDir = $backupDir ?: $this->backupDir;
         $sqlpath = "{$backupDir}/database_dump.sql";
 
-        unlink($sqlpath);
+        file_exists($sqlpath) && unlink($sqlpath);
         $app->backupDatabase($sqlpath);
 
         if (file_exists($sqlpath)) {
