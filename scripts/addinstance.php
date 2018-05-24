@@ -101,13 +101,13 @@ case "ClearOS":
     break;
 case "Windows":
 	$backup_user = $backup_group = "Administrator";
-	$backup_perm = 02750;
+	$backup_perm = 0750;
 	$d_webroot = 'D:\\www\\';
 	break;
 default:
     $backup_user = @posix_getpwuid(posix_geteuid())['name'];
     $backup_group = @posix_getgrgid(posix_getegid())['name'];
-    $backup_perm = 02750;
+    $backup_perm = 0750;
     $d_webroot = ($user == 'root' || $user == 'apache') ?
         '/var/www/html/' : "/home/$user/public_html/";
 }
