@@ -192,3 +192,36 @@ function secure_trim_data($should_set=false) {
         }
     }
 }
+
+function array_flatten ($array, $objectFlat=false)
+{
+    $result = array();
+    $visited = array();
+    $queue = array();
+    $current = null;
+
+    if (is_array($array) || ($objectFlat && is_object($array))) {
+        $queue[] = $array;
+    }
+
+    while (!empty($queue)) {
+        $current = array_shift($queue);
+        if ($objectFlat && is_object($current)) {
+            $current = get_object_vars($current);
+        }
+        if (!is_array($current)) {
+            $result[] = $current;
+            continue;
+        }
+        foreach ($current as $key => $value) {
+            if (is_array($value) || ($objectFlat && is_object($value))) {
+                $queue[] = $value;
+            }
+            else {
+                $result[] = $value;
+            }
+        }
+    }
+
+    return $result;
+}

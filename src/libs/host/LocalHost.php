@@ -8,10 +8,13 @@ class Local_Host
 {
     private static $resources = array();
 
-    private $location;
-    private $env = array();
-
+    private $env;
     private $last_command_exit_code = 0;
+    private $location;
+
+    function __construct() {
+        $this->env = $_ENV ?: array();
+    }
 
     function chdir($location)
     {
@@ -26,6 +29,45 @@ class Local_Host
 
     function hasErrors() {
         return $this->last_command_exit_code !== 0;
+    }
+
+    function runCommand($command, $options=array())
+    {
+        $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
+        $env = !empty($options['env']) ? $options['env'] : $this->env;
+
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+            3 => array("pipe", "w")
+        );
+
+        $commandLine = $command->getFullCommand();
+        $commandLine .= '; echo $? >&3';
+        $process = proc_open($commandLine, $descriptorspec, $pipes, $cwd, $env);
+
+        if (!is_resource($process)) {
+            return $command;
+        }
+
+        $stdin = $command->getStdin();
+        if (is_resource($stdin)) {
+            stream_copy_to_stream($stdin, $pipes[0]);
+        }
+        fclose($pipes[0]);
+
+        $return = stream_get_contents($pipes[3]);
+        $return = intval(trim($return));
+        fclose($pipes[3]);
+
+        $command->setStdout($pipes[1]);
+        $command->setStderr($pipes[2]);
+        $command->setProcess($process);
+        $command->setReturn($return);
+
+        return $command;
     }
 
     function runCommands($commands, $output=false)

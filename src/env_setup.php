@@ -22,6 +22,7 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
 
 require_once TRIM_ROOT . '/vendor/autoload.php';
 require_once TRIM_ROOT . '/src/libs/helpers.php';
+require_once TRIM_ROOT . '/src/libs/host/HostCommand.php';
 require_once TRIM_ROOT . '/src/libs/host/LocalHost.php';
 require_once TRIM_ROOT . '/src/libs/host/FTPHost.php';
 require_once TRIM_ROOT . '/src/libs/host/SSHHost.php';
