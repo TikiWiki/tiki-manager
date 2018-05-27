@@ -2,7 +2,8 @@
 
 
 /**
- * Prepare a shell command to run in a host object
+ * Prepare a shell command to run in a host object.
+ * IMPORTANT!: All resources are cleaned and closed on __destruct
  */
 class Host_Command
 {
@@ -104,6 +105,17 @@ class Host_Command
     public function getStdin()
     {
         return $this->stdin ?: null;
+    }
+
+    /**
+     * @return string The command stdin string
+     */
+    public function getStdinContent()
+    {
+        if (is_resource($this->stdin)) {
+            return stream_get_contents($this->stdin);
+        }
+        return '';
     }
 
     /**
@@ -262,7 +274,7 @@ class Host_Command
      * also be closed on PHP garbage collecting.
      */
     public function finish(){
-        is_resource($this->process) && proc_terminate($this->process);
+        is_resource($this->process) && proc_close($this->process);
         is_resource($this->stdin) && fclose($this->stdin);
         is_resource($this->stdout) && fclose($this->stdout);
         is_resource($this->stderr) && fclose($this->stderr);
