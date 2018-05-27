@@ -41,7 +41,7 @@ class Host_Command
      */
     public function getArgs()
     {
-        return $this->args ?: array();
+        return $this->prepareArgs($this->args);
     }
 
     /**
@@ -178,7 +178,6 @@ class Host_Command
      */
     public function setArgs($args)
     {
-        $args = $this->prepareArgs($args);
         return $this->args = $args;
     }
 

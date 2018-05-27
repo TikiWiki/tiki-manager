@@ -19,9 +19,9 @@ class SSH_Host
 
     function __construct($host, $user, $port)
     {
-        $this->host = $host;
-        $this->user = $user;
-        $this->port = $port;
+        $this->host = $host ?: '';
+        $this->user = $user ?: '';
+        $this->port = $port ?: 22;
 
         $this->copy_id_port_in_host = true;
 
@@ -43,6 +43,22 @@ class SSH_Host
     function setenv($var, $value)
     {
         $this->env[$var] = $value;
+    }
+
+    function getEnvLine($env=null) {
+        $env = $env ?: $this->env;
+
+        if (!is_array($env) || empty($env)) {
+            return '';
+        }
+
+        $line = '';
+        foreach ($env as $key => $value) {
+            $value = preg_replace('/(\s)/', '\\\$1', $value);
+            $value = sprintf('export %s=%s', $key, $value);
+            $line .= escapeshellarg($value) . '\;';
+        }
+        return $line;
     }
 
     private function getExtHandle()
@@ -76,6 +92,24 @@ class SSH_Host
         return self::$resources[$key] = $handle;
     }
 
+    function getSshCommandPrefix($options=array()) {
+        $options['-i'] = !empty($options['pubkey']) ? $options['pubkey'] : SSH_KEY;
+        $options['-F'] = !empty($options['config']) ? $options['config'] : SSH_CONFIG;
+        $options['-p'] = !empty($options['port']) ? $options['port'] : $this->port;
+
+        $options = array_filter($options, 'strlen');
+        $options = array_map('escapeshellarg', $options);
+        $target = $this->user . '@' . $this->host;
+
+        $prefix = 'ssh';
+        foreach ($options as $key => $value) {
+            $prefix .= ' ' . $key . ' ' . $value;
+        }
+        $prefix .= ' ' . escapeshellarg($target);
+
+        return $prefix;
+    }
+
     function setupKey($publicKeyFile)
     {
         // Check key presence first if possible
@@ -100,6 +134,54 @@ class SSH_Host
             `ssh-copy-id -i $file -p $port $host`;
         }
     }
+
+    function runCommand($command, $options=array())
+    {
+        $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
+        $env = !empty($options['env']) ? $options['env'] : $this->env;
+
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+            3 => array("pipe", "w")
+        );
+
+        $cwd = !empty($cwd) ? sprintf('cd %s;', $cwd) : '';
+        $env = $this->getEnvLine($env);
+
+        $commandLine = $this->getSshCommandPrefix();
+        $commandLine .= ' ';
+        $commandLine .= $env;
+        $commandLine .= $command->getFullCommand();
+        $commandLine .= '; echo $? >&3';
+
+        $process = proc_open($commandLine, $descriptorspec, $pipes);
+
+        if (!is_resource($process)) {
+            $command->setReturn(-1);
+            return $command;
+        }
+
+        $stdin = $command->getStdin();
+        if (is_resource($stdin)) {
+            stream_copy_to_stream($stdin, $pipes[0]);
+        }
+        fclose($pipes[0]);
+
+        $return = stream_get_contents($pipes[3]);
+        $return = intval(trim($return));
+        fclose($pipes[3]);
+
+        $command->setStdout($pipes[1]);
+        $command->setStderr($pipes[2]);
+        $command->setProcess($process);
+        $command->setReturn($return);
+
+        return $command;
+    }
+
 
     function runCommands($commands, $output = false)
     {
