@@ -1,5 +1,9 @@
 <?php
 
+
+/**
+ * Prepare a shell command to run in a host object
+ */
 class Host_Command
 {
     private $args;
@@ -10,6 +14,13 @@ class Host_Command
     private $stdin;
     private $stdout;
 
+    /**
+     * Construct a Command object
+     *
+     * @param string $command    command to call
+     * @param array  $args       command args as array
+     * @param resource|string    the command stdin
+     */
     public function __construct($command=':', $args=array(), $stdin='')
     {
         $this->setCommand($command);
@@ -17,20 +28,32 @@ class Host_Command
         $this->setStdin($stdin);
     }
 
+    /**
+     * Close all resources open by command
+     */
     public function __destruct() {
-        is_resource($this->process) && proc_close($this->process);
+        $this->finish();
     }
 
+    /**
+     * @return array Args used by command
+     */
     public function getArgs()
     {
         return $this->args ?: array();
     }
-    
+
+    /**
+     * @return string Command called on shell
+     */
     public function getCommand()
     {
         return $this->command ?: ':';
     }
 
+    /**
+     * @return string The command with args called on shell
+     */
     public function getFullCommand()
     {
         $command = $this->getArgs();
@@ -38,11 +61,17 @@ class Host_Command
         return join(' ', $command);
     }
 
+    /**
+     * @return int The command exit code
+     */
     public function getReturn()
     {
         return $this->return;
     }
 
+    /**
+     * @return array The process status, if exists
+     */
     public function getStatus() {
         if (is_resource($this->process)) {
             $status = proc_get_status($this->process);
@@ -50,11 +79,17 @@ class Host_Command
         }
     }
 
+    /**
+     * @return resource The command stderr resource
+     */
     public function getStderr()
     {
         return $this->stderr ?: null;
     }
 
+    /**
+     * @return string The command stderr as string
+     */
     public function getStderrContent()
     {
         if (is_resource($this->stderr)) {
@@ -63,15 +98,24 @@ class Host_Command
         return '';
     }
 
+    /**
+     * @return resource The command stdin resource
+     */
     public function getStdin()
     {
         return $this->stdin ?: null;
     }
 
+    /**
+     * @return resource The command stdout resource
+     */
     public function getStdout() {
         return $this->stdout ?: null;
     }
 
+    /**
+     * @return string The command stdout string
+     */
     public function getStdoutContent()
     {
         if (is_resource($this->stdout)) {
@@ -80,24 +124,32 @@ class Host_Command
         return '';
     }
 
+    /**
+     * Prepare arguments before executing command
+     *
+     * @param  mixed $args String or positional array
+     * @return array       Arguments prepared
+     */
     public function prepareArgs($args)
     {
         $result = array();
         if (is_string($args)) {
             $args = preg_split('/  */', $args);
         }
-        else if(is_object($args)) {
-            $args = get_object_vars($args);
-        }
         if (empty($args)){
             return $result;
         }
         $args = array_flatten($args, true);
         foreach ($args as $arg) {
+            $arg = trim($arg);
             if (strpos($arg, '-') === 0) {
                 if(strpos($arg, '=') > -1) {
                     $arg = explode('=', $arg, 2);
                     $arg = "{$arg[0]}=" . escapeshellarg($arg[1]);
+                }
+                else if(strpos($arg, ' ') > -1) {
+                    $arg = explode(' ', $arg, 2);
+                    $arg = "{$arg[0]} " . escapeshellarg($arg[1]);
                 }
             }
             else {
@@ -108,17 +160,27 @@ class Host_Command
         return $result;
     }
 
+    /**
+     * @param  mixed $args String or positional array
+     * @return array       Arguments prepared
+     */
     public function setArgs($args)
     {
         $args = $this->prepareArgs($args);
         return $this->args = $args;
     }
-    
+
+    /**
+     * @param string $command The command path
+     */
     public function setCommand($command)
     {
         return $this->command = $command ?: ':';
     }
 
+    /**
+     * @param resource $process The process running the command
+     */
     public function setProcess($process)
     {
         if(is_resource($process) && get_resource_type($process) === 'process') {
@@ -126,11 +188,17 @@ class Host_Command
         }
     }
 
+    /**
+     * @param int $return The command exitcode
+     */
     public function setReturn($return)
     {
         return $this->return = $return;
     }
 
+    /**
+     * @param resource|string $stderr The command stderr
+     */
     public function setStderr($stderr)
     {
         if (is_object($stderr) && method_exists($stderr, '__toString')){
@@ -148,6 +216,9 @@ class Host_Command
         return null;
     }
 
+    /**
+     * @param resource|string $stdin The content to command stdin
+     */
     public function setStdin($stdin)
     {
         if (is_object($stdin) && method_exists($stdin, '__toString')){
@@ -165,6 +236,9 @@ class Host_Command
         return null;
     }
 
+    /**
+     * @param resource|string $stdout The command stdout
+     */
     public function setStdout($stdout)
     {
         if (is_object($stdout) && method_exists($stdout, '__toString')){
@@ -182,6 +256,11 @@ class Host_Command
         return null;
     }
 
+    /**
+     * Closes all resources opened by command (process, stdin, stdout, stderr).
+     * This method is also called on __destruct, this means the resources will
+     * also be closed on PHP garbage collecting.
+     */
     public function finish(){
         is_resource($this->process) && proc_terminate($this->process);
         is_resource($this->stdin) && fclose($this->stdin);
@@ -189,11 +268,22 @@ class Host_Command
         is_resource($this->stderr) && fclose($this->stderr);
     }
 
+    /**
+     * Runs this command in a host object
+     *
+     * @param  Host $host    A host object
+     * @return Host_Command  $this
+     */
     public function run($host)
     {
         if(is_resource($this->process)) {
-            proc_close($this->process);
+            throw new Host_CommandException("Host_Command cannot run twice", 1);
         }
         return $host->runCommand($this);
     }
+}
+
+
+class Host_CommandException extends Exception
+{
 }
