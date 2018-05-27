@@ -19,5 +19,19 @@
       "type": "composer",
       "url": "https://composer.tiki.org"
     }
-  ]
+  ],
+  "require-dev": {
+    "phpunit/phpunit": "^5"
+  },
+  "scripts": {
+      "tests": [
+          "find scripts src -name '*.php' -exec php -l {} \\;",
+          "./vendor/bin/phpunit --bootstrap src/env_includes.php tests"
+      ]
+  },
+  "autoload": {
+      "classmap": [
+          "src/"
+      ]
+  }
 }
