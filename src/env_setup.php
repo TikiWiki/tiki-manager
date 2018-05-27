@@ -4,67 +4,14 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-
-define('TRIM_DEBUG', getenv('TRIM_DEBUG') === 'true');
-define('TRIM_ROOT', realpath(dirname(__DIR__)));
-
-if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-    define('INTERACTIVE', php_sapi_name() === 'cli'
-        && getenv('NONINTERACTIVE') !== 'true');
-} else {
-    define('INTERACTIVE',
-        php_sapi_name() === 'cli'
-        && getenv('NONINTERACTIVE') !== 'true'
-        && !in_array(getenv('TERM'), array('dumb', false, ''))
-        && preg_match(',^/dev/,', exec('tty'))
-    );
-}
-
-require_once TRIM_ROOT . '/vendor/autoload.php';
-require_once TRIM_ROOT . '/src/libs/helpers.php';
-require_once TRIM_ROOT . '/src/libs/host/HostCommand.php';
-require_once TRIM_ROOT . '/src/libs/host/LocalHost.php';
-require_once TRIM_ROOT . '/src/libs/host/FTPHost.php';
-require_once TRIM_ROOT . '/src/libs/host/SSHHost.php';
-require_once TRIM_ROOT . '/src/libs/audit/Checksum.php';
-require_once TRIM_ROOT . '/src/libs/trim/Backup.php';
-require_once TRIM_ROOT . '/src/libs/trim/Instance.php';
-require_once TRIM_ROOT . '/src/libs/trim/Version.php';
-require_once TRIM_ROOT . '/src/accesslib.php';
-require_once TRIM_ROOT . '/src/applicationlib.php';
-require_once TRIM_ROOT . '/src/databaselib.php';
-require_once TRIM_ROOT . '/src/rclib.php';
-require_once TRIM_ROOT . '/src/channellib.php';
-require_once TRIM_ROOT . '/src/backupreportlib.php';
-require_once TRIM_ROOT . '/src/reportlib.php';
-require_once TRIM_ROOT . '/src/ext/Password.php';
-
+require_once dirname(__FILE__) . '/env_includes.php';
 debug('Running TRIM at ' . TRIM_ROOT);
-define('TRIM_DATA', TRIM_ROOT . "/data");
-define('DB_FILE', TRIM_DATA . "/trim.db");
-define('SSH_CONFIG', TRIM_DATA . "/ssh_config");
-
-define('CACHE_FOLDER', TRIM_ROOT . "/cache");
-define('TEMP_FOLDER', TRIM_ROOT . "/tmp");
-define('RSYNC_FOLDER', TRIM_ROOT . "/tmp/rsync");
-define('MOUNT_FOLDER', TRIM_ROOT . "/tmp/mount");
-define('BACKUP_FOLDER', TRIM_ROOT . "/backup");
-define('ARCHIVE_FOLDER', TRIM_ROOT . "/backup/archive");
-define('TRIM_OUTPUT', TRIM_ROOT . "/logs/trim.output");
 
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     define('TRIM_TEMP', getenv('TEMP')."\\trim_temp");
 } else {
     define('TRIM_TEMP', '/tmp/trim_temp');
     secure_trim_data(true);
-}
-
-
-if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
-    file_exists(getenv('HOME') . '/.ssh/id_rsa.pub')) {
-
-    define('SSH_KEY', getenv('HOME') . '/.ssh/id_rsa');
-    define('SSH_PUBLIC_KEY', getenv('HOME') . '/.ssh/id_rsa.pub');
 }
 
 if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
@@ -95,27 +42,6 @@ if (file_exists(TRIM_ROOT . "/data/id_dsa") &&
             SSH_KEY, SSH_PUBLIC_KEY
         )
     );
-}
-
-if (!defined('SSH_KEY') && !defined('SSH_PUBLIC_KEY')) {
-    define('SSH_KEY', TRIM_ROOT . "/data/id_rsa");
-    define('SSH_PUBLIC_KEY', TRIM_ROOT . "/data/id_rsa.pub");
-}
-
-if (array_key_exists('EDITOR', $_ENV))
-    define('EDITOR', $_ENV['EDITOR']);
-else {
-    trim_debug('Default editor used (nano). ' .
-        'You can change the EDITOR environment variable.');
-    define('EDITOR', 'nano');
-}
-
-if (array_key_exists('DIFF', $_ENV))
-    define('DIFF', $_ENV['DIFF']);
-else {
-    trim_debug('Default diff used (diff). ' .
-        'You can change the DIFF environment variable.');
-    define('DIFF', 'diff');
 }
 
 // Check for required extensions
