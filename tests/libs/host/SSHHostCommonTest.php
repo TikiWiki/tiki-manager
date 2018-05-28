@@ -178,9 +178,16 @@ abstract class SSH_HostCommonTest extends TestCase
         $remotefile = '/tmp/test-trim-remote-file.txt';
 
         $filedata = uniqid();
+        $filesize = strlen($filedata);
+
         $command = new Host_Command('tee', array($remotefile), $filedata);
         $host->runCommand($command);
         $this->assertEquals(0, $command->getReturn());
+
+        $command = new Host_Command('stat', array('-c', '%s', $remotefile));
+        $host->runCommand($command);
+        $testdata = (int) $command->getStdoutContent();
+        $this->assertEquals($filesize, $testdata, 'Could not create remote file');
 
         $command = new Host_Command('cat', array($remotefile));
         $host->runCommand($command);
@@ -188,7 +195,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $this->assertEquals($filedata, $testdata, 'Could not create remote file');
 
         $host->receiveFile($remotefile, $localfile);
-        $testdata = file_get_contents($localfile);
+        $testdata = file_get_contents($localfile, FILE_BINARY);
         $this->assertEquals($filedata, $testdata, 'The local copy differs from remote source.');
 
         $command = new Host_Command('rm', array($remotefile));

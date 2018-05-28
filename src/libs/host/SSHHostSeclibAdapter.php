@@ -40,7 +40,7 @@ class SSH_Host_Seclib_Adapter {
         if (isset(self::$resources[$key]))
             return self::$resources[$key];
 
-        $handle = new \phpseclib\Net\SSH2($host, $port);
+        $handle = new \phpseclib\Net\SFTP($host, $port);
 
 
         if (!$handle
@@ -95,11 +95,26 @@ class SSH_Host_Seclib_Adapter {
     public function receiveFile($remoteFile, $localFile)
     {
         $handle = self::getExtHandle();
-        $scpHandle = new \phpseclib\Net\SCP($handle);
-        $success = $scpHandle->get($remoteFile, $localFile);
+        $success = $handle->get($remoteFile, $localFile);
         if (! $success) {
             error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
+            return false;
         }
+
+        $remoteSize = $handle->size($remoteFile);
+        $localSize = filesize($localFile);
+
+        if ($localSize > $remoteSize) {
+            $f = fopen($localFile, 'r+');
+            ftruncate($f, $remoteSize);
+            fclose($f);
+        }
+
+        $remoteCheck = escapeshellarg("echo md5_file('$remoteFile');");
+        $remoteCheck = $handle->exec("php -r $remoteCheck");
+        $localCheck = md5_file($localFile);
+
+        $success = $localCheck === $remoteCheck;
         return $success;
     }
 
@@ -121,8 +136,9 @@ class SSH_Host_Seclib_Adapter {
         $stdin = $command->getStdinContent();
 
         if ($stdin) {
-            $commandLine = '(' . $commandLine . ')';
-            $commandLine .= "<<EOF\n{$stdin}\nEOF";
+            $stdinLen = strlen($stdin);
+            $commandLine = "(head -c $stdinLen <<EOF\n{$stdin}\nEOF\n)"
+                        . '| (' . $commandLine . ')';
         }
 
         $envLine = $this->prepareEnv($env);
@@ -163,11 +179,10 @@ class SSH_Host_Seclib_Adapter {
     public function sendFile($localFile, $remoteFile)
     {
         $handle = self::getExtHandle();
-        $scpHandle = new \phpseclib\Net\SCP($handle);
-        $success = $scpHandle->put(
+        $success = $handle->put(
             $remoteFile,
             file_get_contents($localFile),
-            \phpseclib\Net\SCP::SOURCE_STRING
+            \phpseclib\Net\SFTP::SOURCE_STRING
         );
         if (! $success) {
             error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
