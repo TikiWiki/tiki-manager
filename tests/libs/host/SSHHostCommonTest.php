@@ -111,6 +111,54 @@ abstract class SSH_HostCommonTest extends TestCase
         $this->assertEquals(0, $return);
     }
 
+    public function testRunCommandWithPhpCodeAsStdIn()
+    {
+        $host = $this->getInstance();
+        $code = "<?php echo explode(' ', getenv('SSH_CONNECTION'))[2];";
+
+        $command = new Host_Command('php', array(), $code);
+        $command->run($host);
+
+        $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
+        $this->assertEquals(self::TARGET_HOST, $command->getStdoutContent());
+        $this->assertEmpty($command->getStderrContent());
+    }
+
+    public function testRunCommandDoNotChangeStdinSize()
+    {
+        $host = $this->getInstance();
+        $text = "Hello,\n\nThis text has 31 bytes.";
+
+        $command = new Host_Command('wc', array('-c'), $text);
+        $command->run($host);
+
+        $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
+        $this->assertEquals(strlen($text), (int) $command->getStdoutContent());
+        $this->assertEmpty($command->getStderrContent());
+
+        $text = "Olá,\nO stdin não pode ter seu tamanho alterado.";
+
+        $command = new Host_Command('wc', array('-c'), $text);
+        $command->run($host);
+
+        $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
+        $this->assertEquals(strlen($text), (int) $command->getStdoutContent());
+        $this->assertEmpty($command->getStderrContent());
+    }
+
+    public function testRunCommandDoNotChangeStdinContent()
+    {
+        $host = $this->getInstance();
+        $text = "Hello,\n\nThis text has 31 bytes.";
+
+        $command = new Host_Command('md5sum', array(), $text);
+        $command->run($host);
+
+        $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
+        $this->assertStringStartsWith(md5($text), $command->getStdoutContent());
+        $this->assertEmpty($command->getStderrContent());
+    }
+
     public function testOldRunCommandsMethodStillWorks()
     {
         $host = $this->getInstance();
