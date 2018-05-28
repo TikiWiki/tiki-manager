@@ -45,22 +45,6 @@ class SSH_Host
         $this->env[$var] = $value;
     }
 
-    function getEnvLine($env=null) {
-        $env = $env ?: $this->env;
-
-        if (!is_array($env) || empty($env)) {
-            return '';
-        }
-
-        $line = '';
-        foreach ($env as $key => $value) {
-            $value = preg_replace('/(\s)/', '\\\$1', $value);
-            $value = sprintf('export %s=%s', $key, $value);
-            $line .= escapeshellarg($value) . '\;';
-        }
-        return $line;
-    }
-
     private function getExtHandle()
     {
         $host = $this->host;
@@ -135,53 +119,52 @@ class SSH_Host
         }
     }
 
-    function runCommand($command, $options=array())
+    public function runCommand($command, $options=array())
     {
+        $handle = self::getExtHandle();
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
         $env = !empty($options['env']) ? $options['env'] : $this->env;
 
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-            3 => array("pipe", "w")
-        );
+        $quietMode = $handle->isQuietModeEnabled();
+        $handle->disableQuietMode();
 
-        $cwd = !empty($cwd) ? sprintf('cd %s;', $cwd) : '';
-        $env = $this->getEnvLine($env);
+        $envLine = '';
+        foreach ($env as $key => $value) {
+            $envLine .= $key . '=' . escapeshellarg($value) . ';';
+        }
 
-        $commandLine = $this->getSshCommandPrefix();
-        $commandLine .= ' ';
-        $commandLine .= $env;
+        $commandLine = '';
+        if ($cwd) {
+            $commandLine .= 'cd ' . escapeshellarg($value) . ';';
+        }
+
         $commandLine .= $command->getFullCommand();
-        $commandLine .= '; echo $? >&3';
+        $stdin = $command->getStdinContent();
 
-        $process = proc_open($commandLine, $descriptorspec, $pipes);
-
-        if (!is_resource($process)) {
-            $command->setReturn(-1);
-            return $command;
+        if ($stdin) {
+            $commandLine = '(' . $commandLine . ')';
+            $commandLine .= "<<EOF\n{$stdin}\nEOF";
         }
 
-        $stdin = $command->getStdin();
-        if (is_resource($stdin)) {
-            stream_copy_to_stream($stdin, $pipes[0]);
+        $commandLine = $envLine . $commandLine;
+        $stdout = $handle->exec($commandLine);
+        if ($stdin) {
+            $stdout = rtrim($stdout);
         }
-        fclose($pipes[0]);
+        $command->setStdout($stdout);
 
-        $return = stream_get_contents($pipes[3]);
-        $return = intval(trim($return));
-        fclose($pipes[3]);
+        $stderr = $handle->getStdError();
+        $command->setStderr($stderr);
 
-        $command->setStdout($pipes[1]);
-        $command->setStderr($pipes[2]);
-        $command->setProcess($process);
+        $return = $handle->getExitStatus();
         $command->setReturn($return);
+
+        if ($quietMode) {
+            $handle->enableQuietMode();
+        }
 
         return $command;
     }
-
 
     function runCommands($commands, $output = false)
     {
@@ -316,3 +299,133 @@ class SSH_Host
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
+
+class SSH_Host_Wrapper_Adapter {
+    private $host;
+    private $user;
+    private $port;
+    private $env;
+    private $location;
+
+    public function __construct($host, $user, $port)
+    {
+        $this->host = $host;
+        $this->user = $user;
+        $this->port = $port ?: 22;
+        $this->env  = $_ENV ?: array();
+        $this->location = '';
+    }
+
+    private function getHost()
+    {
+        return $this->host;
+    }
+
+    private function getUser()
+    {
+        return $this->user;
+    }
+
+    private function getPort()
+    {
+        return $this->port;
+    }
+
+    private function getEnv()
+    {
+        return $this->env;
+    }
+
+    private function getLocation()
+    {
+        return $this->location;
+    }
+
+    private function getEnvLine($env=null) {
+        $env = $env ?: $this->env;
+
+        if (!is_array($env) || empty($env)) {
+            return '';
+        }
+
+        $line = '';
+        foreach ($env as $key => $value) {
+            $value = preg_replace('/(\s)/', '\\\$1', $value);
+            $value = sprintf('export %s=%s', $key, $value);
+            $line .= escapeshellarg($value) . '\;';
+        }
+        return $line;
+    }
+
+    public function runCommand($command, $options=array())
+    {
+        $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
+        $env = !empty($options['env']) ? $options['env'] : $this->env;
+
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+            3 => array("pipe", "w")
+        );
+
+        $cwd = !empty($cwd) ? sprintf('cd %s;', $cwd) : '';
+        $env = $this->getEnvLine($env);
+
+        $commandLine = $this->getSshCommandPrefix();
+        $commandLine .= ' ';
+        $commandLine .= $env;
+        $commandLine .= $command->getFullCommand();
+        $commandLine .= '; echo $? >&3';
+
+        $process = proc_open($commandLine, $descriptorspec, $pipes);
+
+        if (!is_resource($process)) {
+            $command->setReturn(-1);
+            return $command;
+        }
+
+        $stdin = $command->getStdin();
+        if (is_resource($stdin)) {
+            stream_copy_to_stream($stdin, $pipes[0]);
+        }
+        fclose($pipes[0]);
+
+        $return = stream_get_contents($pipes[3]);
+        $return = intval(trim($return));
+        fclose($pipes[3]);
+
+        $command->setStdout($pipes[1]);
+        $command->setStderr($pipes[2]);
+        $command->setProcess($process);
+        $command->setReturn($return);
+
+        return $command;
+    }
+
+    public function setHost($host)
+    {
+        $this->host = $host;
+    }
+
+    public function setUser($user)
+    {
+        $this->user = $user;
+    }
+
+    public function setPort($port)
+    {
+        $this->port = $port ?: 22;
+    }
+
+    public function setEnv($env)
+    {
+        $this->env = $env ?: array();
+    }
+
+    public function setLocation($location)
+    {
+        $this->location = $location;
+    }
+}
