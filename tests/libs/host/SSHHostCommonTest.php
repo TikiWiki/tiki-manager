@@ -182,9 +182,14 @@ abstract class SSH_HostCommonTest extends TestCase
         $host->runCommand($command);
         $this->assertEquals(0, $command->getReturn());
 
+        $command = new Host_Command('cat', array($remotefile));
+        $host->runCommand($command);
+        $testdata = $command->getStdoutContent();
+        $this->assertEquals($filedata, $testdata, 'Could not create remote file');
+
         $host->receiveFile($remotefile, $localfile);
         $testdata = file_get_contents($localfile);
-        $this->assertEquals($filedata, $testdata);
+        $this->assertEquals($filedata, $testdata, 'The local copy differs from remote source.');
 
         $command = new Host_Command('rm', array($remotefile));
         $host->runCommand($command);
