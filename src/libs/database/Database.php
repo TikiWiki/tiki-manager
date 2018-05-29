@@ -78,7 +78,7 @@ class Database
 
     static function createFromConfig($instance, $db_local_path)
     {
-        if (!file_exists($db_local_path)) {
+        if (! (file_exists($db_local_path) && filesize($db_local_path) > 0)) {
             return null;
         }
 
