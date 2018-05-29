@@ -46,14 +46,12 @@ class Database
         throw new DatabaseError("Can't connect to database", 2);
     }
 
-    public function createAccess($prefix)
+    public function createAccess($user, $dbname, $pass=null)
     {
-        $pass = Text_Password::create(12, 'unpronounceable');
-        $user = "{$prefix}_user";
-        $dbname = "{$prefix}_db";
+        $pass = $pass ?: Text_Password::create(12, 'unpronounceable');
 
-        $success = $this->createUser($user, $pass)
-            && $this->createDatabase($dbname)
+        $success = $this->createDatabase($dbname)
+            && $this->createUser($user, $pass)
             && $this->grantRights($user, $dbname)
             && $this->finalize();
 
@@ -73,7 +71,7 @@ class Database
 
     public function createDatabase($name)
     {
-        $sql = sprintf("CREATE DATABASE `%s`;", $name);
+        $sql = sprintf("CREATE DATABASE IF NOT EXISTS `%s`;", $name);
         $result = $this->query($sql);
         return $this;
     }
@@ -123,6 +121,14 @@ class Database
         );
         $result = $this->query($sql);
         return $this;
+    }
+
+    public function databaseExists($dbname)
+    {
+        $dbname = $dbname ?: $this->dbname;
+        $sql = sprintf('SHOW DATABASES LIKE "%s"', $dbname);
+        $result = $this->query($sql);
+        return trim($result) === $dbname;
     }
 
     public function finalize()
@@ -230,6 +236,20 @@ class Database
             error($e->getMessage());
         }
         return false;
+    }
+
+    public function userExists($user)
+    {
+        $user = $user ?: $this->user;
+        $host = $this->host === 'localhost' ? $this->host : '%';
+
+        $sql = sprintf(
+            'SELECT user FROM mysql.user'
+            . ' WHERE user="%s" AND host="%s"',
+            $user, $host
+        );
+        $result = $this->query($sql);
+        return trim($result) === $user;
     }
 }
 

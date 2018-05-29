@@ -145,16 +145,42 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             $dbUser->dbname = promptUser('Database name', 'tiki_db');
         } else {
             $maxPrefixLength = $dbRoot->getMaxUsernameLength($instance) - 5;
+            warning("Prefix is a string with maximum of {$maxPrefixLength} chars");
 
             $prefix = 'tiki';
             while(!is_object($dbUser)) {
-                warning("Prefix is a string with maximum of $maxPrefixLength chars");
                 $prefix = promptUser('Prefix to use for username and database', $prefix);
 
-                if(strlen($prefix) <= $maxPrefixLength) {
-                    $dbUser = $dbRoot->createAccess($prefix);
-                } else {
+                if(strlen($prefix) > $maxPrefixLength) {
+                    error("Prefix is a string with maximum of {$maxPrefixLength} chars");
                     $prefix = substr($prefix, 0, $maxPrefixLength);
+                    continue;
+                }
+
+                $username = "{$prefix}_user";
+                if($dbRoot->userExists($username)) {
+                    error("User '$username' already exists, can't proceed.");
+                    continue;
+                }
+
+                $dbname = "{$prefix}_db";
+                if($dbRoot->databaseExists($dbname)) {
+                    warning("Database '$dbname' already exists");
+                    if(promptUser('Continue?', 'y', ['y', 'n']) === 'n') {
+                        continue;
+                    }
+                }
+
+                try {
+                    $dbUser = $dbRoot->createAccess($username, $dbname);
+                } catch(DatabaseError $e) {
+                    error("Can't setup database!");
+                    error($e->getMessage());
+
+                    if(promptUser('(a)abort, (r)retry:', 'a', ['a', 'r']) === 'a') {
+                        error('Aborting');
+                        return;
+                    }
                 }
             }
         }
