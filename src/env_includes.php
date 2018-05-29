@@ -12,7 +12,7 @@ require_once TRIM_ROOT . '/src/libs/trim/Instance.php';
 require_once TRIM_ROOT . '/src/libs/trim/Version.php';
 require_once TRIM_ROOT . '/src/accesslib.php';
 require_once TRIM_ROOT . '/src/applicationlib.php';
-require_once TRIM_ROOT . '/src/databaselib.php';
+require_once TRIM_ROOT . '/src/libs/database/Database.php';
 require_once TRIM_ROOT . '/src/rclib.php';
 require_once TRIM_ROOT . '/src/channellib.php';
 require_once TRIM_ROOT . '/src/backupreportlib.php';

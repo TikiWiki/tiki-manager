@@ -139,6 +139,8 @@ interface ShellPrompt
     function setenv($var, $value);
 
     function hasExecutable($name);
+
+    function runCommand($command, $options=array());
 }
 
 interface Mountable
@@ -458,6 +460,20 @@ class Access_Local extends Access implements ShellPrompt
             $host->setenv($key, $value);
 
         return $host->runCommands($commands, $output);
+    }
+
+    function runCommand($command, $options=array())
+    {
+        $host = $this->getHost();
+
+        if ($this->location) {
+            $options['cwd'] = $this->location;
+        }
+        if ($this->env) {
+            $options['env'] = $this->env;
+        }
+
+        return $command->run($host);
     }
 
     function openShell($workingDir = '')
@@ -791,6 +807,20 @@ class Access_SSH extends Access implements ShellPrompt
             $host->setenv($key, $value);
 
         return $host->runCommands($commands, $output);
+    }
+
+    function runCommand($command, $options=array())
+    {
+        $host = $this->getHost();
+
+        if ($this->location) {
+            $options['cwd'] = $this->location;
+        }
+        if ($this->env) {
+            $options['env'] = $this->env;
+        }
+
+        return $command->run($host);
     }
 
     function openShell($workingDir = '')

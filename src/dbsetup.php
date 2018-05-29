@@ -103,119 +103,68 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
     info(sprintf("Performing database %s...",
         ($remoteBackupFile) ? 'restore' : 'setup'));
 
-    $db = null;
-    $adapter = new Database_Adapter_Dummy();
-
+    $dbUser = null;
     $access = $instance->getBestAccess('scripting');
 
     if (! $remoteBackupFile && ! ($access instanceof ShellPrompt))
         die(error('Can not setup database in non-interactive mode.'));
 
     if ($remoteBackupFile) {
-
         $remoteFile = "{$instance->webroot}/db/local.php";
         $localFile = $access->downloadFile($remoteFile);
-
-        if (filesize($localFile)) {
-
-            include $localFile;
-
-            $db = new Database($instance, $adapter);
-            $db->type = $db_tiki;
-            $db->host = $host_tiki;
-            $db->user = $user_tiki;
-            $db->pass = $pass_tiki;
-            $db->dbname = $dbs_tiki;
-
-            if (! perform_database_connectivity_test($instance, $db)) {
-                $db = null;
-                if (! ($access instanceof ShellPrompt)) {
-                    die(error(
-                        'Can not prompt for database credentials in ' .
-                        'non-interactive mode.'
-                    ));
-                }
-            }
-
-            $db->dbLocalContent = file_get_contents($localFile);
-        }
+        $dbUser = Database::createFromConfig($instance, $localFile);
         unlink($localFile);
     }
 
-    if ($db === null) {
+    if ($dbUser === null) {
         warning(
             'WARNING: Creating databases and users requires ' .
             'root privileges on MySQL.'
         );
 
-        $type = 'y';
-        $new_db_prefix = getenv('NEW_DB_PREFIX');
-        if (empty($new_db_prefix)) {
-            $type = strtolower(
-                promptUser(
-                    'Should a new database and user be created now (both)?',
-                    'yes', array('yes', 'no')
-                )
-            );
-        }
+        $dbRoot = new Database($instance);
+        $valid = false;
+        while (!$valid) {
+            $dbRoot->host = strtolower(promptUser('Database host', $dbRoot->host ?: 'localhost'));
+            $dbRoot->user = strtolower(promptUser('Database user', $dbRoot->user ?: 'root'));
 
-        $db = new Database($instance, $adapter);
-        $db->host = getenv('MYSQL_HOST') ?: 'localhost';
-        $db->user = getenv('MYSQL_ROOT_USER') ?: 'root';
-        $db->pass = getenv('MYSQL_ROOT_PASSWORD') ?: '';
-        $ok = perform_database_connectivity_test($instance, $db);
-
-        while (!$ok) {
-            $db->host = strtolower(
-                promptUser('Database host', 'localhost'));
-            $db->user = strtolower(
-                promptUser('Database user', 'root'));
-            print 'Database password : ';
-            $db->pass = getPassword(true); print "\n";
-            $ok = perform_database_connectivity_test($instance, $db);
+            print 'Database password: ';
+            $dbRoot->pass = getPassword(true);
+            print "\n";
+            $valid = $dbRoot->testConnection();
         }
         debug('Connected to MySQL with adminstrative privileges');
+        
+        $type = strtolower(promptUser(
+            'Should a new database and user be created now (both)? ',
+            'y', array('y', 'n')
+        ));
 
-        if (strtolower($type{0}) == 'n')
-            $db->dbname = promptUser('Database name', 'tiki_db');
-        else {
-            $adapter = new Database_Adapter_Mysql(
-                $db->host, $db->user, $db->pass);
-            $db_new = new Database($instance, $adapter);
-            $db_new->host = $db->host;
-
-            $max_username_length = $adapter->getMaxUsernameLength($instance) ?: 16;
-            $max_prefix_length = $max_username_length - 5; // strlen('_user') == 5;
+        if (strtolower($type{0}) == 'n') {
+            $dbUser = $dbRoot;
+            $dbUser->dbname = promptUser('Database name', 'tiki_db');
+        } else {
+            $maxPrefixLength = $dbRoot->getMaxUsernameLength($instance) - 5;
 
             $prefix = 'tiki';
-
-            $ok = false;
-            if (!empty($new_db_prefix)) {
-                $prefix = $new_db_prefix ?: $prefix;
-                $ok = $db_new->createAccess($prefix);
-                $ok && debug("Got prefix '{$prefix}' from environment");
-            }
-
-            while(!$ok) {
-                warning("Prefix is a string with maximum of $max_prefix_length chars");
+            while(!is_object($dbUser)) {
+                warning("Prefix is a string with maximum of $maxPrefixLength chars");
                 $prefix = promptUser('Prefix to use for username and database', $prefix);
 
-                if(strlen($prefix) <= $max_prefix_length) {
-                    $ok = $db_new->createAccess($prefix);
+                if(strlen($prefix) <= $maxPrefixLength) {
+                    $dbUser = $dbRoot->createAccess($prefix);
                 } else {
-                    $prefix = substr($prefix, 0, $max_prefix_length);
+                    $prefix = substr($prefix, 0, $maxPrefixLength);
                 }
             }
-
-            $db = $db_new;
         }
 
-        $types = $db->getUsableExtensions();
+        $types = $dbUser->getUsableExtensions();
         $type = getenv('MYSQL_DRIVER');
-        $db->type = $type;
+        $dbUser->type = $type;
 
         if (count($types) == 1) {
-            $db->type = reset($types);
+            $dbUser->type = reset($types);
         } else if(empty($type)) {
             echo "Which extension should be used?\n";
             foreach ($types as $key => $name)
@@ -223,16 +172,16 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
 
             $selection = promptUser('>>> ', '0');
             if (array_key_exists( $selection, $types))
-                $db->type = $types[$selection];
+                $dbUser->type = $types[$selection];
             else
-                $db->type = reset($types);
+                $dbUser->type = reset($types);
         }
     }
     
     if ($remoteBackupFile)
-        $instance->getApplication()->restoreDatabase($db, $remoteBackupFile);
+        $instance->getApplication()->restoreDatabase($dbUser, $remoteBackupFile);
     else
-        $instance->getApplication()->setupDatabase($db);
+        $instance->getApplication()->setupDatabase($dbUser);
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

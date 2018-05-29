@@ -285,12 +285,12 @@ class Host_Command
      * @param  Host $host    A host object
      * @return Host_Command  $this
      */
-    public function run($host)
+    public function run($host, $options=array())
     {
-        if(is_resource($this->process)) {
+        if(is_resource($this->process) || !is_null($this->return)) {
             throw new Host_CommandException("Host_Command cannot run twice", 1);
         }
-        return $host->runCommand($this);
+        return $host->runCommand($this, $options);
     }
 }
 

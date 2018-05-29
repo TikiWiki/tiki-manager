@@ -87,39 +87,6 @@ else {
     }
 }
 
-$is_test_db_conn = (promptUser('Do you want to test the DB connection?', 'n', ['y', 'n']) == 'y');
-if ($is_test_db_conn) {
-    $database = null;
-    $adapter = new Database_Adapter_Dummy();
-
-    $database = new Database($instance, $adapter);
-    $database->host = getenv('MYSQL_HOST') ?: 'localhost';
-    $database->user = getenv('MYSQL_ROOT_USER') ?: 'root';
-    $database->pass = getenv('MYSQL_ROOT_PASSWORD') ?: '';
-    $ok = perform_database_connectivity_test($instance, $database);
-
-    while (!$ok) {
-        $is_try_again = (promptUser('Do you want to try again?', 'n', ['y', 'n']) == 'y');
-        if ($is_try_again == false) {
-            break;
-        }
-
-        $database->host = strtolower(promptUser('Database host', 'localhost'));
-        $database->user = strtolower(promptUser('Database user', 'root'));
-        print 'Database password : ';
-        $database->pass = getPassword(true);
-        print "\n";
-        $ok = perform_database_connectivity_test($instance, $database);
-    }
-
-    if ($ok) {
-        echo color("Succeed to connect to database.\n", 'green');
-        putenv('MYSQL_HOST=' . $database->host);
-        putenv('MYSQL_ROOT_USER=' . $database->user);
-        putenv('MYSQL_ROOT_PASSWORD=' . $database->pass);
-    }
-}
-
 $d_linux = $instance->detectDistribution();
 info("You are running : $d_linux");
 
