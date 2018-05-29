@@ -179,7 +179,7 @@ class DatabaseLocalTest extends TestCase
     {
         $pdo = $this->getConnection();
         $dbRoot = $this->getDBInstance();
-        $dbUser = $dbRoot->createAccess(self::TEST_PREFIX);
+        $dbUser = $dbRoot->createAccess(self::TEST_USER, self::TEST_DB);
 
         $this->assertNotEmpty($dbUser);
         $this->assertTrue($dbUser->testConnection());
