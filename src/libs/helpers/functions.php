@@ -225,3 +225,32 @@ function array_flatten ($array, $objectFlat=false)
 
     return $result;
 }
+
+/**
+ * @author http://php.net/manual/pt_BR/function.realpath.php#84012
+ */
+function get_absolute_path($path) {
+    $path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path);
+    $parts = explode(DIRECTORY_SEPARATOR, $path);
+    $parts = array_filter($parts, 'strlen');
+
+    $absolutes = array();
+    foreach ($parts as $part) {
+        if ('.' == $part) {
+            continue;
+        }
+        if ('..' == $part) {
+            array_pop($absolutes);
+        } else {
+            $absolutes[] = $part;
+        }
+    }
+
+    if(substr($path, 0, 1) === DIRECTORY_SEPARATOR) {
+        $path = DIRECTORY_SEPARATOR;
+    } else {
+        $path = '';
+    }
+
+    return $path . implode(DIRECTORY_SEPARATOR, $absolutes);
+}
