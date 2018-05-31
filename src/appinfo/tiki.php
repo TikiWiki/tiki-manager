@@ -173,9 +173,6 @@ class Application_Tiki extends Application
 
             $line = rtrim($line, '/');
 
-            if ($line{0} != '/')
-                $line = "{$this->instance->webroot}/$line";
-
             if (! empty($line))
                 $folders['data'][] = $line;
         }
