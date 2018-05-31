@@ -2,19 +2,19 @@
 
 class Backup 
 {
-    private $access;
-    private $app;
-    private $archiveDir;
-    private $archiveRoot;
-    private $backupDir;
-    private $backupDirname;
-    private $backupRoot;
-    private $errors;
-    private $fileGroup;
-    private $filePerm;
-    private $fileUser;
-    private $instance;
-    private $workpath;
+    protected $access;
+    protected $app;
+    protected $archiveDir;
+    protected $archiveRoot;
+    protected $backupDir;
+    protected $backupDirname;
+    protected $backupRoot;
+    protected $errors;
+    protected $fileGroup;
+    protected $filePerm;
+    protected $fileUser;
+    protected $instance;
+    protected $workpath;
 
     public function __construct($instance)
     {
@@ -49,7 +49,7 @@ class Backup
             $error_code = $access->localizeFolder($dir, $destDir);
 
             if ($error_code) {
-                if(array_key_exists($errors, $error_code)) {
+                if(array_key_exists($this->errors, $error_code)) {
                     $this->errors[$error_code][] = $dir;
                 } else {
                     $this->errors[$error_code] = array($error_code => $dir);
@@ -62,7 +62,7 @@ class Backup
         if(!empty($this->errors)) {
             throw new BackupCopyException(
                 $this->errors,
-                BackupCopyException::RSYNC_CODE
+                BackupCopyException::RSYNC_ERROR
             );
         }
 
@@ -196,9 +196,8 @@ class Backup
 
     public function getAccess($instance=null)
     {
-        $access = null;
         $instance = $instance ?: $this->instance;
-        $access = $access ?: $instance->getBestAccess('scripting');
+        $access = $instance->getBestAccess('scripting');
         return $access;
     }
 
@@ -208,6 +207,11 @@ class Backup
         $instance = $instance ?: $this->instance;
         $globPattern = "{$archiveRoot}/{$instance->id}-*/{$instance->id}*_*.tar.bz2";
         return array_reverse(glob($globPattern));
+    }
+
+    public function getBackupDir()
+    {
+        return $this->backupDir;
     }
 
     public function getTargetDirectories()
@@ -260,7 +264,7 @@ class Backup
 
 class BackupCopyException extends Exception
 {
-    const RSYNC_FLAG = 1;
+    const RSYNC_ERROR = 1;
     private $RSYNC_ERRORS = array(
         0  => 'Success',
         1  => 'Syntax or usage error',
