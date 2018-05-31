@@ -518,6 +518,9 @@ class Instance
 
     function restore($src_app, $archive, $clone = false)
     {
+        $access = $this->getBestAccess('scripting');
+
+        info("Restoring files from " . basename('$archive') . " into {$this->name}");
         $restore = new Restore($this);
         $restore->restoreFiles($archive);
 
@@ -530,8 +533,8 @@ class Instance
         $version->save();
         $this->save();
 
-        perform_database_setup($this,
-            "{$this->tempdir}/restore/{$basetardir}/database_dump.sql");
+        $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
+        perform_database_setup($this, $database_dump);
 
         info('Cleaning up...');
         perform_instance_installation($this);
