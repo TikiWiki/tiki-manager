@@ -11,119 +11,79 @@ class Application_Tiki extends Application
     private $installType = null;
     private $branch = null;
     private $installed = null;
-
-    function getName()
-    {
-        return 'tiki';
-    }
-
-    function getVersions()
-    {
-        $versions = array();
-
-        $base = SVN_TIKIWIKI_URI;
-        $versionsTemp = array();
-        foreach (explode("\n", `svn ls $base/tags`) as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            if (substr($line, -1) == '/' && ctype_digit($line{0}))
-                $versionsTemp[] = 'svn:tags/' . substr($line, 0, -1);
-        }
-        sort($versionsTemp, SORT_NATURAL);
-        $versions = array_merge($versions, $versionsTemp);
-
-        $versionsTemp = array();
-        foreach (explode("\n", `svn ls $base/branches`) as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            if (substr($line, -1) == '/' && ctype_digit($line{0}))
-                $versionsTemp[] = 'svn:branches/' . substr($line, 0, -1);
-        }
-        sort($versionsTemp, SORT_NATURAL);
-        $versions = array_merge($versions, $versionsTemp);
-
-        // Trunk as last option
-        $versions[] = 'svn:trunk';
-
-        $versions_sorted = array();
-        foreach ($versions as $version) {
-            list($type, $branch) = explode(':', $version);
-            $versions_sorted[] = Version::buildFake($type, $branch);
-        }
-
-        return $versions_sorted;
-    }
-
-    function isInstalled()
-    {
-        if (! is_null($this->installed))
-            return $this->installed;
-
-        $access = $this->instance->getBestAccess('filetransfer');
-        $checkpath = $this->instance->getWebPath('tiki-setup.php');
-        $this->installed = $access->fileExists($checkpath);
-        return $this->installed;
-    }
-
-    function getInstallType()
-    {
-        if (! is_null($this->installType))
-            return $this->installType;
-
-        $access = $this->instance->getBestAccess('filetransfer');
-        $checkpaths = array(
-            $this->instance->getWebPath('.svn/entries'),
-            $this->instance->getWebPath('.svn/wc.db')
-        );
-
-        foreach ($checkpaths as $path) {
-            if($access->fileExists($path)) {
-                return $this->installType = 'svn';
-            }
-        }
-        return $this->installType = 'tarball';
-    }
-
-    function install(Version $version)
+    
+    function backupDatabase($target)
     {
         $access = $this->instance->getBestAccess('scripting');
-        $host = $access->getHost();
-
-        $folder = cache_folder($this, $version);
-        $this->extractTo($version, $folder);
-
         if ($access instanceof ShellPrompt) {
-            $host->rsync(array(
-                'src' =>  rtrim($folder, '/') . '/',
-                'dest' => rtrim($this->instance->webroot, '/') . '/'
-            ));
+            $randomName = md5(time() . 'trimbackup') . '.sql.gz';
+            $remoteFile = $this->instance->getWorkPath($randomName);
+            $access->runPHP(
+                dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
+                array($this->instance->webroot, $remoteFile));
+            $localName = $access->downloadFile($remoteFile);
+            $access->deleteFile($remoteFile);
+
+            `zcat $localName > '$target'`;
+            unlink($localName);
         }
         else {
-            $access->copyLocalFolder($folder);
+            $data = $access->runPHP(
+                dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php');
+            file_put_contents($target, $data);
         }
+    }
 
-        $this->branch = $version->branch;
-        $this->installType = $version->type;
-        $this->installed = true;
+    function beforeChecksumCollect()
+    {
+        $this->removeTemporaryFiles();
+    }
 
-        $version = $this->registerCurrentInstallation();
-        $this->fixPermissions(); // it also runs composer!
-
-        if (! $access->fileExists($this->instance->getWebPath('.htaccess'))) {
-            $access->uploadFile(
-                $this->instance->getWebPath('_htaccess'),
-                $this->instance->getWebPath('.htaccess')
-            );
+    function extractTo(Version $version, $folder)
+    {
+        if (file_exists($folder)) {
+            `svn revert --recursive  $folder`;
+            `svn cleanup --remove-ignored  --remove-unversioned  $folder`;
+            `svn up --non-interactive $folder`;
         }
+        else {
+            $command = $this->getExtractCommand($version, $folder);
+            `$command`;
+        }
+    }
+
+    function fixPermissions()
+    {
+        $access = $this->instance->getBestAccess('scripting');
 
         if ($access instanceof ShellPrompt) {
-            $access->shellExec('touch ' .
-                escapeshellarg($this->instance->getWebPath('db/lock')));
-        }
+            $webroot = $this->instance->webroot;
+            $access->chdir($this->instance->webroot);
 
-        $version->collectChecksumFromInstance($this->instance);
+            if ($this->instance->hasConsole()) {
+                $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
+            } else {
+                warning('Old Tiki detected, running bundled TRIM setup.sh script.');
+                $filename = $this->instance->getWorkPath('setup.sh');
+                $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
+                $ret = $access->shellExec("cd $webroot && bash " . escapeshellarg($filename));
+            }
+        }
+    }
+
+    private function formatBranch($version)
+    {
+        if (substr($version, 0, 4) == '1.9.')
+            return 'REL-' . str_replace('.', '-', $version);
+        elseif ($this->getInstallType() == 'svn')
+            return "tags/$version";
+        elseif ($this->getInstallType() == 'tarball')
+            return "tags/$version";
+    }
+
+    function getAcceptableExtensions()
+    {
+        return array('mysqli', 'mysql');
     }
 
     function getBranch()
@@ -187,12 +147,64 @@ class Application_Tiki extends Application
         return $this->branch = $branch;
     }
 
-    function getUpdateDate()
+    private function getExtractCommand($version, $folder)
     {
-        $access = $this->instance->getBestAccess('filetransfer');
-        $date = $access->fileModificationDate($this->instance->getWebPath('tiki-setup.php'));
+        if ($version->type == 'svn' || $version->type == 'tarball') {
+            $branch = SVN_TIKIWIKI_URI . "/{$version->branch}";
+            $branch = str_replace('/./', '/', $branch);
+            $branch = escapeshellarg($branch);
+            return "svn co $branch $folder";
+        }
+    }
 
-        return $date;
+    function getFileLocations()
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        $out = $access->runPHP(
+            dirname(__FILE__) . '/../../scripts/tiki/get_directory_list.php',
+            array($this->instance->webroot)
+        );
+
+        $folders['app'] = array($this->instance->webroot);
+
+        foreach (explode("\n", $out ) as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            $line = rtrim($line, '/');
+
+            if ($line{0} != '/')
+                $line = "{$this->instance->webroot}/$line";
+
+            if (! empty($line))
+                $folders['data'][] = $line;
+        }
+
+        return $folders;
+    }
+
+    function getInstallType()
+    {
+        if (! is_null($this->installType))
+            return $this->installType;
+
+        $access = $this->instance->getBestAccess('filetransfer');
+        $checkpaths = array(
+            $this->instance->getWebPath('.svn/entries'),
+            $this->instance->getWebPath('.svn/wc.db')
+        );
+
+        foreach ($checkpaths as $path) {
+            if($access->fileExists($path)) {
+                return $this->installType = 'svn';
+            }
+        }
+        return $this->installType = 'tarball';
+    }
+
+    function getName()
+    {
+        return 'tiki';
     }
 
     function getSourceFile(Version $version, $filename)
@@ -213,27 +225,110 @@ class Application_Tiki extends Application
         return $local;
     }
 
-    private function getExtractCommand($version, $folder)
+    function getUpdateDate()
     {
-        if ($version->type == 'svn' || $version->type == 'tarball') {
-            $branch = SVN_TIKIWIKI_URI . "/{$version->branch}";
-            $branch = str_replace('/./', '/', $branch);
-            $branch = escapeshellarg($branch);
-            return "svn co $branch $folder";
-        }
+        $access = $this->instance->getBestAccess('filetransfer');
+        $date = $access->fileModificationDate($this->instance->getWebPath('tiki-setup.php'));
+
+        return $date;
     }
 
-    function extractTo(Version $version, $folder)
+    function getVersions()
     {
-        if (file_exists($folder)) {
-            `svn revert --recursive  $folder`;
-            `svn cleanup --remove-ignored  --remove-unversioned  $folder`;
-            `svn up --non-interactive $folder`;
+        $versions = array();
+
+        $base = SVN_TIKIWIKI_URI;
+        $versionsTemp = array();
+        foreach (explode("\n", `svn ls $base/tags`) as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            if (substr($line, -1) == '/' && ctype_digit($line{0}))
+                $versionsTemp[] = 'svn:tags/' . substr($line, 0, -1);
+        }
+        sort($versionsTemp, SORT_NATURAL);
+        $versions = array_merge($versions, $versionsTemp);
+
+        $versionsTemp = array();
+        foreach (explode("\n", `svn ls $base/branches`) as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            if (substr($line, -1) == '/' && ctype_digit($line{0}))
+                $versionsTemp[] = 'svn:branches/' . substr($line, 0, -1);
+        }
+        sort($versionsTemp, SORT_NATURAL);
+        $versions = array_merge($versions, $versionsTemp);
+
+        // Trunk as last option
+        $versions[] = 'svn:trunk';
+
+        $versions_sorted = array();
+        foreach ($versions as $version) {
+            list($type, $branch) = explode(':', $version);
+            $versions_sorted[] = Version::buildFake($type, $branch);
+        }
+
+        return $versions_sorted;
+    }
+
+    function install(Version $version)
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        $host = $access->getHost();
+
+        $folder = cache_folder($this, $version);
+        $this->extractTo($version, $folder);
+
+        if ($access instanceof ShellPrompt) {
+            $host->rsync(array(
+                'src' =>  rtrim($folder, '/') . '/',
+                'dest' => rtrim($this->instance->webroot, '/') . '/'
+            ));
         }
         else {
-            $command = $this->getExtractCommand($version, $folder);
-            `$command`;
+            $access->copyLocalFolder($folder);
         }
+
+        $this->branch = $version->branch;
+        $this->installType = $version->type;
+        $this->installed = true;
+
+        $version = $this->registerCurrentInstallation();
+        $this->fixPermissions(); // it also runs composer!
+
+        if (! $access->fileExists($this->instance->getWebPath('.htaccess'))) {
+            $access->uploadFile(
+                $this->instance->getWebPath('_htaccess'),
+                $this->instance->getWebPath('.htaccess')
+            );
+        }
+
+        if ($access instanceof ShellPrompt) {
+            $access->shellExec('touch ' .
+                escapeshellarg($this->instance->getWebPath('db/lock')));
+        }
+
+        $version->collectChecksumFromInstance($this->instance);
+    }
+
+    function installProfile($domain, $profile) {
+        $access = $this->instance->getBestAccess('scripting');
+
+        echo $access->runPHP(
+            dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php',
+            array($this->instance->webroot, $domain, $profile));
+    }
+
+    function isInstalled()
+    {
+        if (! is_null($this->installed))
+            return $this->installed;
+
+        $access = $this->instance->getBestAccess('filetransfer');
+        $checkpath = $this->instance->getWebPath('tiki-setup.php');
+        $this->installed = $access->fileExists($checkpath);
+        return $this->installed;
     }
 
     function performActualUpdate(Version $version)
@@ -341,59 +436,17 @@ class Application_Tiki extends Application
         }
     }
 
-    private function formatBranch($version)
-    {
-        if (substr($version, 0, 4) == '1.9.')
-            return 'REL-' . str_replace('.', '-', $version);
-        elseif ($this->getInstallType() == 'svn')
-            return "tags/$version";
-        elseif ($this->getInstallType() == 'tarball')
-            return "tags/$version";
-    }
-
-    function fixPermissions()
+    function removeTemporaryFiles()
     {
         $access = $this->instance->getBestAccess('scripting');
+        $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
 
+        // FIXME: Not FTP compatible
         if ($access instanceof ShellPrompt) {
-            $webroot = $this->instance->webroot;
-            $access->chdir($this->instance->webroot);
-
-            if ($this->instance->hasConsole()) {
-                $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
-            } else {
-                warning('Old Tiki detected, running bundled TRIM setup.sh script.');
-                $filename = $this->instance->getWorkPath('setup.sh');
-                $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
-                $ret = $access->shellExec("cd $webroot && bash " . escapeshellarg($filename));
-            }
-        }
-    }
-
-    function getFileLocations()
-    {
-        $access = $this->instance->getBestAccess('scripting');
-        $out = $access->runPHP(
-            dirname(__FILE__) . '/../../scripts/tiki/get_directory_list.php',
-            array($this->instance->webroot)
-        );
-
-        $folders['app'] = array($this->instance->webroot);
-
-        foreach (explode("\n", $out ) as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            $line = rtrim($line, '/');
-
-            if ($line{0} != '/')
-                $line = "{$this->instance->webroot}/$line";
-
-            if (! empty($line))
-                $folders['data'][] = $line;
+            $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear --all");
+            $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
         }
 
-        return $folders;
     }
 
     function requiresDatabase()
@@ -401,25 +454,50 @@ class Application_Tiki extends Application
         return true;
     }
 
-    function getAcceptableExtensions()
+    function restoreDatabase(Database $database, $remoteFile)
     {
-        return array('mysqli', 'mysql');
+        $tmp = tempnam(TEMP_FOLDER, 'dblocal');
+
+        if ( !empty($database->dbLocalContent) ) {
+            file_put_contents($tmp, $database->dbLocalContent);
+        } else {
+            file_put_contents($tmp, "<?php"          . "\n"
+                ."\$db_tiki='{$database->type}';"    . "\n"
+                ."\$host_tiki='{$database->host}';"  . "\n"
+                ."\$user_tiki='{$database->user}';"  . "\n"
+                ."\$pass_tiki='{$database->pass}';"  . "\n"
+                ."\$dbs_tiki='{$database->dbname}';" . "\n"
+                ."// generated by TRIM " . date('Y-m-d H:i:s +Z')
+            );
+        }
+
+        $access = $this->instance->getBestAccess('filetransfer');
+        $access->uploadFile($tmp, 'db/local.php');
+
+        $access = $this->instance->getBestAccess('scripting');
+        $root = $this->instance->webroot;
+
+        // FIXME: Not FTP compatible (arguments)
+        info("Loading '$remoteFile' into '{$database->dbname}'");
+        $access->runPHP(
+            dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
+            array($root, $remoteFile));
     }
 
+//----------------------------------------------------------------
     function setupDatabase(Database $database)
     {
         $tmp = tempnam(TEMP_FOLDER, 'dblocal');
-        file_put_contents($tmp, <<<LOCAL
-<?php
-\$db_tiki='{$database->type}';
-\$host_tiki='{$database->host}';
-\$user_tiki='{$database->user}';
-\$pass_tiki='{$database->pass}';
-\$dbs_tiki='{$database->dbname}';
-\$client_charset = 'utf8';
+        file_put_contents($tmp, "<?php"          . "\n"
+            ."\$db_tiki='{$database->type}';"    . "\n"
+            ."\$host_tiki='{$database->host}';"  . "\n"
+            ."\$user_tiki='{$database->user}';"  . "\n"
+            ."\$pass_tiki='{$database->pass}';"  . "\n"
+            ."\$dbs_tiki='{$database->dbname}';" . "\n"
+            ."\$client_charset = 'utf8';"        . "\n"
+            ."// generated by TRIM " . date('Y-m-d H:i:s +Z')
+        );
 
-LOCAL
-);
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
         $access->shellExec("chmod 0664 {$this->instance->webroot}/db/local.php");
@@ -466,93 +544,16 @@ LOCAL
         }
 
         echo "Verify if you have db/local.php file, if you don't put the following content in it.\n";
-        echo "<?php
-\$db_tiki='{$database->type}';
-\$host_tiki='{$database->host}';
-\$user_tiki='{$database->user}';
-\$pass_tiki='{$database->pass}';
-\$dbs_tiki='{$database->dbname}';
-\$client_charset = 'utf8';
-";
+        echo "<?php"                             . "\n"
+            ."\$db_tiki='{$database->type}';"    . "\n"
+            ."\$host_tiki='{$database->host}';"  . "\n"
+            ."\$user_tiki='{$database->user}';"  . "\n"
+            ."\$pass_tiki='{$database->pass}';"  . "\n"
+            ."\$dbs_tiki='{$database->dbname}';" . "\n"
+            ."\$client_charset = 'utf8';"        . "\n"
+            ."// generated by TRIM " . date('Y-m-d H:i:s +Z');
     }
 
-    function restoreDatabase(Database $database, $remoteFile)
-    {
-        $tmp = tempnam(TEMP_FOLDER, 'dblocal');
-
-        if ( !empty($database->dbLocalContent) ) {
-            file_put_contents($tmp, $database->dbLocalContent);
-        } else {
-            file_put_contents($tmp, "<?php"          . "\n"
-                ."\$db_tiki='{$database->type}';"    . "\n"
-                ."\$host_tiki='{$database->host}';"  . "\n"
-                ."\$user_tiki='{$database->user}';"  . "\n"
-                ."\$pass_tiki='{$database->pass}';"  . "\n"
-                ."\$dbs_tiki='{$database->dbname}';" . "\n"
-                ."// generated by TRIM " . date('Y-m-d H:i:s +Z')
-            );
-        }
-
-        $access = $this->instance->getBestAccess('filetransfer');
-        $access->uploadFile($tmp, 'db/local.php');
-
-        $access = $this->instance->getBestAccess('scripting');
-        $root = $this->instance->webroot;
-
-        // FIXME: Not FTP compatible (arguments)
-        info("Loading '$remoteFile' into '{$database->dbname}'");
-        $access->runPHP(
-            dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
-            array($root, $remoteFile));
-    }
-
-    function backupDatabase($target)
-    {
-        $access = $this->instance->getBestAccess('scripting');
-        if ($access instanceof ShellPrompt) {
-            $randomName = md5(time() . 'trimbackup') . '.sql.gz';
-            $remoteFile = $this->instance->getWorkPath($randomName);
-            $access->runPHP(
-                dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
-                array($this->instance->webroot, $remoteFile));
-            $localName = $access->downloadFile($remoteFile);
-            $access->deleteFile($remoteFile);
-
-            `zcat $localName > '$target'`;
-            unlink($localName);
-        }
-        else {
-            $data = $access->runPHP(
-                dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php');
-            file_put_contents($target, $data);
-        }
-    }
-
-    function beforeChecksumCollect()
-    {
-        $this->removeTemporaryFiles();
-    }
-
-    function installProfile($domain, $profile) {
-        $access = $this->instance->getBestAccess('scripting');
-
-        echo $access->runPHP(
-            dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php',
-            array($this->instance->webroot, $domain, $profile));
-    }
-
-    function removeTemporaryFiles()
-    {
-        $access = $this->instance->getBestAccess('scripting');
-        $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
-
-        // FIXME: Not FTP compatible
-        if ($access instanceof ShellPrompt) {
-            $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear --all");
-            $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
-        }
-
-    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
