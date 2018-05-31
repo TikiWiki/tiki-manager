@@ -520,7 +520,7 @@ class Instance
     {
         $access = $this->getBestAccess('scripting');
 
-        info("Restoring files from " . basename('$archive') . " into {$this->name}");
+        info("Restoring files from '{$archive}' into {$this->name}");
         $restore = new Restore($this);
         $restore->restoreFiles($archive);
 
