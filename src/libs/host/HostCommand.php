@@ -9,6 +9,8 @@ class Host_Command
 {
     private $args;
     private $command;
+    private $host;
+    private $options;
     private $process;
     private $return;
     private $stderr;
@@ -190,6 +192,22 @@ class Host_Command
     }
 
     /**
+     * Set the host where the command will be executed
+     */
+    public function setHost($host)
+    {
+        return $this->host = $host;
+    }
+
+    /**
+     * Set options like current path and environment to host
+     */
+    public function setOptions($options)
+    {
+        return $this->options = $options ?: array();
+    }
+
+    /**
      * @param resource $process The process running the command
      */
     public function setProcess($process)
@@ -285,8 +303,11 @@ class Host_Command
      * @param  Host $host    A host object
      * @return Host_Command  $this
      */
-    public function run($host, $options=array())
+    public function run($host=null, $options=array())
     {
+        $host = $this->host ?: $host;
+        $options = $this->options ?: $options;
+
         if(is_resource($this->process) || !is_null($this->return)) {
             throw new Host_CommandException("Host_Command cannot run twice", 1);
         }
