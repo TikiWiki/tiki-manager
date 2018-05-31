@@ -140,6 +140,8 @@ interface ShellPrompt
 
     function hasExecutable($name);
 
+    function createCommand($bin, $args=array(), $stdin='');
+
     function runCommand($command, $options=array());
 }
 
@@ -460,6 +462,23 @@ class Access_Local extends Access implements ShellPrompt
             $host->setenv($key, $value);
 
         return $host->runCommands($commands, $output);
+    }
+
+    function createCommand($bin, $args=array(), $stdin='')
+    {
+        $options = array();
+
+        if ($this->location) {
+            $options['cwd'] = $this->location;
+        }
+        if ($this->env) {
+            $options['env'] = $this->env;
+        }
+
+        $command = new Host_Command($bin, $args, $stdin);
+        $command->setOptions($options);
+        $command->setHost($this->getHost());
+        return $command;
     }
 
     function runCommand($command, $options=array())
@@ -807,6 +826,23 @@ class Access_SSH extends Access implements ShellPrompt
             $host->setenv($key, $value);
 
         return $host->runCommands($commands, $output);
+    }
+
+    function createCommand($bin, $args=array(), $stdin='')
+    {
+        $options = array();
+
+        if ($this->location) {
+            $options['cwd'] = $this->location;
+        }
+        if ($this->env) {
+            $options['env'] = $this->env;
+        }
+
+        $command = new Host_Command($bin, $args, $stdin);
+        $command->setOptions($options);
+        $command->setHost($this->getHost());
+        return $command;
     }
 
     function runCommand($command, $options=array())
