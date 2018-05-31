@@ -2,6 +2,16 @@
 
 class Restore extends Backup
 {
+    protected $restoreRoot;
+    protected $restoreDirname;
+
+    public function __construct($instance)
+    {
+        parent::__construct($instance);
+        $this->restoreRoot = "{$instance->tempdir}/restore";
+        $this->restoreDirname = "{$instance->id}-{$instance->name}";
+    }
+
     public function getFolderNameFromArchive($srcArchive)
     {
         $bf = bzopen($srcArchive, 'r');
@@ -21,45 +31,54 @@ class Restore extends Backup
         return $content;
     }
 
+    public function getRestoreFolder()
+    {
+        return $this->getRestoreRoot() . '/' . $this->restoreDirname;
+    }
+
+    public function getRestoreRoot()
+    {
+        return rtrim($this->restoreRoot, '/');
+    }
+
     public function prepareArchiveFolder($srcArchive)
     {
         $access = $this->access;
         $instance = $this->instance;
         $archivePath = $srcArchive;
-        $archiveFolder = "{$instance->tempdir}/restore";
+        $archiveRoot = $this->getRestoreRoot();
 
         if($instance->type !== 'local') {
             $archivePath = $access->uploadArchive($srcArchive);
         }
 
-        $args = array('-p', $archiveFolder);
+        $args = array('-p', $archiveRoot);
         $command = $access->createCommand('mkdir', $args);
         $command->run();
 
         if($command->getReturn() !== 0) {
             throw new RestoreError(
-                "Can't create '$archiveFolder': "
+                "Can't create '$archiveRoot': "
                 . $command->getStderrContent(),
                 RestoreError::CREATEDIR_ERROR
             );
         }
 
-        $args = array('-jxp', '-C', $archiveFolder, '-f', $archivePath);
+        $args = array('-jxp', '-C', $archiveRoot, '-f', $archivePath);
         $command = $access->createCommand('tar', $args);
         $command->run();
 
         if($command->getReturn() !== 0) {
             throw new RestoreError(
-                "Can't extract '$archivePath' to '$archiveFolder': "
+                "Can't extract '$archivePath' to '$archiveRoot': "
                 . $command->getStderrContent(),
                 RestoreError::DECOMPRESS_ERROR
             );
         }
 
-        $archiveApp = $archiveFolder 
-            . DIRECTORY_SEPARATOR
-            . $this->getFolderNameFromArchive($srcArchive);
-        return $archiveApp;
+        $this->restoreDirname = $this->getFolderNameFromArchive($srcArchive);
+        $archiveFolder = $archiveRoot . DIRECTORY_SEPARATOR . $this->restoreDirname;
+        return $archiveFolder;
     }
 
     public function readManifest($manifestPath)
@@ -67,7 +86,7 @@ class Restore extends Backup
         $access = $this->getAccess();
         $webroot = rtrim($this->instance->webroot, DIRECTORY_SEPARATOR);
 
-        $manifestDir = dirname($manifestPath);
+        $archiveFolder = dirname($manifestPath);
         $manifest = $access->fileGetContents($manifestPath);
         $manifest = explode("\n", $manifest);
         $manifest = array_map('trim', $manifest);
@@ -76,8 +95,7 @@ class Restore extends Backup
         $folders = array();
         if (empty($manifest)) {
             throw new RestoreError(
-                "Can't extract '$archivePath' to '$archiveFolder': "
-                . $command->getStderrContent(),
+                "Manifest file is invalid: '{$manifestPath}'",
                 RestoreError::MANIFEST_ERROR
             );
         }
@@ -85,7 +103,7 @@ class Restore extends Backup
         foreach ($manifest as $line) {
             list($hash, $type, $destination) = explode('    ', $line, 3);
 
-            $source = $manifestDir 
+            $source = $archiveFolder 
                 . DIRECTORY_SEPARATOR 
                 . $hash
                 . DIRECTORY_SEPARATOR 
