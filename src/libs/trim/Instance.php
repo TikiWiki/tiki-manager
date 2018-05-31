@@ -518,68 +518,8 @@ class Instance
 
     function restore($src_app, $archive, $clone = false)
     {
-        info(sprintf("Uploading : %s", basename($archive)));
-        $access = $this->getBestAccess('scripting');
-
-        $base = basename($archive);
-        list($basetardir, $trash) = explode('_', $base, 2);
-        $remote = $this->getWorkPath($base);
-
-        $access->uploadFile($archive, $remote);
-
-        echo $access->shellExec(
-            "mkdir -p {$this->tempdir}/restore",
-            "tar -jxp -C {$this->tempdir}/restore -f " . escapeshellarg($remote)
-        );
-
-        info('Reading manifest...');
-
-        $current = trim(`pwd`);
-        chdir(TEMP_FOLDER);
-        exec(debug("tar -jxf $archive $basetardir/manifest.txt"));
-        $manifest = file_get_contents("{$basetardir}/manifest.txt");
-        chdir($current);
-
-        foreach (explode("\n", $manifest) as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            list($hash, $type, $location) = explode('    ', $line, 3);
-            $src_path = $location;
-            $src_base = basename($location);
-
-            if ($clone) {
-                $location = $this->webroot;
-            } else {
-                echo "Previous host used: $location\n";
-                $location = promptUser('New location', $this->webroot);
-            }
-
-            $dst_path = ($type == 'app') ? $location : $src_path;
-            info(sprintf('Copying %s files (%s -> %s)...', $type, $src_path, $dst_path));
-
-            $syncpaths = (object) array(
-                'from' => escapeshellarg($this->getWorkPath("restore/{$basetardir}/$hash/$src_base")),
-                'to'   => escapeshellarg(rtrim($dst_path, '/'))
-            );
-
-            $out = $access->shellExec(
-                sprintf('mkdir -p %s', $syncpaths->to),
-                sprintf('rsync -a %s %s %s --delete',
-                    $type === 'app' ? "--exclude '/.htaccess' --exclude '/maintenance.php' --exclude '/db/local.php'" : '',
-                    "{$syncpaths->from}/",
-                    "{$syncpaths->to}/"
-                )
-            );
-
-            $access->shellExec(sprintf('rsync -v %s %s%s',
-                "{$syncpaths->from}/.htaccess",
-                "{$syncpaths->to}/.htaccess",
-                $type === 'app' && $this->isLocked() ? '.bak' : ''
-            ));
-
-            trim_output("REMOTE $out");
-        }
+        $restore = new Restore($this);
+        $restore->restoreFiles($archive);
 
         $this->app = $src_app;
         $oldVersion = $this->getLatestVersion();
