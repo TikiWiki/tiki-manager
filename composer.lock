@@ -1,10 +1,10 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "8303bbe567005ec58c5b7de596c69c3a",
+    "content-hash": "e21b2dfd8468ad0fb9df90c13d39a2fc",
     "packages": [
         {
             "name": "components/jquery",
@@ -733,17 +733,17 @@
         },
         {
             "name": "twitter/bootstrap",
-            "version": "v3.3.7",
+            "version": "v4.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twbs/bootstrap.git",
-                "reference": "0b9c4a4007c44201dce9a6cc1a38407005c26c86"
+                "reference": "779ad9f174ea5ab7e755f6df0ec9e5912d67dd16"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/twitter/bootstrap/twitter-bootstrap-0b9c4a4007c44201dce9a6cc1a38407005c26c86-zip-d3d7dc.zip",
-                "reference": "0b9c4a4007c44201dce9a6cc1a38407005c26c86",
-                "shasum": "b92d9602040c64dcda409d677038e0f1527acd60"
+                "url": "https://composer.tiki.org/dist/twitter/bootstrap/twitter-bootstrap-779ad9f174ea5ab7e755f6df0ec9e5912d67dd16-zip-a1e376.zip",
+                "reference": "779ad9f174ea5ab7e755f6df0ec9e5912d67dd16",
+                "shasum": "9e41f3388d64c03f32f4bf8cd93d75f5421a5a05"
             },
             "replace": {
                 "twitter/bootstrap": "self.version"
@@ -769,18 +769,18 @@
                 }
             ],
             "description": "The most popular front-end framework for developing responsive, mobile first projects on the web.",
-            "homepage": "http://getbootstrap.com",
+            "homepage": "https://getbootstrap.com/",
             "keywords": [
                 "JS",
                 "css",
                 "framework",
                 "front-end",
-                "less",
                 "mobile-first",
                 "responsive",
+                "sass",
                 "web"
             ],
-            "time": "2016-07-25T15:51:55+00:00"
+            "time": "2018-04-30T16:04:33+00:00"
         }
     ],
     "packages-dev": [

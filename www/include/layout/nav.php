@@ -1,70 +1,65 @@
 <header>
-	<nav class="navbar navbar-fixed-top">
+	<nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
 		<div class="container">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand" href="<?php echo html( url( '' ) ) ?>">TRIM Web Admin</a>
-			</div>
+			<a class="navbar-brand" href="<?php echo html( url( '' ) ) ?>">TRIM Web Admin</a>
+			<button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
 
-<?php if( isset( $_SESSION['active'] ) ) { ?>
 			<div id="navbar" class="collapse navbar-collapse">
-				<ul class="nav navbar-nav">
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Instances <span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li><a href="<?php echo html( url( 'list' ) ) ?>">List instances</a></li>
-<!--							<li><a href="#">Create a new instance</a></li>-->
-							<li><a href="<?php echo html( url( 'blank' ) ) ?>">Create a blank instance</a></li>
-<!--							<li><a href="<?php echo html( url( 'import' ) ) ?>">Import a tiki instance</a></li>-->
-							<li><a href="<?php echo html( url( 'delete' ) ) ?>">Delete an instance</a></li>
-						</ul>
+<?php if( isset( $_SESSION['active'] ) ) { ?>
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item dropdown">
+						<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Instances</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="<?php echo html( url( 'list' ) ) ?>">List instances</a>
+<!--							<a class="dropdown-item" href="#">Create a new instance</a>-->
+							<a class="dropdown-item" href="<?php echo html( url( 'blank' ) ) ?>">Create a blank instance</a>
+<!--							<a class="dropdown-item" href="<?php echo html( url( 'import' ) ) ?>">Import a tiki instance</a>-->
+							<a class="dropdown-item" href="<?php echo html( url( 'delete' ) ) ?>">Delete an instance</a>
+						</div>
 					</li>
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manage <span class="caret"></span></a>
-						<ul class="dropdown-menu">
-<!--							<li><a href="#">Check an instance</a></li>-->
-							<li><a href="<?php echo html( url( 'update' ) ) ?>">Update an instance</a></li>
-<!--							<li><a href="#">Upgrade an instance</a></li>-->
-							<li><a href="<?php echo html( url( 'fix' ) ) ?>">Fix an instance</a></li>
-							<li><a href="<?php echo html( url( 'watch' ) ) ?>">Watch an instance</a></li>
-						</ul>
+					<li class="nav-item dropdown">
+						<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Manage</a>
+						<div class="dropdown-menu">
+<!--							<a class="dropdown-item" href="#">Check an instance</a>-->
+							<a class="dropdown-item" href="<?php echo html( url( 'update' ) ) ?>">Update an instance</a>
+<!--							<a class="dropdown-item" href="#">Upgrade an instance</a>-->
+							<a class="dropdown-item" href="<?php echo html( url( 'fix' ) ) ?>">Fix an instance</a>
+							<a class="dropdown-item" href="<?php echo html( url( 'watch' ) ) ?>">Watch an instance</a>
+						</div>
 					</li>
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Backups <span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li><a href="<?php echo html( url( 'backup' ) ) ?>">Backup an instance</a></li>
-							<li><a href="<?php echo html( url( 'restore' ) ) ?>">Restore an instance</a></li>
-							<li><a href="<?php echo html( url( 'clone' ) ) ?>">Clone an instance</a></li>
-<!--							<li><a href="#">Clone and upgrade</a></li>-->
-							<li><a href="<?php echo html( url( 'manage' ) ) ?>">Manage backups</a></li>
-						</ul>
+					<li class="nav-item dropdown">
+						<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Backups</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="<?php echo html( url( 'backup' ) ) ?>">Backup an instance</a>
+							<a class="dropdown-item" href="<?php echo html( url( 'restore' ) ) ?>">Restore an instance</a>
+							<a class="dropdown-item" href="<?php echo html( url( 'clone' ) ) ?>">Clone an instance</a>
+<!--							<a class="dropdown-item" href="#">Clone and upgrade</a>-->
+							<a class="dropdown-item" href="<?php echo html( url( 'manage' ) ) ?>">Manage backups</a>
+						</div>
 					</li>
 <!--
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Misc <span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li><a href="#">Access</a></li>
-							<li><a href="#">Clean</a></li>
-							<li><a href="#">Convert</a></li>
-							<li><a href="#">CopySSHKey</a></li>
-							<li><a href="#">Detect</a></li>
-							<li><a href="#">Profile</a></li>
-							<li><a href="#">Report</a></li>
-							<li><a href="#">ViewDB</a></li>
-						</ul>
+					<li class="nav-item dropdown">
+						<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Misc</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="#">Access</a>
+							<a class="dropdown-item" href="#">Clean</a>
+							<a class="dropdown-item" href="#">Convert</a>
+							<a class="dropdown-item" href="#">CopySSHKey</a>
+							<a class="dropdown-item" href="#">Detect</a>
+							<a class="dropdown-item" href="#">Profile</a>
+							<a class="dropdown-item" href="#">Report</a>
+							<a class="dropdown-item" href="#">ViewDB</a>
+						</div>
 					</li>
 -->
 				</ul>
-				<ul class="nav navbar-nav">
-					<li><a href="<?php echo html( url( 'logout' ) ) ?>">Log out</a></li>
-				</ul>
-			</div>
+				<div class="navbar-nav">
+					<a class="nav-link" href="<?php echo html( url( 'logout' ) ) ?>">Log out</a>
+				</div>
 <?php } ?>
+			</div>
 		</div>
 	</nav>
 </header>

@@ -34,10 +34,8 @@ $(document).ready(function () {
     $('.trim-instance-list.restore ul.archive li').on('click', function () {
         $('.trim-instance-list.restore ul.archive li').each(function () {
             $(this).css('background-color', 'transparent');
-            $(this).find('span.fa').addClass('hide');
         });
-        $(this).css('background-color', 'greenyellow');
-        $(this).find('span.fa').removeClass('hide');
+        $(this).css('background-color', 'palegreen');
         $('.restore.btn').attr('data-sourceid', $(this).data('id'));
         $('.restore.btn').attr('data-backup', $(this).find('.file').text());
         if (($('.restore.btn').attr('data-sourceid')) && ($('.restore.btn').attr('data-id'))) {
@@ -48,10 +46,8 @@ $(document).ready(function () {
     $('.trim-instance-list.restore ul.destination li').click(function () {
         $('.trim-instance-list.restore ul.destination li').each(function () {
             $(this).css('background-color', 'transparent');
-            $(this).find('.buttons a').addClass('hide');
         });
-        $(this).css('background-color', 'greenyellow');
-        $(this).find('.buttons a').removeClass('hide');
+        $(this).css('background-color', 'palegreen');
         $('.restore.btn').attr('data-id', $(this).data('id'));
         $('.restore.btn').attr('data-name', $(this).data('name'));
         if (($('.restore.btn').attr('data-sourceid')) && ($('.restore.btn').attr('data-id'))) {
@@ -64,7 +60,6 @@ $(document).ready(function () {
     function clonecolors(selector) {
         $(selector).each(function () {
             $(this).css('background-color', 'transparent');
-            $(this).parent().find('.buttons a').addClass('hide');
         });
     }
 
@@ -72,26 +67,22 @@ $(document).ready(function () {
         var id = $(this).data('id');
         clonecolors('.trim-instance-list.clone ul.source li');
         clonecolors('.trim-instance-list.clone ul.destination li');
-        $(this).css('background-color', 'greenyellow');
-        $(this).find('.buttons a').removeClass('hide');
+        $(this).css('background-color', 'palegreen');
         $('.clone.btn').attr('data-sourceid', id);
         $('.clone.btn').attr('data-sourcename', $(this).data('name'));
         $('.clone.btn').attr('data-id', '');
         $('.clone.btn').attr('data-name', '');
+        $('.clone.btn').attr('disabled', true);
         $('.trim-instance-list.clone ul.destination').removeClass('hide');
         $('.trim-instance-list.clone ul.destination li').each(function () {
             $(this).removeClass('hide');
             if ($(this).data('id') == id) $(this).addClass('hide');
         });
-        if (($('.clone.btn').attr('data-sourceid')) && ($('.clone.btn').attr('data-id'))) {
-            $('.clone.btn').prop('disabled', false);
-        }
     });
 
     $('.trim-instance-list.clone ul.destination li').on('click', function () {
         clonecolors('.trim-instance-list.clone ul.destination li');
-        $(this).css('background-color', 'greenyellow');
-        $(this).find('.buttons a').removeClass('hide');
+        $(this).css('background-color', 'palegreen');
         $('.clone.btn').attr('data-id', $(this).data('id'));
         $('.clone.btn').attr('data-name', $(this).data('name'));
         if (($('.clone.btn').attr('data-sourceid')) && ($('.clone.btn').attr('data-id'))) {

@@ -24,8 +24,8 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 ?>
 
 <?php $page_title = 'Edit instance : ' . html( $instance->name ); ?>
-<?php require "include/layout/head.php"; ?>
-<?php require "include/layout/nav.php"; ?>
+<?php require dirname(__FILE__) . "/layout/head.php"; ?>
+<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
 	<div class="trim-instance-edit center">
@@ -33,57 +33,64 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 		<h2><?php echo $page_title; ?></h2>
 
 		<form method="post" action="<?php echo html( $_SERVER['REQUEST_URI'] ) ?>">
-			<div class="form-group">
-				<table class="table table-bordered">
-					<tr>
-						<th>Name</th>
-						<td><input type="text" name="name" class="form-control" value="<?php echo html( $instance->name ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>Contact</th>
-						<td><input type="text" name="contact" class="form-control" value="<?php echo html( $instance->contact ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>Web URL</th>
-						<td><input type="text" name="weburl" class="form-control" value="<?php echo html( $instance->weburl ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>Web Root</th>
-						<td><input type="text" name="webroot" class="form-control" value="<?php echo html( $instance->webroot ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>Work Directory</th>
-						<td><input type="text" name="tempdir" class="form-control" value="<?php echo html( $instance->tempdir ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>PHP Interpreter</th>
-						<td><input type="text" name="phpexec" class="form-control" value="<?php echo html( $instance->phpexec ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>Backup owner</th>
-						<td><input type="text" name="backup_user" class="form-control" value="<?php echo html( $instance->getProp('backup_user') ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>Backup group</th>
-						<td><input type="text" name="backup_group" class="form-control" value="<?php echo html( $instance->getProp('backup_group') ) ?>"/></td>
-					</tr>
-					<tr>
-						<th>Backup file permissions</th>
-						<td><input type="text" name="backup_perm" class="form-control" value="<?php echo html( decoct($instance->getProp('backup_perm')) ) ?>"/></td>
-					</tr>
-					<tr>
-						<th class="top">Additional folders to backup<span>(One per line)</span></th>
-						<td><textarea cols="50" rows="6" name="backups" class="form-control"><?php echo html( implode( "\n", $instance->getExtraBackups() ) ) ?></textarea></td>
-					</tr>
-				</table>
-				<p>
-					<a href="<?php echo html( url( "view/{$instance->id}" ) ) ?>" class="cancel btn btn-danger"><span class="fa fa-angle-double-left"></span> Cancel</a>
-					<button type="submit" class="save btn btn-primary">Save</button>
-				</p>
-			</div>
+			<fieldset>
+				<div class="form-group">
+					<table class="table table-bordered">
+						<tbody>
+							<tr>
+								<th scope="row"><label for="name">Name</label></th>
+								<td><input type="text" name="name" id="name" class="form-control" value="<?php echo html( $instance->name ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="contact">Contact</label></th>
+								<td><input type="text" name="contact" id="contact" class="form-control" value="<?php echo html( $instance->contact ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="weburl">Web URL</label></th>
+								<td><input type="text" name="weburl" id="weburl" class="form-control" value="<?php echo html( $instance->weburl ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="webroot">Web Root</label></th>
+								<td><input type="text" name="webroot" id="webroot" class="form-control" value="<?php echo html( $instance->webroot ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="tempdir">Work Directory</label></th>
+								<td><input type="text" name="tempdir" id="tempdir" class="form-control" value="<?php echo html( $instance->tempdir ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="phpexec">PHP Interpreter</label></th>
+								<td><input type="text" name="phpexec" id="phpexec" class="form-control" value="<?php echo html( $instance->phpexec ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="backup_user">Backup owner</label></th>
+								<td><input type="text" name="backup_user" id="backup_user" class="form-control" value="<?php echo html( $instance->getProp('backup_user') ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="backup_group">Backup group</label></th>
+								<td><input type="text" name="backup_group" id="backup_group" class="form-control" value="<?php echo html( $instance->getProp('backup_group') ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="backup_perm">Backup file permissions</label></th>
+								<td><input type="text" name="backup_perm" id="backup_perm" class="form-control" value="<?php echo html( decoct($instance->getProp('backup_perm')) ) ?>"/></td>
+							</tr>
+							<tr>
+								<th scope="row" class="top"><label for="backups">Additional folders to backup<span>(One per line)</span></label></th>
+								<td><textarea cols="50" rows="6" name="backups" id="backups" class="form-control"><?php echo html( implode( "\n", $instance->getExtraBackups() ) ) ?></textarea></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="form-group">
+					<p>
+						<a href="<?php echo html( url( "view/{$instance->id}" ) ) ?>" class="cancel btn btn-secondary"><span class="fa fa-angle-double-left"></span> Cancel</a>
+						<button type="submit" class="save btn btn-primary">Save</button>
+					</p>
+				</div>
+			</fieldset>
 		</form>
 
 	</div>
 </div>
 
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>

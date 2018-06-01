@@ -1,6 +1,6 @@
 <?php $page_title = 'Cloning an instance'; ?>
-<?php require "include/layout/head.php"; ?>
-<?php require "include/layout/nav.php"; ?>
+<?php require dirname(__FILE__) . "/layout/head.php"; ?>
+<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
 	<div class="trim-instance-list clone center">
@@ -12,12 +12,8 @@
 			<ul class="source clearfix">
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
-					<?php $version = $instance->getLatestVersion() ?>
 					<li title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="clone">
-						<?php require "include/layout/url.php"; ?>
-						<div class="buttons fa">
-							<a href="javascript:void(0);" class="hide fa-check" title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>"></a>
-						</div>
+						<?php require dirname(__FILE__) . "/layout/url.php"; ?>
 					</li>
 				<?php endif; ?>
 			<?php endforeach; ?>
@@ -27,12 +23,8 @@
 			<ul class="hide destination clearfix">
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
-					<?php $version = $instance->getLatestVersion() ?>
 					<li title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="clone">
-						<?php require "include/layout/url.php"; ?>
-						<div class="buttons fa">
-							<a href="javascript:void(0);" class="hide fa-check" title="Clone this instance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>"></a>
-						</div>
+						<?php require dirname(__FILE__) . "/layout/url.php"; ?>
 					</li>
 				<?php endif; ?>
 			<?php endforeach; ?>
@@ -42,10 +34,7 @@
 		<?php endif; ?>
 
 		<p class="clearfix">
-			<a href="<?php echo html( url( '' ) ) ?>" class="back btn btn-default">
-				<span class="fa fa-angle-double-left"></span>
-				Back to list
-			</a>
+		<?php require dirname(__FILE__) . "/layout/back.php"; ?>
 			<button class="clone btn btn-success" data-toggle="modal" data-target="#trimModal" data-id="" data-name="" data-sourceid="" data-sourcename="" data-type="clone" disabled>
 				<span class="fa fa-clone"></span> Clone
 			</button>
@@ -54,5 +43,5 @@
 	</div>
 </div>
 
-<?php require "include/layout/modal.php"; ?>
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/modal.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>

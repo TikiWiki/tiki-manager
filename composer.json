@@ -7,7 +7,7 @@
   "require": {
     "phpseclib/phpseclib": "^2.0",
     "psy/psysh": "@stable",
-    "twitter/bootstrap": "^3.3.7",
+    "twitter/bootstrap": "^4.1.1",
     "fortawesome/font-awesome": "^4.7.0",
     "components/jquery": "^3.3.1"
   },

@@ -17,8 +17,8 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 ?>
 
 <?php $page_title = 'Manage backups'; ?>
-<?php require "include/layout/head.php"; ?>
-<?php require "include/layout/nav.php"; ?>
+<?php require dirname(__FILE__) . "/layout/head.php"; ?>
+<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
 	<div class="trim-instance-list manage center">
@@ -27,18 +27,20 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 
 		<?php if (!empty(Instance::getInstances())): ?>
 			<h3>Select an instance</h3>
-			<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+
+			<div id="accordion">
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
 					<?php $version = $instance->getLatestVersion() ?>
-					<div class="panel panel-default">
-						<div class="panel-heading" role="tab" id="heading-<?php echo html( "{$instance->id}" ) ?>">
-							<a class="panel-title collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-<?php echo html( "{$instance->id}" ) ?>" aria-expanded="true" aria-controls="collapse-<?php echo html( "{$instance->id}" ) ?>" data-id="<?php echo html( "{$instance->id}" ) ?>">
-								<?php echo html( $instance->name ) ?> <span>&nbsp;<?php echo html( "{$instance->app} ({$version->type}, {$version->branch})" ) ?></span>
+					<div class="card">
+						<div class="card-header" id="heading-<?php echo html( "{$instance->id}" ) ?>">
+							<a href="" class="collapsed" data-toggle="collapse" data-target="#collapse-<?php echo html( "{$instance->id}" ) ?>" aria-expanded="true" aria-controls="collapse-<?php echo html( "{$instance->id}" ) ?>">
+							<?php echo html( $instance->name ) ?> <span>&nbsp;<?php echo html( "({$version->type}, {$version->branch})" ) ?></span>
 							</a>
-	  					</div>
-						<div id="collapse-<?php echo html( "{$instance->id}" ) ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading-<?php echo html( "{$instance->id}" ) ?>">
-							<div class="panel-body">
+						</div>
+
+						<div id="collapse-<?php echo html( "{$instance->id}" ) ?>" class="collapse" aria-labelledby="heading-<?php echo html( "{$instance->id}" ) ?>" data-parent="#accordion">
+							<div class="card-body">
 							<?php if (!empty($instance->getArchives())): ?>
 								<h3>Archive list</h3>
 								<ul class="archive">
@@ -56,7 +58,7 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 							<?php endif; ?>
 							</div>
 						</div>
-  					</div>
+					</div>
 				<?php endif; ?>
 			<?php endforeach; ?>
 			</div>
@@ -66,7 +68,7 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 		<?php endif; ?>
 
 		<p class="clearfix">
-			<a href="<?php echo html( url( '' ) ) ?>" class="back btn btn-default">
+			<a href="<?php echo html( url( '' ) ) ?>" class="back btn btn-secondary">
 				<span class="fa fa-angle-double-left"></span>
 				Back to list
 			</a>
@@ -75,5 +77,5 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 	</div>
 </div>
 
-<?php require "include/layout/modal.php"; ?>
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/modal.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>

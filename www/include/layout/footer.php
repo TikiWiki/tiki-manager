@@ -1,7 +1,11 @@
 		<footer>
-			<div class="container">
-				<p><?php echo TITLE; ?></p>
-			</div>
+			<nav class="navbar navbar-dark bg-dark">
+				<div class="container">
+					<span class="navbar-text mx-auto">
+						<?php echo TITLE; ?>
+					</span>
+				</div>
+			</nav>
 		</footer>
 
 		<script src="/vendor/components/jquery/jquery.min.js"></script>

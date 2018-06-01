@@ -1,6 +1,6 @@
 <?php $page_title = 'Watching an instance'; ?>
-<?php require "include/layout/head.php"; ?>
-<?php require "include/layout/nav.php"; ?>
+<?php require dirname(__FILE__) . "/layout/head.php"; ?>
+<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
 	<div class="trim-instance-list center">
@@ -11,9 +11,8 @@
 			<ul class="clearfix">
 			<?php foreach( Instance::getInstances() as $instance ): ?>
 				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
-					<?php $version = $instance->getLatestVersion() ?>
 					<li title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="watch">
-						<?php require "include/layout/url.php"; ?>
+						<?php require dirname(__FILE__) . "/layout/url.php"; ?>
 						<div class="buttons fa">
 							<a href="javascript:void(0);" class="fa-eye" title="Watch this instance"></a>
 						</div>
@@ -26,14 +25,11 @@
 		<?php endif; ?>
 
 		<p class="clearfix">
-			<a href="<?php echo html( url( '' ) ) ?>" class="back btn btn-default">
-				<span class="fa fa-angle-double-left"></span>
-				Back to list
-			</a>
+		<?php require dirname(__FILE__) . "/layout/back.php"; ?>
 		</p>
 
 	</div>
 </div>
 
-<?php require "include/layout/modal.php"; ?>
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/modal.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>

@@ -14,16 +14,16 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 ?>
 
 <?php $page_title = 'Login'; ?>
-<?php require "include/layout/head.php"; ?>
-<?php require "include/layout/nav.php"; ?>
+<?php require dirname(__FILE__) . "/layout/head.php"; ?>
+<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
 	<div class="trim-login center">
 		<h1><?php echo TITLE; ?></h1>
 		<h2><?php echo $page_title; ?></h2>
 
-		<div class="row">
-			<div class="col-sm-6 col-sm-offset-3">
+		<div class="row justify-content-center">
+			<div class="col-md-8 col-lg-6">
 				<form method="post" action="<?php echo html( $_SERVER['REQUEST_URI'] ) ?>">
 					<fieldset>
 						<div class="form-group">
@@ -45,4 +45,4 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 	</div>
 </div>
 
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>

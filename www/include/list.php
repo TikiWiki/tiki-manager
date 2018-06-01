@@ -1,6 +1,6 @@
 <?php $page_title = 'Instance List'; ?>
-<?php require "include/layout/head.php"; ?>
-<?php require "include/layout/nav.php"; ?>
+<?php require dirname(__FILE__) . "/layout/head.php"; ?>
+<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
 	<div class="trim-instance-main-list center">
@@ -13,10 +13,9 @@
 				<?php
 					$version = $instance->getLatestVersion();
 					$lock = (md5_file(TRIMPATH . '/scripts/maintenance.htaccess') == md5_file($instance->getWebPath('.htaccess')));
-					$blank = (! $instance->getApplication())
+					$blank = (! $instance->getApplication());
 				?>
 				<li data-href="<?php echo html( url( "view/{$instance->id}" ) ) ?>">
-					<!-- <a href="<?php echo html( url( "view/{$instance->id}" ) ) ?>" <?php if ($blank) { echo "class='nolock'"; } ?>>&nbsp;</a> -->
 					<div class="url">
 						<?php if (! $blank): ?>
 						<div class="lock">
@@ -28,13 +27,13 @@
 						</div>
 						<?php endif; ?>
 
-						<a href="<?php echo html( "{$instance->weburl}" ) ?>" title="Visit website" target="_blank"><?php echo html( $instance->name ) ?></a>
-						<span>&nbsp;
-						<?php
-							if ($blank) { echo "(blank)"; }
-							else { echo html( "{$instance->app} ({$version->type}, {$version->branch})" ); }
-						?>
-						</span>
+						<?php if (! $blank): ?>
+							<a href="<?php echo html( "{$instance->weburl}" ) ?>" title="Visit website" target="_blank"><?php echo html( $instance->name ) ?></a>
+							<span>&nbsp;<?php echo html( "({$version->type}, {$version->branch})" ); ?></span>
+						<?php else: ?>
+							<span class="blanks"><?php echo html( $instance->name ) ?></span>
+							<span>&nbsp;(blank)</span>
+						<?php endif; ?>
 					</div>
 
 					<div class="contact">
@@ -48,7 +47,7 @@
 -->
 					<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
 						<a href="" class="fa-eye" title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="watch"></a>
-						<a href="" class="fa-refresh" title="Update this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="update"></a>
+						<a href="" class="fa-repeat" title="Update this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="update"></a>
 						<a href="" class="fa-floppy-o" title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="backup"></a>
 						<a href="" class="fa-wrench" title="Fix this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="fix"></a>
 					<?php endif; ?>
@@ -63,12 +62,12 @@
 		<?php endif; ?>
 
 		<p class="clearfix">
-			<a href="#" class="new btn btn-primary" disabled>Create a new instance</a>
+			<a href="#" class="new btn btn-primary disabled">Create a new instance</a>
 			<a href="<?php echo html( url( 'blank' ) ) ?>" class="blank btn btn-primary">Create a blank instance</a>
-			<a href="<?php echo html( url( 'import' ) ) ?>" class="new btn btn-primary" disabled>Import a tiki instance</a>
+			<a href="<?php echo html( url( 'import' ) ) ?>" class="new btn btn-primary disabled">Import a tiki instance</a>
 		</p>
 	</div>
 </div>
 
-<?php require "include/layout/modal.php"; ?>
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/modal.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>

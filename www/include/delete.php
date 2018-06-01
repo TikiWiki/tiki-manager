@@ -17,8 +17,8 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 ?>
 
 <?php $page_title = 'Delete an instance'; ?>
-<?php require "include/layout/head.php"; ?>
-<?php require "include/layout/nav.php"; ?>
+<?php require dirname(__FILE__) . "/layout/head.php"; ?>
+<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
 	<div class="trim-instance-list center">
@@ -28,9 +28,8 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 		<?php if (!empty(Instance::getInstances())): ?>
 			<ul class="clearfix">
 			<?php foreach( Instance::getInstances() as $instance ): ?>
-				<?php $version = $instance->getLatestVersion() ?>
 				<li title="Delete this instance" data-toggle="modal" data-target="#deleteInstance" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>">
-					<?php require "include/layout/url.php"; ?>
+					<?php require dirname(__FILE__) . "/layout/url.php"; ?>
 					<div class="buttons fa">
 						<a href="javascript:void(0);" class="fa-times" title="Delete this instance"></a>
 					</div>
@@ -42,14 +41,11 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
 		<?php endif; ?>
 
 		<p class="clearfix">
-			<a href="<?php echo html( url( '' ) ) ?>" class="back btn btn-default">
-				<span class="fa fa-angle-double-left"></span>
-				Back to list
-			</a>
+		<?php require dirname(__FILE__) . "/layout/back.php"; ?>
 		</p>
 
 	</div>
 </div>
 
-<?php require "include/layout/modal.php"; ?>
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/modal.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>

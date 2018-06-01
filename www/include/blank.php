@@ -49,8 +49,8 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 
 <?php
     $page_title = 'Creating a blank instance';
-    require "include/layout/head.php";
-    require "include/layout/nav.php";
+    require dirname(__FILE__) . "/layout/head.php";
+    require dirname(__FILE__) . "/layout/nav.php";
 
     $instance = new Instance;
     if (function_exists('posix_getpwuid')) {
@@ -89,60 +89,67 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 		<h2><?php echo $page_title; ?></h2>
 
 		<form method="post" action="<?php echo html( $_SERVER['REQUEST_URI'] ) ?>">
-			<div class="form-group">
-				<table class="table table-bordered">
-					<tr>
-                        <th>Connection Type</th>
-                        <td>
-                            <select class="form-control" disabled>
-                                <option value="ftp">FTP</option>
-                                <option value="local" selected>Local</option>
-                                <option value="ssh">SSH</option>
-                            </select>
-						    <input type="hidden" name="type" class="form-control" value="local"/>
-                        </td>
-					</tr>
-					<tr>
-						<th>Instance name</th>
-						<td><input type="text" name="name" class="form-control" value="<?php echo $name; ?>"/></td>
-					</tr>
-					<tr>
-						<th>Contact email</th>
-						<td><input type="text" name="contact" class="form-control" value=""/></td>
-					</tr>
-					<tr>
-						<th>Web root</th>
-						<td><input type="text" name="webroot" class="form-control" value="<?php echo $webroot; ?>"/></td>
-					</tr>
-					<tr>
-						<th>Web URL</th>
-						<td><input type="text" name="weburl" class="form-control" value="<?php echo $weburl; ?>"/></td>
-					</tr>
-					<tr>
-						<th>Work directory</th>
-						<td><input type="text" name="tempdir" class="form-control" value="<?php echo $tempdir; ?>"/></td>
-					</tr>
-					<tr>
-						<th>Backup owner</th>
-						<td><input type="text" name="backup_user" class="form-control" value="<?php echo $backup_user; ?>"/></td>
-					</tr>
-					<tr>
-						<th>Backup group</th>
-						<td><input type="text" name="backup_group" class="form-control" value="<?php echo $backup_group; ?>"/></td>
-					</tr>
-					<tr>
-						<th>Backup file permissions</th>
-						<td><input type="text" name="backup_perm" class="form-control" value="<?php echo decoct($backup_perm); ?>"/></td>
-					</tr>
-				</table>
-				<p>
-					<a href="<?php echo html( url( "" ) ) ?>" class="cancel btn btn-danger"><span class="fa fa-angle-double-left"></span> Cancel</a>
-					<button type="submit" class="save btn btn-primary">Save</button>
-				</p>
-			</div>
+            <fieldset>
+                <div class="form-group">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><label for="type">Connection Type</label></th>
+                                <td>
+                                    <select class="form-control" id="type" disabled>
+                                        <option value="ftp">FTP</option>
+                                        <option value="local" selected>Local</option>
+                                        <option value="ssh">SSH</option>
+                                    </select>
+                                    <input type="hidden" name="type" class="form-control" value="local"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="name">Instance name</label></th>
+                                <td><input type="text" name="name" id="name" class="form-control" value="<?php echo $name; ?>"/></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="contact">Contact email</label></th>
+                                <td><input type="text" name="contact" id="contact" class="form-control" value=""/></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="webroot">Web root</label></th>
+                                <td><input type="text" name="webroot" id="webroot" class="form-control" value="<?php echo $webroot; ?>"/></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="weburl">Web URL</label></th>
+                                <td><input type="text" name="weburl" id="weburl" class="form-control" value="<?php echo $weburl; ?>"/></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="tempdir">Work directory</label></th>
+                                <td><input type="text" name="tempdir" id="tempdir" class="form-control" value="<?php echo $tempdir; ?>"/></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="backup_user">Backup owner</label></th>
+                                <td><input type="text" name="backup_user" id="backup_user" class="form-control" value="<?php echo $backup_user; ?>"/></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="backup_group">Backup group</label></th>
+                                <td><input type="text" name="backup_group" id="backup_group" class="form-control" value="<?php echo $backup_group; ?>"/></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="backup_perm">Backup file permissions</label></th>
+                                <td><input type="text" name="backup_perm" id="backup_perm" class="form-control" value="<?php echo decoct($backup_perm); ?>"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group">
+                    <p>
+                        <a href="<?php echo html( url( "" ) ) ?>" class="cancel btn btn-secondary"><span class="fa fa-angle-double-left"></span> Cancel</a>
+                        <button type="submit" class="save btn btn-primary">Save</button>
+                    </p>
+                </div>
+            </fieldset>
 		</form>
 
 	</div>
 </div>
 
-<?php require "include/layout/footer.php"; ?>
+<?php require dirname(__FILE__) . "/layout/footer.php"; ?>
