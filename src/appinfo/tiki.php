@@ -43,7 +43,7 @@ class Application_Tiki extends Application
     {
         if (file_exists($folder)) {
             `svn revert --recursive  $folder`;
-            `svn cleanup --remove-ignored  --remove-unversioned  $folder`;
+            `svn cleanup $folder`;
             `svn up --non-interactive $folder`;
         }
         else {
