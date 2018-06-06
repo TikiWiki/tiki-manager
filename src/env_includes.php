@@ -1,8 +1,11 @@
 <?php
 require_once dirname(__FILE__) . '/env_defines.php';
-require_once TRIM_ROOT . '/vendor/autoload.php';
-require_once TRIM_ROOT . '/src/libs/helpers/Wrapper.php';
 require_once TRIM_ROOT . '/src/libs/helpers/functions.php';
+
+run_composer_install();
+require_once TRIM_ROOT . '/vendor/autoload.php';
+
+require_once TRIM_ROOT . '/src/libs/helpers/Wrapper.php';
 require_once TRIM_ROOT . '/src/libs/host/HostCommand.php';
 require_once TRIM_ROOT . '/src/libs/host/LocalHost.php';
 require_once TRIM_ROOT . '/src/libs/host/FTPHost.php';

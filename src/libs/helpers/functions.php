@@ -254,3 +254,33 @@ function get_absolute_path($path) {
 
     return $path . implode(DIRECTORY_SEPARATOR, $absolutes);
 }
+
+
+function run_composer_install()
+{
+    $autoload = TRIM_ROOT . '/vendor/autoload.php';
+    $composer = TRIM_ROOT . '/tmp/composer';
+
+    if (file_exists($autoload)) {
+        return true;
+    }
+
+    if (!file_exists($composer)) {
+        info("Downloading composer into '{$composer}'");
+        copy('https://getcomposer.org/composer.phar', $composer);
+        chmod($composer, 0755);
+    }
+
+    if (!file_exists($composer)) {
+        error("Failed to download composer");
+        exit(1);
+    }
+
+    $result = shell_exec(implode(' ', array(
+        PHP_BINARY,
+        escapeshellarg($composer),
+        'install'
+    )));
+
+    return !empty($result);
+}
