@@ -36,11 +36,12 @@ echo "This will enable the TRIM administration web panel.\n";
 if ('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
 
 $webTrimDirectory = promptUser('WWW Trim directory (ex: /var/www/virtual/webtrim.example.com/html)');
-$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -aR vendor ' . $webTrimDirectory;
+$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -a composer.* ' . $webTrimDirectory . '; cp -a .phpenv ' . $webTrimDirectory;
 exec($cmd);
 
 $pass = '';
 $user = promptUser('Desired username');
+$owner = fileowner($webTrimDirectory . '/index.php');
 
 while (empty($pass)) {
     print 'Desired password : ';
@@ -68,7 +69,9 @@ CONFIG
 $db = DB_FILE;
 $data = dirname( DB_FILE );
 `chmod 0666 $db`;
-`chmod 0777 $data`;
+`chown apache:apache $data`;
+`(cd $webTrimDirectory && rm -rf vendor && mkdir src && php composer.phar install)`;
+`(cd $webTrimDirectory && chown $owner src && chown -R $owner vendor)`;
 
 echo "WWW Trim is now enabled.\n";
 echo "Enjoy!\n";
