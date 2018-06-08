@@ -37,6 +37,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     $instance->backup_user = trim($backup_user);
     $instance->backup_group = trim($backup_group);
     $instance->backup_perm = octdec($backup_perm);
+	$instance->save();
     $access = $instance->registerAccessMethod($type, $host, $user, $pass, $port);
     $instance->detectPHP();
 	$instance->save();
@@ -75,9 +76,14 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
         $webroot = ($user == 'root' || $user == 'apache') ?
             "/var/www/virtual/{$host}/html/" : "/home/$user/public_html/";
         break;
+    case "Windows":
+	    $backup_user = $backup_group = "Administrator";
+	    $backup_perm = 0750;
+	    $webroot = 'C:\\www\\';
+	    break;
     default:
         $backup_group = @posix_getgrgid(posix_getegid())['name'];
-        $backup_perm = 02750;
+        $backup_perm = 0750;
         $webroot = ($user == 'root' || $user == 'apache') ?
             '/var/www/html/' : "/home/$user/public_html/";
     }
