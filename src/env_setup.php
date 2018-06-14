@@ -11,7 +11,6 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     define('TRIM_TEMP', getenv('TEMP')."\\trim_temp");
 } else {
     define('TRIM_TEMP', '/tmp/trim_temp');
-    secure_trim_data(true);
 }
 
 if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
