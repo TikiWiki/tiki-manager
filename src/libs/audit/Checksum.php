@@ -64,6 +64,7 @@ class Audit_Checksum {
             .'^\./temp/'
             .'|^\./modules/cache/mod'
             .'|^\./templates_c/'
+            .'|^\./maintenance\.php'
             .'|/\.git/'
             .'|/\.svn/'
         .')#';
