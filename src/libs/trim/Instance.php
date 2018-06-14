@@ -525,19 +525,26 @@ class Instance
         $restore->restoreFiles($archive);
 
         $this->app = $src_app;
-        $oldVersion = $this->getLatestVersion();
-        $version = $this->createVersion();
-        $version->type = is_object($oldVersion) ? $oldVersion->type : NULL;
-        $version->branch = is_object($oldVersion) ? $oldVersion->branch : NULL;
-        $version->date = is_object($oldVersion) ? $oldVersion->date : NULL;
-        $version->save();
         $this->save();
-
         $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
-        perform_database_setup($this, $database_dump);
 
-        info('Cleaning up...');
-        perform_instance_installation($this);
+        $version = null;
+        $oldVersion = $this->getLatestVersion();
+
+        perform_database_setup($this, $database_dump);
+        perform_instance_installation($this); // a version is created in this call
+
+        if(!$oldVersion) {
+            $version = $this->getLatestVersion();
+        }
+
+        if(!$version) {
+            $version = $this->createVersion();
+            $version->type = is_object($oldVersion) ? $oldVersion->type : NULL;
+            $version->branch = is_object($oldVersion) ? $oldVersion->branch : NULL;
+            $version->date = is_object($oldVersion) ? $oldVersion->date : NULL;
+            $version->save();
+        }
 
         if ($this->app == 'tiki') {
             info("Fixing permissions for {$this->name}");
