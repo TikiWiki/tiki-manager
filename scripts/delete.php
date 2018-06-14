@@ -7,14 +7,26 @@
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/check.php';
 
-define('ARG_SWITCH', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'switch');
+$args = $_SERVER['argv'];
+$selection = array();
 
-echo color("\nWhich instances do you want to remove? " .
-    "(This will NOT delete the software itself, " .
-    "just your instance connection to it.)\n\n", 'yellow');
+if (count($args) === 2 && $args[1] === 'switch') {
+    define('ARG_SWITCH', true);
+}
+else {
+    $args = array_filter($args, 'is_numeric');
+    $selection = array_map(array('Instance', 'getInstance'), $args);
+    $selection = array_filter($selection, 'is_object');
+}
 
-$instances = Instance::getInstances();
-$selection = selectInstances($instances, '');
+if(empty($selection)) {
+    echo color("\nWhich instances do you want to remove? " .
+        "(This will NOT delete the software itself, " .
+        "just your instance connection to it.)\n\n", 'yellow');
+
+    $instances = Instance::getInstances();
+    $selection = selectInstances($instances, '');
+}
 
 foreach ($selection as $instance) $instance->delete();
 
