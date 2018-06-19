@@ -153,21 +153,26 @@ class Host_Command
         if (empty($args)){
             return $result;
         }
-        $args = array_flatten($args, true);
+
         foreach ($args as $arg) {
-            $arg = trim($arg);
-            if (strpos($arg, '-') === 0) {
-                if(strpos($arg, '=') > -1) {
-                    $arg = explode('=', $arg, 2);
-                    $arg = "{$arg[0]}=" . escapeshellarg($arg[1]);
+            if (is_string($arg)) {
+                $arg = trim($arg);
+                if (strpos($arg, '-') === 0) {
+                    if(strpos($arg, '=') > -1) {
+                        $arg = explode('=', $arg, 2);
+                        $arg = "{$arg[0]}=" . escapeshellarg($arg[1]);
+                    }
+                    else if(strpos($arg, ' ') > -1) {
+                        $arg = explode(' ', $arg, 2);
+                        $arg = "{$arg[0]} " . escapeshellarg($arg[1]);
+                    }
                 }
-                else if(strpos($arg, ' ') > -1) {
-                    $arg = explode(' ', $arg, 2);
-                    $arg = "{$arg[0]} " . escapeshellarg($arg[1]);
+                else {
+                    $arg = escapeshellarg($arg);
                 }
             }
-            else {
-                $arg = escapeshellarg($arg);
+            else if(is_callable($arg)) {
+                $arg = $arg();
             }
             $result[] = $arg;
         }
