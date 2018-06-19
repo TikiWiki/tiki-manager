@@ -136,9 +136,9 @@ class SSH_Host_Seclib_Adapter {
         $stdin = $command->getStdinContent();
 
         if ($stdin) {
-            $stdinLen = strlen($stdin);
-            $commandLine = "(head -c $stdinLen <<EOF\n{$stdin}\nEOF\n)"
-                        . '| (' . $commandLine . ')';
+            $stdin = base64_encode($stdin);
+            $commandLine = "(base64 -d <<EOF\n{$stdin}\nEOF\n)"
+                        . ' | (' . $commandLine . ')';
         }
 
         $envLine = $this->prepareEnv($env);

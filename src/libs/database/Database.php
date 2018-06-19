@@ -71,7 +71,7 @@ class Database
 
     public function createDatabase($name)
     {
-        $sql = sprintf("CREATE DATABASE IF NOT EXISTS `%s`;", $name);
+        $sql = sprintf('CREATE DATABASE IF NOT EXISTS `%s`;', $name);
         $result = $this->query($sql);
         return $this;
     }
