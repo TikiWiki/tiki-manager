@@ -720,10 +720,11 @@ class Access_SSH extends Access implements ShellPrompt
 
     function fileExists($filename)
     {
-        if ($filename{0} != '/')
+        if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
-
-        return file_exists($filename);
+        }
+        $command = $this->createCommand('test', array('-f', $filename));
+        return $command->run()->getReturn() === 0;
     }
 
     function fileGetContents($filename)
