@@ -124,6 +124,8 @@ abstract class Access
     abstract function deleteFile($filename);
 
     abstract function moveFile($remoteSource, $remoteTarget);
+    
+    abstract function copyFile($remoteSource, $remoteTarget);
 
     abstract function localizeFolder($remoteLocation, $localMirror);
 }
@@ -438,6 +440,16 @@ class Access_Local extends Access implements ShellPrompt
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
 
         rename($remoteSource, $remoteTarget);
+    }
+
+    function copyFile($remoteSource, $remoteTarget)
+    {
+        if (!$this->isLocalPath($remoteSource))
+            $remoteSource = $this->instance->getWebPath($remoteSource);
+        if (!$this->isLocalPath($remoteTarget))
+            $remoteTarget = $this->instance->getWebPath($remoteTarget);
+
+        copy($remoteSource, $remoteTarget);
     }
 
     function chdir($location)
@@ -803,6 +815,19 @@ class Access_SSH extends Access implements ShellPrompt
         $this->shellExec("mv $a $b");
     }
 
+    function copyFile($remoteSource, $remoteTarget)
+    {
+        if ($remoteSource{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN')
+            $remoteSource = $this->instance->getWebPath($remoteSource);
+        if ($remoteTarget{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN')
+            $remoteTarget = $this->instance->getWebPath($remoteTarget);
+
+        $a = escapeshellarg($remoteSource);
+        $b = escapeshellarg($remoteTarget);
+
+        $this->shellExec("cp $a $b");
+    }
+
     function chdir($location)
     {
         $this->location = $location;
@@ -1020,6 +1045,17 @@ class Access_FTP extends Access implements Mountable
 
         $host = $this->getHost();
         $host->rename($remoteSource, $remoteTarget);
+    }
+
+    function copyFile($remoteSource, $remoteTarget)
+    {
+        if ($remoteSource{0} != '/')
+            $remoteSource = $this->instance->getWebPath($remoteSource);
+        if ($remoteTarget{0} != '/')
+            $remoteTarget = $this->instance->getWebPath($remoteTarget);
+
+        $host = $this->getHost();
+        $host->copy($remoteSource, $remoteTarget);
     }
 
     function deleteFile($filename)

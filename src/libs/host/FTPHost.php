@@ -63,16 +63,30 @@ class FTP_Host
     function getContent($filename)
     {
         $this->connect();
-
-        $fp = tmpfile();
-        if (ftp_fget($this->conn, $fp, $filename, FTP_ASCII)) {
-            $content = '';
-            rewind($fp);
-            while (! feof($fp))
-                $content .= fread($fp, 8192);
-
+        $fp = $this->getResource($filename);
+        $content = '';
+    
+        if(!is_resource($pf)) {
             return $content;
         }
+    
+        while (!feof($fp)) {
+            $content .= fread($fp, 8192);
+        }
+        fclose($fp);
+
+        return $content;
+    }
+
+    function getResource($filename, $type=FTP_ASCII)
+    {
+        $this->connect();
+        $fp = tmpfile();
+        if (ftp_fget($this->conn, $fp, $filename, $type)) {
+            rewind($fp);
+            return $fp;
+        }
+        return false;
     }
 
     function sendFile($localFile, $remoteFile)
@@ -110,6 +124,18 @@ class FTP_Host
     {
         $this->connect();
         return ftp_rename($this->conn, $from, $to);
+    }
+
+    function copy($from, $to)
+    {
+        $this->connect();
+        $fp = $this->getResource($from);
+        if(!is_resource($pf)) {
+            return false;
+        }
+        $ret = ftp_fput($this->conn, $to, $fp);
+        fclose($fp);
+        return $ret;
     }
 }
 
