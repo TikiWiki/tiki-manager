@@ -295,7 +295,7 @@ class Application_Tiki extends Application
         $this->fixPermissions(); // it also runs composer!
 
         if (! $access->fileExists($this->instance->getWebPath('.htaccess'))) {
-            $access->uploadFile(
+            $access->copyFile(
                 $this->instance->getWebPath('_htaccess'),
                 $this->instance->getWebPath('.htaccess')
             );
