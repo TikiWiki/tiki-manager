@@ -842,10 +842,16 @@ class Access_SSH extends Access implements ShellPrompt
         $this->env[$var] = $value;
     }
 
-    function shellExec($commands, $output = false)
+    function shellExec($commands, $output=false)
     {
-        if (! is_array($commands))
-            $commands = func_get_args();
+        if (!is_array($commands)) {
+            $argv = func_get_args();
+            $argc = count($argv);
+            $commands = $argv;
+            $commands = array_filter($commands, 'is_string');
+            $commands = array_filter($commands, 'strlen');
+            $output = is_bool($argv[$argc - 1]) && $argv[$argc - 1];
+        }
 
         $host = $this->getHost();
         if ($this->location)
