@@ -16,6 +16,7 @@ require_once TRIM_ROOT . '/src/libs/trim/Backup.php';
 require_once TRIM_ROOT . '/src/libs/trim/Restore.php';
 require_once TRIM_ROOT . '/src/libs/trim/Instance.php';
 require_once TRIM_ROOT . '/src/libs/trim/Version.php';
+require_once TRIM_ROOT . '/src/dbsetup.php';
 require_once TRIM_ROOT . '/src/accesslib.php';
 require_once TRIM_ROOT . '/src/applicationlib.php';
 require_once TRIM_ROOT . '/src/libs/database/Database.php';
