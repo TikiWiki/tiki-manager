@@ -111,7 +111,6 @@ class SSH_Host
     public function rsync($args=array())
     {
         $return_val = -1;
-
         if(empty($args['src']) || empty($args['dest'])) {
             return $return_val;
         }
@@ -119,14 +118,20 @@ class SSH_Host
         $key = SSH_KEY;
         $user = $this->user;
         $host = $this->host;
-        
-        $port = null;
-        if ($this->port != 22) $port = " -p {$this->port} ";
+        $src = $args['src'];
+        $dest = $args['dest'];
+        $port = $this->port ;
 
-        $output = array();
-        $command = 'rsync -aL --delete -e ' .
-            "\"ssh $port -i $key -l $user\" $user@$host:{$args['src']} '{$args['dest']}'";
-        exec($command, $output, $return_var);
+        $localHost = new Local_Host();
+        $command = new Host_Command('rsync', array(
+            '-a', '-L', '--delete',
+            '-e', "ssh -p {$port} -i $key",
+            $args['src'],
+            "{$user}@{$host}:{$args['dest']}"
+        ));
+        $localHost->runCommand($command);
+        $return_var = $command->getReturn();
+
         if ($return_var != 0)
             info("RSYNC exit code: $return_var");
 
