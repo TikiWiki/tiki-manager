@@ -11,6 +11,7 @@ require_once TRIM_ROOT . '/src/libs/host/LocalHost.php';
 require_once TRIM_ROOT . '/src/libs/host/FTPHost.php';
 require_once TRIM_ROOT . '/src/libs/host/SSHHost.php';
 require_once TRIM_ROOT . '/src/libs/audit/Checksum.php';
+require_once TRIM_ROOT . '/src/libs/trim/Discovery.php';
 require_once TRIM_ROOT . '/src/libs/trim/Backup.php';
 require_once TRIM_ROOT . '/src/libs/trim/Restore.php';
 require_once TRIM_ROOT . '/src/libs/trim/Instance.php';
