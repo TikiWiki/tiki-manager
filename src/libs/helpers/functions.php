@@ -67,6 +67,17 @@ function getPassword($stars = false)
     return $password;
 }
 
+function promptPassword($prompt="Password", $stars=true, $allowEmpty=false)
+{
+    $password = '';
+    while(empty($password) && !$allowEmpty) {
+        print "{$prompt}: ";
+        $password = getPassword($stars);
+        echo PHP_EOL;
+    }
+    return $password;
+}
+
 function prefix($text, $prefix)
 {
     if(!is_string($text)) {
