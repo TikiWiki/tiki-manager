@@ -213,6 +213,15 @@ class Host_Command
     }
 
     /**
+     * Set option like current path and environment to host
+     */
+    public function setOption($name, $value)
+    {
+        $this->options = $this->options ?: array();
+        return $this->options[$name] = $value;
+    }
+
+    /**
      * @param resource $process The process running the command
      */
     public function setProcess($process)
