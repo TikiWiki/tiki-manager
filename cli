@@ -1,0 +1,4 @@
+#!/usr/bin/env php
+<?php
+include('src/env_setup.php');
+include('src/libs/cli/cliapp.php');

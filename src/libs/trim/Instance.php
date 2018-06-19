@@ -171,6 +171,8 @@ WHERE
 
 class Instance
 {
+    const TYPES = ['local', 'ftp', 'ssh'];
+
     private $id;
     public $name;
     public $contact;
