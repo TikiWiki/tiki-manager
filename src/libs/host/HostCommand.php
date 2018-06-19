@@ -325,7 +325,8 @@ class Host_Command
         if(is_resource($this->process) || !is_null($this->return)) {
             throw new Host_CommandException("Host_Command cannot run twice", 1);
         }
-        return $host->runCommand($this, $options);
+        $host->runCommand($this, $options);
+        return $this;
     }
 }
 
