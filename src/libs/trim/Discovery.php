@@ -340,7 +340,35 @@ class Discovery {
             return $folder['target'];
         }
 
-        return sprintf('/home/%s/html/%s', $user, $instance->name);
+        return sprintf('/home/%s/public_html/%s', $user, $instance->name);
+    }
+
+    public function detectWeburl()
+    {
+        $instance = $this->instance;
+        if(!empty($instance->name)) {
+            return "https://{$instance->name}";
+        }
+        if(!empty($access->host)) {
+            return "https://{$access->host}";
+        }
+        return "http://localhost";
+    }
+
+    public function detectName()
+    {
+        $instance = $this->instance;
+        if(!empty($instance->weburl)) {
+            $url = parse_url($instance->weburl);
+            if(isset($url['host'])) {
+                return $url['host'];
+            }
+        }
+        if(!empty($access->host)) {
+            $name = preg_replace('/[^\w]+/', '-', $access->host);
+            return $name;
+        }
+        return "tikiwiki";
     }
 
     public function getConf($name)
