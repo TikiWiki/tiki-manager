@@ -171,7 +171,6 @@ class RC_SVN
             '--accept theirs-full',
             '--allow-mixed-revisions',
             '--dry-run',
-            '--quiet',
         ));
 
         if (strlen(trim($conflicts)) > 0 &&
