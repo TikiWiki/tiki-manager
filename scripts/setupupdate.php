@@ -18,11 +18,7 @@ if (! in_array($hour, range(0, 23)))
 if (! in_array($minute, range(0, 59)))
     die(error('Invalid minute.'));
 
-$path = realpath( dirname(__FILE__) . '/update.php' );
-$entry = sprintf(
-    "%d %d * * * %s -d memory_limit=256M %s auto %s\n",
-    $minute, $hour, php(), $path, $which
-);
+$path = 'scripts/update.php';
 
 warning("NOTE: Only SVN instances can be updated.\n");
 echo "Which instances do you want to update?\n";
@@ -31,6 +27,11 @@ $instances = Instance::getUpdatableInstances();
 printInstances($instances);
 
 $which = promptUser('>>> ');
+$trimpath = realpath(dirname(__FILE__) . '/..');
+$entry = sprintf(
+    "%d %d * * * cd %s && %s -d memory_limit=256M %s auto %s\n",
+    $minute, $hour, $trimpath, php(), $path, $which
+);
 
 file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
 

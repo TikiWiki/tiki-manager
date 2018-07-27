@@ -19,10 +19,11 @@ if (! in_array($hour, range(0, 23)))
 if (! in_array($minute, range(0, 59)))
     die(error('Invalid minute.'));
 
-$path = realpath(dirname(__FILE__) . '/watch.php');
+$path = 'scripts/watch.php';
+$trimpath = realpath(dirname(__FILE__) . '/..');
 $entry = sprintf(
-    "%d %d * * * %s -d memory_limit=256M %s %s\n",
-    $minute, $hour, php(), $path, $email);
+    "%d %d * * * cd %s && %s -d memory_limit=256M %s %s\n",
+    $minute, $hour, $trimpath, php(), $path, $email);
 
 file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
 
