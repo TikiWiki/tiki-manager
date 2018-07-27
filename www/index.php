@@ -13,6 +13,8 @@ ob_end_clean();
 if( RESTRICT && ( $_SERVER['HTTP_HOST'] != 'localhost' || $_SERVER['REMOTE_ADDR'] != '127.0.0.1' ) )
 	die( "This interface is not enabled." );
 
+set_time_limit(TIMEOUT);
+
 session_start();
 
 if( ! isset( $_SESSION['active'] ) )

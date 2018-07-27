@@ -64,6 +64,7 @@ file_put_contents($webTrimDirectory . '/config.php', <<<CONFIG
 define('USERNAME', '$user');
 define('PASSWORD', '$pass');
 define('RESTRICT', $restrict);
+define('TIMEOUT', 0);
 define('TRIMPATH', '$trimpath');
 define('THEME', 'default');
 define('TITLE', 'TRIM Web Administration');
