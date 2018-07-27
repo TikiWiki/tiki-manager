@@ -21,7 +21,7 @@ if (! in_array($minute, range(0, 59)))
 $path = 'scripts/backup.php';
 $trimpath = realpath(dirname(__FILE__) . '/..');
 $entry = sprintf(
-    "%d %d * * * cd %s %% %s -d memory_limit=256M %s all\n",
+    "%d %d * * * cd %s && %s -d memory_limit=256M %s all\n",
     $minute, $hour, $trimpath, php(), $path);
 
 file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
