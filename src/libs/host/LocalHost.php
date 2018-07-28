@@ -133,6 +133,18 @@ class Local_Host
 
     function openShell($workingDir = '')
     {
+        if (empty($workingDir)) {
+            return;
+        }
+
+        if (!is_dir($workingDir)) {
+            $error = sprintf("Cannot connect: path (%s) is invalid or does not exist.\n", $workingDir);
+            error($error);
+            return;
+        }
+
+        $command = 'sh -c \'cd ' . $workingDir . '; exec ${SHELL:-sh}\'';
+        passthru($command);
     }
 
     function rsync($args=array())
