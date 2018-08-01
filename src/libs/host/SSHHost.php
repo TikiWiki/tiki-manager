@@ -9,6 +9,8 @@ require_once __DIR__ . '/SSHHostWrapperAdapter.php';
 
 class SSH_Host
 {
+    static $sshKeyCheck = [];
+
     private $adapter;
     private $location;
     private $env = array();
@@ -26,6 +28,11 @@ class SSH_Host
         $this->port = $port ?: 22;
         $this->checkCopyId();
         $this->selectAdapter($adapter_class);
+
+        $sshConnectionId = implode('_', [$this->user,$this->host, $this->port]);
+        if (!isset(self::$sshKeyCheck[$sshConnectionId])) {
+            self::$sshKeyCheck[$sshConnectionId] = $this->checkSshKey();
+        }
     }
 
     function chdir($location)
@@ -104,7 +111,7 @@ class SSH_Host
         }
         else
             $command = "ssh $port -i $key {$this->user}@{$this->host}";
-        
+
         passthru($command);
     }
 
@@ -157,6 +164,40 @@ class SSH_Host
             debug("Unable to use $classname, falling back to SSH_Host_Wrapper_Adapter");
         }
         return $this->adapter;
+    }
+
+    /**
+     * Check if Private Key is within the authorized keys from remote server
+     */
+    private function checkSshKey()
+    {
+        $key = SSH_KEY;
+        $user = $this->user;
+        $host = $this->host;
+
+        $localHost = new Local_Host();
+        $command = new Host_Command('ssh', array(
+                '-i',
+                $key,
+                '-o',
+                "IdentitiesOnly yes",
+                '-o',
+                "PreferredAuthentications publickey",
+                "{$user}@{$host}",
+                "exit"
+            )
+        );
+
+        $localHost->runCommand($command);
+        $returnVar = $command->getReturn();
+
+        if ($returnVar != 0) {
+            $message = "Your ssh keys are not properly set up. Please use 'make copysshkey' command.\n";
+            warning($message);
+            return false;
+        }
+
+        return true;
     }
 }
 
