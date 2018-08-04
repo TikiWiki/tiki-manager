@@ -12,5 +12,7 @@ use Symfony\Component\Console\Application;
 $application = new Application();
 
 $application->add(new \App\Command\CreateInstanceCommand());
+$application->add(new \App\Command\AccessInstanceCommand());
+$application->add(new \App\Command\DeleteInstanceCommand());
 
 $application->run();

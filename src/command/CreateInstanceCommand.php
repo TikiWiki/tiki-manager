@@ -16,7 +16,7 @@ class CreateInstanceCommand extends Command
     {
         $this
             ->setName('instance:create')
-            ->setDescription('Creates a new instance.')
+            ->setDescription('Creates a new instance')
             ->setHelp('This command allows you to create a new instance');
 
     }
@@ -37,16 +37,16 @@ class CreateInstanceCommand extends Command
 
         if ($type != 'local') {
 
-            $question = $this->getQuestion('Host name');
+            $question = TrimHelper::getQuestion('Host name');
             $host = $helper->ask($input, $output, $question);
 
-            $question = $this->getQuestion('Port number', ($type == 'ssh') ? 22 : 21);
+            $question = TrimHelper::getQuestion('Port number', ($type == 'ssh') ? 22 : 21);
             $port = $helper->ask($input, $output, $question);
 
-            $question = $this->getQuestion('User');
+            $question = TrimHelper::getQuestion('User');
             $user = $helper->ask($input, $output, $question);
 
-            $question = $this->getQuestion('Password');
+            $question = TrimHelper::getQuestion('Password');
             $question->setHidden(true);
             $question->setHiddenFallback(false);
 
@@ -75,10 +75,10 @@ class CreateInstanceCommand extends Command
 
         $name = $contact = $webroot = $tempdir = $weburl = '';
 
-        $question = $this->getQuestion('Instance name', $d_name);
+        $question = TrimHelper::getQuestion('Instance name', $d_name);
         $name = $helper->ask($input, $output, $question);
 
-        $question = $this->getQuestion('Contact email');
+        $question = TrimHelper::getQuestion('Contact email');
         $contact = $helper->ask($input, $output, $question);
 
         $instance = new \Instance();
@@ -89,10 +89,10 @@ class CreateInstanceCommand extends Command
         $instance->tempdir = rtrim($tempdir, '/');
 
         if ($type == 'ftp') {
-            $question = $this->getQuestion('Web root', "/home/$user/public_html");
+            $question = TrimHelper::getQuestion('Web root', "/home/$user/public_html");
             $webroot = $helper->ask($input, $output, $question);
 
-            $question = $this->getQuestion('Web URL', "http://$host");
+            $question = TrimHelper::getQuestion('Web URL', "http://$host");
             $webroot = $helper->ask($input, $output, $question);
 
             $instance->webroot = rtrim($webroot, '/');
@@ -137,14 +137,14 @@ class CreateInstanceCommand extends Command
         }
 
         if ($type != 'ftp') {
-            $question = $this->getQuestion('Web root', $d_webroot);
+            $question = TrimHelper::getQuestion('Web root', $d_webroot);
             $webroot = $helper->ask($input, $output, $question);
 
-            $question = $this->getQuestion('Web URL', "http://$host");
+            $question = TrimHelper::getQuestion('Web URL', "http://$host");
             $weburl = $helper->ask($input, $output, $question);
         }
 
-        $question = $this->getQuestion('Working directory', TRIM_TEMP);
+        $question = TrimHelper::getQuestion('Working directory', TRIM_TEMP);
         $tempdir = $helper->ask($input, $output, $question);
 
         if ($access instanceof ShellPrompt) {
@@ -154,13 +154,13 @@ class CreateInstanceCommand extends Command
             exit (-1);
         }
 
-        $question = $this->getQuestion('Backup owner', $backup_user);
+        $question = TrimHelper::getQuestion('Backup owner', $backup_user);
         $backup_user = $helper->ask($input, $output, $question);
 
-        $question = $this->getQuestion('Backup group', $backup_group);
+        $question = TrimHelper::getQuestion('Backup group', $backup_group);
         $backup_group = $helper->ask($input, $output, $question);
 
-        $question = $this->getQuestion('Backup file permissions', decoct($backup_perm));
+        $question = TrimHelper::getQuestion('Backup file permissions', decoct($backup_perm));
         $backup_perm = $helper->ask($input, $output, $question);
 
         $instance->weburl = rtrim($weburl, '/');
@@ -190,21 +190,5 @@ class CreateInstanceCommand extends Command
             perform_instance_installation($instance);
             $output->writeln('<fg=blue>Please test your site at ' . $instance->weburl . '</>');
         }
-    }
-
-    /**
-     * @param string $question
-     * @param string $default
-     * @return Question
-     */
-    protected function getQuestion($question, $default = null) {
-
-        if ($default !== null) {
-            $question = sprintf($question . " [%s]: ", $default);
-        } else {
-            $question = $question . ': ';
-        }
-
-        return new Question($question, $default);
     }
 }
