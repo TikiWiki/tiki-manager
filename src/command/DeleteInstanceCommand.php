@@ -40,11 +40,11 @@ class DeleteInstanceCommand extends Command
                     $instances = \Instance::getInstances();
 
                     $instancesId = array_filter(array_map('trim', explode(',', $answer)));
-                    $invalidIntancesId = array_diff($instancesId, array_keys($instances));
+                    $invalidInstancesId = array_diff($instancesId, array_keys($instances));
 
-                    if ($invalidIntancesId) {
+                    if ($invalidInstancesId) {
                         throw new \RuntimeException(
-                            'Invalid instance(s) ID(s) #'.implode(',', $invalidIntancesId)
+                            'Invalid instance(s) ID(s) #' . implode(',', $invalidInstancesId)
                         );
                     }
                 }
@@ -54,7 +54,7 @@ class DeleteInstanceCommand extends Command
 
             $instancesId = array_filter(array_map('trim', explode(',', $answer)));
             foreach ($instancesId as $id) {
-                $output->writeln('<fg=cyan>Deleting instance '.$instances[$id]->name.' ...</>');
+                $output->writeln('<fg=cyan>Deleting instance ' . $instances[$id]->name . ' ...</>');
                 $instances[$id]->delete();
             }
         } else {

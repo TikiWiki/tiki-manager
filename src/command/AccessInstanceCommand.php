@@ -42,11 +42,11 @@ class AccessInstanceCommand extends Command
                     $instances = \Instance::getInstances();
 
                     $instancesId = array_filter(array_map('trim', explode(',', $answer)));
-                    $invalidIntancesId = array_diff($instancesId, array_keys($instances));
+					$invalidInstancesId = array_diff($instancesId, array_keys($instances));
 
-                    if ($invalidIntancesId) {
+                    if ($invalidInstancesId) {
                         throw new \RuntimeException(
-                            'Invalid instance(s) ID(s) #'.implode(',', $invalidIntancesId)
+                            'Invalid instance(s) ID(s) #' . implode(',', $invalidInstancesId)
                         );
                     }
                 }
@@ -56,7 +56,7 @@ class AccessInstanceCommand extends Command
 
             $instancesId = array_filter(array_map('trim', explode(',', $answer)));
             foreach ($instancesId as $id) {
-                $output->writeln('<fg=cyan>Connecting to '.$instances[$id]->name.' at '.$instances[$id]->webroot.' directory ... (use "exit" to move to next the instance)</>');
+                $output->writeln('<fg=cyan>Connecting to ' . $instances[$id]->name.' at ' . $instances[$id]->webroot . ' directory ... (use "exit" to move to next the instance)</>');
                 $access = $instances[$id]->getBestAccess('scripting');
                 $access->openShell($instances[$id]->webroot);
             }
