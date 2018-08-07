@@ -32,7 +32,7 @@ class AccessInstanceCommand extends Command
             $output->writeln('<comment>In case you want to access more than one instance, please use a comma (,) between the values</comment>');
 
             $helper = $this->getHelper('question');
-            $question = TrimHelper::getQuestion(('Which instance(s) do you want to access?'));
+            $question = TrimHelper::getQuestion('Which instance(s) do you want to access?');
             $question->setValidator(function ($answer) {
                 if (empty($answer)) {
                     throw new \RuntimeException(
