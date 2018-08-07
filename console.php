@@ -16,5 +16,6 @@ $application->add(new \App\Command\AccessInstanceCommand());
 $application->add(new \App\Command\DeleteInstanceCommand());
 $application->add(new \App\Command\EnableWwwInstanceCommand());
 $application->add(new \App\Command\CopySshKeyCommand());
+$application->add(new \App\Command\WatchInstanceCommand());
 
 $application->run();

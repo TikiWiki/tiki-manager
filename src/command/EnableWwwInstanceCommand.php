@@ -65,6 +65,12 @@ Continue with this action (y,n)? ', false);
 		$io->newLine();
 
 		$question = TrimHelper::getQuestion('WWW Trim directory (ex: /var/www/virtual/webtrim.example.com/html)');
+		$question->setValidator(function ($value) {
+			if (empty(trim($value))) {
+				throw new \Exception('TRIM directory cannot be empty');
+			}
+			return $value;
+		});
 		$webTrimDirectory = $helper->ask($input, $output, $question);
 		$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -aR vendor ' . $webTrimDirectory;
 		exec($cmd);
@@ -77,7 +83,6 @@ Continue with this action (y,n)? ', false);
 			if (empty(trim($value))) {
 				throw new \Exception('The password cannot be empty');
 			}
-
 			return $value;
 		});
 		$question->setHidden(true);
@@ -89,7 +94,7 @@ Continue with this action (y,n)? ', false);
 		});
 		$restrict = $helper->ask($input, $output, $question);
 
-		$trimpath = realpath(dirname(__FILE__) . '/..');
+		$trimpath = realpath(dirname(__FILE__) . '/../..');
 
 		$user = addslashes($username);
 		$pass = addslashes($password);
