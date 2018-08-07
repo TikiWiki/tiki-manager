@@ -25,9 +25,7 @@ class AccessInstanceCommand extends Command
         $instancesInfo = TrimHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
             $io->newLine();
-
             $renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
-
             $io->newLine();
             $output->writeln('<comment>In case you want to access more than one instance, please use a comma (,) between the values</comment>');
 
