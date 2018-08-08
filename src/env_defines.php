@@ -1,7 +1,8 @@
 <?php
 define('TRIM_ROOT', realpath(dirname(__DIR__)));
 define('TRIM_DEBUG', getenv('TRIM_DEBUG') === 'true');
-define('TRIM_OUTPUT', TRIM_ROOT . "/logs/trim.output");
+define('TRIM_LOGS', TRIM_ROOT . "/logs");
+define('TRIM_OUTPUT', TRIM_LOGS . "/trim.output");
 
 define('CACHE_FOLDER', TRIM_ROOT . "/cache");
 define('TEMP_FOLDER', TRIM_ROOT . "/tmp");

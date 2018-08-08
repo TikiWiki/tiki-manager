@@ -86,6 +86,8 @@ if (! file_exists(BACKUP_FOLDER))
     mkdir(BACKUP_FOLDER);
 if (! file_exists(ARCHIVE_FOLDER))
     mkdir(ARCHIVE_FOLDER);
+if (! file_exists(TRIM_LOGS))
+    mkdir(TRIM_LOGS);
 
 function trim_output($output)
 {
