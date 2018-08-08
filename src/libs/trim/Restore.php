@@ -221,7 +221,7 @@ class Restore extends Backup
         $instance = $this->instance;
 
         $basename = basename($srcArchive);
-        $remote = $this->getWorkPath($basename);
+        $remote = $instance->getWorkPath($basename);
         $access->uploadFile($srcArchive, $remote);
         return $remote;
     }
