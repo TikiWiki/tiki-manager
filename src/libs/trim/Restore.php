@@ -49,7 +49,7 @@ class Restore extends Backup
         $archiveRoot = $this->getRestoreRoot();
 
         if($instance->type !== 'local') {
-            $archivePath = $access->uploadArchive($srcArchive);
+            $archivePath = $this->uploadArchive($srcArchive);
         }
 
         $args = array('-p', $archiveRoot);
