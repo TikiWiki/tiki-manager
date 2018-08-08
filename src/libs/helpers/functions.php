@@ -270,7 +270,7 @@ function get_absolute_path($path) {
 function run_composer_install()
 {
     $autoload = TRIM_ROOT . '/vendor/autoload.php';
-    $composerFolder = TRIM_TEMP;
+    $composerFolder = TRIM_ROOT . '/tmp';
     $composer = $composerFolder . '/composer';
 
     if (file_exists($autoload)) {
