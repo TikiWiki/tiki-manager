@@ -112,6 +112,8 @@ function cache_folder($app, $version)
     return $folder;
 }
 
+global $db; // explicitly mark $db as global
+
 // Make sure the raw database exists
 if (! file_exists(DB_FILE)) {
     if (! is_writable(dirname(DB_FILE)))

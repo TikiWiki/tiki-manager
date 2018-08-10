@@ -147,7 +147,9 @@ class SSH_Host
 
     private function selectAdapter($classname)
     {
-        $classname = $classname ?: 'SSH_Host_Seclib_Adapter';
+        // keep SSH_Host_Seclib_Adapter as the default only for windows.
+        $defaultClass = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? 'SSH_Host_Seclib_Adapter' : 'SSH_Host_Wrapper_Adapter';
+        $classname = $classname ?: $defaultClass;
 
         try {
             $this->adapter = new $classname(
