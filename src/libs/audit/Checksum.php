@@ -60,14 +60,7 @@ class Audit_Checksum {
                 instance_id = :id
         );";
 
-    const CHECKSUM_IGNORE_PATTERN = '#('
-            .'^\./temp/'
-            .'|^\./modules/cache/mod'
-            .'|^\./templates_c/'
-            .'|^\./maintenance\.php'
-            .'|/\.git/'
-            .'|/\.svn/'
-        .')#';
+    const CHECKSUM_IGNORE_PATTERN = '#(^\./temp/|^\./modules/cache/mod|^\./templates_c/|^\./maintenance\.php|/\.git/|/\.svn/)#';
 
     public static function hasChecksums($version_id)
     {
