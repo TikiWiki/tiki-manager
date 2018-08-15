@@ -12,7 +12,7 @@ define('ARG_BLANK', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'blank');
 echo color("\nAnswer the following to add a new TRIM instance.\n\n", 'yellow');
 
 $instance = new Instance();
-$instance->type = strtolower(promptUser('Connection type ', null, Instance::TYPES));
+$instance->type = strtolower(promptUser('Connection type ', null, explode(',', Instance::TYPES)));
 
 $access = Access::getClassFor($instance->type);
 $access = new $access($instance);

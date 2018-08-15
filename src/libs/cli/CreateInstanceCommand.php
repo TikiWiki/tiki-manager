@@ -21,7 +21,7 @@ class CreateInstanceCommand extends Command
             ->addArgument('name', InputArgument::REQUIRED, 'Instance name')
             ->addArgument('webroot', InputArgument::REQUIRED, 'Absolute path to instance folder')
             ->addArgument('weburl', InputArgument::REQUIRED, 'Instance URL')
-            ->addArgument('type', InputArgument::REQUIRED, 'Connection type, one of ['.join(', ', \Instance::TYPES).']')
+            ->addArgument('type', InputArgument::REQUIRED, 'Connection type, one of ['.join(', ', explode(',', \Instance::TYPES)).']')
             ;
 
         $this
