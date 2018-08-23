@@ -363,15 +363,25 @@ TRIM Main Styles
   color: red;
 }
 
+.modal-dialog {
+  max-width: 800px;
+}
+
 /*
 ==========================================================================
 TRIM Responsiveness
 ==========================================================================
 */
-@media (max-width: 767.98px) {
+@media (max-width: 991.98px) {
+  .modal-dialog {
+    max-width: 500px;
+  }
+
   .trim-instance-main-list ul li {
     overflow: hidden;
   }
+}
+@media (max-width: 767.98px) {
   .trim-instance-main-list ul li .buttons {
     padding-bottom: 10px;
   }
@@ -421,4 +431,4 @@ TRIM Responsiveness
   }
 }
 
-/*# sourceMappingURL=default.css.map */
+/*# sourceMappingURL=../css/default.css.map */

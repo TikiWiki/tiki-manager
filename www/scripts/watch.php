@@ -30,8 +30,8 @@ if (isset($_POST['id'])){
 		if (empty($log)) {
 			info("Nothing found.");
 		} else {
-			warning("Potential intrusions detected. Email sent.");
-			mail($email, "[TRIM] Potential intrusions detected.", $log);
+			warning("Potential intrusions detected.");
+			error($log);
 		}
 	} else {
 		die( "Unknown instance." );

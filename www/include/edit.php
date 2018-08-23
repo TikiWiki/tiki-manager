@@ -38,7 +38,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 					<table class="table table-bordered">
 						<tbody>
 							<tr>
-								<th scope="row"><label for="name">Name</label></th>
+								<th scope="row"><label for="name">Instance Name</label></th>
 								<td><input type="text" name="name" id="name" class="form-control" value="<?php echo html( $instance->name ) ?>"/></td>
 							</tr>
 							<tr>

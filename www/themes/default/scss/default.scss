@@ -236,6 +236,8 @@ TRIM Main Styles
     .red { color:red; }
 }
 
+.modal-dialog { max-width:$modal-lg; }
+
 
 
 
@@ -245,19 +247,23 @@ TRIM Responsiveness
 ==========================================================================
 */
 
-// large display
+// desktop
 @include media-breakpoint-down(lg) {}
 
 
-// desktop
-@include media-breakpoint-down(md) {}
-
-
 // tablet
+@include media-breakpoint-down(md) {
+    .modal-dialog { max-width:$modal-md; }
+    .trim-instance-main-list {
+        ul li { overflow:hidden; }
+    }
+}
+
+
+// mobile
 @include media-breakpoint-down(sm) {
     .trim-instance-main-list {
         ul li {
-            overflow:hidden;
             .buttons { padding-bottom:10px; }
         }
     }
@@ -266,7 +272,7 @@ TRIM Responsiveness
 }
 
 
-// mobile
+// small devices
 @include media-breakpoint-down(xs) {
     .navbar-fixed-top .navbar-collapse { max-height:500px; }
     .dropdown-menu > li > a { color:#777; }
@@ -292,4 +298,3 @@ TRIM Responsiveness
         }
     }
 }
-
