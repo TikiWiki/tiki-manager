@@ -157,7 +157,7 @@ class Local_Host
 
         $output = array();
         $command = sprintf(
-            'rsync -aL --delete %s %s 2>&1',
+            'rsync -aL --delete --exclude=.svn/tmp %s %s 2>&1',
             escapeshellarg($args['src']),
             escapeshellarg($args['dest'])
         );

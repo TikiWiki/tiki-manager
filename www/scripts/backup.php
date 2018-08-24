@@ -9,6 +9,10 @@ ob_end_clean();
 
 if (isset($_POST['id'])){
     if ( $instance = Instance::getInstance( (int) $_POST['id'] ) ) {
+        info('Checking permissions before backup...');
+        $instance->getApplication()->fixPermissions();
+        info('Check done!');
+        info('Backing up instance...');
         $instance->backup();
 //        perform_archive_cleanup($instance->id, $instance->name);
     } else {
