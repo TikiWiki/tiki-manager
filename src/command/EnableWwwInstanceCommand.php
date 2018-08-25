@@ -104,6 +104,7 @@ Continue with this action (y,n)? ', false);
 define('USERNAME', '$user');
 define('PASSWORD', '$pass');
 define('RESTRICT', $restrict);
+define('TIMEOUT', 0);
 define('TRIMPATH', '$trimpath');
 define('THEME', 'default');
 define('TITLE', 'TRIM Web Administration');
