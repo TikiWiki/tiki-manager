@@ -24,8 +24,8 @@ class WatchInstanceCommand extends Command
 		$helper = $this->getHelper('question');
 		$question = TrimHelper::getQuestion('Email address to contact');
 		$question->setValidator(function ($value) {
-			if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-				throw new \Exception('Please insert a valid email address');
+			if (! filter_var($value, FILTER_VALIDATE_EMAIL)) {
+				throw new \RuntimeException('Please insert a valid email address');
 			}
 			return $value;
 		});
@@ -35,7 +35,7 @@ class WatchInstanceCommand extends Command
 		$question->setValidator(function ($value) {
 			$match = preg_match('/^(?:2[0-3]|[01][0-9]):[0-5][0-9]$/', $value);
 			if (! $match) {
-				throw new \Exception('Please insert a valid time value');
+				throw new \RuntimeException('Please insert a valid time value');
 			}
 			return $value;
 		});

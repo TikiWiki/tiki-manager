@@ -67,7 +67,7 @@ Continue with this action (y,n)? ', false);
 		$question = TrimHelper::getQuestion('WWW Trim directory (ex: /var/www/virtual/webtrim.example.com/html)');
 		$question->setValidator(function ($value) {
 			if (empty(trim($value))) {
-				throw new \Exception('TRIM directory cannot be empty');
+				throw new \RuntimeException('TRIM directory cannot be empty');
 			}
 			return $value;
 		});

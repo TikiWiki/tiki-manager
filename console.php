@@ -5,7 +5,9 @@
 require __DIR__.'/vendor/autoload.php';
 
 include_once __DIR__.'/src/env_setup.php';
+include_once __DIR__.'/src/check.php';
 include_once __DIR__.'/src/dbsetup.php';
+include_once __DIR__.'/src/clean.php';
 
 use Symfony\Component\Console\Application;
 
@@ -17,5 +19,10 @@ $application->add(new \App\Command\DeleteInstanceCommand());
 $application->add(new \App\Command\EnableWwwInstanceCommand());
 $application->add(new \App\Command\CopySshKeyCommand());
 $application->add(new \App\Command\WatchInstanceCommand());
+$application->add(new \App\Command\DetectInstanceCommand());
+
+$application->add(new \App\Command\ApplyProfileCommand());
+
+$application->add(new \App\Command\FixPermissionsTikiCommand());
 
 $application->run();
