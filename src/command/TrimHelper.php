@@ -3,7 +3,6 @@
 namespace App\Command;
 
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Question\Question;
 
 class TrimHelper
@@ -67,16 +66,17 @@ class TrimHelper
 	}
 
 	/**
-	 * @param string $question
-	 * @param string $default
+	 * @param $question
+	 * @param null $default
+	 * @param string $character
 	 * @return Question
 	 */
-	public static function getQuestion($question, $default = null) {
+	public static function getQuestion($question, $default = null, $character = ':') {
 
 		if ($default !== null) {
 			$question = sprintf($question . " [%s]: ", $default);
 		} else {
-			$question = $question . ': ';
+			$question = $question . $character . ' ';
 		}
 
 		return new Question($question, $default);

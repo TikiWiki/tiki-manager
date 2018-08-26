@@ -58,7 +58,7 @@ access to the administration panel to local users (safer).');
 		$question = new ConfirmationQuestion('<comment>This will enable the TRIM administration web panel.</comment>
 Continue with this action (y,n)? ', false);
 
-		if (!$helper->ask($input, $output, $question)) {
+		if (! $helper->ask($input, $output, $question)) {
 			return;
 		}
 

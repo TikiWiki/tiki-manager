@@ -31,7 +31,7 @@ class WatchInstanceCommand extends Command
 		});
 		$email = $helper->ask($input, $output, $question);
 
-		$question = TrimHelper::getQuestion('What time should it run at?','00:00');
+		$question = TrimHelper::getQuestion('What time should it run at','00:00', '?');
 		$question->setValidator(function ($value) {
 			$match = preg_match('/^(?:2[0-3]|[01][0-9]):[0-5][0-9]$/', $value);
 			if (! $match) {

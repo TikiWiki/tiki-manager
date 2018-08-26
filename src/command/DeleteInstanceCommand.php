@@ -30,7 +30,7 @@ class DeleteInstanceCommand extends Command
 			$output->writeln('<comment>This will NOT delete the software itself, just your instance connection to it</comment>');
 
 			$helper = $this->getHelper('question');
-			$question = TrimHelper::getQuestion('Which instance(s) do you want to delete?');
+			$question = TrimHelper::getQuestion('Which instance(s) do you want to delete', null, '?');
 			$question->setValidator(function ($answer) {
 				if (empty($answer)) {
 					throw new \RuntimeException(
@@ -48,11 +48,10 @@ class DeleteInstanceCommand extends Command
 						);
 					}
 				}
-				return $answer;
+				return $instancesId;
 			});
-			$answer = $helper->ask($input, $output, $question);
 
-			$instancesId = array_filter(array_map('trim', explode(',', $answer)));
+			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
 				$output->writeln('<fg=cyan>Deleting instance ' . $instances[$id]->name . ' ...</>');
 				$instances[$id]->delete();

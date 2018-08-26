@@ -30,7 +30,7 @@ class AccessInstanceCommand extends Command
 			$output->writeln('<comment>In case you want to access more than one instance, please use a comma (,) between the values</comment>');
 
 			$helper = $this->getHelper('question');
-			$question = TrimHelper::getQuestion('Which instance(s) do you want to access?');
+			$question = TrimHelper::getQuestion('Which instance(s) do you want to access', null, '?');
 			$question->setValidator(function ($answer) {
 				if (empty($answer)) {
 					throw new \RuntimeException(
@@ -48,11 +48,10 @@ class AccessInstanceCommand extends Command
 						);
 					}
 				}
-				return $answer;
+				return $instancesId;
 			});
-			$answer = $helper->ask($input, $output, $question);
 
-			$instancesId = array_filter(array_map('trim', explode(',', $answer)));
+			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
 				$output->writeln('<fg=cyan>Connecting to ' . $instances[$id]->name.' at ' . $instances[$id]->webroot . ' directory ... (use "exit" to move to next the instance)</>');
 				$access = $instances[$id]->getBestAccess('scripting');

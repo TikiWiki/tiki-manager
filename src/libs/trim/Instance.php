@@ -213,6 +213,19 @@ class Instance
         return $instances;
     }
 
+    static function getTikiInstances()
+	{
+		$allInstances = self::getInstances();
+
+		$tikiInstances = array();
+		foreach ($allInstances as $instance) {
+			if ($instance->getApplication() instanceof Application_Tiki)
+				$tikiInstances[$instance->id] = $instance;
+		}
+
+		return $tikiInstances;
+	}
+
     static function getInstance($id)
     {
         $result = query(SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);

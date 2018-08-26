@@ -22,14 +22,7 @@ class FixPermissionsTikiCommand extends Command
 	{
 		$io = new SymfonyStyle($input, $output);
 
-		$allInstances = \Instance::getInstances();
-
-		$instances = array();
-		foreach ($allInstances as $instance) {
-			if ($instance->getApplication() instanceof \Application_Tiki)
-				$instances[$instance->id] = $instance;
-		}
-
+		$instances = \Instance::getTikiInstances();
 		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$output->writeln('<comment>Note: Only Tiki instances can have permissions fixed.</comment>');
@@ -40,7 +33,7 @@ class FixPermissionsTikiCommand extends Command
 			$output->writeln('<comment>In case you want to fix permissions to more than one instance, please use a comma (,) between the values</comment>');
 
 			$helper = $this->getHelper('question');
-			$question = TrimHelper::getQuestion('Which instance(s) do you want to fix permissions?');
+			$question = TrimHelper::getQuestion('Which instance(s) do you want to fix permissions', null ,'?');
 			$question->setValidator(function ($answer) {
 				if (empty($answer)) {
 					throw new \RuntimeException(
@@ -58,11 +51,10 @@ class FixPermissionsTikiCommand extends Command
 						);
 					}
 				}
-				return $answer;
+				return $instancesId;
 			});
-			$answer = $helper->ask($input, $output, $question);
 
-			$instancesId = array_filter(array_map('trim', explode(',', $answer)));
+			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
 				$output->writeln('<fg=cyan>Fixing permissions for ' . $instances[$id]->name . '...</>');
 				$instances[$id]->getApplication()->fixPermissions();
