@@ -29,6 +29,7 @@ class FixPermissionsTikiCommand extends Command
 
 			$io->newLine();
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
+
 			$io->newLine();
 			$output->writeln('<comment>In case you want to fix permissions to more than one instance, please use a comma (,) between the values</comment>');
 
@@ -40,7 +41,7 @@ class FixPermissionsTikiCommand extends Command
 						'You must select an #ID'
 					);
 				} else {
-					$instances = \Instance::getInstances();
+					$instances = \Instance::getTikiInstances();
 
 					$instancesId = array_filter(array_map('trim', explode(',', $answer)));
 					$invalidInstancesId = array_diff($instancesId, array_keys($instances));

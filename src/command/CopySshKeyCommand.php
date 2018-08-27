@@ -26,6 +26,7 @@ class CopySshKeyCommand extends Command
 		if (isset($instancesInfo)) {
 			$io->newLine();
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
+
 			$io->newLine();
 			$output->writeln('<comment>In case you want to copy the SSH key to more than one instance, please use a comma (,) between the values</comment>');
 
@@ -53,7 +54,7 @@ class CopySshKeyCommand extends Command
 
 			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Copying SSH key to ' . $instances[$id]->name . ' ... (use "exit" to move to next the instance)</>');
+				$output->writeln('<fg=cyan>Copying SSH key to ' . $instances[$id]->name . '... (use "exit" to move to next the instance)</>');
 				$access = $instances[$id]->getBestAccess('scripting');
 				$access->firstConnect();
 			}

@@ -55,7 +55,7 @@ class ApplyProfileCommand extends Command
 						'You must select an #ID'
 					);
 				} else {
-					$instances = \Instance::getInstances();
+					$instances = \Instance::getTikiInstances();
 
 					$instancesId = array_filter(array_map('trim', explode(',', $answer)));
 					$invalidInstancesId = array_diff($instancesId, array_keys($instances));

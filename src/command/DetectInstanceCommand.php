@@ -26,6 +26,7 @@ class DetectInstanceCommand extends Command
 		if (isset($instancesInfo)) {
 			$io->newLine();
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
+
 			$io->newLine();
 			$output->writeln('<comment>In case you want to detect more than one instance, please use a comma (,) between the values</comment>');
 

@@ -6,8 +6,7 @@ namespace App\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
-use Symfony\Component\Console\Question\Question;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class CreateInstanceCommand extends Command
@@ -17,12 +16,14 @@ class CreateInstanceCommand extends Command
 		$this
 			->setName('instance:create')
 			->setDescription('Creates a new instance')
-			->setHelp('This command allows you to create a new instance');
+			->setHelp('This command allows you to create a new instance')
+			->addArgument('blank', InputArgument::OPTIONAL);
 
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		$blank = $input->getArgument('blank') == 'blank' ? true : false;
 
 		$output->writeln('<comment>Answer the following to add a new TRIM instance.</comment>');
 
@@ -184,7 +185,7 @@ class CreateInstanceCommand extends Command
 		$instance->save();
 		$output->writeln('<info>Instance information saved.</info>');
 
-		if (ARG_BLANK) {
+		if ($blank) {
 			$output->writeln('<fg=blue>This is a blank (empty) instance. This is useful to restore a backup later.</>');
 		} else {
 			perform_instance_installation($instance);

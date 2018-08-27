@@ -26,6 +26,7 @@ class DeleteInstanceCommand extends Command
 		if (isset($instancesInfo)) {
 			$io->newLine();
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
+
 			$io->newLine();
 			$output->writeln('<comment>This will NOT delete the software itself, just your instance connection to it</comment>');
 
@@ -53,7 +54,7 @@ class DeleteInstanceCommand extends Command
 
 			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Deleting instance ' . $instances[$id]->name . ' ...</>');
+				$output->writeln('<fg=cyan>Deleting instance ' . $instances[$id]->name . '...</>');
 				$instances[$id]->delete();
 			}
 		} else {

@@ -26,6 +26,7 @@ class AccessInstanceCommand extends Command
 		if (isset($instancesInfo)) {
 			$io->newLine();
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
+
 			$io->newLine();
 			$output->writeln('<comment>In case you want to access more than one instance, please use a comma (,) between the values</comment>');
 
@@ -53,7 +54,7 @@ class AccessInstanceCommand extends Command
 
 			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Connecting to ' . $instances[$id]->name.' at ' . $instances[$id]->webroot . ' directory ... (use "exit" to move to next the instance)</>');
+				$output->writeln('<fg=cyan>Connecting to ' . $instances[$id]->name.' at ' . $instances[$id]->webroot . ' directory... (use "exit" to move to next the instance)</>');
 				$access = $instances[$id]->getBestAccess('scripting');
 				$access->openShell($instances[$id]->webroot);
 			}

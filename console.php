@@ -20,6 +20,10 @@ $application->add(new \App\Command\EnableWwwInstanceCommand());
 $application->add(new \App\Command\CopySshKeyCommand());
 $application->add(new \App\Command\WatchInstanceCommand());
 $application->add(new \App\Command\DetectInstanceCommand());
+$application->add(new \App\Command\EditInstanceCommand());
+$application->add(new \App\Command\BlankInstanceCommand());
+$application->add(new \App\Command\CheckInstanceCommand());
+$application->add(new \App\Command\VerifyInstanceCommand());
 
 $application->add(new \App\Command\ApplyProfileCommand());
 

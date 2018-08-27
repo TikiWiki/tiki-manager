@@ -66,6 +66,40 @@ class TrimHelper
 	}
 
 	/**
+	 * Render a table with Options and Actions from "check" functionality
+	 *
+	 * @param $output
+	 */
+	public static function renderCheckOptionsAndActions($output)
+	{
+		$headers = array(
+			'Option',
+			'Action'
+		);
+
+		$options = array(
+			array(
+				'current',
+				'Use the files currently online for checksum'
+			),
+			array(
+				'source',
+				'Get checksums from repository (best option)'
+			),
+			array(
+				'skip',
+				'Do nothing'
+			)
+		);
+
+		$table = new Table($output);
+		$table
+			->setHeaders($headers)
+			->setRows($options);
+		$table->render();
+	}
+
+	/**
 	 * @param $question
 	 * @param null $default
 	 * @param string $character
