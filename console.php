@@ -29,4 +29,6 @@ $application->add(new \App\Command\ApplyProfileCommand());
 
 $application->add(new \App\Command\FixPermissionsTikiCommand());
 
+$application->add(new \App\Command\CliTrimCommand());
+
 $application->run();

@@ -33,27 +33,10 @@ class DetectInstanceCommand extends Command
 			$helper = $this->getHelper('question');
 			$question = TrimHelper::getQuestion('Which instance(s) do you want to detect', null, '?');
 			$question->setValidator(function ($answer) {
-				if (empty($answer)) {
-					throw new \RuntimeException(
-						'You must select an #ID'
-					);
-				} else {
-					$instances = \Instance::getInstances();
-
-					$instancesId = array_filter(array_map('trim', explode(',', $answer)));
-					$invalidInstancesId = array_diff($instancesId, array_keys($instances));
-
-					if ($invalidInstancesId) {
-						throw new \RuntimeException(
-							'Invalid instance(s) ID(s) #' . implode(',', $invalidInstancesId)
-						);
-					}
-				}
-				return $answer;
+				return TrimHelper::validateInstanceSelection($answer);
 			});
-			$answer = $helper->ask($input, $output, $question);
 
-			$instancesId = array_filter(array_map('trim', explode(',', $answer)));
+			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
 				if (! $instances[$id]->detectPHP()) {
 					if ($instances[$id]->phpversion < 50300) {

@@ -7,6 +7,12 @@ use Symfony\Component\Console\Question\Question;
 
 class TrimHelper
 {
+	// getInstances
+	// getTikiInstances
+	// getUpdatableInstances
+	// getRestorableInstances
+	// getReportInstances
+
 	/**
 	 * Get information from Instance Object
 	 *
@@ -100,6 +106,8 @@ class TrimHelper
 	}
 
 	/**
+	 * Wrapper for standard console question
+	 *
 	 * @param $question
 	 * @param null $default
 	 * @param string $character
@@ -114,5 +122,33 @@ class TrimHelper
 		}
 
 		return new Question($question, $default);
+	}
+
+	/**
+	 * Validate Instances Selection
+	 *
+	 * @param $answer
+	 * @param string $type
+	 * @return array
+	 */
+	public static function validateInstanceSelection($answer, $type = 'all')
+	{
+		if (empty($answer)) {
+			throw new \RuntimeException(
+				'You must select an #ID'
+			);
+		} else {
+			$instances = $type == 'all' ? \Instance::getInstances() : \Instance::getTikiInstances();
+
+			$instancesId = array_filter(array_map('trim', explode(',', $answer)));
+			$invalidInstancesId = array_diff($instancesId, array_keys($instances));
+
+			if ($invalidInstancesId) {
+				throw new \RuntimeException(
+					'Invalid instance(s) ID(s) #' . implode(',', $invalidInstancesId)
+				);
+			}
+		}
+		return $instancesId;
 	}
 }
