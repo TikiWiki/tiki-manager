@@ -191,13 +191,19 @@ class Instance
         return $this->id;
     }
 
-    static function getInstances()
+    static function getInstances($exclude_blank = false)
     {
         $result = query(SQL_SELECT_INSTANCE);
 
         $instances = array();
-        while ($instance = $result->fetchObject('Instance'))
-            $instances[$instance->getId()] = $instance;
+        while ($instance = $result->fetchObject('Instance')) {
+            if ($exclude_blank) {
+                if ($instance->getApplication())
+                    $instances[$instance->getId()] = $instance;
+            } else {
+                $instances[$instance->getId()] = $instance;
+            }
+        }
 
         return $instances;
     }
