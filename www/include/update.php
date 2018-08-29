@@ -1,23 +1,24 @@
-<?php $page_title = 'Updating an instance'; ?>
-<?php require dirname(__FILE__) . "/layout/head.php"; ?>
-<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
+<?php
+	$page_title = 'Updating an instance';
+	require dirname(__FILE__) . "/layout/head.php";
+	require dirname(__FILE__) . "/layout/nav.php";
+	$instances = Instance::getInstances(true);
+?>
 
 <div class="container">
 	<div class="trim-instance-list center">
 		<h1><?php echo TITLE; ?></h1>
 		<h2><?php echo $page_title; ?></h2>
 
-		<?php if (!empty(Instance::getInstances())): ?>
+		<?php if (!empty($instances)): ?>
 			<ul class="clearfix">
-			<?php foreach( Instance::getInstances() as $instance ): ?>
-				<?php if ($instance->getApplication() instanceof Application_Tiki): ?>
-					<li title="Update this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="update">
-						<?php require dirname(__FILE__) . "/layout/url.php"; ?>
-						<div class="buttons fa">
-							<a href="javascript:void(0);" class="fa-repeat" title="Update this instance"></a>
-						</div>
-					</li>
-				<?php endif; ?>
+			<?php foreach( $instances as $instance ): ?>
+				<li title="Update this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html( "{$instance->id}" ) ?>" data-name="<?php echo html( "{$instance->name}" ) ?>" data-type="update">
+					<?php require dirname(__FILE__) . "/layout/url.php"; ?>
+					<div class="buttons fa">
+						<a href="javascript:void(0);" class="fa-repeat" title="Update this instance"></a>
+					</div>
+				</li>
 			<?php endforeach; ?>
 			</ul>
 		<?php else: ?>

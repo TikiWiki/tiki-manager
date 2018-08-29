@@ -215,7 +215,7 @@ TRIM Main Styles
 .trim-instance-main-list ul.archive li a, .trim-instance-list ul.archive li a {
   padding: 10px;
   width: auto;
-  font-size: 1em;
+  font-size: 0.9em;
   white-space: normal;
 }
 .trim-instance-main-list ul.archive li span, .trim-instance-list ul.archive li span {
@@ -225,6 +225,12 @@ TRIM Main Styles
 .trim-instance-main-list ul.archive li span.fa-times, .trim-instance-list ul.archive li span.fa-times {
   margin-right: 5px;
   font-size: 1.5em;
+}
+.trim-instance-main-list.restore ul.archive li, .trim-instance-list.restore ul.archive li {
+  border: 1px solid #ddd;
+}
+.trim-instance-main-list.restore ul.archive li span, .trim-instance-list.restore ul.archive li span {
+  color: #888;
 }
 .trim-instance-main-list .alert, .trim-instance-list .alert {
   margin: 0 20px 20px;

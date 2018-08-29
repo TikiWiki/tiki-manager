@@ -147,13 +147,18 @@ TRIM Main Styles
                 margin:10px 0; padding:0; text-align:center; border:none;
                 &:hover { background-color:transparent; }
 
-                a { padding:10px; width:auto; font-size:1em; white-space:normal; }
+                a { padding:10px; width:auto; font-size:0.9em; white-space:normal; }
                 span {
                     font-size:1em; color:#fff;
                     &.fa-times { margin-right:5px; font-size:1.5em; }
                 }
             }
         }
+    }
+
+    &.restore ul.archive li {
+        border:1px solid #ddd;
+        span { color:#888; }
     }
 
     .alert {

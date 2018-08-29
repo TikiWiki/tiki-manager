@@ -1,15 +1,18 @@
-<?php $page_title = 'Instance List'; ?>
-<?php require dirname(__FILE__) . "/layout/head.php"; ?>
-<?php require dirname(__FILE__) . "/layout/nav.php"; ?>
+<?php
+	$page_title = 'Instance List';
+	require dirname(__FILE__) . "/layout/head.php";
+	require dirname(__FILE__) . "/layout/nav.php";
+	$instances = Instance::getInstances();
+?>
 
 <div class="container">
 	<div class="trim-instance-main-list center">
 		<h1><?php echo TITLE; ?></h1>
 		<h2><?php echo $page_title; ?></h2>
 
-		<?php if (!empty(Instance::getInstances())): ?>
+		<?php if (!empty($instances)): ?>
 			<ul class="clearfix">
-			<?php foreach( Instance::getInstances() as $instance ): ?>
+			<?php foreach( $instances as $instance ): ?>
 				<?php
 					$version = $instance->getLatestVersion();
 					$lock = (md5_file(TRIMPATH . '/scripts/maintenance.htaccess') == md5_file($instance->getWebPath('.htaccess')));
