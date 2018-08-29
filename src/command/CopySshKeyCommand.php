@@ -36,10 +36,10 @@ class CopySshKeyCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer);
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
-			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Copying SSH key to ' . $instances[$id]->name . '... (use "exit" to move to next the instance)</>');
-				$access = $instances[$id]->getBestAccess('scripting');
+			$selectedInstances = $helper->ask($input, $output, $question);
+			foreach ($selectedInstances as $instance) {
+				$output->writeln('<fg=cyan>Copying SSH key to ' . $instance->name . '... (use "exit" to move to next the instance)</>');
+				$access = $instance->getBestAccess('scripting');
 				$access->firstConnect();
 			}
 		} else {

@@ -36,52 +36,52 @@ class EditInstanceCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer);
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
-			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Edit data for ' . $instances[$id]->name . '...</>');
+			$selectedInstances = $helper->ask($input, $output, $question);
+			foreach ($selectedInstances as $instance) {
+				$output->writeln('<fg=cyan>Edit data for ' . $instance->name . '...</>');
 
-				$result = query(SQL_SELECT_ACCESS, array(':id' => $instances[$id]->id));
+				$result = query(SQL_SELECT_ACCESS, array(':id' => $instance->id));
 				$instanceType = $result->fetch()['type'];
 
 				if ($instanceType != 'local') {
-					$question = TrimHelper::getQuestion('Host name', $instances[$id]->name);
+					$question = TrimHelper::getQuestion('Host name', $instance->name);
 				} else if ($instanceType == 'local') {
-					$question = TrimHelper::getQuestion('Instance name', $instances[$id]->name);
+					$question = TrimHelper::getQuestion('Instance name', $instance->name);
 
 				}
 				$name = $helper->ask($input, $output, $question);
 
-				$question = TrimHelper::getQuestion('Contact email', $instances[$id]->contact);
+				$question = TrimHelper::getQuestion('Contact email', $instance->contact);
 				$contact = $helper->ask($input, $output, $question);
 
-				$question = TrimHelper::getQuestion('Web root', $instances[$id]->webroot);
+				$question = TrimHelper::getQuestion('Web root', $instance->webroot);
 				$webroot = $helper->ask($input, $output, $question);
 
-				$question = TrimHelper::getQuestion('Web URL', $instances[$id]->weburl);
+				$question = TrimHelper::getQuestion('Web URL', $instance->weburl);
 				$weburl = $helper->ask($input, $output, $question);
 
-				$question = TrimHelper::getQuestion('Working directory', $instances[$id]->tempdir);
+				$question = TrimHelper::getQuestion('Working directory', $instance->tempdir);
 				$tempdir = $helper->ask($input, $output, $question);
 
-				$question = TrimHelper::getQuestion('Backup owner', $instances[$id]->getProp('backup_user'));
+				$question = TrimHelper::getQuestion('Backup owner', $instance->getProp('backup_user'));
 				$backup_user = $helper->ask($input, $output, $question);
 
-				$question = TrimHelper::getQuestion('Backup group', $instances[$id]->getProp('backup_group'));
+				$question = TrimHelper::getQuestion('Backup group', $instance->getProp('backup_group'));
 				$backup_group = $helper->ask($input, $output, $question);
 
-				$backup_perm = intval($instances[$id]->getProp('backup_perm') ?: 0775);
+				$backup_perm = intval($instance->getProp('backup_perm') ?: 0775);
 				$question = TrimHelper::getQuestion('Backup file permissions', decoct($backup_perm));
 				$backup_perm = $helper->ask($input, $output, $question);
 
-				$instances[$id]->name = $name;
-				$instances[$id]->contact = $contact;
-				$instances[$id]->webroot = rtrim($webroot, '/');
-				$instances[$id]->weburl = rtrim($weburl, '/');
-				$instances[$id]->tempdir = rtrim($tempdir, '/');
-				$instances[$id]->backup_user = $backup_user;
-				$instances[$id]->backup_group = $backup_group;
-				$instances[$id]->backup_perm = octdec($backup_perm);
-				$instances[$id]->save();
+				$instance->name = $name;
+				$instance->contact = $contact;
+				$instance->webroot = rtrim($webroot, '/');
+				$instance->weburl = rtrim($weburl, '/');
+				$instance->tempdir = rtrim($tempdir, '/');
+				$instance->backup_user = $backup_user;
+				$instance->backup_group = $backup_group;
+				$instance->backup_perm = octdec($backup_perm);
+				$instance->save();
 
 				$output->writeln('<info>Instance information saved.</info>');
 			}

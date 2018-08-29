@@ -36,10 +36,10 @@ class DetectInstanceCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer);
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
-			foreach ($instancesId as $id) {
-				if (! $instances[$id]->detectPHP()) {
-					if ($instances[$id]->phpversion < 50300) {
+			$selectedInstances = $helper->ask($input, $output, $question);
+			foreach ($selectedInstances as $instance) {
+				if (! $instance->detectPHP()) {
+					if ($instance->phpversion < 50300) {
 						$output->writeln('<error>PHP Interpreter version is less than 5.3.</error>');
 						die(-1);
 					} else {
@@ -48,11 +48,11 @@ class DetectInstanceCommand extends Command
 					}
 				}
 
-				perform_instance_installation($instances[$id]);
+				perform_instance_installation($instance);
 
 				$matches = array();
 				preg_match('/(\d+)(\d{2})(\d{2})$/',
-					$instances[$id]->phpversion, $matches);
+					$instance->phpversion, $matches);
 
 				if (count($matches) == 4) {
 					info(sprintf("Detected PHP : %d.%d.%d",

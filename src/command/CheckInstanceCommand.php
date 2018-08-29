@@ -37,19 +37,19 @@ class CheckInstanceCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer);
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
-			foreach ($instancesId as $id) {
-				$version = $instances[$id]->getLatestVersion();
+			$selectedInstances = $helper->ask($input, $output, $question);
+			foreach ($selectedInstances as $instance) {
+				$version = $instance->getLatestVersion();
 
 				if (! $version) {
-					$output->writeln('<comment>Instance [' . $instances[$id]->id . '] (' . $instances[$id]->name . ') does not have a registered version. Skip.</comment>');
+					$output->writeln('<comment>Instance [' . $instance->id . '] (' . $instance->name . ') does not have a registered version. Skip.</comment>');
 					continue;
 				}
 
-				$output->writeln('<fg=cyan>Checking instance: ' . $instances[$id]->name . '...</>');
+				$output->writeln('<fg=cyan>Checking instance: ' . $instance->name . '...</>');
 
 				if ($version->hasChecksums())
-					handleCheckResult($instances[$id], $version, $version->performCheck($instances[$id]));
+					handleCheckResult($instance, $version, $version->performCheck($instance));
 				else {
 					$output->writeln('<comment>No checksums exist.</comment>');
 					$io->newLine();
@@ -65,11 +65,11 @@ class CheckInstanceCommand extends Command
 
 					switch ($option) {
 						case 'source':
-							$version->collectChecksumFromSource($instances[$id]);
-							handleCheckResult($instances[$id], $version, $version->performCheck($instances[$id]));
+							$version->collectChecksumFromSource($instance);
+							handleCheckResult($instance, $version, $version->performCheck($instance));
 							break;
 						case 'current':
-							$version->collectChecksumFromInstance($instances[$id]);
+							$version->collectChecksumFromInstance($instance);
 							break;
 						case 'skip':
 							continue;

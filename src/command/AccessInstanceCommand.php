@@ -36,11 +36,11 @@ class AccessInstanceCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer);
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
-			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Connecting to ' . $instances[$id]->name . ' at ' . $instances[$id]->webroot . ' directory... (use "exit" to move to next the instance)</>');
-				$access = $instances[$id]->getBestAccess('scripting');
-				$access->openShell($instances[$id]->webroot);
+			$selectedInstances = $helper->ask($input, $output, $question);
+			foreach ($selectedInstances as $instance) {
+				$output->writeln('<fg=cyan>Connecting to ' . $instance->name . ' at ' . $instance->webroot . ' directory... (use "exit" to move to next the instance)</>');
+				$access = $instance->getBestAccess('scripting');
+				$access->openShell($instance->webroot);
 			}
 		} else {
 			$output->writeln('<comment>No instances available to access.</comment>');

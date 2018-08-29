@@ -36,10 +36,10 @@ class DeleteInstanceCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer);
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
-			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Deleting instance ' . $instances[$id]->name . '...</>');
-				$instances[$id]->delete();
+			$selectedInstances = $helper->ask($input, $output, $question);
+			foreach ($selectedInstances as $instance) {
+				$output->writeln('<fg=cyan>Deleting instance ' . $instance->name . '...</>');
+				$instance->delete();
 			}
 		} else {
 			$output->writeln('<comment>No instances available to delete.</comment>');

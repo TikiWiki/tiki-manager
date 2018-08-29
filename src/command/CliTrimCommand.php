@@ -39,7 +39,7 @@ class CliTrimCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer, 'tiki');
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
+			$selectedInstances = $helper->ask($input, $output, $question);
 
 			$question = TrimHelper::getQuestion('Write command to execute', null);
 			$question->setNormalizer(function ($value) {
@@ -47,13 +47,13 @@ class CliTrimCommand extends Command
 			});
 			$command = $helper->ask($input, $output, $question);
 
-			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Calling command in ' . $instances[$id]->name . '</>');
+			foreach ($selectedInstances as $instance) {
+				$output->writeln('<fg=cyan>Calling command in ' . $instance->name . '</>');
 
-				$access = $instances[$id]->getBestAccess('scripting');
-				$access->chdir($instances[$id]->webroot);
+				$access = $instance->getBestAccess('scripting');
+				$access->chdir($instance->webroot);
 				$new = $access->shellExec(
-					["{$instances[$id]->phpexec} -q -d memory_limit=256M console.php " . $command],
+					["{$instance->phpexec} -q -d memory_limit=256M console.php " . $command],
 					true
 				);
 				if ($new) {

@@ -53,11 +53,11 @@ class ApplyProfileCommand extends Command
 				return TrimHelper::validateInstanceSelection($answer, 'tiki');
 			});
 
-			$instancesId = $helper->ask($input, $output, $question);
-			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Applying profile to ' . $instances[$id]->name . '...</>');
-				$instances[$id]->getApplication()->installProfile($repository, $profile);
-				perform_archive_cleanup($instances[$id]->id, $instances[$id]->name);
+			$selectedInstances = $helper->ask($input, $output, $question);
+			foreach ($selectedInstances as $instance) {
+				$output->writeln('<fg=cyan>Applying profile to ' . $instance->name . '...</>');
+				$instance->getApplication()->installProfile($repository, $profile);
+				perform_archive_cleanup($instance->id, $instance->name);
 			}
 		} else {
 			$output->writeln('<comment>No Tiki instances available to apply a profile.</comment>');

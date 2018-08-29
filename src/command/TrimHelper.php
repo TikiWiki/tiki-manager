@@ -19,12 +19,9 @@ class TrimHelper
 
 		if (! empty($instances)) {
 			foreach ($instances as $key => $instance) {
-				$result = query(SQL_SELECT_ACCESS, array(':id' => $instance->id));
-				$instanceType = $result->fetch()['type'];
-
 				$instancesInfo[] = array(
 					$instance->id,
-					$instanceType,
+					$instance->type,
 					$instance->name,
 					$instance->weburl,
 					$instance->contact
@@ -100,6 +97,44 @@ class TrimHelper
 	}
 
 	/**
+	 * Render a table with Report options
+	 *
+	 * @param $output
+	 */
+	public static function renderReportOptions($output)
+	{
+		$headers = array(
+			'Option',
+			'Description'
+		);
+
+		$options = array(
+			array(
+				'add',
+				'Add a report receiver'
+			),
+			array(
+				'modify',
+				'Modify a report receiver'
+			),
+			array(
+				'remove',
+				'Remove a report receiver'
+			),
+			array(
+				'send',
+				'Send updated reports'
+			)
+		);
+
+		$table = new Table($output);
+		$table
+			->setHeaders($headers)
+			->setRows($options);
+		$table->render();
+	}
+
+	/**
 	 * Wrapper for standard console question
 	 *
 	 * @param $question
@@ -121,14 +156,12 @@ class TrimHelper
 	/**
 	 * Get Instances based on type
 	 *
-	 * @param $type
+	 * @param string $type
 	 * @return array
 	 */
 	public static function getInstances($type = 'all')
 	{
 		$result = array();
-
-		// getReportInstances
 
 		switch ($type) {
 			case 'tiki':
@@ -143,6 +176,14 @@ class TrimHelper
 			case 'restore':
 				$result = \Instance::getRestorableInstances();
 	        	break;
+			case 'report':
+				$report = new \ReportManager;
+				$result = $report->getReportInstances();
+				break;
+			case 'report-available':
+				$report = new \ReportManager;
+				$result = $report->getAvailableInstances();
+				break;
 			default:
 				$result = \Instance::getInstances();
 		}
@@ -174,7 +215,14 @@ class TrimHelper
 					'Invalid instance(s) ID(s) #' . implode(',', $invalidInstancesId)
 				);
 			}
+
+			$selectedInstances = array();
+			foreach ($instancesId as $index) {
+				if (array_key_exists($index, $instances))
+					$selectedInstances[] = $instances[$index];
+			}
+
 		}
-		return $instancesId;
+		return $selectedInstances;
 	}
 }
