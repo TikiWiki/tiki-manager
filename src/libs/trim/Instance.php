@@ -226,6 +226,19 @@ class Instance
 		return $tikiInstances;
 	}
 
+	static function getNoTikiInstances()
+	{
+		$allInstances = self::getInstances();
+
+		$noTikiInstances = array();
+		foreach ($allInstances as $instance) {
+			if (! $instance->getApplication())
+				$noTikiInstances[$instance->id] = $instance;
+		}
+
+		return $noTikiInstances;
+	}
+
     static function getInstance($id)
     {
         $result = query(SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);

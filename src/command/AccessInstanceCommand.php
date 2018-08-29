@@ -21,7 +21,7 @@ class AccessInstanceCommand extends Command
 	{
 		$io = new SymfonyStyle($input, $output);
 
-		$instances = \Instance::getInstances();
+		$instances = TrimHelper::getInstances();
 		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$io->newLine();
@@ -38,7 +38,7 @@ class AccessInstanceCommand extends Command
 
 			$instancesId = $helper->ask($input, $output, $question);
 			foreach ($instancesId as $id) {
-				$output->writeln('<fg=cyan>Connecting to ' . $instances[$id]->name.' at ' . $instances[$id]->webroot . ' directory... (use "exit" to move to next the instance)</>');
+				$output->writeln('<fg=cyan>Connecting to ' . $instances[$id]->name . ' at ' . $instances[$id]->webroot . ' directory... (use "exit" to move to next the instance)</>');
 				$access = $instances[$id]->getBestAccess('scripting');
 				$access->openShell($instances[$id]->webroot);
 			}

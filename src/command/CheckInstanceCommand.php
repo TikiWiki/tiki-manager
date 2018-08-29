@@ -22,7 +22,7 @@ class CheckInstanceCommand extends Command
 	{
 		$io = new SymfonyStyle($input, $output);
 
-		$instances = \Instance::getInstances();
+		$instances = TrimHelper::getInstances();
 		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$io->newLine();

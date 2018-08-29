@@ -21,7 +21,7 @@ class CliTrimCommand extends Command
 	{
 		$io = new SymfonyStyle($input, $output);
 
-		$instances = \Instance::getTikiInstances();
+		$instances = TrimHelper::getInstances('tiki');
 		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$output->writeln('<comment>Note: Only Tiki instances can run Console commands.</comment>');

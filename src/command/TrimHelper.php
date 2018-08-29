@@ -7,12 +7,6 @@ use Symfony\Component\Console\Question\Question;
 
 class TrimHelper
 {
-	// getInstances
-	// getTikiInstances
-	// getUpdatableInstances
-	// getRestorableInstances
-	// getReportInstances
-
 	/**
 	 * Get information from Instance Object
 	 *
@@ -125,6 +119,38 @@ class TrimHelper
 	}
 
 	/**
+	 * Get Instances based on type
+	 *
+	 * @param $type
+	 * @return array
+	 */
+	public static function getInstances($type = 'all')
+	{
+		$result = array();
+
+		// getReportInstances
+
+		switch ($type) {
+			case 'tiki':
+				$result = \Instance::getTikiInstances();
+				break;
+			case 'no-tiki':
+				$result = \Instance::getNoTikiInstances();
+				break;
+			case 'update':
+				$result = \Instance::getUpdatableInstances();
+				break;
+			case 'restore':
+				$result = \Instance::getRestorableInstances();
+	        	break;
+			default:
+				$result = \Instance::getInstances();
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Validate Instances Selection
 	 *
 	 * @param $answer
@@ -138,7 +164,7 @@ class TrimHelper
 				'You must select an #ID'
 			);
 		} else {
-			$instances = $type == 'all' ? \Instance::getInstances() : \Instance::getTikiInstances();
+			$instances = self::getInstances($type);
 
 			$instancesId = array_filter(array_map('trim', explode(',', $answer)));
 			$invalidInstancesId = array_diff($instancesId, array_keys($instances));
