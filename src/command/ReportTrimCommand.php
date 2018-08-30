@@ -74,8 +74,8 @@ class ReportTrimCommand extends Command
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
 
 			$question = TrimHelper::getQuestion('Which instances do you want to report on', null, '?');
-			$question->setValidator(function ($answer) {
-				return TrimHelper::validateInstanceSelection($answer, 'report-available');
+			$question->setValidator(function ($answer) use ($instances) {
+				return TrimHelper::validateInstanceSelection($answer, $instances);
 			});
 
 			$selectedInstances = $helper->ask($input, $output, $question);
@@ -84,8 +84,8 @@ class ReportTrimCommand extends Command
 				$renderResult = TrimHelper::renderInstancesTable($output, $allInstancesInfo);
 
 				$question = TrimHelper::getQuestion('Which instances do you want to include in the report', null, '?');
-				$question->setValidator(function ($answer) {
-					return TrimHelper::validateInstanceSelection($answer);
+				$question->setValidator(function ($answer) use ($allInstances) {
+					return TrimHelper::validateInstanceSelection($answer, $allInstances);
 				});
 
 				$toAdd = $helper->ask($input, $output, $question);
@@ -116,8 +116,8 @@ class ReportTrimCommand extends Command
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
 
 			$question = TrimHelper::getQuestion('Which reports do you want to modify', null, '?');
-			$question->setValidator(function ($answer) {
-				return TrimHelper::validateInstanceSelection($answer, 'report');
+			$question->setValidator(function ($answer) use ($instances) {
+				return TrimHelper::validateInstanceSelection($answer, $instances);
 			});
 
 			$selectedInstances = $helper->ask($input, $output, $question);
@@ -129,15 +129,11 @@ class ReportTrimCommand extends Command
 					$renderResult = TrimHelper::renderInstancesTable($output, $allReportCandidatesInfo);
 
 					$question = TrimHelper::getQuestion('Which instances do you want to include in the report', null, '?');
-					$answer = $helper->ask($input, $output, $question);
+					$question->setValidator(function ($answer) use ($allReportCandidates) {
+						return TrimHelper::validateInstanceSelection($answer, $allReportCandidates);
+					});
 
-					$instancesId = array_filter(array_map('trim', explode(',', $answer)));
-
-					$toAdd = array();
-					foreach ($instancesId as $index) {
-						if (array_key_exists($index, $allReportCandidates))
-							$toAdd[] = $allReportCandidates[$index];
-					}
+					$toAdd = $helper->ask($input, $output, $question);
 
 					$full = array_merge($report->getReportContent($instance), $toAdd);
 					$report->setInstances($instance, $full);
@@ -166,8 +162,8 @@ class ReportTrimCommand extends Command
 			$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
 
 			$question = TrimHelper::getQuestion('Which reports do you want to modify', null, '?');
-			$question->setValidator(function ($answer) {
-				return TrimHelper::validateInstanceSelection($answer, 'report');
+			$question->setValidator(function ($answer) use ($instances) {
+				return TrimHelper::validateInstanceSelection($answer, $instances);
 			});
 
 			$selectedInstances = $helper->ask($input, $output, $question);
@@ -179,15 +175,11 @@ class ReportTrimCommand extends Command
 					$renderResult = TrimHelper::renderInstancesTable($output, $allReportCandidatesInfo);
 
 					$question = TrimHelper::getQuestion('Which instances do you want to remove from the report', null, '?');
-					$answer = $helper->ask($input, $output, $question);
+					$question->setValidator(function ($answer) use ($allReportCandidates) {
+						return TrimHelper::validateInstanceSelection($answer, $allReportCandidates);
+					});
 
-					$instancesId = array_filter(array_map('trim', explode(',', $answer)));
-
-					$toRemove = array();
-					foreach ($instancesId as $index) {
-						if (array_key_exists($index, $allReportCandidates))
-							$toRemove[] = $allReportCandidates[$index];
-					}
+					$toRemove = $helper->ask($input, $output, $question);
 
 					$report->removeInstances($instance, $toRemove);
 				}

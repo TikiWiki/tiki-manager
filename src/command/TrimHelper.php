@@ -176,14 +176,6 @@ class TrimHelper
 			case 'restore':
 				$result = \Instance::getRestorableInstances();
 	        	break;
-			case 'report':
-				$report = new \ReportManager;
-				$result = $report->getReportInstances();
-				break;
-			case 'report-available':
-				$report = new \ReportManager;
-				$result = $report->getAvailableInstances();
-				break;
 			default:
 				$result = \Instance::getInstances();
 		}
@@ -195,18 +187,16 @@ class TrimHelper
 	 * Validate Instances Selection
 	 *
 	 * @param $answer
-	 * @param string $type
+	 * @param $instances
 	 * @return array
 	 */
-	public static function validateInstanceSelection($answer, $type = 'all')
+	public static function validateInstanceSelection($answer, $instances)
 	{
 		if (empty($answer)) {
 			throw new \RuntimeException(
 				'You must select an #ID'
 			);
 		} else {
-			$instances = self::getInstances($type);
-
 			$instancesId = array_filter(array_map('trim', explode(',', $answer)));
 			$invalidInstancesId = array_diff($instancesId, array_keys($instances));
 

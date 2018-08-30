@@ -32,8 +32,8 @@ class DetectInstanceCommand extends Command
 
 			$helper = $this->getHelper('question');
 			$question = TrimHelper::getQuestion('Which instance(s) do you want to detect', null, '?');
-			$question->setValidator(function ($answer) {
-				return TrimHelper::validateInstanceSelection($answer);
+			$question->setValidator(function ($answer) use ($instances) {
+				return TrimHelper::validateInstanceSelection($answer, $instances);
 			});
 
 			$selectedInstances = $helper->ask($input, $output, $question);

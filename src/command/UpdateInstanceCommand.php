@@ -58,8 +58,8 @@ class UpdateInstanceCommand extends Command
 				$output->writeln('<comment>In case you want to update more than one instance, please use a comma (,) between the values</comment>');
 
 				$question = TrimHelper::getQuestion('Which instance(s) do you want to update', null, '?');
-				$question->setValidator(function ($answer) {
-					return TrimHelper::validateInstanceSelection($answer, 'update');
+				$question->setValidator(function ($answer) use ($instances) {
+					return TrimHelper::validateInstanceSelection($answer, $instances);
 				});
 
 				$selectedInstances = $helper->ask($input, $output, $question);

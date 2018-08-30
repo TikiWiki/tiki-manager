@@ -35,8 +35,8 @@ class CliTrimCommand extends Command
 
 			$helper = $this->getHelper('question');
 			$question = TrimHelper::getQuestion('Which instance(s) do you want run Console commands', null ,'?');
-			$question->setValidator(function ($answer) {
-				return TrimHelper::validateInstanceSelection($answer, 'tiki');
+			$question->setValidator(function ($answer) use ($instances) {
+				return TrimHelper::validateInstanceSelection($answer, $instances);
 			});
 
 			$selectedInstances = $helper->ask($input, $output, $question);
