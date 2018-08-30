@@ -6,14 +6,7 @@
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/dbsetup.php';
 
-$all = Instance::getInstances();
-
-$instances = [];
-foreach ($all as $instance) {
-    if ($instance->getApplication() instanceof Application_Tiki) {
-        $instances[$instance->id] = $instance;
-    }
-}
+$instances = Instance::getInstances();
 
 $selection = selectInstances(
     $instances, "Which instances do you want to edit?\n"

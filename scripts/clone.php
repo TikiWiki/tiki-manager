@@ -67,7 +67,7 @@ if (! ARG_MODE_CLONE && ! ARG_MODE_CLONE_UPGRADE ) {
     exit(1);
 }
 
-$instances = Instance::getInstances();
+$instances = Instance::getInstances(true);
 
 if (! isset($_SERVER['argv'][2])) {
     echo color("\nNOTE: Clone operations are only available on Local and SSH instances.\n\n", 'yellow');

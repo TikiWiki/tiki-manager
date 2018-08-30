@@ -15,7 +15,7 @@ $selection = array_map(array('Instance', 'getInstance'), $selection);
 $selection = array_filter($selection, 'is_object');
 
 if (empty($selection)) {
-    $instances = Instance::getInstances();
+    $instances = Instance::getInstances(true);
     if(INTERACTIVE) {
         echo "\nInstances you can verify:\n";
         $selection = selectInstances($instances,
