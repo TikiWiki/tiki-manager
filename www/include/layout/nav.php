@@ -15,7 +15,7 @@
 							<a class="dropdown-item" href="<?php echo html( url( 'list' ) ) ?>">List instances</a>
 <!--							<a class="dropdown-item" href="#">Create a new instance</a>-->
 							<a class="dropdown-item" href="<?php echo html( url( 'blank' ) ) ?>">Create a blank instance</a>
-<!--							<a class="dropdown-item" href="<?php echo html( url( 'import' ) ) ?>">Import a tiki instance</a>-->
+							<a class="dropdown-item" href="<?php echo html( url( 'import' ) ) ?>">Import a tiki instance</a>
 							<a class="dropdown-item" href="<?php echo html( url( 'delete' ) ) ?>">Delete an instance</a>
 						</div>
 					</li>

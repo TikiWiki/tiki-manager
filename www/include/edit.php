@@ -39,7 +39,10 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 						<tbody>
 							<tr>
 								<th scope="row"><label for="name">Instance Name</label></th>
-								<td><input type="text" name="name" id="name" class="form-control" value="<?php echo html( $instance->name ) ?>"/></td>
+								<td>
+									<input type="text" name="name" id="name" class="form-control" value="<?php echo html( $instance->name ) ?>"/>
+									<input type="hidden" name="phpexec" id="phpexec" class="form-control" value="<?php echo html( $instance->phpexec ) ?>"/>
+								</td>
 							</tr>
 							<tr>
 								<th scope="row"><label for="contact">Contact</label></th>
@@ -56,10 +59,6 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 							<tr>
 								<th scope="row"><label for="tempdir">Work Directory</label></th>
 								<td><input type="text" name="tempdir" id="tempdir" class="form-control" value="<?php echo html( $instance->tempdir ) ?>"/></td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="phpexec">PHP Interpreter</label></th>
-								<td><input type="text" name="phpexec" id="phpexec" class="form-control" value="<?php echo html( $instance->phpexec ) ?>"/></td>
 							</tr>
 							<tr>
 								<th scope="row"><label for="backup_user">Backup owner</label></th>

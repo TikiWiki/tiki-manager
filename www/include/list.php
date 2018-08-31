@@ -67,7 +67,7 @@
 		<p class="clearfix">
 			<a href="#" class="new btn btn-primary disabled">Create a new instance</a>
 			<a href="<?php echo html( url( 'blank' ) ) ?>" class="blank btn btn-primary">Create a blank instance</a>
-			<a href="<?php echo html( url( 'import' ) ) ?>" class="new btn btn-primary disabled">Import a tiki instance</a>
+			<a href="<?php echo html( url( 'import' ) ) ?>" class="new btn btn-primary">Import a tiki instance</a>
 		</p>
 	</div>
 </div>
