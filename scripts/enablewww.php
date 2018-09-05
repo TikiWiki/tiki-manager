@@ -36,28 +36,26 @@ echo "This will enable the TRIM administration web panel.\n";
 if ('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
 
 $webTrimDirectory = promptUser('WWW Trim directory (ex: /var/www/virtual/webtrim.example.com/html)');
-$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -a composer.* ' . $webTrimDirectory;
+$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -a composer.phar ' . $webTrimDirectory;
 exec($cmd);
 
-$pass = '';
-$user = promptUser('Desired username');
 $owner = fileowner($webTrimDirectory . '/index.php');
 
-if (!is_dir($webTrimDirectory . '/src')) {
-    mkdir($webTrimDirectory . '/src');
-}
+if (! file_exists($webTrimDirectory . '/config.php')) {
+    $pass = '';
+    $user = promptUser('Desired username');
 
-while (empty($pass)) {
-    print 'Desired password : ';
-    $pass = getPassword(true); print "\n";
-}
+    while (empty($pass)) {
+        print 'Desired password : ';
+        $pass = getPassword(true); print "\n";
+    }
 
-$restrict = promptUser('Restrict use to localhost', 'no');
-$restrict = (strtolower($restrict{0}) == 'n') ? 'false' : 'true';
-$trimpath = realpath(dirname(__FILE__) . '/..');
+    $restrict = promptUser('Restrict use to localhost', 'no');
+    $restrict = (strtolower($restrict{0}) == 'n') ? 'false' : 'true';
+    $trimpath = realpath(dirname(__FILE__) . '/..');
 
-$user = addslashes($user);
-$pass = addslashes($pass);
+    $user = addslashes($user);
+    $pass = addslashes($pass);
 
 file_put_contents($webTrimDirectory . '/config.php', <<<CONFIG
 <?php
@@ -70,13 +68,19 @@ define('THEME', 'default');
 define('TITLE', 'TRIM Web Administration');
 CONFIG
 );
+}
 
 $db = DB_FILE;
-$data = dirname( DB_FILE );
+$data = TRIM_DATA;
+$backup = BACKUP_FOLDER;
+$archive = ARCHIVE_FOLDER;
 `chmod 0666 $db`;
+`chmod 0700 $data`;
 `chown apache:apache $data`;
+`chown apache:apache $backup`;
+`chown apache:apache $archive`;
 `(cd $webTrimDirectory && rm -rf vendor && php composer.phar install)`;
-`(cd $webTrimDirectory && chown $owner src && chown -R $owner vendor)`;
+`(cd $webTrimDirectory && chown -R $owner vendor)`;
 
 echo "WWW Trim is now enabled.\n";
 echo "Enjoy!\n";
