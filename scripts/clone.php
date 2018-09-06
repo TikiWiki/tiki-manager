@@ -130,6 +130,10 @@ foreach ($dst_selection as $dst_instance) {
     $dst_instance->unlock();
 }
 
+info("Deleting archive");
+$access = $src_selection[0]->getBestAccess('scripting');
+$access->shellExec("rm -f " . $archive);
+
 exit(0);
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
