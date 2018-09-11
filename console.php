@@ -27,6 +27,8 @@ $application->add(new \App\Command\VerifyInstanceCommand());
 $application->add(new \App\Command\UpdateInstanceCommand());
 $application->add(new \App\Command\UpgradeInstanceCommand());
 $application->add(new \App\Command\RestoreInstanceCommand());
+$application->add(new \App\Command\CloneInstanceCommand());
+$application->add(new \App\Command\CloneAndUpgradeInstanceCommand());
 
 $application->add(new \App\Command\ApplyProfileCommand());
 

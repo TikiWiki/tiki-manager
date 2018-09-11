@@ -26,21 +26,28 @@ class UpdateInstanceCommand extends Command
 		if (isset($instancesInfo)) {
 			$helper = $this->getHelper('question');
 
-			$switch = false;
 			$auto = false;
+			$switch = false;
+			$offset = 0;
 
 			$argument = $input->getArgument('mode');
 			if (isset($argument) && ! empty($argument)) {
 				if (is_array($argument)) {
-					$switch = $input->getArgument('mode')[0] == 'switch' ? true : false;
 					$auto = $input->getArgument('mode')[0] == 'auto' ? true : false;
+					$switch = $input->getArgument('mode')[0] == 'switch' ? true : false;
 				} else {
 					$switch = $input->getArgument('mode') == 'switch' ? true : false;
 				}
 			}
 
+			if ($switch == false && $auto == false) {
+				$auto = true;
+			} else {
+				$offset = 1;
+			}
+
 			if ($auto) {
-				$instancesIds = array_slice($input->getArgument('mode'), 1 );
+				$instancesIds = array_slice($input->getArgument('mode'), $offset);
 
 				$selectedInstances = array();
 				foreach ($instancesIds as $index) {
@@ -121,8 +128,8 @@ class UpdateInstanceCommand extends Command
 						$selectedVersion = $helper->ask($input, $output, $question);
 						$versionSel = getEntries($versions, $selectedVersion);
 
-						if (empty($versionSel) && ! empty($input)) {
-							$target = \Version::buildFake('svn', $input);
+						if (empty($versionSel) && ! empty($selectedVersion)) {
+							$target = \Version::buildFake('svn', $selectedVersion);
 						} else {
 							$target = reset($versionSel);
 						}
