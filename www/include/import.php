@@ -42,17 +42,17 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
         $instance->name = $name;
         $instance->contact = $contact;
         $instance->weburl = rtrim($weburl, '/');
-        $instance->save();
-        $access->save();
-
         $instance->webroot = rtrim($webroot, '/');
         $instance->tempdir = rtrim($tempdir, '/');
         $instance->backup_user = trim($backup_user);
         $instance->backup_group = trim($backup_group);
         $instance->backup_perm = octdec($backup_perm);
+        $instance->save();
+        $access->save();
 //        $instance->phpexec = $discovery->detectPHP();
 //        $instance->phpversion = $discovery->detectPHPVersion();
-        $instance->save();
+//        $instance->save();
+        $instance->detectPHP();
         $instance->findApplication();
 
         header( "Location: " . url( "list" ) );
@@ -80,17 +80,16 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     $access->host = 'localhost';
     $access->user = $discovery->detectUser();
     $backup_user = $access->user;
+    $backup_perm = 0770;
 
     switch ($discovery->detectDistro()) {
     case "ClearOS":
         $backup_group = 'apache';
-        $backup_perm = 0770;
         $webroot = ($access->user == 'root' || $access->user == 'apache') ?
             "/var/www/virtual/{$access->host}/html/" : "/home/{$access->user}/public_html/";
         break;
     default:
         $backup_group = @posix_getgrgid(posix_getegid())['name'];
-        $backup_perm = 0770;
         $webroot = ($access->user == 'root' || $access->user == 'apache') ?
             '/var/www/html/' : "/home/{$access->user}/public_html/";
     }

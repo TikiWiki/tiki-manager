@@ -2,8 +2,7 @@
 
 if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 {
-    $type = $user = $host = $pass = '';
-    $name = $contact = $webroot = $tempdir = $weburl = '';
+    $type = $name = $contact = $webroot = $weburl = $tempdir = '';
 
     $type = $_POST['type'];
     $name = $_POST['name'];
@@ -15,20 +14,17 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     $backup_group = $_POST['backup_group'];
     $backup_perm = $_POST['backup_perm'];
 
+    $instance = new Instance;
+    $instance->type = $type;
+    $access = Access::getClassFor($instance->type);
+    $access = new $access($instance);
+    $discovery = new \trim\instance\Discovery($instance, $access);
+
     if ($type == 'local') {
-        if (function_exists('posix_getpwuid')) {
-            $user = posix_getpwuid(posix_geteuid())['name'];
-        } elseif (!empty($_SERVER['USER'])) {
-            $user = $_SERVER['USER'];
-        } else {
-            $user = '';
-        }
-        $pass = '';
-        $host = 'localhost';
-        $port = 0;
+        $access->host = 'localhost';
+        $access->user = $discovery->detectUser();
     }
 
-    $instance = new Instance;
     $instance->name = $name;
     $instance->contact = $contact;
     $instance->webroot = rtrim($webroot, '/');
@@ -37,10 +33,9 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     $instance->backup_user = trim($backup_user);
     $instance->backup_group = trim($backup_group);
     $instance->backup_perm = octdec($backup_perm);
-	$instance->save();
-    $access = $instance->registerAccessMethod($type, $host, $user, $pass, $port);
+    $instance->save();
+    $access->save();
     $instance->detectPHP();
-	$instance->save();
 
     header( "Location: " . url( "list" ) );
 	exit;
@@ -54,38 +49,34 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     require dirname(__FILE__) . "/layout/nav.php";
 
     $instance = new Instance;
-    if (function_exists('posix_getpwuid')) {
-        $user = posix_getpwuid(posix_geteuid())['name'];
-    } elseif (!empty($_SERVER['USER'])) {
-        $user = $_SERVER['USER'];
-    } else {
-        $user = '';
-    }
-    $instance->registerAccessMethod('local', 'localhost', $user, '', 0);
+    $instance->type = 'local';
+    $access = Access::getClassFor($instance->type);
+    $access = new $access($instance);
+    $discovery = new \trim\instance\Discovery($instance, $access);
 
     $name = 'localhost';
     $weburl = "http://$name";
     $tempdir = TRIM_TEMP;
-    $backup_user = @posix_getpwuid(posix_geteuid())['name'];
 
-    switch ($instance->detectDistribution()) {
+    $access->host = 'localhost';
+    $access->user = $discovery->detectUser();
+    $backup_user = $access->user;
+    $backup_perm = 0770;
+
+    switch ($discovery->detectDistro()) {
     case "ClearOS":
-        $backup_group = 'allusers';
-        $backup_perm = 02770;
-        $host = preg_replace("/[\\\\\/?%*:|\"<>]+/", '-', $name);
-        $webroot = ($user == 'root' || $user == 'apache') ?
-            "/var/www/virtual/{$host}/html/" : "/home/$user/public_html/";
+        $backup_group = 'apache';
+        $webroot = ($access->user == 'root' || $access->user == 'apache') ?
+            "/var/www/virtual/{$access->host}/html/" : "/home/{$access->user}/public_html/";
         break;
     case "Windows":
 	    $backup_user = $backup_group = "Administrator";
-	    $backup_perm = 0750;
 	    $webroot = 'C:\\www\\';
 	    break;
     default:
         $backup_group = @posix_getgrgid(posix_getegid())['name'];
-        $backup_perm = 0750;
-        $webroot = ($user == 'root' || $user == 'apache') ?
-            '/var/www/html/' : "/home/$user/public_html/";
+        $webroot = ($access->user == 'root' || $access->user == 'apache') ?
+            '/var/www/html/' : "/home/{$access->user}/public_html/";
     }
 ?>
 

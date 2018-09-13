@@ -1,10 +1,7 @@
 <?php
-$authFile = dirname(__FILE__) . "/../config.php";
-
 ob_start();
-require $authFile;
+require dirname(__FILE__) . "/../config.php";
 require TRIMPATH . '/src/env_setup.php';
-require TRIMPATH . '/src/dbsetup.php';
 ob_end_clean();
 
 if (isset($_POST['id'])){
@@ -17,8 +14,6 @@ if (isset($_POST['id'])){
 
 //        $access = $instance->getBestAccess('scripting');
 //        $access->uploadFile($archive, $remote);
-
-
 
         $instance->restore($source->app, $_POST['backup']);
         echo "\nIt is now time to test your site: " . $instance->name . "\n";
