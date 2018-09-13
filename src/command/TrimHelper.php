@@ -157,9 +157,10 @@ class TrimHelper
 	 * Get Instances based on type
 	 *
 	 * @param string $type
+	 * @param bool $excludeBlank
 	 * @return array
 	 */
-	public static function getInstances($type = 'all')
+	public static function getInstances($type = 'all', $excludeBlank = false)
 	{
 		$result = array();
 
@@ -176,8 +177,8 @@ class TrimHelper
 			case 'restore':
 				$result = \Instance::getRestorableInstances();
 	        	break;
-			default:
-				$result = \Instance::getInstances();
+			case 'all':
+				$result = \Instance::getInstances($excludeBlank);
 		}
 
 		return $result;

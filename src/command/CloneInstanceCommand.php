@@ -21,7 +21,7 @@ class CloneInstanceCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$instances = TrimHelper::getInstances();
+		$instances = TrimHelper::getInstances('all', true);
 		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$io = new SymfonyStyle($input, $output);
@@ -116,6 +116,10 @@ class CloneInstanceCommand extends Command
 					}
 					$destinationInstance->unlock();
 				}
+
+				$output->writeln('<fg=cyan>Deleting archive...</>');
+				$access = $selectedSourceInstances[0]->getBestAccess('scripting');
+				$access->shellExec("rm -f " . $archive);
 			} else {
 				$output->writeln('<comment>No instances available as destination.</comment>');
 			}

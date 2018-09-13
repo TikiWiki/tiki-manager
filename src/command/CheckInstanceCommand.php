@@ -22,7 +22,7 @@ class CheckInstanceCommand extends Command
 	{
 		$io = new SymfonyStyle($input, $output);
 
-		$instances = TrimHelper::getInstances();
+		$instances = TrimHelper::getInstances('all', true);
 		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$io->newLine();
@@ -63,6 +63,10 @@ class CheckInstanceCommand extends Command
 					$question->setErrorMessage('Option %s is invalid.');
 					$option = $helper->ask($input, $output, $question);
 
+					if ($option == 'skip') {
+						continue;
+					}
+
 					switch ($option) {
 						case 'source':
 							$version->collectChecksumFromSource($instance);
@@ -71,8 +75,6 @@ class CheckInstanceCommand extends Command
 						case 'current':
 							$version->collectChecksumFromInstance($instance);
 							break;
-						case 'skip':
-							continue;
 					}
 				}
 			}

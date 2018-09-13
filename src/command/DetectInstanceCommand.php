@@ -21,7 +21,7 @@ class DetectInstanceCommand extends Command
 	{
 		$io = new SymfonyStyle($input, $output);
 
-		$instances = TrimHelper::getInstances();
+		$instances = TrimHelper::getInstances('all', true);
 		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$io->newLine();

@@ -72,34 +72,37 @@ Continue with this action (y,n)? ', false);
 			return $value;
 		});
 		$webTrimDirectory = $helper->ask($input, $output, $question);
-		$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -aR vendor ' . $webTrimDirectory;
+		$cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -a composer.phar ' . $webTrimDirectory;
 		exec($cmd);
 
-		$question = TrimHelper::getQuestion('Desired username');
-		$username = $helper->ask($input, $output, $question);
+		$owner = fileowner($webTrimDirectory . '/index.php');
 
-		$question = TrimHelper::getQuestion('Desired password');
-		$question->setValidator(function ($value) {
-			if (empty(trim($value))) {
-				throw new \Exception('The password cannot be empty');
-			}
-			return $value;
-		});
-		$question->setHidden(true);
-		$password = $helper->ask($input, $output, $question);
+		if (! file_exists($webTrimDirectory . '/config.php')) {
+			$question = TrimHelper::getQuestion('Desired username');
+			$username = $helper->ask($input, $output, $question);
 
-		$question = TrimHelper::getQuestion('Restrict use to localhost', 'no');
-		$question->setNormalizer(function ($value) {
-			return (strtolower($value{0}) == 'n') ? 'false' : 'true';
-		});
-		$restrict = $helper->ask($input, $output, $question);
+			$question = TrimHelper::getQuestion('Desired password');
+			$question->setValidator(function ($value) {
+				if (empty(trim($value))) {
+					throw new \Exception('The password cannot be empty');
+				}
+				return $value;
+			});
+			$question->setHidden(true);
+			$password = $helper->ask($input, $output, $question);
 
-		$trimpath = realpath(dirname(__FILE__) . '/../..');
+			$question = TrimHelper::getQuestion('Restrict use to localhost', 'no');
+			$question->setNormalizer(function ($value) {
+				return (strtolower($value{0}) == 'n') ? 'false' : 'true';
+			});
+			$restrict = $helper->ask($input, $output, $question);
 
-		$user = addslashes($username);
-		$pass = addslashes($password);
+			$trimpath = realpath(dirname(__FILE__) . '/../..');
 
-		file_put_contents($webTrimDirectory . '/config.php', <<<CONFIG
+			$user = addslashes($username);
+			$pass = addslashes($password);
+
+			file_put_contents($webTrimDirectory . '/config.php', <<<CONFIG
 <?php
 define('USERNAME', '$user');
 define('PASSWORD', '$pass');
@@ -109,12 +112,20 @@ define('TRIMPATH', '$trimpath');
 define('THEME', 'default');
 define('TITLE', 'TRIM Web Administration');
 CONFIG
-		);
+			);
+		}
 
 		$db = DB_FILE;
-		$data = dirname( DB_FILE );
+		$data = TRIM_DATA;
+		$backup = BACKUP_FOLDER;
+		$archive = ARCHIVE_FOLDER;
 		`chmod 0666 $db`;
-		`chmod 0777 $data`;
+		`chmod 0700 $data`;
+		`chown apache:apache $data`;
+		`chown apache:apache $backup`;
+		`chown apache:apache $archive`;
+		`(cd $webTrimDirectory && rm -rf vendor && php composer.phar install)`;
+		`(cd $webTrimDirectory && chown -R $owner vendor)`;
 
 		$output->writeln('<info>WWW Trim is now enabled.</info>');
 		$output->writeln('<info>Enjoy!</info>');
