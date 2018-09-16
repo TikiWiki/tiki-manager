@@ -17,6 +17,10 @@ define('SSH_CONFIG', TRIM_DATA . "/ssh_config");
 
 define('TRIM_OS', strtoupper(substr(PHP_OS, 0, 3)));
 
+define('PDO_ATTR_TIMEOUT', 10);
+define('PDO_EXTENDED_DEBUG', false);
+define('PDO_DIE_ON_EXCEPTION_THROWN', true);
+
 if (TRIM_OS === 'WIN') {
     define('INTERACTIVE', php_sapi_name() === 'cli'
         && getenv('NONINTERACTIVE') !== 'true');

@@ -5,6 +5,8 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 require_once dirname(__FILE__) . '/env_includes.php';
+require_once dirname(__FILE__) . '/libs/helpers/PDOWrapper.php';
+
 debug('Running TRIM at ' . TRIM_ROOT);
 
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -120,7 +122,7 @@ if (! file_exists(DB_FILE)) {
         die(error('Impossible to generate database. Make sure data folder is writable.'));
 
     try {
-        $db = new PDO('sqlite:' . DB_FILE);
+        $db = new PDOWrapper('sqlite:' . DB_FILE);
     } catch (PDOException $e) {
         die(error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}"));
     }
@@ -133,7 +135,7 @@ if (! file_exists(DB_FILE)) {
 }
 
 try {
-    $db = new PDO('sqlite:' . DB_FILE);
+    $db = new PDOWrapper('sqlite:' . DB_FILE);
 } catch (PDOException $e) {
     die(error("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}"));
 }
