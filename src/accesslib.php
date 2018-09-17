@@ -373,7 +373,7 @@ class Access_Local extends Access implements ShellPrompt
 
     function fileGetContents($filename)
     {
-        return file_get_contents($filename);
+        return @file_get_contents($filename);
     }
 
     function fileModificationDate($filename)

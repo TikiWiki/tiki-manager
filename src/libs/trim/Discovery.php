@@ -407,7 +407,7 @@ class Discovery {
     }
 }
 
-class ConfigException
+class ConfigException extends \Exception
 {
     const DETECT_ERROR = 1;
 }
