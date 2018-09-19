@@ -159,6 +159,7 @@ class Access_Local extends Access implements ShellPrompt
     private $location;
     private $env = array();
     private $hostlib = null;
+    private $changeLocation = null;
 
     function __construct(Instance $instance)
     {
@@ -176,8 +177,6 @@ class Access_Local extends Access implements ShellPrompt
 
     public function getHost()
     {
-        static $changeLocation = null;
-
         if(!(is_object($this->hostlib) && $this->hostlib instanceof Local_Host)){
             $this->hostlib = new Local_Host();
         }
@@ -186,29 +185,29 @@ class Access_Local extends Access implements ShellPrompt
         // change cwd before executing commands, for instance in CoreOS it may influence what
         // php interpreter version is used to execute commands, if the dir is not available
         // try the parent directory
-        if ($changeLocation === null && !empty($this->instance->webroot)) {
+        if ($this->changeLocation === null && !empty($this->instance->webroot)) {
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 if(chdir($this->instance->webroot))
-                    $changeLocation = $this->instance->webroot;
+                    $this->changeLocation = $this->instance->webroot;
                 else if(chdir(dirname($this->instance->webroot)))
-                        $changeLocation = dirname($this->instance->webroot);
+                        $this->changeLocation = dirname($this->instance->webroot);
             } else {
                 $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
                 if ($output == "EXISTS") {
-                    $changeLocation = $this->instance->webroot;
+                    $this->changeLocation = $this->instance->webroot;
                 } else {
                     $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
                     if ($output == "EXISTS") {
-                        $changeLocation = dirname($this->instance->webroot);
+                        $this->changeLocation = dirname($this->instance->webroot);
                     }
                 }
-                if ($changeLocation === null) {
-                    $changeLocation = false;
+                if ($this->changeLocation === null) {
+                    $this->changeLocation = false;
                 }
             }
         }
-        if ($changeLocation) {
-            $host->chdir($changeLocation);
+        if ($this->changeLocation) {
+            $host->chdir($this->changeLocation);
         }
 
         return $host;
@@ -539,6 +538,7 @@ class Access_SSH extends Access implements ShellPrompt
 {
     private $location;
     private $env = array();
+    private $changeLocation = null;
 
     function __construct(Instance $instance)
     {
@@ -548,29 +548,27 @@ class Access_SSH extends Access implements ShellPrompt
 
     public function getHost()
     {
-        static $changeLocation = null;
-
         $host = new SSH_Host($this->host, $this->user, $this->port);
 
         // change cwd before executing commands, for instance in CoreOS it may influence what
         // php interpreter version is used to execute commands, if the dir is not available
         // try the parent directory
-        if ($changeLocation === null && !empty($this->instance->webroot)) {
+        if ($this->changeLocation === null && !empty($this->instance->webroot)) {
             $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
             if ($output == "EXISTS") {
-                $changeLocation = $this->instance->webroot;
+                $this->changeLocation = $this->instance->webroot;
             } else {
                 $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
                 if ($output == "EXISTS") {
-                    $changeLocation = dirname($this->instance->webroot);
+                    $this->changeLocation = dirname($this->instance->webroot);
                 }
             }
-            if ($changeLocation === null) {
-                $changeLocation = false;
+            if ($this->changeLocation === null) {
+                $this->changeLocation = false;
             }
         }
-        if ($changeLocation) {
-            $host->chdir($changeLocation);
+        if ($this->changeLocation) {
+            $host->chdir($this->changeLocation);
         }
 
         return $host;
