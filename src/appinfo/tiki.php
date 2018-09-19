@@ -403,6 +403,7 @@ class Application_Tiki extends Application
         case 'svn':
         case 'tarball':
             $access = $this->instance->getBestAccess('scripting');
+            $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
             if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
 
