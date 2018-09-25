@@ -388,6 +388,10 @@ class Application_Tiki extends Application
             $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
 
             if ($this->instance->hasConsole()) {
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M  console.php index:rebuild");
+            }
+
+            if ($this->instance->hasConsole()) {
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M  console.php cache:generate");
             }
 
