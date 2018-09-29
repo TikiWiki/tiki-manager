@@ -7,8 +7,20 @@
 header("HTTP/1.1 503 Service Unavailable", true, 503);
 header("Retry-After: 3600");
 
-$timestamp = filemtime(__FILE__); // seconds
-$date = date('Y-m-d H:i:s P', $timestamp);
+// Clear the stat cache for this file
+clearstatcache(true, __FILE__);
+// Create a first DateTime object with current date
+$updateTime = date_create();
+// Create a second DateTime object to hold the file modification time
+$timestamp = date_create();
+// Set to the file modification time
+date_timestamp_set($timestamp,filemtime(__FILE__));
+// Get the differences of both
+$interval = date_diff($timestamp, $updateTime);
+// Format the display with full date and time of start (timestamp of file)
+$dateStart = $timestamp->format('y/m/d h:i:s');
+// Format the display with usual hours, minutes, seconds (don't need the day, we hope so !)
+$timeElapsed = $interval->format('%h:%i:%s');
 
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -19,8 +31,8 @@ $date = date('Y-m-d H:i:s P', $timestamp);
     <body>
         <h1>Maintenance in progress</h1>
         <p>
-            An update started on <b><?= $date; ?></b>
-            and it is currently in progress on this website. Please try again in
+            An update started on <b><?= $dateStart; ?></b>
+            and has progressed for <b><?= $timeElapsed; ?></b>. Please try again in
             a few minutes.
         </p>
     </body>
