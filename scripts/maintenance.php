@@ -18,9 +18,9 @@ date_timestamp_set($timestamp,filemtime(__FILE__));
 // Get the differences of both
 $interval = date_diff($timestamp, $updateTime);
 // Format the display with full date and time of start (timestamp of file)
-$dateStart = $timestamp->format('y/m/d h:i:s');
+$dateStart = gmdate ('Y/m/d h:i:s', $timestamp->getTimestamp());
 // Format the display with usual hours, minutes, seconds (don't need the day, we hope so !)
-$timeElapsed = $interval->format('%h:%i:%s');
+$timeElapsed = $interval->format('%hh:%im:%ss');
 
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -31,7 +31,7 @@ $timeElapsed = $interval->format('%h:%i:%s');
     <body>
         <h1>Maintenance in progress</h1>
         <p>
-            An update started on <b><?= $dateStart; ?></b>
+            An update started on <b><?= $dateStart; ?><i>UTC</i></b>
             and has progressed for <b><?= $timeElapsed; ?></b>. Please try again in
             a few minutes.
         </p>
