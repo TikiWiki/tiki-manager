@@ -81,15 +81,22 @@ class Local_Host
         //       flag or a command. We have to change all calls to this function
         $commands = array_filter($commands, 'is_string');
 
+        $commandPrefix = '';
+        $commandPrefixArray = [];
         if ($this->location)
-            array_unshift($commands, 'cd ' . escapeshellarg($this->location));
+            array_unshift($commandPrefixArray, 'cd ' . escapeshellarg($this->location));
 
         foreach ($this->env as $name => $value)
-            array_unshift($commands, "export $name=$value");
+            array_unshift($commandPrefixArray, "export $name=$value");
+
+        if ( count($commandPrefixArray) ) {
+            $commandPrefixArray[] = '';
+            $commandPrefix = implode(' ;' , $commandPrefixArray);
+        }
 
         $contents = '';
         foreach ($commands as $cmd) {
-            $cmd .= ' 2>&1';
+            $cmd = $commandPrefix . $cmd . ' 2>&1';
 
             debug(var_export($this->env, true) . "\n" . $cmd);
             $ph = popen($cmd, 'r');
