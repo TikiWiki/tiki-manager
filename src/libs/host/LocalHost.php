@@ -99,7 +99,7 @@ class Local_Host
                 $result = trim(stream_get_contents($ph));
                 $code = pclose($ph);
                 $this->last_command_exit_code = $code;
-                trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] - return ' . $code . (empty($result) ? '' : "\n" . $result));
+                trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] ' . $cmd . ' - return: ' . $code . (empty($result) ? '' : "\n" . $result));
                 if ($code != 0) {
                     if($output) {
                         warning(sprintf('%s [%d]', $cmd, $code));
