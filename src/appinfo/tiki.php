@@ -344,7 +344,7 @@ class Application_Tiki extends Application
                 $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
                 $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
 
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all");
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
 
                 $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
                 $svn->revert($webroot, array('--recursive'));
@@ -358,7 +358,7 @@ class Application_Tiki extends Application
 
                     $ret = $access->shellExec(array(
                       "sh {$escaped_root_path}/setup.sh composer",
-                      "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
+                      "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
                     ));
                 }
 
@@ -388,11 +388,12 @@ class Application_Tiki extends Application
             $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
 
             if ($this->instance->hasConsole()) {
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M  console.php index:rebuild");
-            }
-
-            if ($this->instance->hasConsole()) {
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M  console.php cache:generate");
+                info('Rebuilding Index...');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+                info('Cleaning Cache...');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
+                info('Generating Caches...');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
             }
 
             return;
@@ -423,7 +424,7 @@ class Application_Tiki extends Application
 
                     $ret = $access->shellExec(array(
                         "sh setup.sh composer",
-                        "{$this->instance->phpexec} -q -d memory_limit=256M console.php clear:cache --all",
+                        "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
                     ));
                 }
 
@@ -440,6 +441,11 @@ class Application_Tiki extends Application
                 $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
 
                 if ($this->instance->hasConsole()) {
+                    info('Rebuilding Index...');
+                    $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+                    info('Cleaning Cache...');
+                    $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
+                    info('Generating Caches...');
                     $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
                 }
 
