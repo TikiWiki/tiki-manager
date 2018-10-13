@@ -22,7 +22,7 @@ class UpdateInstanceCommand extends Command
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$instances = TrimHelper::getInstances('update');
-		$instancesInfo = TrimHelper::getInstancesInfo($instances);
+		$instancesInfo = TrimHelper::getInstancesInfo($instances, true);
 		if (isset($instancesInfo)) {
 			$helper = $this->getHelper('question');
 
@@ -40,14 +40,8 @@ class UpdateInstanceCommand extends Command
 				}
 			}
 
-			if ($switch == false && $auto == false) {
-				$auto = true;
-			} else {
-				$offset = 1;
-			}
-
 			if ($auto) {
-				$instancesIds = array_slice($input->getArgument('mode'), $offset);
+				$instancesIds = array_slice($input->getArgument('mode'), 1);
 
 				$selectedInstances = array();
 				foreach ($instancesIds as $index) {
@@ -55,16 +49,21 @@ class UpdateInstanceCommand extends Command
 						$selectedInstances[] = $instances[$index];
 				}
 			} else {
+				$action = 'update';
+				if ($switch) {
+					$action = 'upgrade';
+				}
+
 				$io = new SymfonyStyle($input, $output);
-				$output->writeln('<comment>WARNING: Only SVN instances can be updated.</comment>');
+				$output->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
 
 				$io->newLine();
-				$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
+				$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo, true);
 
 				$io->newLine();
-				$output->writeln('<comment>In case you want to update more than one instance, please use a comma (,) between the values</comment>');
+				$output->writeln('<comment>In case you want to ' . $action .' more than one instance, please use a comma (,) between the values</comment>');
 
-				$question = TrimHelper::getQuestion('Which instance(s) do you want to update', null, '?');
+				$question = TrimHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
 				$question->setValidator(function ($answer) use ($instances) {
 					return TrimHelper::validateInstanceSelection($answer, $instances);
 				});
@@ -146,9 +145,15 @@ class UpdateInstanceCommand extends Command
 						$output->writeln('<comment>the latest version permitted by the server.</comment>');
 					}
 				} else {
-					$filesToResolve = $app->performUpdate($instance);
-					$version = $instance->getLatestVersion();
-					handleCheckResult($instance, $version, $filesToResolve);
+					$app_branch = $app->getBranch();
+					if ($app_branch == $branch_name) {
+						$filesToResolve = $app->performUpdate($instance);
+						$version = $instance->getLatestVersion();
+						handleCheckResult($instance, $version, $filesToResolve);
+					} else {
+						$output->writeln('<error>Error: Tiki Application branch is different than the one stored in the TRIM db.</error>');
+						exit (-1);
+					}
 				}
 
 				if ($locked) $instance->unlock();
