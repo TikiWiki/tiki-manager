@@ -26,7 +26,7 @@ WHERE
 
 define('SQL_SELECT_UPDATABLE_INSTANCE', "
 SELECT
-    instance.instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app
+    instance.instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app, version.branch
 FROM
     instance
 INNER JOIN

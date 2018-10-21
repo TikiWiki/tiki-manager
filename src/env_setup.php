@@ -306,9 +306,9 @@ function getEntries($list, $selection)
  * Ask the user to select one or more instances to perform
  * an action.
  *
- * @param array list of Instance objects
- * @param string $selectionQuestion message displayed to the user before the list of available instances
- * @return array one or more instances objects
+ * @param array $instances - list of Instance objects
+ * @param $selectionQuestion - message displayed to the user before the list of available instances
+ * @return array|string - one or more instances objects
  */
 function selectInstances(array $instances, $selectionQuestion)
 {
@@ -325,15 +325,16 @@ function selectInstances(array $instances, $selectionQuestion)
 /**
  * Print a list of instances to the user for selection.
  *
- * @param array $instances list of Instance objects
- * @return null
+ * @param array $instances - list of Instance objects
  */
 function printInstances(array $instances)
 {
     foreach ($instances as $key => $i) {
         $name = substr($i->name, 0, 18);
         $weburl = substr($i->weburl, 0, 38);
-        echo "[$i->id] " . str_pad($name, 20) . str_pad($weburl, 40) . str_pad($i->contact, 20) . "\n";
+        $branch = isset($i->branch)? $i->branch : '';
+
+        echo "[$i->id] " . str_pad($name, 20) . str_pad($weburl, 40) . str_pad($i->contact, 30) . str_pad($branch, 20) . "\n";
     }
 }
 

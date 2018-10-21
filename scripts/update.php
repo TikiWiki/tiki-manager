@@ -13,11 +13,16 @@ define('ARG_AUTO', $_SERVER['argc'] > 2 && $_SERVER['argv'][1] == 'auto');
 
 $instances = Instance::getUpdatableInstances();
 
+$mode = 'update';
+if (ARG_SWITCH) {
+	$mode = 'upgrade';
+}
+
 if (ARG_AUTO)
     $selection = getEntries($instances, implode(' ', array_slice($_SERVER['argv'], 2 )));
 else {
-    warning("\nWARNING: Only SVN instances can be updated.\n");
-    echo "Which instances do you want to update?\n";
+    warning("\nWARNING: Only SVN instances can be " . $mode . "d.\n");
+    echo "Which instances do you want to " . $mode . "?\n";
 
     printInstances($instances);
 
@@ -106,11 +111,15 @@ foreach ($selection as $instance) {
                 'the latest version permitted by the server.'
             );
         }
-    }
-    else {
-        $filesToResolve = $app->performUpdate($instance);
-        $version = $instance->getLatestVersion();
-        handleCheckResult($instance, $version, $filesToResolve);
+    } else {
+		$app_branch = $app->getBranch();
+		if ($app_branch == $branch_name) {
+			$filesToResolve = $app->performUpdate($instance);
+			$version = $instance->getLatestVersion();
+			handleCheckResult($instance, $version, $filesToResolve);
+		} else {
+			echo color("\nError: Tiki Application branch is different than the one stored in the TRIM db.\n\n", 'red');
+		}
     }
 
     if ($locked) $instance->unlock();
