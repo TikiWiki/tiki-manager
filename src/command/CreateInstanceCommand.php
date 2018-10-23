@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use trim\instance\Discovery;
 
 class CreateInstanceCommand extends Command
 {
@@ -105,6 +106,7 @@ class CreateInstanceCommand extends Command
 		$output->writeln('<info>Instance information saved.</info>');
 
 		$access = $instance->registerAccessMethod($type, $host, $user, $pass, $port);
+        $discovery = new Discovery($instance, $access);
 
 		if (!$access) {
 			$instance->delete();
@@ -118,7 +120,14 @@ class CreateInstanceCommand extends Command
 		}
 
 		$d_linux = $instance->detectDistribution();
-		$output->writeln('<info>You are running : ' . $d_linux . '</info>');
+        $php_version_output = $discovery->detectPHPVersion();
+
+        if (preg_match('/(\d+)(\d{2})(\d{2})$/', $php_version_output, $matches)) {
+            $php_version_output = "$matches[1].$matches[2].$matches[3]";
+        }
+
+        $output->writeln('<info>You are running : ' . $d_linux . '</info>');
+        $output->writeln('<info>PHP Version: ' . $php_version_output . ' found at ' . $discovery->detectPHP() . '</info>');
 
 		switch ($d_linux) {
 			case "ClearOS":

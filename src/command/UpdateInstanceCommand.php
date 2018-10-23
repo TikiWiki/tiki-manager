@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
+use trim\instance\Discovery;
 
 class UpdateInstanceCommand extends Command
 {
@@ -72,7 +73,16 @@ class UpdateInstanceCommand extends Command
 			}
 
 			foreach ($selectedInstances as $instance) {
-				$output->writeln('<fg=cyan>Working on ' . $instance->name . '</>');
+			    $access = $instance->getBestAccess('scripting');
+                $discovery = new Discovery($instance, $access);
+                $php_version_output = $discovery->detectPHPVersion();
+
+                if (preg_match('/(\d+)(\d{2})(\d{2})$/', $php_version_output, $matches)) {
+                    $php_version_output = "$matches[1].$matches[2].$matches[3]";
+                }
+
+                $output->writeln('<fg=cyan>Working on ' . $instance->name . '</>');
+				$output->writeln('<fg=cyan>PHP version ' . $php_version_output . ' found at ' . $discovery->detectPHP() . '</>');
 
 				$locked = $instance->lock();
 				$instance->detectPHP();
