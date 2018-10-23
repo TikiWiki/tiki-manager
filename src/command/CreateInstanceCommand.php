@@ -126,8 +126,7 @@ class CreateInstanceCommand extends Command
             $php_version_output = "$matches[1].$matches[2].$matches[3]";
         }
 
-        $output->writeln('<info>You are running : ' . $d_linux . '</info>');
-        $output->writeln('<info>PHP Version: ' . $php_version_output . ' found at ' . $discovery->detectPHP() . '</info>');
+        $output->writeln('<info>You are running : ' . $d_linux . "\nPHP Version: $php_version_output found at " . $discovery->detectPHP() . '</info>');
 
 		switch ($d_linux) {
 			case "ClearOS":

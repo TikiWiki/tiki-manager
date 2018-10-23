@@ -81,8 +81,7 @@ class UpdateInstanceCommand extends Command
                     $php_version_output = "$matches[1].$matches[2].$matches[3]";
                 }
 
-                $output->writeln('<fg=cyan>Working on ' . $instance->name . '</>');
-				$output->writeln('<fg=cyan>PHP version ' . $php_version_output . ' found at ' . $discovery->detectPHP() . '</>');
+                $output->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $php_version_output found at " . $discovery->detectPHP() .'</>');
 
 				$locked = $instance->lock();
 				$instance->detectPHP();
