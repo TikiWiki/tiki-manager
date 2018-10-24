@@ -8,6 +8,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
+
 use trim\instance\Discovery;
 
 class CreateInstanceCommand extends Command
@@ -156,10 +158,29 @@ class CreateInstanceCommand extends Command
 		$question = TrimHelper::getQuestion('Working directory', TRIM_TEMP);
 		$tempdir = $helper->ask($input, $output, $question);
 
-		if ($access instanceof ShellPrompt) {
+		if ($access instanceof \ShellPrompt) {
+			$testResult = $access->shellExec('test -d ' . escapeshellarg($webroot) .' && echo EXISTS');
+			if ($testResult != 'EXISTS') {
+				echo "Directory [" . $webroot . "] does not exist. TRIM will try to create it.\n";
+
+				$helper = $this->getHelper('question');
+				$question = new ConfirmationQuestion('Continue with this action (y,n)? ', false);
+
+				if (! $helper->ask($input, $output, $question)) {
+					$output->writeln('<error>Directory not created. Application stopped.</error>');
+					return;
+				}
+
+				$createResult = $access->shellExec('mkdir -m777 -p ' . escapeshellarg($webroot) . ' && echo SUCCESS');
+				if ($createResult != 'SUCCESS') {
+					$output->writeln('<error>Directory not created. Application stopped.</error>');
+					exit (-1);
+				}
+			}
+
 			$access->shellExec("mkdir -p $tempdir");
 		} else {
-			$output->writeln('<error>Shell access is required to create the working directory. You will need to create it manually.</error>');
+			$output->writeln('<error>Shell access is required to create the working directory and web root directory. You will need to create it manually.</error>');
 			exit (-1);
 		}
 
