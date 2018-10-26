@@ -41,8 +41,33 @@ $access->save();
 echo color("Instance information saved.\n", 'green');
 
 info("Running on " . $discovery->detectDistro());
-$instance->webroot = promptUser('Web root', $discovery->detectWebroot());
-$instance->tempdir = promptUser('Working directory', TRIM_TEMP);
+if ($access instanceof ShellPrompt) {
+    $webroot = promptUser('Web root', $discovery->detectWebroot());
+    $testResult = $access->shellExec('test -d ' . escapeshellarg($webroot) .' && echo EXISTS');
+    if ($testResult != 'EXISTS') {
+        echo "Directory [" . $webroot . "] does not exist.\n";
+        $confirmAnswer = promptUser('Create directory?', false, ['yes','no']);
+        $createResult = '';
+        if ($confirmAnswer == 'yes') {
+            $createResult = $access->shellExec('mkdir -m777 -p ' . escapeshellarg($webroot) . ' && echo SUCCESS');
+        }
+
+        if ($confirmAnswer != 'yes') {
+            echo die(color("Webroot directory not created. Unable to continue, TRIM requires an existing webroot directory.\n", 'yellow'));
+        }
+
+        if ($createResult != 'SUCCESS') {
+            echo die(color("Unable to create webroot directory. Unable to continue, TRIM requires an existing webroot directory.\n", 'yellow'));
+        }
+    }
+
+    $instance->webroot = $webroot;
+
+    $instance->tempdir = promptUser('Working directory', TRIM_TEMP);
+    $access->shellExec('mkdir -m777 -p ' . escapeshellarg($instance->tempdir));
+} else {
+    echo die(color("Shell access is required to create the working and web root directory. You will need to create it manually.\n", 'yellow'));
+}
 
 list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 $instance->backup_user = promptUser('Backup owner', $backup_user);
@@ -51,11 +76,6 @@ $instance->backup_perm = intval(promptUser('Backup file permissions', decoct($ba
 
 $instance->phpexec = $discovery->detectPHP();
 $instance->phpversion = $discovery->detectPHPVersion();
-
-if ($access instanceof ShellPrompt) {
-    $access->shellExec('mkdir -m777 -p ' . escapeshellarg($instance->tempdir));
-} else
-    echo die(color("Shell access is required to create the working directory. You will need to create it manually.\n", 'yellow'));
 
 $instance->save();
 echo color("Instance information saved.\n", 'green');
