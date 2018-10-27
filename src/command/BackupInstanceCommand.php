@@ -4,6 +4,7 @@ namespace App\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,7 +17,8 @@ class BackupInstanceCommand extends Command
 			->setName('instance:backup')
 			->setDescription('Backup instance')
 			->setHelp('This command allows you to backup instances')
-			->addArgument('instances', InputArgument::IS_ARRAY | InputArgument::OPTIONAL);
+			->addArgument('instances', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
+			->addOption('exclude', 'e', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Exclude the backup of specific instance IDs');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
@@ -31,7 +33,8 @@ class BackupInstanceCommand extends Command
 			$arguments = $input->getArgument('instances');
 			if (! empty($arguments)) {
 				if ($arguments[0] == 'all') {
-					$selectedInstances = $instances;
+				    $this->checkForExcludedInstances($instances);
+                    $selectedInstances = $instances;
 				} else {
 					$instancesIds = array_slice($arguments, 0);
 
@@ -67,4 +70,23 @@ class BackupInstanceCommand extends Command
 			$output->writeln('<comment>No instances available to backup.</comment>');
 		}
 	}
+
+    /**
+     * Function used to check for instances to exclude via option "--exclude="
+     * @param $instances
+     */
+	private function checkForExcludedInstances(&$instances)
+    {
+        $excluded_option = get_cli_option('exclude');
+        if (empty($excluded_option)) {
+            return;
+        }
+
+        $instances_to_exclude = explode(',', get_cli_option('exclude'));
+        foreach ($instances as $key => $instance) {
+            if(in_array($instance->id, $instances_to_exclude)) {
+                unset($instances[$key]);
+            }
+        }
+    }
 }

@@ -45,10 +45,33 @@ class WatchInstanceCommand extends Command
 		$hour = (int)$hour;
 		$minute = (int)$minute;
 
-		$path = realpath(dirname(__FILE__) . '/../../scripts/watch.php');
+		$options = '';
+		$question = TrimHelper::getQuestion('Which instance IDs should be ignored?');
+
+		$question->setValidator(function ($value) {
+		    if (empty($value)) {
+                return '';
+            }
+
+            $instance_ids = explode(',', $value);
+		    foreach ($instance_ids as $instance_id) {
+		        if (! is_numeric($instance_id)) {
+                    throw new \RuntimeException("'$instance_id' is an invalid instance ID. Please check your input.");
+                }
+            }
+
+            return $value;
+        });
+
+        $excluded_instances = $helper->ask($input, $output, $question);
+        if (! empty($excluded_instances)) {
+            $options .= "--exclude=$excluded_instances ";
+        }
+
+        $path = realpath(dirname(__FILE__) . '/../../scripts/watch.php');
 		$entry = sprintf(
-			"%d %d * * * %s -d memory_limit=256M %s %s\n",
-			$minute, $hour, php(), $path, $email);
+			"%d %d * * * %s -d memory_limit=256M %s %s %s\n",
+			$minute, $hour, php(), $path, $email, $options);
 
 		file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
 
