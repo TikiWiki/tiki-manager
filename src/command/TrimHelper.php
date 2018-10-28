@@ -11,33 +11,22 @@ class TrimHelper
 	 * Get information from Instance Object
 	 *
 	 * @param $instances array of Instance objects
-	 * @param $includeBranch boolean
 	 * @return array|null
 	 */
-	public static function getInstancesInfo($instances, $includeBranch = false)
+	public static function getInstancesInfo($instances)
 	{
 		$instancesInfo = null;
 
 		if (! empty($instances)) {
 			foreach ($instances as $key => $instance) {
-				if (! $includeBranch) {
-					$instancesInfo[] = array(
-						$instance->id,
-						$instance->type,
-						$instance->name,
-						$instance->weburl,
-						$instance->contact
-					);
-				} else {
-					$instancesInfo[] = array(
-						$instance->id,
-						$instance->type,
-						$instance->name,
-						$instance->weburl,
-						$instance->contact,
-						$instance->branch
-					);
-				}
+				$instancesInfo[] = array(
+					$instance->id,
+					$instance->type,
+					$instance->name,
+					$instance->weburl,
+					$instance->contact,
+					$instance->branch
+				);
 			}
 		}
 
@@ -49,34 +38,22 @@ class TrimHelper
 	 *
 	 * @param $output
 	 * @param $rows
-	 * @param $includeBranch
 	 * @return bool
 	 */
-	public static function renderInstancesTable($output, $rows, $includeBranch = false)
+	public static function renderInstancesTable($output, $rows)
 	{
 		if (empty($rows)) {
 			return false;
 		}
 
-		if (! $includeBranch) {
-			$instanceTableHeaders = array(
-				'ID',
-				'Type',
-				'Name',
-				'Web URL',
-				'Contact'
-			);
-		} else {
-			$instanceTableHeaders = array(
-				'ID',
-				'Type',
-				'Name',
-				'Web URL',
-				'Contact',
-				'Branch'
-			);
-		}
-
+		$instanceTableHeaders = array(
+			'ID',
+			'Type',
+			'Name',
+			'Web URL',
+			'Contact',
+			'Branch'
+		);
 
 		$table = new Table($output);
 		$table

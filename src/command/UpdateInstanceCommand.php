@@ -23,7 +23,7 @@ class UpdateInstanceCommand extends Command
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$instances = TrimHelper::getInstances('update');
-		$instancesInfo = TrimHelper::getInstancesInfo($instances, true);
+		$instancesInfo = TrimHelper::getInstancesInfo($instances);
 		if (isset($instancesInfo)) {
 			$helper = $this->getHelper('question');
 
@@ -59,7 +59,7 @@ class UpdateInstanceCommand extends Command
 				$output->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
 
 				$io->newLine();
-				$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo, true);
+				$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
 
 				$io->newLine();
 				$output->writeln('<comment>In case you want to ' . $action .' more than one instance, please use a comma (,) between the values</comment>');
