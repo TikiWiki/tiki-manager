@@ -6,20 +6,24 @@
 
 define('SQL_SELECT_INSTANCE', "
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch
 FROM
     instance i
 INNER JOIN access a
     ON i.instance_id=a.instance_id
+LEFT JOIN
+    version v ON i.instance_id = v.instance_id
 ;");
 
 define('SQL_SELECT_INSTANCE_BY_ID', "
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch
 FROM
     instance i
 INNER JOIN access a
     ON i.instance_id=a.instance_id
+LEFT JOIN
+    version v ON i.instance_id = v.instance_id
 WHERE
     i.instance_id = :id
 ;");
@@ -226,7 +230,7 @@ class Instance
         return $instances;
     }
 
-    function getRestorableInstances()
+    static function getRestorableInstances()
     {
         $dp = opendir(BACKUP_FOLDER);
 
