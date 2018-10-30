@@ -300,3 +300,22 @@ function run_composer_install()
 
     return !empty($result);
 }
+
+/**
+ * Gets a CLI option given the option name eg: "--<option>="
+ *
+ * @param $option
+ * @param null $default
+ * @return bool|null|string
+ */
+function get_cli_option($option, $default = null) {
+    global $argv;
+
+    foreach ($argv as $argument) {
+        if (strpos($argument, "--{$option}=") === 0) {
+            return substr($argument, strlen($option) + 3);
+        }
+    }
+
+    return $default;
+}

@@ -6,13 +6,25 @@
 
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 
-if ($_SERVER['argc'] != 2)
+if ($_SERVER['argc'] < 2)
     die(error('Expecting target email address as parameter.'));
 
 $log = '';
 $email = $_SERVER['argv'][1];
 
 $instances = Instance::getInstances();
+$excluded_option = get_cli_option('exclude');
+
+if (! empty($excluded_option)) {
+    $instances_to_exclude = explode(',', get_cli_option('exclude'));
+
+    foreach ($instances as $key => $instance) {
+        if(in_array($instance->id, $instances_to_exclude)) {
+            unset($instances[$key]);
+        }
+    }
+}
+
 foreach ($instances as $instance) {
     $version = $instance->getLatestVersion();
 

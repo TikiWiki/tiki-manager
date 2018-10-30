@@ -13,6 +13,18 @@ if (! isset($_SERVER['argv'][1])) {
     echo color("\nNOTE: Backups are only available on Local and SSH instances.\n\n", 'yellow');
     $selection = selectInstances($instances, "Which instances do you want to backup?\n");
 } elseif ($_SERVER['argv'][1] == 'all') {
+    $excluded_option = get_cli_option('exclude');
+
+    if (! empty($excluded_option)) {
+        $instances_to_exclude = explode(',', get_cli_option('exclude'));
+
+        foreach ($instances as $key => $instance) {
+            if(in_array($instance->id, $instances_to_exclude)) {
+                unset($instances[$key]);
+            }
+        }
+    }
+
     $selection = $instances;
 } else {
     $selection = getEntries($instances, implode(' ', array_slice($_SERVER['argv'], 1)));
