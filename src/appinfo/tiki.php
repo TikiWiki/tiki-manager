@@ -474,9 +474,46 @@ class Application_Tiki extends Application
 
     function restoreDatabase(Database $database, $remoteFile)
     {
-        $tmp = tempnam(TEMP_FOLDER, 'dblocal');
+		$tmp = tempnam(TEMP_FOLDER, 'dblocal');
 
-        if ( !empty($database->dbLocalContent) ) {
+		$credencialsChanged = false;
+		if (file_exists($remoteFile)) {
+			$lines = file($remoteFile);
+			$databaseInfo = array_slice($lines, 2, 1);
+			$databaseInfo = ! empty($databaseInfo) ? explode(' ', $databaseInfo[0]) : [];
+			$sourceHost = '';
+			$sourceDatabase = '';
+			foreach ($databaseInfo as $key => $info) {
+				if ($info == 'Host:') {
+					$sourceHost = trim($databaseInfo[$key + 1]);
+				}
+				if ($info == 'Database:') {
+					$sourceDatabase = trim($databaseInfo[$key + 1]);
+				}
+			}
+
+			$valid = false;
+			while (! $valid) {
+				$valid = $database->testConnection();
+				$sameCredencials = false;
+				if (! empty($database->host) && ! empty($database->dbname) && $sourceHost == $database->host && $sourceDatabase == $database->dbname) {
+					$sameCredencials = true;
+					error('Database host and name are the same in the source and destination.');
+				}
+				if (! $valid || $sameCredencials) {
+					$database->host = strtolower(promptUser('Database host', $database->host ?: 'localhost'));
+					$database->dbname = strtolower(promptUser('Database name', $database->dbname ?: 'tiki_db'));
+					$database->user = strtolower(promptUser('Database user', $database->user ?: 'root'));
+					print 'Database password: ';
+					$database->pass = getPassword(true);
+					print "\n";
+					$valid = false;
+					$credencialsChanged = true;
+				}
+			}
+		}
+
+        if (! $credencialsChanged && ! empty($database->dbLocalContent)) {
             file_put_contents($tmp, $database->dbLocalContent);
         } else {
             file_put_contents($tmp, "<?php"          . "\n"
