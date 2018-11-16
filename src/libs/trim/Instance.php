@@ -431,7 +431,8 @@ class Instance
             return $version;
         }
 
-        return false;
+        error("No suitable php interpreter was found on {$this->name} instance");
+        exit(1);
     }
 
     function detectSVN()
