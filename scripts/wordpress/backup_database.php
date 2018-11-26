@@ -4,8 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET')
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
     $_SERVER['argv'] = $_GET;
+}
 
 $root = $_SERVER['argv'][1];
 $outputFile = $_SERVER['argv'][2];
@@ -18,31 +19,38 @@ function getWpDbRegex($name)
 $wpConfigContents = file("{$root}/wp-config.php");
 
 foreach ($wpConfigContents as $line) {
-    $matches = array();
+    $matches = [];
     
-    if (preg_match(getWpDbRegex('DB_NAME'), $line, $matches))
+    if (preg_match(getWpDbRegex('DB_NAME'), $line, $matches)) {
         $dbName = $matches[1];
+    }
     
-    if (preg_match(getWpDbRegex('DB_USER'), $line, $matches))
+    if (preg_match(getWpDbRegex('DB_USER'), $line, $matches)) {
         $dbUser = $matches[1];
+    }
     
-    if (preg_match(getWpDbRegex('DB_PASSWORD'), $line, $matches))
+    if (preg_match(getWpDbRegex('DB_PASSWORD'), $line, $matches)) {
         $dbPassword = $matches[1];
+    }
     
-    if (preg_match(getWpDbRegex('DB_HOST'), $line, $matches))
+    if (preg_match(getWpDbRegex('DB_HOST'), $line, $matches)) {
         $dbHost = $matches[1];
+    }
 }
 
-$args = array();
+$args = [];
 
-if ($dbUser)
+if ($dbUser) {
     $args[] = '-u' . escapeshellarg($dbUser);
+}
 
-if ($dbPassword)
+if ($dbPassword) {
     $args[] = '-p' . escapeshellarg($dbPassword);
+}
 
-if ($dbHost)
+if ($dbHost) {
     $args[] = '-h' . escapeshellarg($dbHost);
+}
 
 $args[] = $dbName;
 

@@ -15,12 +15,12 @@ $instances = Instance::getUpdatableInstances();
 
 $mode = 'update';
 if (ARG_SWITCH) {
-	$mode = 'upgrade';
+    $mode = 'upgrade';
 }
 
-if (ARG_AUTO)
-    $selection = getEntries($instances, implode(' ', array_slice($_SERVER['argv'], 2 )));
-else {
+if (ARG_AUTO) {
+    $selection = getEntries($instances, implode(' ', array_slice($_SERVER['argv'], 2)));
+} else {
     warning("\nWARNING: Only SVN instances can be " . $mode . "d.\n");
     echo "Which instances do you want to " . $mode . "?\n";
 
@@ -43,8 +43,8 @@ foreach ($selection as $instance) {
         $contents = $string = trim(preg_replace('/\s\s+/', ' ', ob_get_contents()));
         ob_end_clean();
 
-        $matches = array();
-        if(preg_match('/(\d+\.|trunk)/', $contents, $matches)) {
+        $matches = [];
+        if (preg_match('/(\d+\.|trunk)/', $contents, $matches)) {
             $branch_name = $matches[0];
         }
     }
@@ -54,11 +54,12 @@ foreach ($selection as $instance) {
     $branch_version = $version->getBaseVersion();
 
     if (ARG_SWITCH) {
-        $versions = array();
+        $versions = [];
         $versions_raw = $app->getVersions();
         foreach ($versions_raw as $version) {
-            if ($version->type == 'svn')
+            if ($version->type == 'svn') {
                 $versions[] = $version;
+            }
         }
 
         echo "You are currently running: $branch_name\n";
@@ -93,36 +94,37 @@ foreach ($selection as $instance) {
 
             $input = promptUser('>>> ');
             $versionSel = getEntries($versions, $input);
-            if (empty($versionSel) && ! empty($input))
+            if (empty($versionSel) && ! empty($input)) {
                 $target = Version::buildFake('svn', $input);
-            else
+            } else {
                 $target = reset($versionSel);
+            }
 
             if (count($versionSel) > 0) {
                 $filesToResolve = $app->performUpdate($instance, $target);
                 $version = $instance->getLatestVersion();
                 handleCheckResult($instance, $version, $filesToResolve);
-            }
-            else
+            } else {
                 warning('No version selected. Nothing to perform.');
-        }
-        else {
+            }
+        } else {
             warning('No upgrades are available. This is likely because you are already at ' .
-                'the latest version permitted by the server.'
-            );
+                'the latest version permitted by the server.');
         }
     } else {
-		$app_branch = $app->getBranch();
-		if ($app_branch == $branch_name) {
-			$filesToResolve = $app->performUpdate($instance);
-			$version = $instance->getLatestVersion();
-			handleCheckResult($instance, $version, $filesToResolve);
-		} else {
-			echo color("\nError: Tiki Application branch is different than the one stored in the TRIM db.\n\n", 'red');
-		}
+        $app_branch = $app->getBranch();
+        if ($app_branch == $branch_name) {
+            $filesToResolve = $app->performUpdate($instance);
+            $version = $instance->getLatestVersion();
+            handleCheckResult($instance, $version, $filesToResolve);
+        } else {
+            echo color("\nError: Tiki Application branch is different than the one stored in the TRIM db.\n\n", 'red');
+        }
     }
 
-    if ($locked) $instance->unlock();
+    if ($locked) {
+        $instance->unlock();
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

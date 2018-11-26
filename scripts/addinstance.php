@@ -32,7 +32,7 @@ $instance->weburl = promptUser('Web URL', $discovery->detectWeburl());
 $instance->name = promptUser('Instance name', $discovery->detectName());
 $instance->contact = strtolower(promptUser('Contact email'));
 
-if(!$access->firstConnect()) {
+if (!$access->firstConnect()) {
     error('Failed to setup access');
 }
 
@@ -80,9 +80,9 @@ $instance->phpversion = $discovery->detectPHPVersion();
 $instance->save();
 echo color("Instance information saved.\n", 'green');
 
-if (ARG_BLANK) 
+if (ARG_BLANK) {
     echo color("This is a blank (empty) instance. This is useful to restore a backup later.\n", 'blue');
-else {
+} else {
     perform_instance_installation($instance);
     echo color("Please test your site at {$instance->weburl}\n", 'blue');
 }

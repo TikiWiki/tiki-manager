@@ -17,7 +17,6 @@ function perform_instance_installation(Instance $instance)
 
         $versions = $app->getVersions();
         foreach ($versions as $key => $version) {
-
             preg_match('/(\d+\.|trunk)/', $version->branch, $matches);
             if (array_key_exists(0, $matches)) {
                 // TODO: This is Tiki-specific, not applicable to other apps (ex: wordpress).
@@ -26,22 +25,29 @@ function perform_instance_installation(Instance $instance)
                     ($instance->phpversion < 50500)) {
                     // Nothing to do, this match is incompatible...
                     $found_incompatibilities = true;
-                }
-                else {
-                    echo sprintf("[%3d] %s : %s\n",
-                        $key, $version->type, $version->branch);
+                } else {
+                    echo sprintf(
+                        "[%3d] %s : %s\n",
+                        $key,
+                        $version->type,
+                        $version->branch
+                    );
                 }
             }
         }
         
         echo "[ -1] blank : none\n";
 
-        $matches = array();
+        $matches = [];
         preg_match('/(\d+)(\d{2})(\d{2})$/', $instance->phpversion, $matches);
 
         if (count($matches) == 4) {
-            info(sprintf('TRIM detected PHP release: %d.%d.%d',
-                $matches[1], $matches[2], $matches[3]));
+            info(sprintf(
+                'TRIM detected PHP release: %d.%d.%d',
+                $matches[1],
+                $matches[2],
+                $matches[3]
+            ));
         }
 
         if ($found_incompatibilities) {
@@ -50,23 +56,28 @@ function perform_instance_installation(Instance $instance)
         }
 
         $input = promptUser('>>> ', '');
-        if ($input > -1) $selection = getEntries($versions, $input);
+        if ($input > -1) {
+            $selection = getEntries($versions, $input);
+        }
 
-        if ((empty($selection) && empty($input)) || ($input < 0))
+        if ((empty($selection) && empty($input)) || ($input < 0)) {
             die(error('No version to install.  This is a blank instance.'));
+        }
 
-        if (empty($selection))
+        if (empty($selection)) {
             $version = Version::buildFake('svn', $input);
-        else
+        } else {
             $version = reset($selection);
+        }
 
         info("Installing application...");
         echo color("If for any reason the installation fails (ex: wrong setup.sh parameters for tiki), " .
            "you can use 'make access' to complete the installation manually.\n", 'yellow');
         $app->install($version);
 
-        if ($app->requiresDatabase())
+        if ($app->requiresDatabase()) {
             perform_database_setup($instance);
+        }
     }
 }
 
@@ -74,12 +85,14 @@ function perform_database_connectivity_test(Instance $instance, Database $databa
 {
     info('Testing database connectivity...');
 
-    $command = sprintf('mysql -u %s%s -h %s -e \'SELECT 1\' ' .
+    $command = sprintf(
+        'mysql -u %s%s -h %s -e \'SELECT 1\' ' .
         ' 2>> /tmp/trim.output >> /tmp/trim.output; echo $?',
         escapeshellarg($database->user),
         empty($database->pass) ?
             '' : ' -p' . escapeshellarg($database->pass),
-        escapeshellarg($database->host));
+        escapeshellarg($database->host)
+    );
 
     $access = $instance->getBestAccess('scripting');
     $output = $access->shellExec($command);
@@ -100,14 +113,17 @@ function perform_database_connectivity_test(Instance $instance, Database $databa
 
 function perform_database_setup(Instance $instance, $remoteBackupFile = null)
 {
-    info(sprintf("Performing database %s...",
-        ($remoteBackupFile) ? 'restore' : 'setup'));
+    info(sprintf(
+        "Performing database %s...",
+        ($remoteBackupFile) ? 'restore' : 'setup'
+    ));
 
     $dbUser = null;
     $access = $instance->getBestAccess('scripting');
 
-    if (! $remoteBackupFile && ! ($access instanceof ShellPrompt))
+    if (! $remoteBackupFile && ! ($access instanceof ShellPrompt)) {
         die(error('Can not setup database in non-interactive mode.'));
+    }
 
     if ($remoteBackupFile) {
         $remoteFile = "{$instance->webroot}/db/local.php";
@@ -137,7 +153,8 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
         
         $type = strtolower(promptUser(
             'Should a new database and user be created now (both)? ',
-            'y', array('y', 'n')
+            'y',
+            ['y', 'n']
         ));
 
         if (strtolower($type{0}) == 'n') {
@@ -148,36 +165,36 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             warning("Prefix is a string with maximum of {$maxPrefixLength} chars");
 
             $prefix = 'tiki';
-            while(!is_object($dbUser)) {
+            while (!is_object($dbUser)) {
                 $prefix = promptUser('Prefix to use for username and database', $prefix);
 
-                if(strlen($prefix) > $maxPrefixLength) {
+                if (strlen($prefix) > $maxPrefixLength) {
                     error("Prefix is a string with maximum of {$maxPrefixLength} chars");
                     $prefix = substr($prefix, 0, $maxPrefixLength);
                     continue;
                 }
 
                 $username = "{$prefix}_user";
-                if($dbRoot->userExists($username)) {
+                if ($dbRoot->userExists($username)) {
                     error("User '$username' already exists, can't proceed.");
                     continue;
                 }
 
                 $dbname = "{$prefix}_db";
-                if($dbRoot->databaseExists($dbname)) {
+                if ($dbRoot->databaseExists($dbname)) {
                     warning("Database '$dbname' already exists");
-                    if(promptUser('Continue?', 'y', ['y', 'n']) === 'n') {
+                    if (promptUser('Continue?', 'y', ['y', 'n']) === 'n') {
                         continue;
                     }
                 }
 
                 try {
                     $dbUser = $dbRoot->createAccess($username, $dbname);
-                } catch(DatabaseError $e) {
+                } catch (DatabaseError $e) {
                     error("Can't setup database!");
                     error($e->getMessage());
 
-                    if(promptUser('(a)abort, (r)retry:', 'a', ['a', 'r']) === 'a') {
+                    if (promptUser('(a)abort, (r)retry:', 'a', ['a', 'r']) === 'a') {
                         error('Aborting');
                         return;
                     }
@@ -191,23 +208,26 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
 
         if (count($types) == 1) {
             $dbUser->type = reset($types);
-        } else if(empty($type)) {
+        } elseif (empty($type)) {
             echo "Which extension should be used?\n";
-            foreach ($types as $key => $name)
+            foreach ($types as $key => $name) {
                 echo "[$key] $name\n";
+            }
 
             $selection = promptUser('>>> ', '0');
-            if (array_key_exists( $selection, $types))
+            if (array_key_exists($selection, $types)) {
                 $dbUser->type = $types[$selection];
-            else
+            } else {
                 $dbUser->type = reset($types);
+            }
         }
     }
     
-    if ($remoteBackupFile)
+    if ($remoteBackupFile) {
         $instance->getApplication()->restoreDatabase($dbUser, $remoteBackupFile);
-    else
+    } else {
         $instance->getApplication()->setupDatabase($dbUser);
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

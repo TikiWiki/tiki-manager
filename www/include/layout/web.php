@@ -19,8 +19,10 @@ function web_backup($instance)
 
     // the extrabackups query returns an error on a mac
     $targets = $backup->getTargetDirectories();
-    foreach( $targets as $key=>$val ) {
-        if(strpos($val[1], 'command not found')) unset($targets[$key]);
+    foreach ($targets as $key => $val) {
+        if (strpos($val[1], 'command not found')) {
+            unset($targets[$key]);
+        }
     }
 
     info('Downloading files locally...');

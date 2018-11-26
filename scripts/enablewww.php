@@ -7,10 +7,12 @@
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 
 if (function_exists('posix_getuid')) {
-    if (posix_getuid() != 0)
+    if (posix_getuid() != 0) {
         die(error('You need to run this script as root to write to configuration files.'));
+    }
+} else {
+    die(error('PHP POSIX functions are not installed, install them and try again.'));
 }
-else die(error('PHP POSIX functions are not installed, install them and try again.'));
 
 echo <<<INFO
 TRIM web administration files are located in the TRIM directory. In order to
@@ -33,7 +35,9 @@ access to the administration panel to local users (safer).
 INFO;
 
 echo "This will enable the TRIM administration web panel.\n";
-if ('confirm' != promptUser('Type \'confirm\' to continue', '')) exit(1);
+if ('confirm' != promptUser('Type \'confirm\' to continue', '')) {
+    exit(1);
+}
 
 $webTrimDirectory = promptUser('WWW Trim directory (ex: /var/www/virtual/webtrim.example.com/html)');
 $cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -a composer.phar ' . $webTrimDirectory;
@@ -47,7 +51,8 @@ if (! file_exists($webTrimDirectory . '/config.php')) {
 
     while (empty($pass)) {
         print 'Desired password : ';
-        $pass = getPassword(true); print "\n";
+        $pass = getPassword(true);
+        print "\n";
     }
 
     $restrict = promptUser('Restrict use to localhost', 'no');
@@ -57,7 +62,7 @@ if (! file_exists($webTrimDirectory . '/config.php')) {
     $user = addslashes($user);
     $pass = addslashes($pass);
 
-file_put_contents($webTrimDirectory . '/config.php', <<<CONFIG
+    file_put_contents($webTrimDirectory . '/config.php', <<<CONFIG
 <?php
 define('USERNAME', '$user');
 define('PASSWORD', '$pass');
@@ -67,7 +72,7 @@ define('TRIMPATH', '$trimpath');
 define('THEME', 'default');
 define('TITLE', 'TRIM Web Administration');
 CONFIG
-);
+    );
 }
 
 $db = DB_FILE;

@@ -28,7 +28,9 @@ class FTP_Host
 
     function connect()
     {
-        if ($this->conn) return;
+        if ($this->conn) {
+            return;
+        }
 
         $conn = ftp_connect($this->host, $this->port, 15);
         if ($conn) {
@@ -51,9 +53,9 @@ class FTP_Host
         
         $list = ftp_nlist($this->conn, $dir);
 
-        if (in_array($filename, $list) || in_array($base, $list))
+        if (in_array($filename, $list) || in_array($base, $list)) {
             return true;
-        else {
+        } else {
             $list = ftp_nlist($this->conn, "-a $dir");
 
             return in_array($filename, $list) || in_array($base, $list);
@@ -66,7 +68,7 @@ class FTP_Host
         $fp = $this->getResource($filename);
         $content = '';
     
-        if(!is_resource($pf)) {
+        if (!is_resource($pf)) {
             return $content;
         }
     
@@ -78,7 +80,7 @@ class FTP_Host
         return $content;
     }
 
-    function getResource($filename, $type=FTP_ASCII)
+    function getResource($filename, $type = FTP_ASCII)
     {
         $this->connect();
         $fp = tmpfile();
@@ -130,7 +132,7 @@ class FTP_Host
     {
         $this->connect();
         $fp = $this->getResource($from);
-        if(!is_resource($pf)) {
+        if (!is_resource($pf)) {
             return false;
         }
         $ret = ftp_fput($this->conn, $to, $fp);

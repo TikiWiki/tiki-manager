@@ -24,7 +24,7 @@ class Host_Command
      * @param array  $args       command args as array
      * @param resource|string    the command stdin
      */
-    public function __construct($command=':', $args=array(), $stdin='')
+    public function __construct($command = ':', $args = [], $stdin = '')
     {
         $this->setCommand($command);
         $this->setArgs($args);
@@ -34,7 +34,8 @@ class Host_Command
     /**
      * Close all resources open by command
      */
-    public function __destruct() {
+    public function __destruct()
+    {
         $this->finish();
     }
 
@@ -75,7 +76,8 @@ class Host_Command
     /**
      * @return array The process status, if exists
      */
-    public function getStatus() {
+    public function getStatus()
+    {
         if (is_resource($this->process)) {
             $status = proc_get_status($this->process);
             return $status;
@@ -123,7 +125,8 @@ class Host_Command
     /**
      * @return resource The command stdout resource
      */
-    public function getStdout() {
+    public function getStdout()
+    {
         return $this->stdout ?: null;
     }
 
@@ -146,11 +149,11 @@ class Host_Command
      */
     public function prepareArgs($args)
     {
-        $result = array();
+        $result = [];
         if (is_string($args)) {
             $args = preg_split('/  */', $args);
         }
-        if (empty($args)){
+        if (empty($args)) {
             return $result;
         }
 
@@ -158,20 +161,17 @@ class Host_Command
             if (is_string($arg)) {
                 $arg = trim($arg);
                 if (strpos($arg, '-') === 0) {
-                    if(strpos($arg, '=') > -1) {
+                    if (strpos($arg, '=') > -1) {
                         $arg = explode('=', $arg, 2);
                         $arg = "{$arg[0]}=" . escapeshellarg($arg[1]);
-                    }
-                    else if(strpos($arg, ' ') > -1) {
+                    } elseif (strpos($arg, ' ') > -1) {
                         $arg = explode(' ', $arg, 2);
                         $arg = "{$arg[0]} " . escapeshellarg($arg[1]);
                     }
-                }
-                else {
+                } else {
                     $arg = escapeshellarg($arg);
                 }
-            }
-            else if(is_callable($arg)) {
+            } elseif (is_callable($arg)) {
                 $arg = $arg();
             }
             $result[] = $arg;
@@ -209,7 +209,7 @@ class Host_Command
      */
     public function setOptions($options)
     {
-        return $this->options = $options ?: array();
+        return $this->options = $options ?: [];
     }
 
     /**
@@ -217,7 +217,7 @@ class Host_Command
      */
     public function setOption($name, $value)
     {
-        $this->options = $this->options ?: array();
+        $this->options = $this->options ?: [];
         return $this->options[$name] = $value;
     }
 
@@ -226,7 +226,7 @@ class Host_Command
      */
     public function setProcess($process)
     {
-        if(is_resource($process) && get_resource_type($process) === 'process') {
+        if (is_resource($process) && get_resource_type($process) === 'process') {
             return $this->process = $process;
         }
     }
@@ -244,11 +244,11 @@ class Host_Command
      */
     public function setStderr($stderr)
     {
-        if (is_object($stderr) && method_exists($stderr, '__toString')){
+        if (is_object($stderr) && method_exists($stderr, '__toString')) {
             $stderr = strval($stderr);
         }
         if (is_string($stderr)) {
-            $res = fopen('php://memory','r+');
+            $res = fopen('php://memory', 'r+');
             fwrite($res, $stderr);
             rewind($res);
             $stderr = $res;
@@ -264,11 +264,11 @@ class Host_Command
      */
     public function setStdin($stdin)
     {
-        if (is_object($stdin) && method_exists($stdin, '__toString')){
+        if (is_object($stdin) && method_exists($stdin, '__toString')) {
             $stdin = strval($stdin);
         }
         if (is_string($stdin)) {
-            $res = fopen('php://memory','r+');
+            $res = fopen('php://memory', 'r+');
             fwrite($res, $stdin);
             rewind($res);
             $stdin = $res;
@@ -284,11 +284,11 @@ class Host_Command
      */
     public function setStdout($stdout)
     {
-        if (is_object($stdout) && method_exists($stdout, '__toString')){
+        if (is_object($stdout) && method_exists($stdout, '__toString')) {
             $stdout = strval($stdout);
         }
         if (is_string($stdout)) {
-            $res = fopen('php://memory','r+');
+            $res = fopen('php://memory', 'r+');
             fwrite($res, $stdout);
             rewind($res);
             $stdout = $res;
@@ -304,7 +304,8 @@ class Host_Command
      * This method is also called on __destruct, this means the resources will
      * also be closed on PHP garbage collecting.
      */
-    public function finish(){
+    public function finish()
+    {
         is_resource($this->process) && proc_close($this->process);
         is_resource($this->stdin) && fclose($this->stdin);
         is_resource($this->stdout) && fclose($this->stdout);
@@ -317,12 +318,12 @@ class Host_Command
      * @param  Host $host    A host object
      * @return Host_Command  $this
      */
-    public function run($host=null, $options=array())
+    public function run($host = null, $options = [])
     {
         $host = $this->host ?: $host;
         $options = $this->options ?: $options;
 
-        if(is_resource($this->process) || !is_null($this->return)) {
+        if (is_resource($this->process) || !is_null($this->return)) {
             throw new Host_CommandException("Host_Command cannot run twice", 1);
         }
         $host->runCommand($this, $options);

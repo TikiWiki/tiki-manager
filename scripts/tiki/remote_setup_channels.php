@@ -4,8 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET')
-	$_SERVER['argv'] = $_GET;
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
+    $_SERVER['argv'] = $_GET;
+}
 
 chdir($_SERVER['argv'][1]);
 require_once 'tiki-setup.php';

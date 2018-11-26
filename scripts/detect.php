@@ -9,26 +9,36 @@ include_once dirname(__FILE__) . '/../src/check.php';
 include_once dirname(__FILE__) . '/../src/dbsetup.php';
 
 $instances = Instance::getInstances(true);
-$selection = selectInstances($instances,
-    "Which instances do you want to detect?\n");
+$selection = selectInstances(
+    $instances,
+    "Which instances do you want to detect?\n"
+);
 
 foreach ($selection as $instance) {
     if (! $instance->detectPHP()) {
-        if ($instance->phpversion < 50300)
+        if ($instance->phpversion < 50300) {
             die(color("PHP Interpreter version is less than 5.3.\n", 'red'));
-        else
+        } else {
             die(color("PHP Interpreter could not be found on remote host.\n", 'red'));
+        }
     }
 
     perform_instance_installation($instance);
 
-    $matches = array();
-    preg_match('/(\d+)(\d{2})(\d{2})$/',
-        $instance->phpversion, $matches);
+    $matches = [];
+    preg_match(
+        '/(\d+)(\d{2})(\d{2})$/',
+        $instance->phpversion,
+        $matches
+    );
 
     if (count($matches) == 4) {
-        info(sprintf("Detected PHP : %d.%d.%d",
-            $matches[1], $matches[2], $matches[3]));
+        info(sprintf(
+            "Detected PHP : %d.%d.%d",
+            $matches[1],
+            $matches[2],
+            $matches[3]
+        ));
     }
 }
 

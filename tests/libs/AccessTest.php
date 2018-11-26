@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
 
-
 class AccessLocalTest extends TestCase
 {
     public function getAccessInstance()
@@ -14,7 +13,7 @@ class AccessLocalTest extends TestCase
     public function testCreateCommand()
     {
         $access = $this->getAccessInstance();
-        $command = $access->createCommand('cat', array(), 'Hello World');
+        $command = $access->createCommand('cat', [], 'Hello World');
 
         $command->run();
         $output = $command->getStdoutContent();
@@ -27,7 +26,7 @@ class AccessLocalTest extends TestCase
         $access = $this->getAccessInstance();
         $access->setenv('FOO', 'bar');
 
-        $command = $access->createCommand('bash', array(), 'echo -n $FOO');
+        $command = $access->createCommand('bash', [], 'echo -n $FOO');
 
         $command->run();
         $output = $command->getStdoutContent();

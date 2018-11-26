@@ -3,9 +3,8 @@
 $import = false;
 $notfound = false;
 
-if( $_SERVER['REQUEST_METHOD'] == 'POST' )
-{
-    if( $_POST['mode'] == 'search' ) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($_POST['mode'] == 'search') {
         $instance = new Instance;
         $instance->webroot = $_POST['tikiwebroot'];
         if (file_exists($instance->getWebPath('tiki-setup.php'))) {
@@ -15,7 +14,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
         }
     }
 
-    if( $_POST['mode'] == 'import' ) {
+    if ($_POST['mode'] == 'import') {
         $type = $name = $contact = $webroot = $weburl = $tempdir = '';
 
         $type = $_POST['type'];
@@ -55,7 +54,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
         $instance->detectPHP();
         $instance->findApplication();
 
-        header( "Location: " . url( "list" ) );
+        header("Location: " . url("list"));
         exit;
     }
 }
@@ -82,7 +81,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     $backup_user = $access->user;
     $backup_perm = 0770;
 
-    switch ($discovery->detectDistro()) {
+switch ($discovery->detectDistro()) {
     case "ClearOS":
         $backup_group = 'apache';
         $webroot = ($access->user == 'root' || $access->user == 'apache') ?
@@ -92,39 +91,43 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
         $backup_group = @posix_getgrgid(posix_getegid())['name'];
         $webroot = ($access->user == 'root' || $access->user == 'apache') ?
             '/var/www/html/' : "/home/{$access->user}/public_html/";
-    }
+}
 
-    if ($import) $webroot = $_POST['tikiwebroot'];
+if ($import) {
+    $webroot = $_POST['tikiwebroot'];
+}
 ?>
 
 <div class="container">
-	<div class="trim-instance-new center">
-		<h1><?php echo TITLE; ?></h1>
-		<h2><?php echo $page_title; ?></h2>
+    <div class="trim-instance-new center">
+        <h1><?php echo TITLE; ?></h1>
+        <h2><?php echo $page_title; ?></h2>
 
-        <div class="searching <?php if ($import) { echo 'hide'; } ?>">
-            <?php if ($notfound): ?>
+        <div class="searching <?php if ($import) {
+            echo 'hide';
+} ?>">
+            <?php if ($notfound) : ?>
             <div class="alert alert-danger" role="alert">
                 No instances found at <?php echo $_POST['tikiwebroot']; ?>
             </div>
             <?php endif; ?>
 
-            <form method="post" action="<?php echo html( $_SERVER['REQUEST_URI'] ) ?>">
+            <form method="post" action="<?php echo html($_SERVER['REQUEST_URI']) ?>">
                 <div class="form-group">
                     <table class="table table-bordered">
-						<tbody>
-							<tr>
-								<th scope="row"><label for="tikiwebroot">Tiki Web root</label></th>
-								<td>
-									<input type="text" name="tikiwebroot" id="tikiwebroot" class="form-control" value="<?php echo $webroot; ?>"/>
-									<input type="hidden" name="mode" class="form-control" value="search"/>
-								</td>
-							</tr>
-						</tbody>
+                        <tbody>
+                            <tr>
+                                <th scope="row"><label for="tikiwebroot">Tiki Web root</label></th>
+                                <td>
+                                    <input type="text" name="tikiwebroot" id="tikiwebroot" class="form-control" value="<?php echo $webroot; ?>"/>
+                                    <input type="hidden" name="mode" class="form-control" value="search"/>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
-                    <?php if (! $import): ?>
+                    <?php if (! $import) : ?>
                     <p>
-                        <a href="<?php echo html( url( "" ) ) ?>" class="cancel btn btn-danger"><span class="fa fa-angle-double-left"></span> Cancel</a>
+                        <a href="<?php echo html(url("")) ?>" class="cancel btn btn-danger"><span class="fa fa-angle-double-left"></span> Cancel</a>
                         <button type="submit" class="import btn btn-primary">Import</button>
                     </p>
                     <?php endif; ?>
@@ -132,11 +135,13 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
             </form>
         </div>
 
-        <div class="importing <?php if (! $import) { echo 'hide'; } ?>">
+        <div class="importing <?php if (! $import) {
+            echo 'hide';
+} ?>">
             <div class="alert alert-info" role="alert">
                 Tiki instance found at <?php echo $_POST['tikiwebroot']; ?>
             </div>
-            <form method="post" action="<?php echo html( $_SERVER['REQUEST_URI'] ) ?>">
+            <form method="post" action="<?php echo html($_SERVER['REQUEST_URI']) ?>">
                 <fieldset>
                     <div class="form-group">
                         <table class="table table-bordered">
@@ -188,7 +193,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 
                     <div class="form-group">
                         <p>
-                            <a href="<?php echo html( url( "" ) ) ?>" class="cancel btn btn-danger"><span class="fa fa-angle-double-left"></span> Cancel</a>
+                            <a href="<?php echo html(url("")) ?>" class="cancel btn btn-danger"><span class="fa fa-angle-double-left"></span> Cancel</a>
                             <button type="submit" class="save btn btn-primary">Save</button>
                         </p>
                     </div>
@@ -196,7 +201,7 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
             </form>
         </div>
 
-	</div>
+    </div>
 </div>
 
 <?php require dirname(__FILE__) . "/layout/footer.php"; ?>

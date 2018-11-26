@@ -1,6 +1,6 @@
 <?php
 
-class Backup 
+class Backup
 {
     protected $access;
     protected $app;
@@ -30,7 +30,7 @@ class Backup
         $this->filePerm = intval($instance->getProp('backup_perm')) ?: 0770;
         $this->fileUser = $instance->getProp('backup_user');
         $this->fileGroup = $instance->getProp('backup_group');
-        $this->errors = array();
+        $this->errors = [];
 
         $this->createBackupDir();
         $this->createArchiveDir();
@@ -40,7 +40,7 @@ class Backup
     {
         $access = $this->getAccess();
         $backupDir = $backupDir ?: $this->backupDir;
-        $result = array();
+        $result = [];
 
         foreach ($targets as $target) {
             list($type, $dir) = $target;
@@ -49,17 +49,17 @@ class Backup
             $error_code = $access->localizeFolder($dir, $destDir);
 
             if ($error_code) {
-                if(array_key_exists($this->errors, $error_code)) {
+                if (array_key_exists($this->errors, $error_code)) {
                     $this->errors[$error_code][] = $dir;
                 } else {
-                    $this->errors[$error_code] = array($error_code => $dir);
+                    $this->errors[$error_code] = [$error_code => $dir];
                 }
             }
 
-            $result[] = array($hash, $type, $dir);
+            $result[] = [$hash, $type, $dir];
         }
 
-        if(!empty($this->errors)) {
+        if (!empty($this->errors)) {
             throw new BackupCopyException(
                 $this->errors,
                 BackupCopyException::RSYNC_ERROR
@@ -69,7 +69,7 @@ class Backup
         return $result;
     }
 
-    public function create($skipArchive=false, $backupDir=null)
+    public function create($skipArchive = false, $backupDir = null)
     {
         $access = $this->getAccess();
         $backupDir = $backupDir ?: $this->backupDir;
@@ -94,7 +94,8 @@ class Backup
         return $result;
     }
 
-    public function createArchive($archiveDir=null) {
+    public function createArchive($archiveDir = null)
+    {
         $archiveDir = $archiveDir ?: $this->archiveDir;
         $tarDate = date('Y-m-d_H-i-s');
         $tarPath = "{$archiveDir}/{$this->backupDirname}_{$tarDate}.tar.bz2";
@@ -106,8 +107,9 @@ class Backup
 
         exec($command, $output, $return_var);
 
-        if ($return_var != 0)
+        if ($return_var != 0) {
             error("TAR exit code: $return_var");
+        }
 
         $success = $return_var === 0
             && file_exists($tarPath)
@@ -116,17 +118,17 @@ class Backup
         return $success ? $tarPath : false;
     }
 
-    public function createArchiveDir($archiveDir=null)
+    public function createArchiveDir($archiveDir = null)
     {
         $archiveDir = $archiveDir ?: $this->archiveDir;
-        if (is_dir($archiveDir) || mkdir($archiveDir, $this->filePerm, true)){
+        if (is_dir($archiveDir) || mkdir($archiveDir, $this->filePerm, true)) {
             $this->fixPermissions($archiveDir);
             return $archiveDir;
         }
         return false;
     }
 
-    public function createBackupDir($backupDir=null)
+    public function createBackupDir($backupDir = null)
     {
         $backupDir = $backupDir ?: $this->backupDir;
 
@@ -136,7 +138,7 @@ class Backup
         }
     }
 
-    public function createDatabaseDump($app, $backupDir=null)
+    public function createDatabaseDump($app, $backupDir = null)
     {
         $app = $app ?: $this->app;
         $backupDir = $backupDir ?: $this->backupDir;
@@ -153,7 +155,8 @@ class Backup
         return false;
     }
 
-    public function createManifest($data, $backupDir=null) {
+    public function createManifest($data, $backupDir = null)
+    {
         $backupDir = $backupDir ?: $this->backupDir;
         $manifestFile = "{$backupDir}/manifest.txt";
         $file = fopen($manifestFile, 'w');
@@ -168,40 +171,39 @@ class Backup
         return $manifestFile;
     }
 
-    public function fixPermissions($path) 
+    public function fixPermissions($path)
     {
         $perm = $this->filePerm;
 
         if (is_dir($path)) {       // avoid rw-rw-rw- for dirs
             $perm = (($perm & 0b100100100) >> 2) | $perm;
-        }
-        else if (is_file($path)) { // avoid --x--x--x for files
+        } elseif (is_file($path)) { // avoid --x--x--x for files
             $perm = ($perm & 0b001001001) ^ $perm;
         }
 
         $success = 1;
-        if($perm){
+        if ($perm) {
             $success &= chmod($path, $perm);
         }
         if (getmyuid() === 0) {
-            if($this->fileUser){
+            if ($this->fileUser) {
                 $success &= chown($path, $this->fileUser);
             }
-            if($this->fileGroup){
+            if ($this->fileGroup) {
                 $success &= chgrp($path, $this->fileGroup);
             }
         }
         return $success > 0;
     }
 
-    public function getAccess($instance=null)
+    public function getAccess($instance = null)
     {
         $instance = $instance ?: $this->instance;
         $access = $instance->getBestAccess('scripting');
         return $access;
     }
 
-    public function getArchives($archiveRoot=null, $instance=null)
+    public function getArchives($archiveRoot = null, $instance = null)
     {
         $archiveRoot = $archiveRoot ?: $this->archiveRoot;
         $instance = $instance ?: $this->instance;
@@ -216,37 +218,36 @@ class Backup
 
     public function getTargetDirectories()
     {
-        $targets = array();
-        $extraBackups = $this->instance->getExtraBackups() ?: array();
+        $targets = [];
+        $extraBackups = $this->instance->getExtraBackups() ?: [];
         $locations = $this->app->getFileLocations();
 
         foreach ($locations as $type => $directories) {
             foreach ($directories as $dir) {
-                $targets[] = array($type, $dir);
+                $targets[] = [$type, $dir];
             }
         }
 
         foreach ($extraBackups as $dir) {
-            $targets[] = array('data', $dir);
+            $targets[] = ['data', $dir];
         }
 
         return $targets;
     }
 
-    public function setArchiveSymlink($symlinkPath=null, $archiveDir=null, $instance=null)
+    public function setArchiveSymlink($symlinkPath = null, $archiveDir = null, $instance = null)
     {
         $archiveDir = $archiveDir ?: $this->archiveDir;
         $instance = $instance ?: $this->instance;
         $symlinkPath = $symlinkPath ?: dirname($instance->webroot) . '/backup';
 
         // If TRIM archive dir is a link, swap link and target
-        if(is_link($archiveDir)) {
+        if (is_link($archiveDir)) {
             $realArchiveDir = readlink($archiveDir);
             unlink($archiveDir);
             if (file_exists($realArchiveDir)) {
                 rename($realArchiveDir, $archiveDir);
-            }
-            else {
+            } else {
                 mkdir($archiveDir, $this->filePerm, true);
             }
         }
@@ -265,7 +266,7 @@ class Backup
 class BackupCopyException extends Exception
 {
     const RSYNC_ERROR = 1;
-    private $RSYNC_ERRORS = array(
+    private $RSYNC_ERRORS = [
         0  => 'Success',
         1  => 'Syntax or usage error',
         2  => 'Protocol incompatibility',
@@ -286,9 +287,9 @@ class BackupCopyException extends Exception
         25 => 'The --max-delete limit stopped deletions',
         30 => 'Timeout in data send/receive',
         35 => 'Timeout waiting for daemon connection'
-    );
+    ];
 
-    public function __construct ($errors='', $code=1, $previous=null)
+    public function __construct($errors = '', $code = 1, $previous = null)
     {
         $message = $this->formatMessage($errors);
         parent::__construct($message, $code, $previous);

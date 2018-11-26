@@ -188,7 +188,7 @@ class Instance
     public $app;
     public $type;
 
-    private $access = array();
+    private $access = [];
 
     function getId()
     {
@@ -199,11 +199,12 @@ class Instance
     {
         $result = query(SQL_SELECT_INSTANCE);
 
-        $instances = array();
+        $instances = [];
         while ($instance = $result->fetchObject('Instance')) {
             if ($exclude_blank) {
-                if ($instance->getApplication())
+                if ($instance->getApplication()) {
                     $instances[$instance->getId()] = $instance;
+                }
             } else {
                 $instances[$instance->getId()] = $instance;
             }
@@ -214,7 +215,7 @@ class Instance
 
     static function getInstance($id)
     {
-        $result = query(SQL_SELECT_INSTANCE_BY_ID, array(':id' => $id));
+        $result = query(SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);
         $instance = $result->fetchObject('Instance');
         return $instance;
     }
@@ -223,9 +224,10 @@ class Instance
     {
         $result = query(SQL_SELECT_UPDATABLE_INSTANCE);
 
-        $instances = array();
-        while ($instance = $result->fetchObject('Instance'))
+        $instances = [];
+        while ($instance = $result->fetchObject('Instance')) {
             $instances[$instance->id] = $instance;
+        }
 
         return $instances;
     }
@@ -234,14 +236,16 @@ class Instance
     {
         $dp = opendir(BACKUP_FOLDER);
 
-        $backups = array();
-        $matches = array();
+        $backups = [];
+        $matches = [];
         while (false !== $file = readdir($dp)) {
-            if (! preg_match('/^\d+/', $file, $matches))
+            if (! preg_match('/^\d+/', $file, $matches)) {
                 continue;
+            }
 
-            if ($instance = self::getInstance($matches[0]))
+            if ($instance = self::getInstance($matches[0])) {
                 $backups[$matches[0]] = $instance;
+            }
         }
 
         closedir($dp);
@@ -250,7 +254,7 @@ class Instance
 
     function save()
     {
-        $params = array(
+        $params = [
             ':id' => $this->id,
             ':name' => $this->name,
             ':contact' => $this->contact,
@@ -259,20 +263,22 @@ class Instance
             ':temp' => $this->tempdir,
             ':phpexec' => $this->phpexec,
             ':app' => $this->app,
-        );
+        ];
 
         query(SQL_INSERT_INSTANCE, $params);
 
         $rowid = rowid();
-        if (! $this->id && $rowid) $this->id = $rowid;
+        if (! $this->id && $rowid) {
+            $this->id = $rowid;
+        }
 
-        if(!empty($this->backup_user)) {
+        if (!empty($this->backup_user)) {
             $this->setProp('backup_user', $this->backup_user);
         }
-        if(!empty($this->backup_group)) {
+        if (!empty($this->backup_group)) {
             $this->setProp('backup_group', $this->backup_group);
         }
-        if(!empty($this->backup_perm)) {
+        if (!empty($this->backup_perm)) {
             $this->setProp('backup_perm', $this->backup_perm);
         }
     }
@@ -293,39 +299,43 @@ class Instance
 
         query(SQL_UPDATE_INSTANCE, $params);
 
-        if(!empty($this->backup_user)) {
+        if (!empty($this->backup_user)) {
             $this->setProp('backup_user', $this->backup_user);
         }
-        if(!empty($this->backup_group)) {
+        if (!empty($this->backup_group)) {
             $this->setProp('backup_group', $this->backup_group);
         }
-        if(!empty($this->backup_perm)) {
+        if (!empty($this->backup_perm)) {
             $this->setProp('backup_perm', $this->backup_perm);
         }
     }
 
     function delete()
     {
-        query(SQL_DELETE_ACCESS, array(':id' => $this->id));
-        query(SQL_DELETE_BACKUP, array(':id' => $this->id));
-        query(SQL_DELETE_FILE_BY_SELECT, array(':id' => $this->id));
-        query(SQL_DELETE_INSTANCE, array(':id' => $this->id));
-        query(SQL_DELETE_REPORT_CONTENT, array(':id' => $this->id));
-        query(SQL_DELETE_REPORT_RECEIVER, array( ':id' => $this->id));
-        query(SQL_DELETE_VERSION, array(':id' => $this->id));
-        query(SQL_DELETE_ALL_INSTANCE_PROPERTIES, array(':id' => $this->id));
+        query(SQL_DELETE_ACCESS, [':id' => $this->id]);
+        query(SQL_DELETE_BACKUP, [':id' => $this->id]);
+        query(SQL_DELETE_FILE_BY_SELECT, [':id' => $this->id]);
+        query(SQL_DELETE_INSTANCE, [':id' => $this->id]);
+        query(SQL_DELETE_REPORT_CONTENT, [':id' => $this->id]);
+        query(SQL_DELETE_REPORT_RECEIVER, [ ':id' => $this->id]);
+        query(SQL_DELETE_VERSION, [':id' => $this->id]);
+        query(SQL_DELETE_ALL_INSTANCE_PROPERTIES, [':id' => $this->id]);
     }
 
     function registerAccessMethod($type, $host, $user, $password = null, $port = null)
     {
-        if (! $class = Access::getClassFor($type)) return;
+        if (! $class = Access::getClassFor($type)) {
+            return;
+        }
 
         $access = new $class($this);
         $access->host = $host;
         $access->user = $user;
         $access->password = $password;
 
-        if ($port) $access->port = $port;
+        if ($port) {
+            $access->port = $port;
+        }
 
         if ($access->firstConnect()) {
             $access->save();
@@ -337,8 +347,9 @@ class Instance
 
     function getBestAccess($type)
     {
-        if (empty($this->access))
+        if (empty($this->access)) {
             $this->access = Access::getAccessFor($this);
+        }
 
         // TODO: Add intelligence as more access types get added
         // types:
@@ -370,26 +381,29 @@ class Instance
         return "{$this->tempdir}/$relativePath";
     }
 
-    function getProp($key) {
-        $result = query(SQL_GET_INSTANCE_PROPERTY, array(':id' => $this->id, ':key' => $key));
+    function getProp($key)
+    {
+        $result = query(SQL_GET_INSTANCE_PROPERTY, [':id' => $this->id, ':key' => $key]);
         $result = $result->fetchObject();
-        if ( $result && $result->value ) {
+        if ($result && $result->value) {
             return $result->value;
         }
     }
 
-    function setProp($key, $value) {
-        $result = query(SQL_SET_INSTANCE_PROPERTY, array(
+    function setProp($key, $value)
+    {
+        $result = query(SQL_SET_INSTANCE_PROPERTY, [
             ':id' => $this->id,
             ':key' => $key,
             ':value' => $value
-        ));
+        ]);
     }
 
     function createWorkPath($access = null)
     {
-        if (is_null($access))
+        if (is_null($access)) {
             $access = $this->getBestAccess('scripting');
+        }
 
         echo $access->shellExec(
             "mkdir -p {$this->tempdir}"
@@ -416,7 +430,9 @@ class Instance
         if (strlen($path) > 0) {
             $version = $access->getInterpreterVersion($path);
             $this->phpversion = intval($version);
-            if ($version <  50300) return false;
+            if ($version <  50300) {
+                return false;
+            }
 
             $this->phpexec = $path;
             $this->save();
@@ -424,7 +440,7 @@ class Instance
             // even passing full path to php binary, we need to fix PATH
             // so scripts like setup.sh can use correct php version
             $bin_folder = dirname($path);
-            if(strpos($path_env, $bin_folder) === false) {
+            if (strpos($path_env, $bin_folder) === false) {
                 $access->setenv('PATH', "${bin_folder}:${path_env}");
             }
 
@@ -440,8 +456,9 @@ class Instance
         $access = $this->getBestAccess('scripting');
         $path = $access->getSVNPath();
 
-        if (strlen($path) > 0)
+        if (strlen($path) > 0) {
             return $path;
+        }
 
         return false;
     }
@@ -476,13 +493,13 @@ class Instance
 
     function createVersion()
     {
-        return new Version( $this->getId() );
+        return new Version($this->getId());
     }
 
     function getLatestVersion()
     {
-        $result = query(SQL_SELECT_LATEST_VERSION, array(':id' => $this->id));
-        $object = $result->fetchObject('Version', array($this));
+        $result = query(SQL_SELECT_LATEST_VERSION, [':id' => $this->id]);
+        $object = $result->fetchObject('Version', [$this]);
 
         return $object;
     }
@@ -493,7 +510,8 @@ class Instance
      *
      * @return bool
      */
-    function hasConsole() {
+    function hasConsole()
+    {
         $current = $this->getLatestVersion();
         $hasConsole = $current->branch === 'trunk'
             || (
@@ -505,14 +523,16 @@ class Instance
 
     function getApplication()
     {
-        if (empty($this->app))
+        if (empty($this->app)) {
             return false;
+        }
 
         $class = 'Application_' . ucfirst($this->app);
 
         $dir = TRIM_ROOT . '/src/appinfo';
-        if (! class_exists($class))
+        if (! class_exists($class)) {
             require_once "$dir/{$this->app}.php";
+        }
 
         return new $class($this);
     }
@@ -547,15 +567,15 @@ class Instance
         perform_database_setup($this, $database_dump);
         perform_instance_installation($this); // a version is created in this call
 
-        if(!$oldVersion) {
+        if (!$oldVersion) {
             $version = $this->getLatestVersion();
         }
 
-        if(!$version) {
+        if (!$version) {
             $version = $this->createVersion();
-            $version->type = is_object($oldVersion) ? $oldVersion->type : NULL;
-            $version->branch = is_object($oldVersion) ? $oldVersion->branch : NULL;
-            $version->date = is_object($oldVersion) ? $oldVersion->date : NULL;
+            $version->type = is_object($oldVersion) ? $oldVersion->type : null;
+            $version->branch = is_object($oldVersion) ? $oldVersion->branch : null;
+            $version->date = is_object($oldVersion) ? $oldVersion->date : null;
             $version->save();
         }
 
@@ -572,21 +592,24 @@ class Instance
 
     function getExtraBackups()
     {
-        $result = query(SQL_SELECT_BACKUP_LOCATION, array(':id' => $this->id));
+        $result = query(SQL_SELECT_BACKUP_LOCATION, [':id' => $this->id]);
 
-        $list = array();
-        while ($str = $result->fetchColumn()) $list[] = $str;
+        $list = [];
+        while ($str = $result->fetchColumn()) {
+            $list[] = $str;
+        }
 
         return $list;
     }
 
-    function setExtraBackups( $paths )
+    function setExtraBackups($paths)
     {
-        query(SQL_DELETE_BACKUP, array(':id' => $this->id));
+        query(SQL_DELETE_BACKUP, [':id' => $this->id]);
 
         foreach ($paths as $path) {
-            if (! empty($path))
-                query(SQL_INSERT_BACKUP, array(':id' => $this->id, ':loc' => $path));
+            if (! empty($path)) {
+                query(SQL_INSERT_BACKUP, [':id' => $this->id, ':loc' => $path]);
+            }
         }
     }
 
@@ -596,7 +619,8 @@ class Instance
         return $backup->getArchives();
     }
 
-    function isLocked() {
+    function isLocked()
+    {
         $access = $this->getBestAccess('scripting');
         $base_htaccess = TRIM_ROOT . '/scripts/maintenance.htaccess';
         $curr_htaccess = $this->getWebPath('.htaccess');
@@ -616,8 +640,9 @@ class Instance
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.php', 'maintenance.php');
         $access->shellExec('touch maintenance.php');
 
-        if ($access->fileExists($this->getWebPath('.htaccess')))
+        if ($access->fileExists($this->getWebPath('.htaccess'))) {
             $access->moveFile('.htaccess', '.htaccess.bak');
+        }
 
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.htaccess', '.htaccess');
         return $this->isLocked();
@@ -625,7 +650,7 @@ class Instance
 
     function unlock()
     {
-        if(!$this->isLocked()) {
+        if (!$this->isLocked()) {
             return true;
         }
 
@@ -634,15 +659,17 @@ class Instance
         $access->deleteFile('.htaccess');
         $access->deleteFile('maintenance.php');
 
-        if ($access->fileExists('.htaccess.bak'))
+        if ($access->fileExists('.htaccess.bak')) {
             $access->moveFile('.htaccess.bak', '.htaccess');
+        }
 
         return !$this->isLocked();
     }
 
     function __get($name)
     {
-        if (isset($this->$name))
+        if (isset($this->$name)) {
             return $this->$name;
+        }
     }
 }

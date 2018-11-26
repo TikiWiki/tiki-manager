@@ -9,7 +9,8 @@ include_once dirname(__FILE__) . '/../src/dbsetup.php';
 $instances = Instance::getInstances();
 
 $selection = selectInstances(
-    $instances, "Which instances do you want to edit?\n"
+    $instances,
+    "Which instances do you want to edit?\n"
 );
 
 foreach ($selection as $instance) {

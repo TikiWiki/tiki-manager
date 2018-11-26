@@ -25,17 +25,17 @@ if (TRIM_OS === 'WIN') {
     define('INTERACTIVE', php_sapi_name() === 'cli'
         && getenv('NONINTERACTIVE') !== 'true');
 } else {
-    define('INTERACTIVE',
+    define(
+        'INTERACTIVE',
         php_sapi_name() === 'cli'
         && getenv('NONINTERACTIVE') !== 'true'
-        && !in_array(getenv('TERM'), array('dumb', false, ''))
+        && !in_array(getenv('TERM'), ['dumb', false, ''])
         && preg_match(',^/dev/,', exec('tty'))
     );
 }
 
 if (file_exists(getenv('HOME') . '/.ssh/id_rsa') &&
     file_exists(getenv('HOME') . '/.ssh/id_rsa.pub')) {
-
     define('SSH_KEY', getenv('HOME') . '/.ssh/id_rsa');
     define('SSH_PUBLIC_KEY', getenv('HOME') . '/.ssh/id_rsa.pub');
 }
@@ -45,14 +45,14 @@ if (!defined('SSH_KEY') && !defined('SSH_PUBLIC_KEY')) {
     define('SSH_PUBLIC_KEY', TRIM_ROOT . "/data/id_rsa.pub");
 }
 
-if (array_key_exists('EDITOR', $_ENV))
+if (array_key_exists('EDITOR', $_ENV)) {
     define('EDITOR', $_ENV['EDITOR']);
-else {
+} else {
     define('EDITOR', 'nano');
 }
 
-if (array_key_exists('DIFF', $_ENV))
+if (array_key_exists('DIFF', $_ENV)) {
     define('DIFF', $_ENV['DIFF']);
-else {
+} else {
     define('DIFF', 'diff');
 }

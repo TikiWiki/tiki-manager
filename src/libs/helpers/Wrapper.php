@@ -6,22 +6,22 @@ class Wrapper
     private $__wrapped_properties;
     private $__wrapped_methods;
 
-    public function __construct($obj, $props=array(), $methods=array())
+    public function __construct($obj, $props = [], $methods = [])
     {
         $this->__wrapped_object = $obj;
-        $this->__wrapped_properties = $props ?: array();
-        $this->__wrapped_methods = $methods ?: array();
+        $this->__wrapped_properties = $props ?: [];
+        $this->__wrapped_methods = $methods ?: [];
     }
 
-    public function __call($name, $arguments=array())
+    public function __call($name, $arguments = [])
     {
         $arguments = is_array($arguments)
             ? $arguments
-            : array();
+            : [];
 
-        $call = array($this->__wrapped_object, $name);
+        $call = [$this->__wrapped_object, $name];
 
-        if(isset($this->__wrapped_methods[$name])
+        if (isset($this->__wrapped_methods[$name])
             && is_callable($this->__wrapped_methods[$name])) {
             $call = $this->__wrapped_methods[$name];
         }
@@ -31,7 +31,7 @@ class Wrapper
 
     public function __get($name)
     {
-        if(isset($this->__wrapped_properties[$name])) {
+        if (isset($this->__wrapped_properties[$name])) {
             return $this->__wrapped_properties[$name];
         }
         return $this->__wrapped_object->{$name};

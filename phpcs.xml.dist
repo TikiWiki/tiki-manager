@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<ruleset name="Tiki Manager Coding Standard">
+	<description>Tiki Coding Standard</description>
+
+	<!-- Paths to check -->
+	<file>.</file>
+
+	<!-- Exclude libraries and other folders that should not contain code -->
+
+	<!-- vendor folders -->
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+
+	<!-- any dot file -->
+	<exclude-pattern>*/\.*/*</exclude-pattern>
+
+	<!-- other directories that should not contain core code -->
+	<exclude-pattern>*/backup/*</exclude-pattern>
+	<exclude-pattern>*/cache/*</exclude-pattern>
+	<exclude-pattern>*/data/*</exclude-pattern>
+	<exclude-pattern>*/logs/*</exclude-pattern>
+	<exclude-pattern>*/tmp/*</exclude-pattern>
+
+	<!-- display progress -->
+	<arg value="p"/>
+	<arg name="colors"/>
+	<arg name="extensions" value="php"/>
+
+	<!-- Check for compatibility for PHP >= 7.1 -->
+	<config name="installed_paths" value="vendor_bundled/vendor/wimg/php-compatibility" />
+	<config name="testVersion" value="7.1-"/>
+
+	<!-- Tiki Manager uses PSR-2 coding standards
+		reference: https://www.php-fig.org/psr/psr-2/ -->
+	<rule ref="PSR2"/>
+	<rule ref="Generic.Arrays.DisallowLongArraySyntax">
+	</rule>
+
+	<!-- Change severity to be able to filter if too many lines over 120 using cli option warning-severity=5 -->
+	<rule ref="Generic.Files.LineLength">
+		<severity>4</severity>
+	</rule>
+
+	<!-- Exceptions to PSR-2 -->
+
+	<!-- Extra rules to improve code quality and avoid deprecated code -->
+	<rule ref="Generic.PHP.DeprecatedFunctions"/>
+	<!--
+	<rule ref="Generic.Classes.DuplicateClassName"/>
+	<rule ref="Generic.Files.OneClassPerFile"/>
+	<rule ref="Generic.Files.OneInterfacePerFile"/>
+	<rule ref="Generic.Files.OneTraitPerFile"/>
+	<rule ref="Generic.PHP.BacktickOperator"/>
+	-->
+
+</ruleset>

@@ -47,7 +47,7 @@ class CreateInstanceCommand extends Command
             array_keys($definition->getArguments()),
             array_keys($definition->getOptions())
         );
-        $errors = array();
+        $errors = [];
         foreach ($fields as $field) {
             $method = 'check' . ucfirst($field);
             $valid = (
@@ -61,20 +61,22 @@ class CreateInstanceCommand extends Command
     protected function checkType($input, $output)
     {
         $type = $input->getArgument('type');
-        $required = array(
-            'local' => array(),
-            'ftp' => array('user', 'host', 'password'),
-            'ssh' => array('user', 'host')
-        );
+        $required = [
+            'local' => [],
+            'ftp' => ['user', 'host', 'password'],
+            'ssh' => ['user', 'host']
+        ];
 
-        if(isset($required[$type])) {
-            $options = array_map(array($input, 'getOption'), $required[$type]);
+        if (isset($required[$type])) {
+            $options = array_map([$input, 'getOption'], $required[$type]);
             $options = array_combine($required[$type], $options);
         } else {
             throw new InvalidArgumentException("Type '$type' is unknown.");
         }
 
-        $callback = function($v, $o) { return $v && strlen($o) > 0; };
+        $callback = function ($v, $o) {
+            return $v && strlen($o) > 0;
+        };
         $valid = array_reduce($options, $callback, true);
 
         if (!$valid) {
@@ -91,7 +93,7 @@ class CreateInstanceCommand extends Command
     protected function checkHost($input, $output)
     {
         $type = $input->getArgument('type');
-        if($type === 'local') {
+        if ($type === 'local') {
             return true;
         }
         $host = $input->getOption('host');
@@ -128,7 +130,7 @@ class CreateInstanceCommand extends Command
         $discovery = new Discovery($instance, $access);
 
         $instance->phpexec = $input->getOption('phpexec');
-        if(!$instance->phpexec) {
+        if (!$instance->phpexec) {
             $instance->phpexec = $discovery->detectPHP();
             $output->writeln("Detected PHP binary: {$instance->phpexec}");
 
@@ -142,7 +144,7 @@ class CreateInstanceCommand extends Command
         $instance->backup_perm = intval($input->getOption('backup_perm'), 8) ?: $backup_perm[2];
         $instance->save();
 
-        if($blank) {
+        if ($blank) {
             exit(0);
         }
 

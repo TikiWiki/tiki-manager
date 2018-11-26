@@ -2,4 +2,3 @@
 
 session_destroy();
 header('Location: ' . url(''));
-

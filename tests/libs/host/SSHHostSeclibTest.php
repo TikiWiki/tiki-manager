@@ -1,7 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-require_once (__DIR__) . '/SSHHostCommonTest.php';
+
+require_once(__DIR__) . '/SSHHostCommonTest.php';
 
 class SSH_HostSeclibTest extends SSH_HostCommonTest
 {

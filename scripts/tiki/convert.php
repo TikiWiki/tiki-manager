@@ -6,19 +6,22 @@
 
 include_once dirname(__FILE__) . '/../../src/env_setup.php';
 
-$instances = array();
+$instances = [];
 $raw = Instance::getUpdatableInstances();
 foreach ($raw as $instance) {
-    if ($instance->getLatestVersion()->type == 'cvs')
+    if ($instance->getLatestVersion()->type == 'cvs') {
         $instances[] = $instance;
+    }
 }
 
 warning('Make sure you have a recent backup before performing this operation. ' .
     'Some customizations and data may be lost.  Only instances running ' .
     'Tiki can be converted.');
 
-$selection = selectInstances($instances,
-    "Which instances do you want to convert from CVS 1.9 to SVN 2.0?\n");
+$selection = selectInstances(
+    $instances,
+    "Which instances do you want to convert from CVS 1.9 to SVN 2.0?\n"
+);
 $selection = getEntries($instances, $selection);
 
 foreach ($selection as $instance) {
@@ -31,14 +34,14 @@ foreach ($selection as $instance) {
 
     $locked = $instance->lock();
 
-    $toKeep = array(
+    $toKeep = [
         'db/local.php',
         'img/wiki',
         'img/wiki_up',
-    );
+    ];
 
-    $store = array();
-    $restore = array();
+    $store = [];
+    $restore = [];
     foreach ($toKeep as $filename) {
         $file = escapeshellarg($instance->getWebPath($filename));
         $temp = escapeshellarg($instance->getWorkPath(md5($instance->name . $filename)));
@@ -57,7 +60,7 @@ foreach ($selection as $instance) {
 
     info('Removing 1.9 files');
 
-    $access->shellExec( 
+    $access->shellExec(
         "mv $maint $temp",
         "rm -Rf " . escapeshellarg($instance->webroot) . '/*',
         "mv $temp $maint"
@@ -74,7 +77,9 @@ foreach ($selection as $instance) {
 
     $filesToResolve = $app->performUpdate($instance);
 
-    if ($locked) $instance->unlock();
+    if ($locked) {
+        $instance->unlock();
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

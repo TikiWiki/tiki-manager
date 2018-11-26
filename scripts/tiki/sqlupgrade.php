@@ -4,15 +4,16 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET')
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
     $_SERVER['argv'] = $_GET;
+}
 
-if ($root = $_SERVER['argv'][1])
+if ($root = $_SERVER['argv'][1]) {
     chdir($root);
+}
 
 $local_php = 'db/local.php';
 if (file_exists('installer/shell.php') && !file_exists('console.php')) {
-
     require_once('installer/installlib.php');
     include_once('lib/adodb/adodb.inc.php');
 
@@ -22,9 +23,8 @@ if (file_exists('installer/shell.php') && !file_exists('console.php')) {
 
     $installer = new Installer;
     $installer->update();
-}
-else {
-    if(!is_dir('db')) {
+} else {
+    if (!is_dir('db')) {
         fwrite(STDERR, getcwd() . "/db/ directory not found");
         exit(1);
     }
@@ -41,7 +41,7 @@ else {
             continue;
         }
 
-        if(count($match) === 3) {
+        if (count($match) === 3) {
             $args .=  " --site=" . $match[2];
         }
 

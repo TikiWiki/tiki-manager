@@ -6,13 +6,13 @@
 
 include_once dirname(__FILE__) . '/../../src/env_setup.php';
 
-$values = array();
+$values = [];
 
 function menu()
 {
     global $values;
 
-    $values = array();
+    $values = [];
     echo "\nWhat do you want to do?\n";
     $values[] = 'add';
     echo "     add - Add a report receiver.\n";
@@ -92,23 +92,22 @@ do {
     $request = promptUser('>>>', 'help', $values);
 
     switch ($request) {
-    case 'add':
-        add();
-        break;
-    case 'remove':
-        remove();
-        break;
-    case 'modify':
-        modify();
-        break;
-    case 'send':
-        send();
-        break;
-    case 'help':
-        break;
+        case 'add':
+            add();
+            break;
+        case 'remove':
+            remove();
+            break;
+        case 'modify':
+            modify();
+            break;
+        case 'send':
+            send();
+            break;
+        case 'help':
+            break;
     }
-}
-while ($request != 'exit');
+} while ($request != 'exit');
 
 /*
 $channel = new Channel('http://localhost/trunk/tiki-channel.php');

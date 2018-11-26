@@ -6,14 +6,15 @@
 
 class Local_Host
 {
-    private static $resources = array();
+    private static $resources = [];
 
     private $env;
     private $last_command_exit_code = 0;
     private $location;
 
-    function __construct() {
-        $this->env = $_ENV ?: array();
+    function __construct()
+    {
+        $this->env = $_ENV ?: [];
     }
 
     function chdir($location)
@@ -27,22 +28,23 @@ class Local_Host
         $this->env[$var] = $value;
     }
 
-    function hasErrors() {
+    function hasErrors()
+    {
         return $this->last_command_exit_code !== 0;
     }
 
-    function runCommand($command, $options=array())
+    function runCommand($command, $options = [])
     {
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
         $env = !empty($options['env']) ? $options['env'] : $this->env;
 
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-            3 => array("pipe", "w")
-        );
+        $pipes = [];
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+            3 => ["pipe", "w"]
+        ];
 
         $commandLine = $command->getFullCommand();
         $commandLine .= '; echo $? >&3';
@@ -70,7 +72,7 @@ class Local_Host
         return $command;
     }
 
-    function runCommands($commands, $output=false)
+    function runCommands($commands, $output = false)
     {
         if (! is_array($commands)) {
             $commands = func_get_args();
@@ -83,15 +85,17 @@ class Local_Host
 
         $commandPrefix = '';
         $commandPrefixArray = [];
-        if ($this->location)
+        if ($this->location) {
             array_unshift($commandPrefixArray, 'cd ' . escapeshellarg($this->location));
+        }
 
-        foreach ($this->env as $name => $value)
+        foreach ($this->env as $name => $value) {
             array_unshift($commandPrefixArray, "export $name=$value");
+        }
 
-        if ( count($commandPrefixArray) ) {
+        if (count($commandPrefixArray)) {
             $commandPrefixArray[] = '';
-            $commandPrefix = implode(' ;' , $commandPrefixArray);
+            $commandPrefix = implode(' ;', $commandPrefixArray);
         }
 
         $contents = '';
@@ -108,15 +112,15 @@ class Local_Host
                 $this->last_command_exit_code = $code;
                 trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] ' . $cmd . ' - return: ' . $code . (empty($result) ? '' : "\n" . $result));
                 if ($code != 0) {
-                    if($output) {
+                    if ($output) {
                         warning(sprintf('%s [%d]', $cmd, $code));
-                        error($result, $prefix='    ');
+                        error($result, $prefix = '    ');
                     }
                 } else {
                     $contents .= (!empty($contents) ? "\n" : '') . $result;
                 }
 
-                debug($result, $prefix="({$code})>>", "\n\n");
+                debug($result, $prefix = "({$code})>>", "\n\n");
             }
         }
 
@@ -125,15 +129,21 @@ class Local_Host
 
     function sendFile($localFile, $remoteFile)
     {
-        $command = sprintf('rsync -av %s %s',
-            escapeshellarg($localFile), escapeshellarg($remoteFile));
+        $command = sprintf(
+            'rsync -av %s %s',
+            escapeshellarg($localFile),
+            escapeshellarg($remoteFile)
+        );
         $this->runCommands($command);
     }
 
     function receiveFile($remoteFile, $localFile)
     {
-        $command = sprintf('rsync -av %s %s',
-            escapeshellarg($remoteFile), escapeshellarg($localFile));
+        $command = sprintf(
+            'rsync -av %s %s',
+            escapeshellarg($remoteFile),
+            escapeshellarg($localFile)
+        );
         $this->runCommands($command);
     }
 
@@ -153,15 +163,15 @@ class Local_Host
         passthru($command);
     }
 
-    function rsync($args=array())
+    function rsync($args = [])
     {
         $return_val = -1;
 
-        if(empty($args['src']) || empty($args['dest'])) {
+        if (empty($args['src']) || empty($args['dest'])) {
             return $return_val;
         }
 
-        $output = array();
+        $output = [];
         $command = sprintf(
             'rsync -aL --delete --exclude=.svn/tmp %s %s 2>&1',
             escapeshellarg($args['src']),
@@ -171,7 +181,8 @@ class Local_Host
 
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
-            $output = trim(stream_get_contents($ph));;
+            $output = trim(stream_get_contents($ph));
+            ;
             $return_var = pclose($ph);
         }
 
@@ -181,7 +192,7 @@ class Local_Host
             error($output);
         }
 
-        debug($output, $prefix="({$return_var})>>", "\n\n");
+        debug($output, $prefix = "({$return_var})>>", "\n\n");
         return $return_var;
     }
 }

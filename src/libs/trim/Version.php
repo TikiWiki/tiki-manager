@@ -21,7 +21,7 @@ class Version
     public $date;
     public $audit;
 
-    function __construct($instance=null)
+    function __construct($instance = null)
     {
         $this->instance = $instance;
     }
@@ -38,19 +38,19 @@ class Version
 
     function save()
     {
-        $params = array(
+        $params = [
             ':id' => $this->id,
             ':instance' => $this->instance,
             ':type' => $this->type,
             ':branch' => $this->branch,
             ':date' => $this->date,
-        );
+        ];
 
         query(self::SQL_INSERT_VERSION, $params);
 
         $rowid = rowid();
 
-        if (! $this->id && $rowid){
+        if (! $this->id && $rowid) {
             $this->id = $rowid;
         }
     }
@@ -60,11 +60,13 @@ class Version
         return Instance::getInstance($this->instance);
     }
 
-    function getBranch() {
+    function getBranch()
+    {
         return $this->branch;
     }
 
-    function getBaseVersion() {
+    function getBaseVersion()
+    {
         $branch = $this->getBranch();
         $result = null;
         if (preg_match('/((\d+)(\.\d+)?|trunk)/', $branch, $matches)) {
@@ -117,7 +119,7 @@ class Version
         return Audit_Checksum::addFile($this->id, $hash, $filename);
     }
 
-    function recordFiles($hashFiles=array())
+    function recordFiles($hashFiles = [])
     {
         return Audit_Checksum::addFiles($this->id, $hashFiles);
     }
@@ -132,7 +134,7 @@ class Version
         return Audit_Checksum::replaceFile($this->id, $hash, $filename);
     }
 
-    function replaceFiles($hashFiles=array(), $app=null)
+    function replaceFiles($hashFiles = [], $app = null)
     {
         return Audit_Checksum::replaceFiles($this->id, $hashFiles);
     }
