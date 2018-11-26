@@ -214,30 +214,32 @@ class Instance
     }
 
     static function getTikiInstances()
-	{
-		$allInstances = self::getInstances();
+    {
+        $allInstances = self::getInstances();
 
-		$tikiInstances = array();
-		foreach ($allInstances as $instance) {
-			if ($instance->getApplication() instanceof Application_Tiki)
-				$tikiInstances[$instance->id] = $instance;
-		}
+        $tikiInstances = [];
+        foreach ($allInstances as $instance) {
+            if ($instance->getApplication() instanceof Application_Tiki) {
+                $tikiInstances[$instance->id] = $instance;
+            }
+        }
 
-		return $tikiInstances;
-	}
+        return $tikiInstances;
+    }
 
-	static function getNoTikiInstances()
-	{
-		$allInstances = self::getInstances();
+    static function getNoTikiInstances()
+    {
+        $allInstances = self::getInstances();
 
-		$noTikiInstances = array();
-		foreach ($allInstances as $instance) {
-			if (! $instance->getApplication())
-				$noTikiInstances[$instance->id] = $instance;
-		}
+        $noTikiInstances = [];
+        foreach ($allInstances as $instance) {
+            if (! $instance->getApplication()) {
+                $noTikiInstances[$instance->id] = $instance;
+            }
+        }
 
-		return $noTikiInstances;
-	}
+        return $noTikiInstances;
+    }
 
     static function getInstance($id)
     {

@@ -9,24 +9,24 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class BlankInstanceCommand extends Command
 {
-	protected function configure()
-	{
-		$this
-			->setName('instance:blank')
-			->setDescription('Creates a new blank instance')
-			->setHelp('This command allows you to create a new blank instance without actually add a Tiki');
-	}
+    protected function configure()
+    {
+        $this
+            ->setName('instance:blank')
+            ->setDescription('Creates a new blank instance')
+            ->setHelp('This command allows you to create a new blank instance without actually add a Tiki');
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-		$command = $this->getApplication()->find('instance:create');
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $command = $this->getApplication()->find('instance:create');
 
-		$arguments = array(
-			'command' => 'instance:create',
-			'blank'    => 'blank'
-		);
+        $arguments = [
+            'command' => 'instance:create',
+            'blank'    => 'blank'
+        ];
 
-		$blankInstanceInput = new ArrayInput($arguments);
-		$returnCode = $command->run($blankInstanceInput, $output);
-	}
+        $blankInstanceInput = new ArrayInput($arguments);
+        $returnCode = $command->run($blankInstanceInput, $output);
+    }
 }

@@ -11,69 +11,70 @@ use trim\instance\Discovery;
 
 class UpdateInstanceCommand extends Command
 {
-	protected function configure()
-	{
-		$this
-			->setName('instance:update')
-			->setDescription('Update instance')
-			->setHelp('This command allows you update an instance')
-			->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL);
-	}
+    protected function configure()
+    {
+        $this
+            ->setName('instance:update')
+            ->setDescription('Update instance')
+            ->setHelp('This command allows you update an instance')
+            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL);
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-		$instances = TrimHelper::getInstances('update');
-		$instancesInfo = TrimHelper::getInstancesInfo($instances);
-		if (isset($instancesInfo)) {
-			$helper = $this->getHelper('question');
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $instances = TrimHelper::getInstances('update');
+        $instancesInfo = TrimHelper::getInstancesInfo($instances);
+        if (isset($instancesInfo)) {
+            $helper = $this->getHelper('question');
 
-			$auto = false;
-			$switch = false;
-			$offset = 0;
+            $auto = false;
+            $switch = false;
+            $offset = 0;
 
-			$argument = $input->getArgument('mode');
-			if (isset($argument) && ! empty($argument)) {
-				if (is_array($argument)) {
-					$auto = $input->getArgument('mode')[0] == 'auto' ? true : false;
-					$switch = $input->getArgument('mode')[0] == 'switch' ? true : false;
-				} else {
-					$switch = $input->getArgument('mode') == 'switch' ? true : false;
-				}
-			}
+            $argument = $input->getArgument('mode');
+            if (isset($argument) && ! empty($argument)) {
+                if (is_array($argument)) {
+                    $auto = $input->getArgument('mode')[0] == 'auto' ? true : false;
+                    $switch = $input->getArgument('mode')[0] == 'switch' ? true : false;
+                } else {
+                    $switch = $input->getArgument('mode') == 'switch' ? true : false;
+                }
+            }
 
-			if ($auto) {
-				$instancesIds = array_slice($input->getArgument('mode'), 1);
+            if ($auto) {
+                $instancesIds = array_slice($input->getArgument('mode'), 1);
 
-				$selectedInstances = array();
-				foreach ($instancesIds as $index) {
-					if (array_key_exists($index, $instances))
-						$selectedInstances[] = $instances[$index];
-				}
-			} else {
-				$action = 'update';
-				if ($switch) {
-					$action = 'upgrade';
-				}
+                $selectedInstances = [];
+                foreach ($instancesIds as $index) {
+                    if (array_key_exists($index, $instances)) {
+                        $selectedInstances[] = $instances[$index];
+                    }
+                }
+            } else {
+                $action = 'update';
+                if ($switch) {
+                    $action = 'upgrade';
+                }
 
-				$io = new SymfonyStyle($input, $output);
-				$output->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
+                $io = new SymfonyStyle($input, $output);
+                $output->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
 
-				$io->newLine();
-				$renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
+                $io->newLine();
+                $renderResult = TrimHelper::renderInstancesTable($output, $instancesInfo);
 
-				$io->newLine();
-				$output->writeln('<comment>In case you want to ' . $action .' more than one instance, please use a comma (,) between the values</comment>');
+                $io->newLine();
+                $output->writeln('<comment>In case you want to ' . $action .' more than one instance, please use a comma (,) between the values</comment>');
 
-				$question = TrimHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
-				$question->setValidator(function ($answer) use ($instances) {
-					return TrimHelper::validateInstanceSelection($answer, $instances);
-				});
+                $question = TrimHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
+                $question->setValidator(function ($answer) use ($instances) {
+                    return TrimHelper::validateInstanceSelection($answer, $instances);
+                });
 
-				$selectedInstances = $helper->ask($input, $output, $question);
-			}
+                $selectedInstances = $helper->ask($input, $output, $question);
+            }
 
-			foreach ($selectedInstances as $instance) {
-			    $access = $instance->getBestAccess('scripting');
+            foreach ($selectedInstances as $instance) {
+                $access = $instance->getBestAccess('scripting');
                 $discovery = new Discovery($instance, $access);
                 $php_version_output = $discovery->detectPHPVersion();
 
@@ -83,92 +84,95 @@ class UpdateInstanceCommand extends Command
 
                 $output->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $php_version_output found at " . $discovery->detectPHP() .'</>');
 
-				$locked = $instance->lock();
-				$instance->detectPHP();
-				$app = $instance->getApplication();
+                $locked = $instance->lock();
+                $instance->detectPHP();
+                $app = $instance->getApplication();
 
-				if (!$app->isInstalled()) {
-					ob_start();
-					perform_instance_installation($instance);
-					$contents = $string = trim(preg_replace('/\s\s+/', ' ', ob_get_contents()));
-					ob_end_clean();
+                if (!$app->isInstalled()) {
+                    ob_start();
+                    perform_instance_installation($instance);
+                    $contents = $string = trim(preg_replace('/\s\s+/', ' ', ob_get_contents()));
+                    ob_end_clean();
 
-					$matches = array();
-					if(preg_match('/(\d+\.|trunk)/', $contents, $matches)) {
-						$branch_name = $matches[0];
-					}
-				}
+                    $matches = [];
+                    if (preg_match('/(\d+\.|trunk)/', $contents, $matches)) {
+                        $branch_name = $matches[0];
+                    }
+                }
 
-				$version = $instance->getLatestVersion();
-				$branch_name = $version->getBranch();
-				$branch_version = $version->getBaseVersion();
+                $version = $instance->getLatestVersion();
+                $branch_name = $version->getBranch();
+                $branch_version = $version->getBaseVersion();
 
-				if ($switch) {
-					$versions = array();
-					$versions_raw = $app->getVersions();
-					foreach ($versions_raw as $version) {
-						if ($version->type == 'svn')
-							$versions[] = $version;
-					}
+                if ($switch) {
+                    $versions = [];
+                    $versions_raw = $app->getVersions();
+                    foreach ($versions_raw as $version) {
+                        if ($version->type == 'svn') {
+                            $versions[] = $version;
+                        }
+                    }
 
-					$output->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
+                    $output->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
 
-					$counter = 0;
-					$found_incompatibilities = false;
-					foreach ($versions as $key => $version) {
-						$base_version = $version->getBaseVersion();
+                    $counter = 0;
+                    $found_incompatibilities = false;
+                    foreach ($versions as $key => $version) {
+                        $base_version = $version->getBaseVersion();
 
-						$compatible = 0;
-						$compatible |= $base_version >= 13;
-						$compatible &= $base_version >= $branch_version;
-						$compatible |= $base_version === 'trunk';
-						$compatible &= $instance->phpversion > 50500;
-						$found_incompatibilities |= !$compatible;
+                        $compatible = 0;
+                        $compatible |= $base_version >= 13;
+                        $compatible &= $base_version >= $branch_version;
+                        $compatible |= $base_version === 'trunk';
+                        $compatible &= $instance->phpversion > 50500;
+                        $found_incompatibilities |= !$compatible;
 
-						if ($compatible) {
-							$counter++;
-							$output->writeln('[' . $key .'] ' . $version->type . ' : ' . $version->branch);
-						}
-					}
+                        if ($compatible) {
+                            $counter++;
+                            $output->writeln('[' . $key .'] ' . $version->type . ' : ' . $version->branch);
+                        }
+                    }
 
-					if ($counter) {
-						$question = TrimHelper::getQuestion('Which version do you want to upgrade to', null, '?');
-						$selectedVersion = $helper->ask($input, $output, $question);
-						$versionSel = getEntries($versions, $selectedVersion);
+                    if ($counter) {
+                        $question = TrimHelper::getQuestion('Which version do you want to upgrade to', null, '?');
+                        $selectedVersion = $helper->ask($input, $output, $question);
+                        $versionSel = getEntries($versions, $selectedVersion);
 
-						if (empty($versionSel) && ! empty($selectedVersion)) {
-							$target = \Version::buildFake('svn', $selectedVersion);
-						} else {
-							$target = reset($versionSel);
-						}
+                        if (empty($versionSel) && ! empty($selectedVersion)) {
+                            $target = \Version::buildFake('svn', $selectedVersion);
+                        } else {
+                            $target = reset($versionSel);
+                        }
 
-						if (count($versionSel) > 0) {
-							$filesToResolve = $app->performUpdate($instance, $target);
-							$version = $instance->getLatestVersion();
-							handleCheckResult($instance, $version, $filesToResolve);
-						} else {
-							$output->writeln('<comment>No version selected. Nothing to perform.</comment>');
-						}
-					} else {
-						$output->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-						$output->writeln('<comment>the latest version permitted by the server.</comment>');
-					}
-				} else {
-					$app_branch = $app->getBranch();
-					if ($app_branch == $branch_name) {
-						$filesToResolve = $app->performUpdate($instance);
-						$version = $instance->getLatestVersion();
-						handleCheckResult($instance, $version, $filesToResolve);
-					} else {
-						$output->writeln('<error>Error: Tiki Application branch is different than the one stored in the TRIM db.</error>');
-						exit (-1);
-					}
-				}
+                        if (count($versionSel) > 0) {
+                            $filesToResolve = $app->performUpdate($instance, $target);
+                            $version = $instance->getLatestVersion();
+                            handleCheckResult($instance, $version, $filesToResolve);
+                        } else {
+                            $output->writeln('<comment>No version selected. Nothing to perform.</comment>');
+                        }
+                    } else {
+                        $output->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
+                        $output->writeln('<comment>the latest version permitted by the server.</comment>');
+                    }
+                } else {
+                    $app_branch = $app->getBranch();
+                    if ($app_branch == $branch_name) {
+                        $filesToResolve = $app->performUpdate($instance);
+                        $version = $instance->getLatestVersion();
+                        handleCheckResult($instance, $version, $filesToResolve);
+                    } else {
+                        $output->writeln('<error>Error: Tiki Application branch is different than the one stored in the TRIM db.</error>');
+                        exit(-1);
+                    }
+                }
 
-				if ($locked) $instance->unlock();
-			}
-		} else {
-			$output->writeln('<comment>No instances available to update/upgrade.</comment>');
-		}
-	}
+                if ($locked) {
+                    $instance->unlock();
+                }
+            }
+        } else {
+            $output->writeln('<comment>No instances available to update/upgrade.</comment>');
+        }
+    }
 }

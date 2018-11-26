@@ -10,35 +10,35 @@ use Symfony\Component\Console\Input\InputArgument;
 
 class CloneAndUpgradeInstanceCommand extends Command
 {
-	protected function configure()
-	{
-		$this
-			->setName('instance:cloneandupgrade')
-			->setDescription('Clone and upgrade instance')
-			->setHelp('This command allows you make another identical copy of Tiki with an extra upgrade operation')
-			->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL);
-	}
+    protected function configure()
+    {
+        $this
+            ->setName('instance:cloneandupgrade')
+            ->setDescription('Clone and upgrade instance')
+            ->setHelp('This command allows you make another identical copy of Tiki with an extra upgrade operation')
+            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL);
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-		$command = $this->getApplication()->find('instance:clone');
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $command = $this->getApplication()->find('instance:clone');
 
-		$argumentsToAdd = array('upgrade');
+        $argumentsToAdd = ['upgrade'];
 
-		$args = $input->getArgument('mode');
-		if (isset($args) && ! empty($args)) {
-			$offset = $args[0] == 'upgrade' ? 1 : 0;
-			$args = array_slice($args, $offset);
+        $args = $input->getArgument('mode');
+        if (isset($args) && ! empty($args)) {
+            $offset = $args[0] == 'upgrade' ? 1 : 0;
+            $args = array_slice($args, $offset);
 
-			$argumentsToAdd = array_merge($argumentsToAdd, $args);
-		}
+            $argumentsToAdd = array_merge($argumentsToAdd, $args);
+        }
 
-		$arguments = array(
-			'command' => 'instance:clone',
-			'mode'    => $argumentsToAdd
-		);
+        $arguments = [
+            'command' => 'instance:clone',
+            'mode'    => $argumentsToAdd
+        ];
 
-		$verifyInstanceInput = new ArrayInput($arguments);
-		$returnCode = $command->run($verifyInstanceInput, $output);
-	}
+        $verifyInstanceInput = new ArrayInput($arguments);
+        $returnCode = $command->run($verifyInstanceInput, $output);
+    }
 }
