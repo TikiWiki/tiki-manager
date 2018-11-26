@@ -1,0 +1,68 @@
+image: rjsmelo/ubuntu-php:7.1-qa
+
+cache:
+  paths:
+  - .composercache/files
+  - vendor
+
+variables:
+  COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
+
+stages:
+- build
+- quality
+
+#
+# build
+#
+composer:
+  stage: build
+  script:
+    - composer --ansi install --no-progress --prefer-dist -n
+
+
+#
+# Lint
+#
+
+phpcs:
+  stage: quality
+  script:
+  - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git log -m -1 --name-only && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
+  - git log -m -1 --name-only
+  - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | xargs php vendor_bundled/vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
+  allow_failure: true
+  only:
+    - master
+
+phpcs-branches:
+  stage: quality
+  variables:
+    SBRANCH: master
+  script:
+    - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git diff --name-status origin/$SBRANCH && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
+    - git diff --name-status origin/$SBRANCH
+    - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
+  allow_failure: true
+  except:
+    - $SBRANCH
+
+
+code_quality:
+  image: docker:stable
+  stage: quality
+  variables:
+    DOCKER_DRIVER: overlay2
+  allow_failure: true
+  services:
+  - docker:stable-dind
+  script:
+  - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+  - docker run
+      --env SOURCE_CODE="$PWD"
+      --volume "$PWD":/code
+      --volume /var/run/docker.sock:/var/run/docker.sock
+      "registry.gitlab.com/gitlab-org/security-products/codequality:$SP_VERSION" /code
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json

@@ -20,16 +20,17 @@ class Application_Tiki extends Application
             $remoteFile = $this->instance->getWorkPath($randomName);
             $access->runPHP(
                 dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
-                array($this->instance->webroot, $remoteFile));
+                [$this->instance->webroot, $remoteFile]
+            );
             $localName = $access->downloadFile($remoteFile);
             $access->deleteFile($remoteFile);
 
             `zcat $localName > '$target'`;
             unlink($localName);
-        }
-        else {
+        } else {
             $data = $access->runPHP(
-                dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php');
+                dirname(__FILE__) . '/../../tiki/scripts/mysqldump.php'
+            );
             file_put_contents($target, $data);
         }
     }
@@ -45,8 +46,7 @@ class Application_Tiki extends Application
             `svn revert --recursive  $folder`;
             `svn cleanup $folder`;
             `svn up --non-interactive $folder`;
-        }
-        else {
+        } else {
             $command = $this->getExtractCommand($version, $folder);
             `$command`;
         }
@@ -73,23 +73,25 @@ class Application_Tiki extends Application
 
     private function formatBranch($version)
     {
-        if (substr($version, 0, 4) == '1.9.')
+        if (substr($version, 0, 4) == '1.9.') {
             return 'REL-' . str_replace('.', '-', $version);
-        elseif ($this->getInstallType() == 'svn')
+        } elseif ($this->getInstallType() == 'svn') {
             return "tags/$version";
-        elseif ($this->getInstallType() == 'tarball')
+        } elseif ($this->getInstallType() == 'tarball') {
             return "tags/$version";
+        }
     }
 
     function getAcceptableExtensions()
     {
-        return array('mysqli', 'mysql');
+        return ['mysqli', 'mysql'];
     }
 
     function getBranch()
     {
-        if ($this->branch)
+        if ($this->branch) {
             return $this->branch;
+        }
 
         if ($this->getInstallType() == 'svn') {
             $access = $this->instance->getBestAccess('scripting');
@@ -103,45 +105,57 @@ class Application_Tiki extends Application
 
         $access = $this->instance->getBestAccess('filetransfer');
         $content = $access->fileGetContents(
-            $this->instance->getWebPath('tiki-setup.php'));
+            $this->instance->getWebPath('tiki-setup.php')
+        );
 
         if (preg_match(
-            "/tiki_version\s*=\s*[\"'](\d+\.\d+\.\d+(\.\d+)?)/", $content, $matches)) {
+            "/tiki_version\s*=\s*[\"'](\d+\.\d+\.\d+(\.\d+)?)/",
+            $content,
+            $matches
+        )) {
             $version = $matches[1];
             $branch = $this->formatBranch($version);
 
             echo 'The branch provided may not be correct. ' .
                 "Until 1.10 is tagged, use branches/1.10.\n";
             $entry = readline("If this is not correct, enter the one to use: [$branch]");
-            if (! empty($entry))
+            if (! empty($entry)) {
                 return $this->branch = $entry;
-            else
+            } else {
                 return $this->branch = $branch;
+            }
         }
 
         $content = $access->fileGetContents(
-            $this->instance->getWebPath('lib/setup/twversion.class.php'));
+            $this->instance->getWebPath('lib/setup/twversion.class.php')
+        );
         if (empty($content)) {
             $content = $access->fileGetContents(
-                $this->instance->getWebPath('lib/twversion.class.php'));
+                $this->instance->getWebPath('lib/twversion.class.php')
+            );
         }
 
         if (preg_match(
-            "/this-\>version\s*=\s*[\"'](\d+\.\d+(\.\d+)?(\.\d+)?(\w+)?)/", $content, $matches)) {
+            "/this-\>version\s*=\s*[\"'](\d+\.\d+(\.\d+)?(\.\d+)?(\w+)?)/",
+            $content,
+            $matches
+        )) {
             $version = $matches[1];
             $branch = $this->formatBranch($version);
 
-            if (strpos($branch, 'branches/1.10') === 0)
+            if (strpos($branch, 'branches/1.10') === 0) {
                 $branch = 'branches/2.0';
+            }
 
             $entry = readline("If this is not correct, enter the one to use: [$branch]");
-            if (! empty($entry))
+            if (! empty($entry)) {
                 return $this->branch = $entry;
-        }
-        else {
+            }
+        } else {
             $branch = '';
-            while (empty($branch))
+            while (empty($branch)) {
                 $branch = readline("No version found. Which tag should be used? (Ex.: (Subversion) branches/1.10) ");
+            }
         }
 
         return $this->branch = $branch;
@@ -162,19 +176,22 @@ class Application_Tiki extends Application
         $access = $this->instance->getBestAccess('scripting');
         $out = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/get_directory_list.php',
-            array($this->instance->webroot)
+            [$this->instance->webroot]
         );
 
-        $folders['app'] = array($this->instance->webroot);
+        $folders['app'] = [$this->instance->webroot];
 
-        foreach (explode("\n", $out ) as $line) {
+        foreach (explode("\n", $out) as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
             $line = rtrim($line, '/');
 
-            if (! empty($line))
+            if (! empty($line)) {
                 $folders['data'][] = $line;
+            }
         }
 
         return $folders;
@@ -182,17 +199,18 @@ class Application_Tiki extends Application
 
     function getInstallType()
     {
-        if (! is_null($this->installType))
+        if (! is_null($this->installType)) {
             return $this->installType;
+        }
 
         $access = $this->instance->getBestAccess('filetransfer');
-        $checkpaths = array(
+        $checkpaths = [
             $this->instance->getWebPath('.svn/entries'),
             $this->instance->getWebPath('.svn/wc.db')
-        );
+        ];
 
         foreach ($checkpaths as $path) {
-            if($access->fileExists($path)) {
+            if ($access->fileExists($path)) {
                 return $this->installType = 'svn';
             }
         }
@@ -232,27 +250,33 @@ class Application_Tiki extends Application
 
     function getVersions()
     {
-        $versions = array();
+        $versions = [];
 
         $base = SVN_TIKIWIKI_URI;
-        $versionsTemp = array();
+        $versionsTemp = [];
         foreach (explode("\n", `svn ls $base/tags`) as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
-            if (substr($line, -1) == '/' && ctype_digit($line{0}))
+            if (substr($line, -1) == '/' && ctype_digit($line{0})) {
                 $versionsTemp[] = 'svn:tags/' . substr($line, 0, -1);
+            }
         }
         sort($versionsTemp, SORT_NATURAL);
         $versions = array_merge($versions, $versionsTemp);
 
-        $versionsTemp = array();
+        $versionsTemp = [];
         foreach (explode("\n", `svn ls $base/branches`) as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
-            if (substr($line, -1) == '/' && ctype_digit($line{0}))
+            if (substr($line, -1) == '/' && ctype_digit($line{0})) {
                 $versionsTemp[] = 'svn:branches/' . substr($line, 0, -1);
+            }
         }
         sort($versionsTemp, SORT_NATURAL);
         $versions = array_merge($versions, $versionsTemp);
@@ -260,7 +284,7 @@ class Application_Tiki extends Application
         // Trunk as last option
         $versions[] = 'svn:trunk';
 
-        $versions_sorted = array();
+        $versions_sorted = [];
         foreach ($versions as $version) {
             list($type, $branch) = explode(':', $version);
             $versions_sorted[] = Version::buildFake($type, $branch);
@@ -278,12 +302,11 @@ class Application_Tiki extends Application
         $this->extractTo($version, $folder);
 
         if ($access instanceof ShellPrompt) {
-            $host->rsync(array(
+            $host->rsync([
                 'src' =>  rtrim($folder, '/') . '/',
                 'dest' => rtrim($this->instance->webroot, '/') . '/'
-            ));
-        }
-        else {
+            ]);
+        } else {
             $access->copyLocalFolder($folder);
         }
 
@@ -309,18 +332,21 @@ class Application_Tiki extends Application
         $version->collectChecksumFromInstance($this->instance);
     }
 
-    function installProfile($domain, $profile) {
+    function installProfile($domain, $profile)
+    {
         $access = $this->instance->getBestAccess('scripting');
 
         echo $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php',
-            array($this->instance->webroot, $domain, $profile));
+            [$this->instance->webroot, $domain, $profile]
+        );
     }
 
     function isInstalled()
     {
-        if (! is_null($this->installed))
+        if (! is_null($this->installed)) {
             return $this->installed;
+        }
 
         $access = $this->instance->getBestAccess('filetransfer');
         $checkpath = $this->instance->getWebPath('tiki-setup.php');
@@ -331,110 +357,54 @@ class Application_Tiki extends Application
     function performActualUpdate(Version $version)
     {
         switch ($this->getInstallType()) {
-        case 'svn':
-        case 'tarball':
-            $access = $this->instance->getBestAccess('scripting');
+            case 'svn':
+            case 'tarball':
+                $access = $this->instance->getBestAccess('scripting');
 
-            if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
+                if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
+                    info('Updating svn...');
+                    $webroot = $this->instance->webroot;
 
-                info('Updating svn...');
-                $webroot = $this->instance->webroot;
+                    $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
+                    $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
+                    $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
 
-                $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
-                $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
-                $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
+                    $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
 
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
+                    $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
+                    $svn->revert($webroot, ['--recursive']);
+                    $svn->cleanup($webroot);
 
-                $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
-                $svn->revert($webroot, array('--recursive'));
-                $svn->cleanup($webroot);
+                    $svn->updateInstanceTo($this->instance->webroot, $version->branch);
+                    $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
 
-                $svn->updateInstanceTo($this->instance->webroot, $version->branch);
-                $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
+                    if ($this->instance->hasConsole()) {
+                        info('Updating composer');
 
-                if ($this->instance->hasConsole()) {
-                    info('Updating composer');
-
-                    $ret = $access->shellExec(array(
-                      "sh {$escaped_root_path}/setup.sh composer",
-                      "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
-                    ));
-                }
-
-            }
-            elseif ($access instanceof Mountable) {
-                $folder = cache_folder($this, $version);
-                $this->extractTo($version, $folder);
-                $access->copyLocalFolder($folder);
-            }
-
-            info('Updating database schema...');
-
-            if ($this->instance->hasConsole()) {
-                $ret = $access->shellExec(array(
-                  "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
-                ));
-            } else {
-                $access->runPHP(
-                    dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                    array($this->instance->webroot)
-                );
-            }
-            
-            info('Fixing permissions...');
-
-            $this->fixPermissions();
-            $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
-
-            if ($this->instance->hasConsole()) {
-                info('Rebuilding Index...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
-                info('Cleaning Cache...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
-                info('Generating Caches...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
-            }
-
-            return;
-        }
-
-        // TODO: Handle fallback
-    }
-
-    function performActualUpgrade(Version $version, $abort_on_conflict)
-    {
-        switch ($this->getInstallType()) {
-        case 'svn':
-        case 'tarball':
-            $access = $this->instance->getBestAccess('scripting');
-            $access->getHost(); // trigger the config of the location change (to catch phpenv)
-
-            if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
-
-                info('Upgrading svn...');
-                $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear");
-
-                $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
-                $svn->updateInstanceTo($this->instance->webroot, $version->branch);
-                $access->shellExec('chmod 0777 temp temp/cache');
-
-                if ($this->instance->hasConsole()) {
-                    info('Updating composer...');
-
-                    $ret = $access->shellExec(array(
-                        "sh setup.sh composer",
-                        "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
-                    ));
+                        $ret = $access->shellExec([
+                          "sh {$escaped_root_path}/setup.sh composer",
+                          "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
+                        ]);
+                    }
+                } elseif ($access instanceof Mountable) {
+                    $folder = cache_folder($this, $version);
+                    $this->extractTo($version, $folder);
+                    $access->copyLocalFolder($folder);
                 }
 
                 info('Updating database schema...');
 
-                $access->runPHP(
-                  dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                  array($this->instance->webroot)
-                );
-
+                if ($this->instance->hasConsole()) {
+                    $ret = $access->shellExec([
+                      "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
+                    ]);
+                } else {
+                    $access->runPHP(
+                        dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
+                        [$this->instance->webroot]
+                    );
+                }
+            
                 info('Fixing permissions...');
 
                 $this->fixPermissions();
@@ -450,7 +420,59 @@ class Application_Tiki extends Application
                 }
 
                 return;
-            }
+        }
+
+        // TODO: Handle fallback
+    }
+
+    function performActualUpgrade(Version $version, $abort_on_conflict)
+    {
+        switch ($this->getInstallType()) {
+            case 'svn':
+            case 'tarball':
+                $access = $this->instance->getBestAccess('scripting');
+                $access->getHost(); // trigger the config of the location change (to catch phpenv)
+
+                if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
+                    info('Upgrading svn...');
+                    $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear");
+
+                    $svn = new RC_SVN(SVN_TIKIWIKI_URI, $access);
+                    $svn->updateInstanceTo($this->instance->webroot, $version->branch);
+                    $access->shellExec('chmod 0777 temp temp/cache');
+
+                    if ($this->instance->hasConsole()) {
+                        info('Updating composer...');
+
+                        $ret = $access->shellExec([
+                        "sh setup.sh composer",
+                        "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
+                        ]);
+                    }
+
+                    info('Updating database schema...');
+
+                    $access->runPHP(
+                        dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
+                        [$this->instance->webroot]
+                    );
+
+                    info('Fixing permissions...');
+
+                    $this->fixPermissions();
+                    $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
+
+                    if ($this->instance->hasConsole()) {
+                        info('Rebuilding Index...');
+                        $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+                        info('Cleaning Cache...');
+                        $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
+                        info('Generating Caches...');
+                        $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
+                    }
+
+                    return;
+                }
         }
     }
 
@@ -464,7 +486,6 @@ class Application_Tiki extends Application
             $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear --all");
             $access->shellExec("svn cleanup --non-interactive {$escaped_root_path}");
         }
-
     }
 
     function requiresDatabase()
@@ -476,7 +497,7 @@ class Application_Tiki extends Application
     {
         $tmp = tempnam(TEMP_FOLDER, 'dblocal');
 
-        if ( !empty($database->dbLocalContent) ) {
+        if (!empty($database->dbLocalContent)) {
             file_put_contents($tmp, $database->dbLocalContent);
         } else {
             file_put_contents($tmp, "<?php"          . "\n"
@@ -485,8 +506,7 @@ class Application_Tiki extends Application
                 ."\$user_tiki='{$database->user}';"  . "\n"
                 ."\$pass_tiki='{$database->pass}';"  . "\n"
                 ."\$dbs_tiki='{$database->dbname}';" . "\n"
-                ."// generated by TRIM " . date('Y-m-d H:i:s +Z')
-            );
+                ."// generated by TRIM " . date('Y-m-d H:i:s +Z'));
         }
 
         $access = $this->instance->getBestAccess('filetransfer');
@@ -499,7 +519,8 @@ class Application_Tiki extends Application
         info("Loading '$remoteFile' into '{$database->dbname}'");
         $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
-            array($root, $remoteFile));
+            [$root, $remoteFile]
+        );
     }
 
 //----------------------------------------------------------------
@@ -513,8 +534,7 @@ class Application_Tiki extends Application
             ."\$pass_tiki='{$database->pass}';"  . "\n"
             ."\$dbs_tiki='{$database->dbname}';" . "\n"
             ."\$client_charset = 'utf8';"        . "\n"
-            ."// generated by TRIM " . date('Y-m-d H:i:s +Z')
-        );
+            ."// generated by TRIM " . date('Y-m-d H:i:s +Z'));
 
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
@@ -524,41 +544,38 @@ class Application_Tiki extends Application
         $access->shellExec("chown apache:apache {$this->instance->webroot}/db/local.php");
 
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
-
-            info( "Updating svn, composer, perms & database..." );
+            info("Updating svn, composer, perms & database...");
 
             $access = $this->instance->getBestAccess('scripting');
             $access->chdir($this->instance->webroot);
-            $ret = $access->shellExec(array(
+            $ret = $access->shellExec([
                 "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:install",
                 'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
-            ));
-
-        }
-        else if ($access->fileExists('installer/shell.php')) {
+            ]);
+        } elseif ($access->fileExists('installer/shell.php')) {
             if ($access instanceof ShellPrompt) {
                 $access = $this->instance->getBestAccess('scripting');
                 $access->chdir($this->instance->webroot);
                 $access->shellExec($this->instance->phpexec . ' installer/shell.php install');
-            }
-            else {
+            } else {
                 $access->runPHP(
                     dirname(__FILE__) . '/../../scripts/tiki/tiki_dbinstall_ftp.php',
-                    array($this->instance->webroot)
+                    [$this->instance->webroot]
                 );
             }
-        }
-        else {
+        } else {
             // FIXME: Not FTP compatible ? prior to 3.0 only
             $access = $this->instance->getBestAccess('scripting');
             $file = $this->instance->getWebPath('db/tiki.sql');
             $root = $this->instance->webroot;
             $access->runPHP(
                 dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
-                array($root, $file));
+                [$root, $file]
+            );
             $access->runPHP(
                 dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                array($this->instance->webroot));
+                [$this->instance->webroot]
+            );
         }
 
         echo "Verify if you have db/local.php file, if you don't put the following content in it.\n";
@@ -571,7 +588,6 @@ class Application_Tiki extends Application
             ."\$client_charset = 'utf8';"        . "\n"
             ."// generated by TRIM " . date('Y-m-d H:i:s +Z');
     }
-
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

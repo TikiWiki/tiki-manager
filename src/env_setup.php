@@ -19,13 +19,14 @@ if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
     file_exists(getenv('HOME') . '/.ssh/id_dsa.pub') &&
     !defined('SSH_KEY') &&
     !defined('SSH_PUBLIC_KEY')) {
-
     warning(
-        sprintf('Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
+        sprintf(
+            'Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
             'because DSA was deprecated in openssh-7.0. ' .
             'If you need a new RSA key, run \'make copysshkey\' and TRIM will create a new one.' .
             'Copy the new key to all your instances.',
-            SSH_KEY, SSH_PUBLIC_KEY
+            SSH_KEY,
+            SSH_PUBLIC_KEY
         )
     );
 }
@@ -34,20 +35,22 @@ if (file_exists(TRIM_ROOT . "/data/id_dsa") &&
     file_exists(TRIM_ROOT . "/data/id_dsa.pub") &&
     !defined('SSH_KEY') &&
     !defined('SSH_PUBLIC_KEY')) {
-
     warning(
-        sprintf('Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
+        sprintf(
+            'Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
             'because DSA was deprecated in openssh-7.0. ' .
             'If you need a new RSA key, run \'make copysshkey\' and TRIM will create a new one.' .
             'Copy the new key to all your instances.',
-            SSH_KEY, SSH_PUBLIC_KEY
+            SSH_KEY,
+            SSH_PUBLIC_KEY
         )
     );
 }
 
 // Check for required extensions
-if (! in_array('sqlite', PDO::getAvailableDrivers()))
+if (! in_array('sqlite', PDO::getAvailableDrivers())) {
     die(error("The SQLite PHP extension is not available. Install to continue."));
+}
 
 // Check for required system dependencies
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -65,8 +68,9 @@ if (empty($ssh) || empty($kg)) {
 
 // Make sure SSH is set-up
 if (! file_exists(SSH_KEY) || ! file_exists(SSH_PUBLIC_KEY)) {
-    if (! is_writable(dirname(SSH_KEY)))
+    if (! is_writable(dirname(SSH_KEY))) {
         die(error('Impossible to generate SSH key. Make sure data folder is writable.'));
+    }
 
     echo 'If you enter a passphrase, you will need to enter it every time you run ' .
         'TRIM, and thus, automatic, unattended operations (like backups, file integrity ' .
@@ -76,20 +80,27 @@ if (! file_exists(SSH_KEY) || ! file_exists(SSH_PUBLIC_KEY)) {
     `ssh-keygen -t rsa -f $key`;
 }
 
-if (! file_exists(CACHE_FOLDER))
+if (! file_exists(CACHE_FOLDER)) {
     mkdir(CACHE_FOLDER);
-if (! file_exists(TEMP_FOLDER))
+}
+if (! file_exists(TEMP_FOLDER)) {
     mkdir(TEMP_FOLDER);
-if (! file_exists(RSYNC_FOLDER))
-    mkdir( RSYNC_FOLDER );
-if (! file_exists(MOUNT_FOLDER))
+}
+if (! file_exists(RSYNC_FOLDER)) {
+    mkdir(RSYNC_FOLDER);
+}
+if (! file_exists(MOUNT_FOLDER)) {
     mkdir(MOUNT_FOLDER);
-if (! file_exists(BACKUP_FOLDER))
+}
+if (! file_exists(BACKUP_FOLDER)) {
     mkdir(BACKUP_FOLDER);
-if (! file_exists(ARCHIVE_FOLDER))
+}
+if (! file_exists(ARCHIVE_FOLDER)) {
     mkdir(ARCHIVE_FOLDER);
-if (! file_exists(TRIM_LOGS))
+}
+if (! file_exists(TRIM_LOGS)) {
     mkdir(TRIM_LOGS);
+}
 
 function trim_output($output)
 {
@@ -102,7 +113,9 @@ function trim_output($output)
 
 function trim_debug($output)
 {
-    if (TRIM_DEBUG) trim_output($output);
+    if (TRIM_DEBUG) {
+        trim_output($output);
+    }
 }
 
 function cache_folder($app, $version)
@@ -118,8 +131,9 @@ global $db; // explicitly mark $db as global
 
 // Make sure the raw database exists
 if (! file_exists(DB_FILE)) {
-    if (! is_writable(dirname(DB_FILE)))
+    if (! is_writable(dirname(DB_FILE))) {
         die(error('Impossible to generate database. Make sure data folder is writable.'));
+    }
 
     try {
         $db = new PDOWrapper('sqlite:' . DB_FILE);
@@ -147,8 +161,8 @@ $version = (int)$result->fetchColumn();
 // Update the schema to the latest version
 // One case per version, no breaks, no failures
 switch ($version) {
-case 0:
-    $db->exec("
+    case 0:
+        $db->exec("
         CREATE TABLE instance (
             instance_id INTEGER PRIMARY KEY,
             name VARCHAR(25),
@@ -184,8 +198,8 @@ case 0:
 
         UPDATE info SET value = '1' WHERE name = 'version';
     ");
-case 1:
-    $db->exec("
+    case 1:
+        $db->exec("
         CREATE TABLE backup (
             instance_id INTEGER,
             location VARCHAR(200)
@@ -198,8 +212,8 @@ case 1:
 
         UPDATE info SET value = '2' WHERE name = 'version';
     ");
-case 2:
-    $db->exec("
+    case 2:
+        $db->exec("
         CREATE TABLE report_receiver (
             instance_id INTEGER PRIMARY KEY,
             user VARCHAR(200),
@@ -216,16 +230,16 @@ case 2:
 
         UPDATE info SET value = '3' WHERE name = 'version';
     ");
-case 3:
-    $db->exec("
+    case 3:
+        $db->exec("
         UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh';
         UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh::nokey';
         UPDATE access SET host = (host || ':' || '21') WHERE type = 'ftp';
 
         UPDATE info SET value = '4' WHERE name = 'version';
     ");
-case 4:
-    $db->exec("
+    case 4:
+        $db->exec("
         CREATE TABLE property (
             instance_id INTEGER NOT NULL,
             key VARCHAR(50) NOT NULL,
@@ -240,22 +254,24 @@ case 4:
 // Database access
 function query($query, $params = null)
 {
-    if (is_null($params)) $params = array();
+    if (is_null($params)) {
+        $params = [];
+    }
     foreach ($params as $key => $value) {
-        if (is_null($value))
+        if (is_null($value)) {
             $query = str_replace($key, 'NULL', $query);
-        elseif (is_int($value))
+        } elseif (is_int($value)) {
             $query = str_replace($key, (int) $value, $query);
-        elseif (is_array($value)) {
+        } elseif (is_array($value)) {
             error("Unsupported query parameter type: array\n");
             printf("Query\n\"%s\"\nParamters:\n", $query);
             var_dump($params);
             printf("Backtrace:\n");
             debug_print_backtrace();
             exit(1);
-        }
-        else
+        } else {
             $query = str_replace($key, "'$value'", $query);
+        }
     }
 
     global $db;
@@ -277,7 +293,8 @@ function rowid()
 function findDigits($selection)
 {
     // Accept ranges of type 2-10
-    $selection = preg_replace_callback('/(\d+)-(\d+)/',
+    $selection = preg_replace_callback(
+        '/(\d+)-(\d+)/',
         function ($matches) {
             return implode(' ', range($matches[1], $matches[2]));
         },
@@ -290,13 +307,15 @@ function findDigits($selection)
 
 function getEntries($list, $selection)
 {
-    if (! is_array($selection))
+    if (! is_array($selection)) {
         $selection = findDigits($selection);
+    }
 
-    $output = array();
+    $output = [];
     foreach ($selection as $index) {
-        if (array_key_exists($index, $list))
+        if (array_key_exists($index, $list)) {
             $output[] = $list[$index];
+        }
     }
 
     return $output;
@@ -347,26 +366,34 @@ function printInstances(array $instances)
  * @return string User-supplied value.
  */
 
-function promptUser($prompt, $default = false, $values = array())
+function promptUser($prompt, $default = false, $values = [])
 {
-    if(!INTERACTIVE) {
+    if (!INTERACTIVE) {
         return $default;
     }
 
-    if (is_array($values) && count($values))
+    if (is_array($values) && count($values)) {
         $prompt .= ' (' . implode(', ', $values) . ')';
-    if ($default !== false && strlen($default))
+    }
+    if ($default !== false && strlen($default)) {
         $prompt .= " [$default]";
+    }
 
     do {
         $answer = trim(readline($prompt . ' : '));
-        if (! strlen($answer)) $answer = $default;
+        if (! strlen($answer)) {
+            $answer = $default;
+        }
 
         if (is_array($values) && count($values)) {
-            if (in_array($answer, $values)) return $answer;
+            if (in_array($answer, $values)) {
+                return $answer;
+            }
+        } elseif (! is_bool($default)) {
+            return $answer;
+        } elseif (strlen($answer)) {
+            return $answer;
         }
-        else if (! is_bool($default)) return $answer;
-        else if (strlen($answer)) return $answer;
 
         error("Invalid response.\n");
     } while (true);
@@ -375,34 +402,41 @@ function promptUser($prompt, $default = false, $values = array())
 function php()
 {
 
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
         $paths = `where php`;
-    else
+    } else {
         $paths = `whereis php 2>> logs/trim.output`;
+    }
     $phps = explode(' ', $paths);
 
     // Check different versions
-    $valid = array();
+    $valid = [];
     foreach ($phps as $interpreter) {
-        if (! in_array(basename($interpreter), array('php', 'php5')))
+        if (! in_array(basename($interpreter), ['php', 'php5'])) {
             continue;
+        }
 
-        if (! @is_executable($interpreter))
+        if (! @is_executable($interpreter)) {
             continue;
+        }
 
-        if (@is_dir($interpreter))
+        if (@is_dir($interpreter)) {
             continue;
+        }
 
         $versionInfo = `$interpreter -v`;
-        if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches))
+        if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches)) {
             $valid[$matches[1]] = $interpreter;
+        }
     }
 
     // Handle easy cases
-    if (count($valid) == 0)
+    if (count($valid) == 0) {
         return null;
-    if (count($valid) == 1)
+    }
+    if (count($valid) == 1) {
         return reset($valid);
+    }
 
     // List available options for user
     krsort($valid);

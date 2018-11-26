@@ -1,17 +1,18 @@
 <?php
 
-class SSH_Host_Seclib_Adapter {
+class SSH_Host_Seclib_Adapter
+{
     private $env;
     private $handle;
     private $host;
     private $location;
     private $port;
     private $user;
-    private static $resources = array();
+    private static $resources = [];
 
     public function __construct($host, $user, $port)
     {
-        $this->setEnv(array());
+        $this->setEnv([]);
         $this->setHost($host);
         $this->setPort($port ?: 22);
         $this->setUser($user);
@@ -19,7 +20,8 @@ class SSH_Host_Seclib_Adapter {
 
         if (!$this->handle) {
             throw new SSH_Host_Seclib_Exception(
-                'Unable to create PHPSecLib instance.', 1
+                'Unable to create PHPSecLib instance.',
+                1
             );
         }
     }
@@ -37,8 +39,9 @@ class SSH_Host_Seclib_Adapter {
 
         $key = "$user@$host:$port";
 
-        if (isset(self::$resources[$key]))
+        if (isset(self::$resources[$key])) {
             return self::$resources[$key];
+        }
 
         $handle = new \phpseclib\Net\SFTP($host, $port);
 
@@ -80,7 +83,8 @@ class SSH_Host_Seclib_Adapter {
         return $this->user;
     }
 
-    private function prepareEnv($env=null) {
+    private function prepareEnv($env = null)
+    {
         $line = '';
         $env = $env ?: $this->env;
         if (!is_array($env) || empty($env)) {
@@ -118,7 +122,7 @@ class SSH_Host_Seclib_Adapter {
         return $success;
     }
 
-    public function runCommand($command, $options=array())
+    public function runCommand($command, $options = [])
     {
         $handle = self::getExtHandle();
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
@@ -159,12 +163,13 @@ class SSH_Host_Seclib_Adapter {
         return $command;
     }
 
-    public function runCommands($commands, $output=false)
+    public function runCommands($commands, $output = false)
     {
         $content = '';
         foreach ($commands as $line) {
-            if ($this->location)
+            if ($this->location) {
                 $line = 'cd ' . escapeshellarg($this->location) . "; $line";
+            }
 
             foreach ($this->env as $key => $value) {
                 $line = "export $key=" . escapeshellarg($value) . "; $line";
@@ -192,7 +197,7 @@ class SSH_Host_Seclib_Adapter {
 
     public function setEnv($env)
     {
-        $this->env = $env ?: array();
+        $this->env = $env ?: [];
     }
 
     public function setHost($host)
@@ -221,6 +226,6 @@ class SSH_Host_Seclib_Adapter {
     }
 }
 
-class SSH_Host_Seclib_Exception extends Exception 
+class SSH_Host_Seclib_Exception extends Exception
 {
 }

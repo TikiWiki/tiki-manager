@@ -14,10 +14,12 @@ $hour = (int)$hour;
 $minute = (int)$minute;
 $options = "";
 
-if (! in_array($hour, range(0, 23)))
+if (! in_array($hour, range(0, 23))) {
     die(error('Invalid hour.'));
-if (! in_array($minute, range(0, 59)))
+}
+if (! in_array($minute, range(0, 59))) {
     die(error('Invalid minute.'));
+}
 
 $excludeInstances = promptUser('Do you want to exclude any instance from backups?', '', ['y', 'n']);
 
@@ -26,7 +28,9 @@ if ($excludeInstances == 'y') {
     $selection = selectInstances($instances, "Which instances do you want to exclude?\n");
 
     if (!empty($selection) && is_array($selection)) {
-        $selection = array_map(function($instance) { return $instance->getId(); }, $selection);
+        $selection = array_map(function ($instance) {
+            return $instance->getId();
+        }, $selection);
         $selection = implode(',', $selection);
         $options .= "--exclude=$selection ";
     }
@@ -36,7 +40,13 @@ $path = 'scripts/backup.php';
 $trimpath = realpath(dirname(__FILE__) . '/..');
 $entry = sprintf(
     "%d %d * * * cd %s && %s -d memory_limit=256M %s all %s\n",
-    $minute, $hour, $trimpath, php(), $path, $options);
+    $minute,
+    $hour,
+    $trimpath,
+    php(),
+    $path,
+    $options
+);
 
 file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
 

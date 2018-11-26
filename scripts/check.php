@@ -11,16 +11,18 @@ $selection = array_slice($_SERVER['argv'], 1);
 $selection = array_filter($selection, 'is_numeric');
 $selection = array_map('intval', $selection);
 $selection = array_filter($selection, 'is_numeric');
-$selection = array_map(array('Instance', 'getInstance'), $selection);
+$selection = array_map(['Instance', 'getInstance'], $selection);
 $selection = array_filter($selection, 'is_object');
 
 if (empty($selection)) {
     $instances = Instance::getInstances(true);
-    if(INTERACTIVE) {
+    if (INTERACTIVE) {
         echo "\nInstances you can verify:\n";
-        $selection = selectInstances($instances,
-            "You can select one, multiple, or blank for all.\n");
-        if (empty($selection)){
+        $selection = selectInstances(
+            $instances,
+            "You can select one, multiple, or blank for all.\n"
+        );
+        if (empty($selection)) {
             $selection = $instances;
         }
     } else {
@@ -39,11 +41,11 @@ foreach ($selection as $instance) {
 
     info("Checking instance: {$instance->name}");
 
-    if ($version->hasChecksums())
+    if ($version->hasChecksums()) {
         handleCheckResult($instance, $version, $version->performCheck($instance));
-    else {
+    } else {
         $input = '';
-        $values = array('current', 'source', 'skip');
+        $values = ['current', 'source', 'skip'];
         warning('No checksums exist.');
         echo "What do you want to do?\n";
         echo "  current - Use the files currently online for checksum.\n";
@@ -52,17 +54,17 @@ foreach ($selection as $instance) {
         $input = promptUser('>>>', 'skip', $values);
 
         switch ($input) {
-        case 'source':
-            $version->collectChecksumFromSource($instance);
-            handleCheckResult($instance, $version, $version->performCheck($instance));
-            break;
+            case 'source':
+                $version->collectChecksumFromSource($instance);
+                handleCheckResult($instance, $version, $version->performCheck($instance));
+                break;
 
-        case 'current':
-            $version->collectChecksumFromInstance($instance);
-            break;
+            case 'current':
+                $version->collectChecksumFromInstance($instance);
+                break;
 
-        case 'skip':
-            continue;
+            case 'skip':
+                continue;
         }
     }
 }

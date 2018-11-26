@@ -6,8 +6,9 @@
 
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 
-if ($_SERVER['argc'] < 2)
+if ($_SERVER['argc'] < 2) {
     die(error('Expecting target email address as parameter.'));
+}
 
 $log = '';
 $email = $_SERVER['argv'][1];
@@ -19,7 +20,7 @@ if (! empty($excluded_option)) {
     $instances_to_exclude = explode(',', get_cli_option('exclude'));
 
     foreach ($instances as $key => $instance) {
-        if(in_array($instance->id, $instances_to_exclude)) {
+        if (in_array($instance->id, $instances_to_exclude)) {
             unset($instances[$key]);
         }
     }
@@ -28,7 +29,9 @@ if (! empty($excluded_option)) {
 foreach ($instances as $instance) {
     $version = $instance->getLatestVersion();
 
-    if (! $version) continue;
+    if (! $version) {
+        continue;
+    }
 
     if ($version->hasChecksums()) {
         $result = $version->performCheck($instance);
@@ -36,19 +39,23 @@ foreach ($instances as $instance) {
         if (count($result['new']) || count($result['mod']) || count($result['del'])) {
             $log .= "{$instance->name} ({$instance->weburl})\n";
 
-            foreach ($result['new'] as $file => $hash)
+            foreach ($result['new'] as $file => $hash) {
                 $log .= "+ $file\n";
-            foreach ($result['mod'] as $file => $hash)
+            }
+            foreach ($result['mod'] as $file => $hash) {
                 $log .= "o $file\n";
-            foreach ($result['del'] as $file => $hash)
+            }
+            foreach ($result['del'] as $file => $hash) {
                 $log .= "- $file\n";
+            }
 
             $log .= "\n\n";
         }
     }
 }
 
-if (! empty($log))
+if (! empty($log)) {
     mail($email, "[TRIM] Potential intrusions detected.", $log);
+}
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

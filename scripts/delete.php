@@ -8,18 +8,17 @@ include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/check.php';
 
 $args = $_SERVER['argv'];
-$selection = array();
+$selection = [];
 
 if (count($args) === 2 && $args[1] === 'switch') {
     define('ARG_SWITCH', true);
-}
-else {
+} else {
     $args = array_filter($args, 'is_numeric');
-    $selection = array_map(array('Instance', 'getInstance'), $args);
+    $selection = array_map(['Instance', 'getInstance'], $args);
     $selection = array_filter($selection, 'is_object');
 }
 
-if(empty($selection)) {
+if (empty($selection)) {
     echo color("\nWhich instances do you want to remove? " .
         "(This will NOT delete the software itself, " .
         "just your instance connection to it.)\n\n", 'yellow');
@@ -28,6 +27,8 @@ if(empty($selection)) {
     $selection = selectInstances($instances, '');
 }
 
-foreach ($selection as $instance) $instance->delete();
+foreach ($selection as $instance) {
+    $instance->delete();
+}
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

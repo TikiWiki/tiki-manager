@@ -18,18 +18,21 @@ UNION
         tiki_forums
 ;");
 
-if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET')
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
     $_SERVER['argv'] = $_GET;
+}
 
 $root = $_SERVER['argv'][1];
 
 include "{$root}/db/local.php";
 
-$args = array();
-if ($user_tiki)
+$args = [];
+if ($user_tiki) {
     $args[] = '-u' . escapeshellarg($user_tiki);
-if ($pass_tiki)
+}
+if ($pass_tiki) {
     $args[] = '-p' . escapeshellarg($pass_tiki);
+}
 
 if ($host_tiki) {
     $parts = explode(';', $host_tiki);

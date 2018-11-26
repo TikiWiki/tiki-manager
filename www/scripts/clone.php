@@ -6,8 +6,8 @@ require dirname(__FILE__) . "/../include/layout/web.php";
 require TRIMPATH . '/src/env_setup.php';
 ob_end_clean();
 
-if (isset($_POST['id'])){
-    if (( $instance = Instance::getInstance( (int) $_POST['id'] ) ) && ( $source = Instance::getInstance( (int) $_POST['source'] ) )) {
+if (isset($_POST['id'])) {
+    if (( $instance = Instance::getInstance((int) $_POST['id']) ) && ( $source = Instance::getInstance((int) $_POST['source']) )) {
         warning("Initiating backup of {$source->name}");
         $archive = web_backup($source);
 
@@ -22,7 +22,6 @@ if (isset($_POST['id'])){
 
         // $archive = $source->backup();
     } else {
-		die( "Unknown instance." );
+        die("Unknown instance.");
     }
 }
-?>

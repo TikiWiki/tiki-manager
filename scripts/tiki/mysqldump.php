@@ -95,8 +95,7 @@ if (function_exists('mysqli_query')) {
         global $mysqli_db_link;
         return mysqli_fetch_field_direct($result, $field);
     }
-}
-else {
+} else {
     function connect($host, $user, $pass)
     {
         return mysql_connect($host, $user, $pass);
@@ -158,8 +157,9 @@ if ($host_tiki) {
     $parts = explode(';', $host_tiki);
 
     // Parse the MySQL port from a DSN string
-    if (isset($parts[1]) && strpos($parts[1], 'port=') !== false)
+    if (isset($parts[1]) && strpos($parts[1], 'port=') !== false) {
         $port = substr($parts[1], 5);
+    }
 
     $host_tiki = $parts[0] . ":$port";
 }
@@ -191,9 +191,9 @@ function _mysqldump($mysql_database)
             
             _mysqldump_table_data($row[0]);
         }
-    }
-    else
+    } else {
         echo "/* no tables in $mysql_database */\n";
+    }
 
     free($result);
 }
@@ -206,8 +206,9 @@ function _mysqldump_table_structure($table)
     $sql = "show create table `$table`;";
     $result = query($sql);
     if ($result) {
-        if ($row = fetch_assoc($result))
+        if ($row = fetch_assoc($result)) {
             echo $row['Create Table'] . ";\n\n";
+        }
     }
 
     free($result);
@@ -229,7 +230,7 @@ function _mysqldump_table_data($table)
             echo "/* dumping data for table `$table` */\n";
             
             $i = 0;
-            $field_type = array();
+            $field_type = [];
             while ($i < $num_fields) {
                 $meta = fetch_field($result, $i);
                 array_push($field_type, $meta->type);
@@ -241,25 +242,26 @@ function _mysqldump_table_data($table)
             echo "insert into `$table` values\n";
             while ($row= fetch_row($result)) {
                 echo '(';
-                for ( $i=0; $i < $num_fields; $i++) {
-                    if (is_null($row[$i]))
+                for ($i=0; $i < $num_fields; $i++) {
+                    if (is_null($row[$i])) {
                         $out = "null";
-                    else
-                    {
+                    } else {
                         switch ($field_type[$i]) {
-                        case 'int':
-                            $out = $row[$i];
-                            break;
-                        case 'string':
-                        case 'blob' :
-                        default:
-                            $out = "'" . escape($row[$i]) . "'";
+                            case 'int':
+                                $out = $row[$i];
+                                break;
+                            case 'string':
+                            case 'blob':
+                            default:
+                                $out = "'" . escape($row[$i]) . "'";
                         }
                     }
 
                     echo $out;
                     $output_length += strlen($out) + 1;
-                    if ($i < $num_fields - 1) echo ',';
+                    if ($i < $num_fields - 1) {
+                        echo ',';
+                    }
                 }
 
                 echo ')';
@@ -269,12 +271,12 @@ function _mysqldump_table_data($table)
                         $output_length = 0;
                         echo ';';
                         echo "\ninsert into `$table` values";
-                    }
-                    else
+                    } else {
                         echo ',';
-                }
-                else
+                    }
+                } else {
                     echo ';';
+                }
 
                 echo "\n";
                 
@@ -289,8 +291,9 @@ function _mysqldump_table_data($table)
 function _mysql_test($mysql_host, $mysql_database, $mysql_username, $mysql_password)
 {
     $link = connect($mysql_host, $mysql_username, $mysql_password);
-    if ($link)
+    if ($link) {
         $db_selected = select_db($mysql_database, $link);
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

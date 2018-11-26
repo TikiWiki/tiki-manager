@@ -10,16 +10,16 @@ class BackupReport
     {
         $channel->push(
             'trim_backup_summary',
-            array('body' => $this->getSummary($instances))
+            ['body' => $this->getSummary($instances)]
         );
         
         foreach ($instances as $instance) {
             $channel->push(
                 'trim_backup_detail',
-                array(
+                [
                     'instance_name' => $instance->name,
                     'body' => $this->getDetails($instance)
-                )
+                ]
             );
         }
     }
@@ -55,19 +55,22 @@ OUT;
     private function hasValidBackup($instance)
     {
         $archives = $instance->getArchives();
-        if (count($archives) == 0)
+        if (count($archives) == 0) {
             return false;
+        }
 
         // Last backup within 24 hours
-        if (time() - filemtime($archives[0]) > 24*3600)
+        if (time() - filemtime($archives[0]) > 24*3600) {
             return false;
+        }
 
         $backups = array_map('filesize', $archives);
         $average = array_sum($backups) / count($backups);
 
         // Last backup not below 90% of the average
-        if ($backups[0] < 0.9 * $average)
+        if ($backups[0] < 0.9 * $average) {
             return false;
+        }
 
         return true;
     }
@@ -82,9 +85,10 @@ OUT;
 
     private function humanReadableSize($value, $init = 0)
     {
-        $unit = array('K', 'M','G','T','P');
-        for ($i = 0; $init > $i; ++$i)
+        $unit = ['K', 'M','G','T','P'];
+        for ($i = 0; $init > $i; ++$i) {
             array_shift($unit);
+        }
 
         $used = '';
         while ($value >= 1000 && count($unit) > 0) {
@@ -153,9 +157,10 @@ DET;
 
         $span = $high - $low;
 
-        $percs = array();
-        foreach ($sizes as $size)
+        $percs = [];
+        foreach ($sizes as $size) {
             $percs[] = ($size - $low) / $span * 100;
+        }
 
         return $percs;
     }

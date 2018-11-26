@@ -85,7 +85,7 @@ class ReportManager
 
     function getReportContent($instance)
     {
-        $result = query(SQL_SELECT_REPORT_CONTENT, array(':id' => $instance->id));
+        $result = query(SQL_SELECT_REPORT_CONTENT, [':id' => $instance->id]);
 
         $records = $result->fetchAll();
         $ids = array_map('reset', $records);
@@ -95,7 +95,7 @@ class ReportManager
 
     function getReportCandidates(Instance $instance)
     {
-        $result = query(SQL_SELECT_REPORT_CANDIDATES, array(':id' => $instance->id));
+        $result = query(SQL_SELECT_REPORT_CANDIDATES, [':id' => $instance->id]);
 
         $records = $result->fetchAll();
         $ids = array_map('reset', $records);
@@ -112,10 +112,11 @@ class ReportManager
      */
     protected function buildInstancesArray($ids)
     {
-        $instances = array();
+        $instances = [];
 
-        foreach ($ids as $id)
+        foreach ($ids as $id) {
             $instances[$id] = Instance::getInstance($id);
+        }
 
         return $instances;
     }
@@ -125,21 +126,27 @@ class ReportManager
         $instance->getApplication()->installProfile('profiles.tiki.org', 'TRIM_Report_Receiver');
         $password = $instance->getBestAccess('scripting')->runPHP(
             dirname(__FILE__) . '/../scripts/tiki/remote_setup_channels.php',
-            array($instance->webroot, $instance->contact)
+            [$instance->webroot, $instance->contact]
         );
         
-        query(SQL_INSERT_REPORT_RECEIVER,
-            array(':id' => $instance->id, ':user' => 'trim_user', ':pass' => $password));
+        query(
+            SQL_INSERT_REPORT_RECEIVER,
+            [':id' => $instance->id, ':user' => 'trim_user', ':pass' => $password]
+        );
     }
 
     function setInstances($receiver, $instances)
     {
-        query(SQL_DELETE_REPORT_CONTENT_BY_RECEIVER,
-            array(':id' => $receiver->id));
+        query(
+            SQL_DELETE_REPORT_CONTENT_BY_RECEIVER,
+            [':id' => $receiver->id]
+        );
 
         foreach ($instances as $instance) {
-            query(SQL_INSERT_REPORT_CONTENT,
-                array(':instance' => $receiver->id, ':id' => $instance->id));
+            query(
+                SQL_INSERT_REPORT_CONTENT,
+                [':instance' => $receiver->id, ':id' => $instance->id]
+            );
         }
     }
 
@@ -160,7 +167,7 @@ class ReportManager
 
     private function getReportSenders()
     {
-        $out = array();
+        $out = [];
         $senders = query(SQL_SELECT_REPORT_SENDERS);
 
         while ($row = $senders->fetch()) {
@@ -176,10 +183,11 @@ class ReportManager
 
     function getReportInstances()
     {
-        $instances = array();
+        $instances = [];
 
-        foreach ($this->getReportSenders() as $row)
+        foreach ($this->getReportSenders() as $row) {
             $instances[$row['instance_id']] = $row['instance'];
+        }
 
         return $instances;
     }
@@ -187,8 +195,10 @@ class ReportManager
     function removeInstances($receiver, $instances)
     {
         foreach ($instances as $instance) {
-            query(SQL_DELETE_REPORT_CONTENT_BY_INSTANCE,
-                array(':id' => $receiver->id, ':inst' => $instance->id));
+            query(
+                SQL_DELETE_REPORT_CONTENT_BY_INSTANCE,
+                [':id' => $receiver->id, ':inst' => $instance->id]
+            );
         }
     }
 }

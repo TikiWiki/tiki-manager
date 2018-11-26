@@ -2,23 +2,24 @@
 
 namespace trim\instance;
 
-class Discovery {
+class Discovery
+{
     protected $access;
     protected $instance;
-    protected $config = array();
+    protected $config = [];
 
-    protected $distroProbes = array(
-        "Arch"    => array("release" => "arch-release",    "regex" => null),
-        "Ubuntu"  => array("release" => "issue",           "regex" => "/^Ubuntu/"),
-        "Debian"  => array("release" => "debian_version",  "regex" => null),
-        "Fedora"  => array("release" => "fedora-release",  "regex" => null),
-        "ClearOS" => array("release" => "clearos-release", "regex" => null),
-        "CentOS"  => array("release" => "centos-release",  "regex" => null),
-        "Mageia"  => array("release" => "mageia-release",  "regex" => null),
-        "Redhat"  => array("release" => "redhat-release",  "regex" => null)
-    );
+    protected $distroProbes = [
+        "Arch"    => ["release" => "arch-release",    "regex" => null],
+        "Ubuntu"  => ["release" => "issue",           "regex" => "/^Ubuntu/"],
+        "Debian"  => ["release" => "debian_version",  "regex" => null],
+        "Fedora"  => ["release" => "fedora-release",  "regex" => null],
+        "ClearOS" => ["release" => "clearos-release", "regex" => null],
+        "CentOS"  => ["release" => "centos-release",  "regex" => null],
+        "Mageia"  => ["release" => "mageia-release",  "regex" => null],
+        "Redhat"  => ["release" => "redhat-release",  "regex" => null]
+    ];
 
-    public function __construct($instance, $access=null)
+    public function __construct($instance, $access = null)
     {
         $this->setInstance($instance);
         $this->setAccess($access);
@@ -30,15 +31,15 @@ class Discovery {
         $user = $this->getConf('user') ?: $this->detectUser();
         $distro = $this->getConf('distro') ?: $this->detectDistro();
 
-        if($os === 'WINDOWS') {
-            return array('Administrator', 'Administrator', 0750);
+        if ($os === 'WINDOWS') {
+            return ['Administrator', 'Administrator', 0750];
         }
 
-        if($distro === 'ClearOS') {
-            return array($user, 'allusers', 0750);
+        if ($distro === 'ClearOS') {
+            return [$user, 'allusers', 0750];
         }
 
-        return array($user, $user, 0750);
+        return [$user, $user, 0750];
     }
 
     public function detectDistro()
@@ -51,7 +52,7 @@ class Discovery {
             if (isset($this->distroProbes[$found])) {
                 $distro = $found;
             }
-        } 
+        }
 
         // attempt 2: check by files we know
         if (empty($distro)) {
@@ -59,7 +60,7 @@ class Discovery {
         }
 
         // fallback: when found but not recognized on attempt 1 and failed on attempt 2
-        if(empty($distro) && $found) {
+        if (empty($distro) && $found) {
             $distro = $found;
         }
 
@@ -70,7 +71,7 @@ class Discovery {
     public function detectDistroByProbing()
     {
         $access = $this->getAccess();
-        foreach($this->distroProbes as $name => $probe) {
+        foreach ($this->distroProbes as $name => $probe) {
             $filename = '/etc/' . $probe['release'];
             $regex = $probe['regex'];
             $content = $access->fileGetContents($filename);
@@ -102,7 +103,7 @@ class Discovery {
     public function detectOS()
     {
         $access = $this->getAccess();
-        $command = $access->createCommand('php', array('-r', 'echo PHP_OS;'));
+        $command = $access->createCommand('php', ['-r', 'echo PHP_OS;']);
         $command->run();
 
         $out = null;
@@ -123,7 +124,7 @@ class Discovery {
         );
     }
 
-    public function detectPHP($sel=0)
+    public function detectPHP($sel = 0)
     {
         $os = $this->getConf('os') ?: $this->detectOS();
         $distro = $this->getConf('distro') ?: $this->detectDistro();
@@ -131,17 +132,15 @@ class Discovery {
 
         if ($os === 'WINDOWS') {
             $result = $this->detectPHPWindows();
-        }
-        else if ($distro === 'ClearOS') {
+        } elseif ($distro === 'ClearOS') {
             $result = $this->detectPHPClearOS();
         } else {
             $result = $this->detectPHPLinux();
         }
 
-        if($sel === null) {
+        if ($sel === null) {
             return $result;
-        }
-        else if(empty($result) || !isset($result[$sel])) {
+        } elseif (empty($result) || !isset($result[$sel])) {
             return null;
         }
         $this->config['phpexec'] = $result[$sel];
@@ -154,7 +153,7 @@ class Discovery {
         $command = $access->createCommand('locate', ['-r', 'bin/php$']);
         $command->run();
 
-        $result = array();
+        $result = [];
         if ($command->getReturn() === 0) {
             $out = $command->getStdout();
             $line = fgets($out);
@@ -177,7 +176,7 @@ class Discovery {
         $webroot = $this->getConf('webroot') ?: $this->detectWebroot();
         $access = $this->getAccess();
 
-        $command = $access->createCommand('test', array('-d', $webroot));
+        $command = $access->createCommand('test', ['-d', $webroot]);
         $command->run();
 
         if ($command->getReturn() !== 0) {
@@ -190,8 +189,8 @@ class Discovery {
 
         if ($command->getReturn() === 0) {
             $out = $command->getStdout();
-            $line = trim( fgets($out) );
-            return empty($line) ? array() : array($line);
+            $line = trim(fgets($out));
+            return empty($line) ? [] : [$line];
         }
 
         throw new ConfigException(
@@ -203,14 +202,14 @@ class Discovery {
     public function detectPHPWindows()
     {
         $access = $this->getAccess();
-        $command = $access->createCommand('where', array(
+        $command = $access->createCommand('where', [
             '$path:php.exe',
             '$path:php5.exe',
             '$path:php7.exe',
-        ));
+        ]);
         $command->run();
 
-        $result = array();
+        $result = [];
         if ($command->getReturn() === 0) {
             $out = $command->getStdout();
             $line = fgets($out);
@@ -288,7 +287,7 @@ class Discovery {
             .     ': ""'
             . ');';
 
-        $command = $access->createCommand('php', array(), $script);
+        $command = $access->createCommand('php', [], $script);
         $command->run();
 
         $out = null;
@@ -312,20 +311,20 @@ class Discovery {
         $distro = $this->getConf('distro') ?: $this->detectDistro();
         $user = $this->getConf('user') ?: $this->detectUser();
 
-        $folder = array(
+        $folder = [
             'base' => '/var/www/html',
             'target' => '/var/www/html/' . $instance->name
-        );
+        ];
 
-        if($distro === 'ClearOS') {
-            $folder = array(
+        if ($distro === 'ClearOS') {
+            $folder = [
                 'base' => '/var/www/virtual',
                 'target' => '/var/www/virtual/' . $instance->name . '/html'
-            );
+            ];
         }
 
         $canWrite = (
-            $access->createCommand('test', array(
+            $access->createCommand('test', [
                     '-d', $folder['target'],
                     '-a',
                     '-w', $folder['target'],
@@ -333,7 +332,7 @@ class Discovery {
                     '-d', $folder['base'],
                     '-a',
                     '-w', $folder['base']
-                ))->run()->getReturn() === 0
+                ])->run()->getReturn() === 0
         );
 
         if ($canWrite) {
@@ -346,10 +345,10 @@ class Discovery {
     public function detectWeburl()
     {
         $instance = $this->instance;
-        if(!empty($instance->name)) {
+        if (!empty($instance->name)) {
             return "https://{$instance->name}";
         }
-        if(!empty($access->host)) {
+        if (!empty($access->host)) {
             return "https://{$access->host}";
         }
         return "http://localhost";
@@ -358,13 +357,13 @@ class Discovery {
     public function detectName()
     {
         $instance = $this->instance;
-        if(!empty($instance->weburl)) {
+        if (!empty($instance->weburl)) {
             $url = parse_url($instance->weburl);
-            if(isset($url['host'])) {
+            if (isset($url['host'])) {
                 return $url['host'];
             }
         }
-        if(!empty($access->host)) {
+        if (!empty($access->host)) {
             $name = preg_replace('/[^\w]+/', '-', $access->host);
             return $name;
         }
@@ -377,7 +376,7 @@ class Discovery {
             return $this->config;
         }
 
-        if(isset($this->config[$name])) {
+        if (isset($this->config[$name])) {
             return $this->config[$name];
         }
     }

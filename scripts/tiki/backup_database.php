@@ -4,8 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
-if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET')
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
     $_SERVER['argv'] = $_GET;
+}
 
 $root = $_SERVER['argv'][1];
 $outputFile = $_SERVER['argv'][2];
@@ -18,11 +19,13 @@ if (!file_exists($db_config)) {
 
 include "{$db_config}";
 
-$args = array();
-if ($user_tiki)
+$args = [];
+if ($user_tiki) {
     $args[] = '-u' . escapeshellarg($user_tiki);
-if ($pass_tiki)
+}
+if ($pass_tiki) {
     $args[] = '-p' . escapeshellarg($pass_tiki);
+}
 
 if ($host_tiki) {
     $parts = explode(';', $host_tiki);

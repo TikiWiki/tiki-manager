@@ -9,23 +9,23 @@ class RC_SVN
     private $access;
     private $repository;
     private $svn_command = 'svn';
-    private $svn_global_args = array(
+    private $svn_global_args = [
         '--non-interactive',
-    );
+    ];
 
-    private $svn_default_args = array(
-        'info' => array(
+    private $svn_default_args = [
+        'info' => [
             '--xml'
-        ),
-        'update' => array(
+        ],
+        'update' => [
             '--accept theirs-full',
             '--force',
-        ),
-        'upgrade' => array(
+        ],
+        'upgrade' => [
             '--force',
             '--accept theirs-full',
-        )
-    );
+        ]
+    ];
 
     function __construct($repository, $access)
     {
@@ -35,7 +35,7 @@ class RC_SVN
 
     private function execute($subcommand, $args)
     {
-        $command = array($this->svn_command);
+        $command = [$this->svn_command];
         $command = array_merge($command, $this->svn_global_args);
         $command[] = $subcommand;
 
@@ -57,11 +57,11 @@ class RC_SVN
 
     public function getDefaultArgs($subcommand)
     {
-        if(!empty($this->svn_default_args[$subcommand])) {
+        if (!empty($this->svn_default_args[$subcommand])) {
             $result = $this->svn_default_args[$subcommand];
             return $result;
         }
-        return array();
+        return [];
     }
 
     public function getRepositoryBranch($path)
@@ -75,25 +75,24 @@ class RC_SVN
         return $branch_name;
     }
 
-    public function isUpgrade($current, $branch) {
+    public function isUpgrade($current, $branch)
+    {
         $branch = $this->getBranchUrl($branch);
         $is_upgrade = $current !== $branch;
         return $is_upgrade;
     }
 
-    public function merge($path, $branch, $args=array())
+    public function merge($path, $branch, $args = [])
     {
-        if(empty($args)) {
+        if (empty($args)) {
             $args = $this->getDefaultArgs('merge');
         }
 
         if (preg_match('/^(\w+):(\w+)$/', $branch)) {
             $args[] = "--revision {$branch}";
-        }
-        else if (is_numeric($branch)) {
+        } elseif (is_numeric($branch)) {
             $args[] = "--change {$branch}";
-        }
-        else {
+        } else {
             $branch = $this->getBranchUrl($branch);
         }
 
@@ -102,9 +101,9 @@ class RC_SVN
         return $result;
     }
 
-    public function update($path, $args=array())
+    public function update($path, $args = [])
     {
-        if(empty($args)) {
+        if (empty($args)) {
             $args = $this->getDefaultArgs('update');
         }
         $args[] = $path;
@@ -114,7 +113,7 @@ class RC_SVN
 
     public function revert($path, $args)
     {
-        if(empty($args)) {
+        if (empty($args)) {
             $args = $this->getDefaultArgs('revert');
         }
         $args[] = $path;
@@ -122,10 +121,10 @@ class RC_SVN
         return $result;
     }
 
-    public function svnSwitch($path, $branch, $args=array())
+    public function svnSwitch($path, $branch, $args = [])
     {
         $branch = $this->getBranchUrl($branch);
-        if(empty($args)) {
+        if (empty($args)) {
             $args = $this->getDefaultArgs('switch');
         }
         $args[] = $branch;
@@ -134,21 +133,21 @@ class RC_SVN
         return $result;
     }
 
-    public function upgrade($path, $branch, $args=array())
+    public function upgrade($path, $branch, $args = [])
     {
-        if(empty($args)) {
+        if (empty($args)) {
             $args = $this->getDefaultArgs('upgrade');
         }
-        $result = $this->revert($path, array(
+        $result = $this->revert($path, [
             '--recursive'
-        ));
+        ]);
         $result = $this->svnSwitch($path, $branch, $args);
         return $result;
     }
 
-    public function cleanup($path, $args=array())
+    public function cleanup($path, $args = [])
     {
-        if(empty($args)) {
+        if (empty($args)) {
             $args = $this->getDefaultArgs('cleanup');
         }
         $args[] = $path;
@@ -167,30 +166,30 @@ class RC_SVN
             return false;
         }
 
-        $conflicts = $this->merge($path, 'BASE:HEAD', array(
+        $conflicts = $this->merge($path, 'BASE:HEAD', [
             '--accept theirs-full',
             '--allow-mixed-revisions',
             '--dry-run',
-        ));
+        ]);
 
         if (strlen(trim($conflicts)) > 0 &&
             preg_match('/conflicts:/i', $conflicts)) {
-
             echo "SVN MERGE: $conflicts\n";
 
             if ('yes' == strtolower(promptUser(
                 'It seems there are some conflicts. Type "yes" to exit and solve manually or "no" to discard changes. Exit?',
                 INTERACTIVE ? 'yes' : 'no',
-                array('yes', 'no') )))
+                ['yes', 'no']
+            ))) {
                 exit;
+            }
         }
 
 
-        if($this->isUpgrade($url, $branch)) {
+        if ($this->isUpgrade($url, $branch)) {
             info("Upgrading to '{$branch}'");
             $this->upgrade($path, $branch);
-        }
-        else {
+        } else {
             info("Updating '{$branch}'");
             $this->update($path);
         }
@@ -198,9 +197,9 @@ class RC_SVN
         $this->cleanup($path);
     }
 
-    public function info($path, $args=array())
+    public function info($path, $args = [])
     {
-        if(empty($args)) {
+        if (empty($args)) {
             $args = $this->getDefaultArgs('info');
         }
         $args[] = $path;
@@ -209,12 +208,12 @@ class RC_SVN
         $xml = simplexml_load_string($xml);
 
         $cur_node = $xml->entry;
-        $result = array();
-        $stack = array(
-            array($cur_node, &$result)
-        );  
+        $result = [];
+        $stack = [
+            [$cur_node, &$result]
+        ];
 
-        while(!empty($stack)) {
+        while (!empty($stack)) {
             $stack_item = array_pop($stack);
             $cur_node = $stack_item[0];
             $output = &$stack_item[1];
@@ -227,17 +226,16 @@ class RC_SVN
                 $value = is_numeric($value) ? float($value) : $value;
                 $output[ $node_name ] = $value;
                 continue;
-            }
-            else {
-                $output[ $node_name ] = array();
+            } else {
+                $output[ $node_name ] = [];
 
                 foreach ($node_children as $node_child) {
-                    $stack[] = array($node_child, &$output[ $node_name ]);
+                    $stack[] = [$node_child, &$output[ $node_name ]];
                 }
             }
         }
 
-        $result = !empty($result['entry']) ? $result['entry'] : array();
+        $result = !empty($result['entry']) ? $result['entry'] : [];
         return $result;
     }
 }

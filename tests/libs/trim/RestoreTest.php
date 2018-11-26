@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
 
-
 class RestoreTest extends TestCase
 {
     public function getBackupPath()

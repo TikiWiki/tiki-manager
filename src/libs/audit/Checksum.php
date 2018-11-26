@@ -1,6 +1,7 @@
 <?php
 
-class Audit_Checksum {
+class Audit_Checksum
+{
     const SQL_SELECT_FILE_MAP =
         "SELECT
             path, hash
@@ -64,15 +65,15 @@ class Audit_Checksum {
 
     public static function hasChecksums($version_id)
     {
-        $args = array(':id' => $version_id);
+        $args = [':id' => $version_id];
         $result = query(self::SQL_SELECT_FILE_COUNT_BY_VERSION, $args);
         return ($result->fetchColumn() > 0);
     }
 
     public static function getChecksums($version_id)
     {
-        $map = array();
-        $result = query(self::SQL_SELECT_FILE_MAP, array(':v' => $version_id));
+        $map = [];
+        $result = query(self::SQL_SELECT_FILE_MAP, [':v' => $version_id]);
 
         while ($row = $result->fetch()) {
             extract($row);
@@ -81,14 +82,14 @@ class Audit_Checksum {
         return $map;
     }
 
-    public static function checksumFolder($folder, $callback=null)
+    public static function checksumFolder($folder, $callback = null)
     {
-        $result = array();
+        $result = [];
 
-        if(!is_callable($callback)) {
-            $callback = function($hash, $filename) use (&$result) {
-                $result[] = array($hash, $filename);
-                return array($hash, $filename);
+        if (!is_callable($callback)) {
+            $callback = function ($hash, $filename) use (&$result) {
+                $result[] = [$hash, $filename];
+                return [$hash, $filename];
             };
         }
 
@@ -98,7 +99,7 @@ class Audit_Checksum {
             RecursiveIteratorIterator::SELF_FIRST
         );
 
-        foreach($objiterator as $name => $object) {
+        foreach ($objiterator as $name => $object) {
             if (preg_match(self::CHECKSUM_IGNORE_PATTERN, $name)) {
                 continue;
             }
@@ -110,7 +111,8 @@ class Audit_Checksum {
         return $result;
     }
 
-    public static function checksumLocalFolder($folder) {
+    public static function checksumLocalFolder($folder)
+    {
         $current = getcwd();
         chdir($folder);
         $result = self::checksumFolder('.');
@@ -118,11 +120,12 @@ class Audit_Checksum {
         return $result;
     }
 
-    public static function checksumRemoteFolder($folder, $access) {
-        $result = $access->runPHP(__FILE__, array($folder));
+    public static function checksumRemoteFolder($folder, $access)
+    {
+        $result = $access->runPHP(__FILE__, [$folder]);
         $result = trim($result);
-        $result = empty($result) ? array() : explode("\n", $result);
-        $result = array_map(function($line){
+        $result = empty($result) ? [] : explode("\n", $result);
+        $result = array_map(function ($line) {
             return explode(':', $line);
         }, $result);
 
@@ -139,15 +142,15 @@ class Audit_Checksum {
 
     public static function addFile($version_id, $hash, $filename)
     {
-        $args = array(
+        $args = [
             ':version' => $version_id,
             ':path' => $filename,
             ':hash' => $hash
-        );
+        ];
         return query(self::SQL_INSERT_FILE, $args);
     }
 
-    public static function addFiles($version_id, $hashFiles=array())
+    public static function addFiles($version_id, $hashFiles = [])
     {
         query('BEGIN TRANSACTION');
         foreach ($hashFiles as $hashFile) {
@@ -159,7 +162,7 @@ class Audit_Checksum {
 
     public static function removeFile($version_id, $filename)
     {
-        $args = array(':v' => $version_id, ':p' => $filename);
+        $args = [':v' => $version_id, ':p' => $filename];
         return query(self::SQL_DELETE_FILE, $args);
     }
 
@@ -179,13 +182,13 @@ class Audit_Checksum {
         return query('COMMIT');
     }
 
-    public static function validate($version_id, $current_checksums=array())
+    public static function validate($version_id, $current_checksums = [])
     {
 
-        $newFiles = array();
-        $modifiedFiles = array();
-        $missingFiles = array();
-        $pristineFiles = array();
+        $newFiles = [];
+        $modifiedFiles = [];
+        $missingFiles = [];
+        $pristineFiles = [];
 
         $known = self::getChecksums($version_id);
 
@@ -194,27 +197,26 @@ class Audit_Checksum {
 
             if (! isset($known[$filename])) {
                 $newFiles[$filename] = $hash;
-            }
-            else {
-                if ($known[$filename] != $hash){
+            } else {
+                if ($known[$filename] != $hash) {
                     $modifiedFiles[$filename] = $hash;
-                }
-                else {
+                } else {
                     $pristineFiles[$filename] = $hash;
                 }
                 unset($known[$filename]);
             }
         }
 
-        foreach ($known as $filename => $hash)
+        foreach ($known as $filename => $hash) {
             $missingFiles[$filename] = $hash;
+        }
 
-        return array(
+        return [
             'new' => $newFiles,
             'mod' => $modifiedFiles,
             'del' => $missingFiles,
             'pri' => $pristineFiles,
-        );
+        ];
     }
 
     public static function saveChecksums($version_id, $entries)
@@ -222,7 +224,9 @@ class Audit_Checksum {
         query('BEGIN TRANSACTION');
 
         foreach ($entries as $parts) {
-            if (count($parts) != 2) continue;
+            if (count($parts) != 2) {
+                continue;
+            }
             list($hash, $file) = $parts;
             self::addFile($version_id, $hash, $file);
         }
@@ -238,16 +242,19 @@ class Audit_Checksum {
 if (realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
     call_user_func(function () {
         $cur = getcwd();
-        if (array_key_exists('REQUEST_METHOD', $_SERVER))
+        if (array_key_exists('REQUEST_METHOD', $_SERVER)) {
             $next = $_GET[1];
-
-        elseif (count($_SERVER['argv']) > 1)
+        } elseif (count($_SERVER['argv']) > 1) {
             $next = $_SERVER['argv'][1];
+        }
 
-        if (isset($next) && file_exists($next))
+        if (isset($next) && file_exists($next)) {
             chdir($next);
+        }
 
-        $callback = function($md5, $filename){ printf("%s:%s\n", $md5, $filename); };
+        $callback = function ($md5, $filename) {
+            printf("%s:%s\n", $md5, $filename);
+        };
         Audit_Checksum::checksumFolder('.', $callback);
         chdir($cur);
     });

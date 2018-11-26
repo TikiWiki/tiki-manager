@@ -1,7 +1,6 @@
 <?php
 
-if( $_SERVER['REQUEST_METHOD'] == 'POST' )
-{
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $type = $name = $contact = $webroot = $weburl = $tempdir = '';
 
     $type = $_POST['type'];
@@ -37,8 +36,8 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     $access->save();
     $instance->detectPHP();
 
-    header( "Location: " . url( "list" ) );
-	exit;
+    header("Location: " . url("list"));
+    exit;
 }
 
 ?>
@@ -63,29 +62,29 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
     $backup_user = $access->user;
     $backup_perm = 0770;
 
-    switch ($discovery->detectDistro()) {
+switch ($discovery->detectDistro()) {
     case "ClearOS":
         $backup_group = 'apache';
         $webroot = ($access->user == 'root' || $access->user == 'apache') ?
             "/var/www/virtual/{$access->host}/html/" : "/home/{$access->user}/public_html/";
         break;
     case "Windows":
-	    $backup_user = $backup_group = "Administrator";
-	    $webroot = 'C:\\www\\';
-	    break;
+        $backup_user = $backup_group = "Administrator";
+        $webroot = 'C:\\www\\';
+        break;
     default:
         $backup_group = @posix_getgrgid(posix_getegid())['name'];
         $webroot = ($access->user == 'root' || $access->user == 'apache') ?
             '/var/www/html/' : "/home/{$access->user}/public_html/";
-    }
+}
 ?>
 
 <div class="container">
-	<div class="trim-instance-new center">
-		<h1><?php echo TITLE; ?></h1>
-		<h2><?php echo $page_title; ?></h2>
+    <div class="trim-instance-new center">
+        <h1><?php echo TITLE; ?></h1>
+        <h2><?php echo $page_title; ?></h2>
 
-		<form method="post" action="<?php echo html( $_SERVER['REQUEST_URI'] ) ?>">
+        <form method="post" action="<?php echo html($_SERVER['REQUEST_URI']) ?>">
             <fieldset>
                 <div class="form-group">
                     <table class="table table-bordered">
@@ -139,14 +138,14 @@ if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 
                 <div class="form-group">
                     <p>
-                        <a href="<?php echo html( url( "" ) ) ?>" class="cancel btn btn-secondary"><span class="fa fa-angle-double-left"></span> Cancel</a>
+                        <a href="<?php echo html(url("")) ?>" class="cancel btn btn-secondary"><span class="fa fa-angle-double-left"></span> Cancel</a>
                         <button type="submit" class="save btn btn-primary">Save</button>
                     </p>
                 </div>
             </fieldset>
-		</form>
+        </form>
 
-	</div>
+    </div>
 </div>
 
 <?php require dirname(__FILE__) . "/layout/footer.php"; ?>

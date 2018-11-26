@@ -15,21 +15,23 @@ abstract class Application
 
     public static function getApplications(Instance $instance)
     {
-        $objects = array();
+        $objects = [];
 
         $dir = dirname(__FILE__) . "/appinfo";
         $files = scandir($dir);
 
-        $apps = array();
+        $apps = [];
         foreach ($files as $file) {
-            if (preg_match('/^(\w+)\.php$/', $file, $matches))
+            if (preg_match('/^(\w+)\.php$/', $file, $matches)) {
                 $apps[] = $matches[1];
+            }
         }
 
         foreach ($apps as $name) {
             $classname = 'Application_' . ucfirst($name);
-            if (! class_exists($classname))
+            if (! class_exists($classname)) {
                 require "$dir/$name.php";
+            }
 
             $objects[] = new $classname($instance);
         }
@@ -88,8 +90,7 @@ abstract class Application
             $new->branch = $current->branch;
             $new->date = date('Y-m-d');
             $new->save();
-        }
-        else {
+        } else {
             // Provided version, copy properties
             $new = $instance->createVersion();
             $new->type = $version->type;
@@ -99,7 +100,7 @@ abstract class Application
         }
         info('Checking old instance checksums.');
         $oldPristine = $current->performCheck($instance);
-        $oldPristine = $oldPristine['pri'] ?: array();
+        $oldPristine = $oldPristine['pri'] ?: [];
 
         info('Obtaining checksum from source.');
         $new->collectChecksumFromSource($instance);
@@ -108,20 +109,20 @@ abstract class Application
         info('Checking new instance checksums.');
         $newDiff = $new->performCheck($instance);
 
-        $toSave = array();
+        $toSave = [];
         foreach ($newDiff['new'] as $file => $hash) {
             if (isset($oldPristine[$file])) {
-                $toSave[] = array($hash, $file);
+                $toSave[] = [$hash, $file];
                 unset($newDiff['new'][$file]);
             }
         }
         $new->recordFiles($toSave);
 
-        $toSave = array();
+        $toSave = [];
         foreach ($newDiff['mod'] as $file => $hash) {
             // If modified file was in the same state in previous version
             if (isset($oldPristine[$file])) {
-                $toSave[] = array($hash, $file);
+                $toSave[] = [$hash, $file];
                 unset($newDiff['mod'][$file]);
             }
         }
@@ -130,11 +131,11 @@ abstract class Application
         // Consider all missing files as conflicts
         $newDel = $newDiff['del'];
 
-        return array(
+        return [
             'new' => $newDiff['new'],
             'mod' => $newDiff['mod'],
             'del' => $newDel,
-        );
+        ];
     }
 
     function performUpgrade(Instance $instance, $version, $abort_on_conflict = true)
@@ -144,8 +145,9 @@ abstract class Application
 
     function registerCurrentInstallation()
     {
-        if (! $this->isInstalled())
+        if (! $this->isInstalled()) {
             return null;
+        }
 
         $this->instance->app = $this->getName();
         $this->instance->save();

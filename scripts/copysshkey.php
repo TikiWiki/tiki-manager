@@ -7,8 +7,10 @@
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 
 $instances = Instance::getInstances();
-$selection = selectInstances($instances,
-    "Which instances do you want to copy the SSH key?\n");
+$selection = selectInstances(
+    $instances,
+    "Which instances do you want to copy the SSH key?\n"
+);
 
 foreach ($selection as $instance) {
     echo "Copying SSH key to {$instance->name}... " .

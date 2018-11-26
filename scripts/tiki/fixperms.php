@@ -9,16 +9,19 @@ include_once dirname(__FILE__) . '/../../src/check.php';
 
 $all = Instance::getInstances();
 
-$instances = array();
+$instances = [];
 foreach ($all as $instance) {
-    if ($instance->getApplication() instanceof Application_Tiki)
+    if ($instance->getApplication() instanceof Application_Tiki) {
         $instances[$instance->id] = $instance;
+    }
 }
 
 info("Note: Only Tiki instances can have permissions fixed.\n");
 
-$selection = selectInstances($instances,
-    "Which instances do you want to fix?\n");
+$selection = selectInstances(
+    $instances,
+    "Which instances do you want to fix?\n"
+);
 
 foreach ($selection as $instance) {
     info("Fixing permissions for {$instance->name}");

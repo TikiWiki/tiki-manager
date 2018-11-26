@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
 
-
 class WrapperTest extends TestCase
 {
     public function testWrapperPassProperties()
@@ -22,9 +21,9 @@ class WrapperTest extends TestCase
         $object->name = 'Property name';
         $object->other = 'Another property';
 
-        $props = array(
+        $props = [
             'other' => 'foo'
-        );
+        ];
 
         $wrapper = new Wrapper($object, $props);
 
@@ -54,7 +53,7 @@ class WrapperTest extends TestCase
         $this->assertTrue(isset($wrapper->{'name'}));
         $this->assertFalse(isset($wrapper->{'other'}));
 
-        $props = array('other' => 'foo');
+        $props = ['other' => 'foo'];
         $wrapper = new Wrapper($object, $props);
         $this->assertTrue(isset($wrapper->{'name'}));
         $this->assertTrue(isset($wrapper->{'other'}));
@@ -65,7 +64,7 @@ class WrapperTest extends TestCase
         $object = new stdClass();
         $object->name = 'Property name';
 
-        $props = array('other' => 'foo');
+        $props = ['other' => 'foo'];
         $wrapper = new Wrapper($object, $props);
         $this->assertTrue(isset($wrapper->{'name'}));
         $this->assertTrue(isset($wrapper->{'other'}));
@@ -77,7 +76,6 @@ class WrapperTest extends TestCase
         unset($wrapper->name);
         $this->assertFalse(isset($wrapper->{'name'}));
         $this->assertFalse(isset($wrapper->{'other'}));
-
     }
 
     public function testWrapperPassMethodCalls()
@@ -95,11 +93,13 @@ class WrapperTest extends TestCase
     {
         $command = new Host_Command('cat', '-n', 'Hello World');
 
-        $methods = array(
-            'getCommand' => function() { return 'Hello World'; }
-        );
+        $methods = [
+            'getCommand' => function () {
+                return 'Hello World';
+            }
+        ];
 
-        $wrapper = new Wrapper($command, array(), $methods);
+        $wrapper = new Wrapper($command, [], $methods);
         $result = $wrapper->getCommand();
 
         $this->assertEquals('Hello World', $result);

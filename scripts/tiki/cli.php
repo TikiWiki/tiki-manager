@@ -8,7 +8,7 @@ include_once dirname(__FILE__) . '/../../src/check.php';
 
 $all = Instance::getInstances();
 
-$instances = array();
+$instances = [];
 foreach ($all as $instance) {
     if ($instance->getApplication() instanceof Application_Tiki) {
         $instances[$instance->id] = $instance;

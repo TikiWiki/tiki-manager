@@ -9,14 +9,15 @@ include_once dirname(__FILE__) . '/../src/dbsetup.php';
 
 define('ARG_SWITCH', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'switch');
 
-$all = array();
-$instances = array();
+$all = [];
+$instances = [];
 $raw = Instance::getInstances();
 foreach ($raw as $instance) {
     $all[$instance->id] = $instance;
 
-    if (! $instance->getApplication())
+    if (! $instance->getApplication()) {
         $instances[$instance->id] = $instance;
+    }
 }
 
 warning("\nNOTE: It is only possible to restore a backup on a blank install.");
@@ -38,13 +39,14 @@ foreach ($selection as $instance) {
     if (! $single = reset(getEntries($restorable, $single))) {
         warning('No instance selected.');
         continue;
-    } 
+    }
 
     echo "Which backup do you want to restore?\n";
 
     $files = $single->getArchives();
-    foreach ($files as $key => $path)
+    foreach ($files as $key => $path) {
         echo "[$key] " . basename($path). "\n";
+    }
 
     $file = promptUser('>>> ');
     if (! $file = reset(getEntries($files, $file))) {

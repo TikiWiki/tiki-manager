@@ -1,6 +1,7 @@
 <?php
 
-class SSH_Host_Wrapper_Adapter {
+class SSH_Host_Wrapper_Adapter
+{
     private $host;
     private $user;
     private $port;
@@ -12,11 +13,12 @@ class SSH_Host_Wrapper_Adapter {
         $this->host = $host;
         $this->user = $user;
         $this->port = $port ?: 22;
-        $this->env  = $_ENV ?: array();
+        $this->env  = $_ENV ?: [];
         $this->location = '';
     }
     
-    private function getCommandPrefix($options=array()) {
+    private function getCommandPrefix($options = [])
+    {
         $options['-i'] = !empty($options['pubkey']) ? $options['pubkey'] : SSH_KEY;
         $options['-F'] = !empty($options['config']) ? $options['config'] : SSH_CONFIG;
         $options['-p'] = !empty($options['port']) ? $options['port'] : $this->port;
@@ -59,7 +61,8 @@ class SSH_Host_Wrapper_Adapter {
         return $this->location;
     }
 
-    private function prepareEnv($env=null) {
+    private function prepareEnv($env = null)
+    {
         $line = '';
         $env = $env ?: $this->env;
         if (!is_array($env) || empty($env)) {
@@ -75,8 +78,8 @@ class SSH_Host_Wrapper_Adapter {
 
     public function receiveFile($remoteFile, $localFile)
     {
-        $localFile = escapeshellarg( $localFile );
-        $remoteFile = escapeshellarg( $remoteFile );
+        $localFile = escapeshellarg($localFile);
+        $remoteFile = escapeshellarg($remoteFile);
         $key = SSH_KEY;
         $port = null;
         if ($this->port != 22) {
@@ -85,18 +88,18 @@ class SSH_Host_Wrapper_Adapter {
         return `scp -i $key $port {$this->user}@{$this->host}:$remoteFile $localFile`;
     }
 
-    public function runCommand($command, $options=array())
+    public function runCommand($command, $options = [])
     {
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
         $env = !empty($options['env']) ? $options['env'] : $this->env;
 
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-            3 => array("pipe", "w")
-        );
+        $pipes = [];
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+            3 => ["pipe", "w"]
+        ];
 
         $cwd = !empty($cwd) ? sprintf('cd %s;', $cwd) : '';
         $env = $this->prepareEnv($env);
@@ -132,27 +135,31 @@ class SSH_Host_Wrapper_Adapter {
         return $command;
     }
 
-    public function runCommands($commands, $output=false)
+    public function runCommands($commands, $output = false)
     {
         $key = SSH_KEY;
         $config = SSH_CONFIG;
 
-        if ($this->location)
+        if ($this->location) {
             array_unshift($commands, 'cd ' . escapeshellarg($this->location));
+        }
 
-        foreach ($this->env as $name => $value)
+        foreach ($this->env as $name => $value) {
             array_unshift($commands, "export $name=$value");
+        }
 
         $string = implode(' && ', $commands);
         $fullcommand = escapeshellarg($string);
 
         $port = null;
-        if ($this->port != 22) $port = " -p {$this->port} ";
+        if ($this->port != 22) {
+            $port = " -p {$this->port} ";
+        }
 
         $command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand";
         $command .= ($output ? '' : ' 2>> /tmp/trim.output');
 
-        $output = array();
+        $output = [];
         exec($command, $output);
 
         $output = implode("\n", $output);
@@ -166,10 +173,12 @@ class SSH_Host_Wrapper_Adapter {
 
         $key = SSH_KEY;
         $port = null;
-        if ($this->port != 22) $port = " -P {$this->port} ";
+        if ($this->port != 22) {
+            $port = " -P {$this->port} ";
+        }
         `scp -i $key $port $localFile {$this->user}@{$this->host}:$remoteFile`;
 
-        $this->runCommands(array("chmod 0644 $remoteFile"));
+        $this->runCommands(["chmod 0644 $remoteFile"]);
     }
 
     public function setHost($host)
@@ -189,7 +198,7 @@ class SSH_Host_Wrapper_Adapter {
 
     public function setEnv($env)
     {
-        $this->env = $env ?: array();
+        $this->env = $env ?: [];
     }
 
     public function setLocation($location)

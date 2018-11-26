@@ -20,7 +20,7 @@ class Restore extends Backup
 
         while (!feof($bf)) {
             $char = bzread($bf, 1);
-            if($char === "\0") {
+            if ($char === "\0") {
                 break;
             }
             $content .= $char;
@@ -48,15 +48,15 @@ class Restore extends Backup
         $archivePath = $srcArchive;
         $archiveRoot = $this->getRestoreRoot();
 
-        if($instance->type !== 'local') {
+        if ($instance->type !== 'local') {
             $archivePath = $this->uploadArchive($srcArchive);
         }
 
-        $args = array('-p', $archiveRoot);
+        $args = ['-p', $archiveRoot];
         $command = $access->createCommand('mkdir', $args);
         $command->run();
 
-        if($command->getReturn() !== 0) {
+        if ($command->getReturn() !== 0) {
             throw new RestoreError(
                 "Can't create '$archiveRoot': "
                 . $command->getStderrContent(),
@@ -64,11 +64,11 @@ class Restore extends Backup
             );
         }
 
-        $args = array('-jxp', '-C', $archiveRoot, '-f', $archivePath);
+        $args = ['-jxp', '-C', $archiveRoot, '-f', $archivePath];
         $command = $access->createCommand('tar', $args);
         $command->run();
 
-        if($command->getReturn() !== 0) {
+        if ($command->getReturn() !== 0) {
             throw new RestoreError(
                 "Can't extract '$archivePath' to '$archiveRoot': "
                 . $command->getStderrContent(),
@@ -92,7 +92,7 @@ class Restore extends Backup
         $manifest = array_map('trim', $manifest);
         $manifest = array_filter($manifest, 'strlen');
 
-        $folders = array();
+        $folders = [];
         if (empty($manifest)) {
             throw new RestoreError(
                 "Manifest file is invalid: '{$manifestPath}'",
@@ -103,13 +103,13 @@ class Restore extends Backup
         foreach ($manifest as $line) {
             list($hash, $type, $destination) = explode('    ', $line, 3);
 
-            $source = $archiveFolder 
-                . DIRECTORY_SEPARATOR 
+            $source = $archiveFolder
+                . DIRECTORY_SEPARATOR
                 . $hash
-                . DIRECTORY_SEPARATOR 
+                . DIRECTORY_SEPARATOR
                 . basename($destination);
 
-            if($destination{0} === DIRECTORY_SEPARATOR) {
+            if ($destination{0} === DIRECTORY_SEPARATOR) {
                 warning("manifest.txt shouldn't have absolute paths like '{$destination}'");
                 if ($type === 'app') {
                     $destination = '';
@@ -122,21 +122,20 @@ class Restore extends Backup
             $destination = $webroot . DIRECTORY_SEPARATOR . $destination;
             $destination = get_absolute_path($destination);
 
-            $folders[] = array(
+            $folders[] = [
                 $type,
                 $source,
                 $destination
-            );
+            ];
         }
         return $folders;
     }
 
-    public function restoreFiles($srcContent=null)
+    public function restoreFiles($srcContent = null)
     {
         if (is_dir($srcContent)) {
             $this->restoreFilesFromFolder($srcContent);
-        }
-        else if(is_file($srcContent)) {
+        } elseif (is_file($srcContent)) {
             $this->restoreFilesFromArchive($srcContent);
         }
     }
@@ -166,14 +165,14 @@ class Restore extends Backup
         $src = rtrim($src, '/');
         $target = rtrim($target, '/');
 
-        if(empty($src) || empty($target)) {
+        if (empty($src) || empty($target)) {
             throw new RestoreError(
                 "Invalid paths:\n \$src='$src';\n \$target='$target';",
                 RestoreError::INVALID_PATHS
             );
         }
 
-        $command = $access->createCommand('mkdir', array('-p', $target));
+        $command = $access->createCommand('mkdir', ['-p', $target]);
         $command->run();
 
         if ($command->getReturn() !== 0) {
@@ -185,14 +184,14 @@ class Restore extends Backup
         }
 
         $command = $access->createCommand('rsync');
-        $command->setArgs(array(
+        $command->setArgs([
             '-a', '--delete',
             '--exclude', '/.htaccess',
             '--exclude', '/maintenance.php',
             '--exclude', '/db/local.php',
-            $src . '/', 
+            $src . '/',
             $target . '/'
-        ));
+        ]);
         $command->run();
 
         if ($command->getReturn() !== 0) {
@@ -203,12 +202,12 @@ class Restore extends Backup
             );
         }
 
-        if($access->fileExists($src . '/.htaccess')) {
+        if ($access->fileExists($src . '/.htaccess')) {
             $command = $access->createCommand('rsync');
-            $command->setArgs(array(
+            $command->setArgs([
                 $src . '/.htaccess',
                 $target . '/.htaccess' . ($instance->isLocked() ? '.bak' : '')
-            ));
+            ]);
             $command->run();
         }
 
@@ -225,7 +224,6 @@ class Restore extends Backup
         $access->uploadFile($srcArchive, $remote);
         return $remote;
     }
-
 }
 
 class RestoreError extends Exception

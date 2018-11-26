@@ -13,7 +13,7 @@ class SSH_Host
 
     private $adapter;
     private $location;
-    private $env = array();
+    private $env = [];
 
     private $host;
     private $user;
@@ -21,7 +21,7 @@ class SSH_Host
 
     private $copy_id_port_in_host;
 
-    function __construct($host, $user, $port, $adapter_class=null)
+    function __construct($host, $user, $port, $adapter_class = null)
     {
         $this->host = $host ?: '';
         $this->user = $user ?: '';
@@ -44,11 +44,12 @@ class SSH_Host
     {
         $this->copy_id_port_in_host = true;
         $ph = popen('ssh-copy-id -h 2>&1', 'r');
-        if (! is_resource($ph))
+        if (! is_resource($ph)) {
             error('Required command (ssh-copy_id) not found.');
-        else {
-            if (preg_match('/p port/', stream_get_contents($ph)))
+        } else {
+            if (preg_match('/p port/', stream_get_contents($ph))) {
                 $this->copy_id_port_in_host = false;
+            }
             pclose($ph);
         }
     }
@@ -67,15 +68,14 @@ class SSH_Host
         if ($this->copy_id_port_in_host) {
             $host = escapeshellarg("-p {$this->port} {$this->user}@{$this->host}");
             `ssh-copy-id -i $file $host`;
-        }
-        else {
+        } else {
             $port = escapeshellarg($this->port);
             $host = escapeshellarg("{$this->user}@{$this->host}");
             `ssh-copy-id -i $file -p $port $host`;
         }
     }
 
-    public function runCommand($command, $options=array())
+    public function runCommand($command, $options = [])
     {
         return $this->adapter->runCommand($command, $options);
     }
@@ -104,21 +104,23 @@ class SSH_Host
     {
         $key = SSH_KEY;
         $port = null;
-        if ($this->port != 22) $port = " -p {$this->port} ";
+        if ($this->port != 22) {
+            $port = " -p {$this->port} ";
+        }
         if (strlen($workingDir) > 0) {
             $command = "ssh $port -i $key {$this->user}@{$this->host} " .
                 "-t 'cd {$workingDir}; pwd; bash --login'";
-        }
-        else
+        } else {
             $command = "ssh $port -i $key {$this->user}@{$this->host}";
+        }
 
         passthru($command);
     }
 
-    public function rsync($args=array())
+    public function rsync($args = [])
     {
         $return_val = -1;
-        if(empty($args['src']) || empty($args['dest'])) {
+        if (empty($args['src']) || empty($args['dest'])) {
             return $return_val;
         }
 
@@ -130,17 +132,18 @@ class SSH_Host
         $port = $this->port ;
 
         $localHost = new Local_Host();
-        $command = new Host_Command('rsync', array(
+        $command = new Host_Command('rsync', [
             '-a', '-L', '--delete',
             '-e', "ssh -p {$port} -i $key",
             $args['src'],
             "{$user}@{$host}:{$args['dest']}"
-        ));
+        ]);
         $localHost->runCommand($command);
         $return_var = $command->getReturn();
 
-        if ($return_var != 0)
+        if ($return_var != 0) {
             info("RSYNC exit code: $return_var");
+        }
 
         return $return_var;
     }
@@ -178,7 +181,7 @@ class SSH_Host
         $host = $this->host;
 
         $localHost = new Local_Host();
-        $command = new Host_Command('ssh', array(
+        $command = new Host_Command('ssh', [
                 '-i',
                 $key,
                 '-o',
@@ -187,8 +190,7 @@ class SSH_Host
                 "PreferredAuthentications publickey",
                 "{$user}@{$host}",
                 "exit"
-            )
-        );
+            ]);
 
         $localHost->runCommand($command);
         $returnVar = $command->getReturn();

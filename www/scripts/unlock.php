@@ -6,11 +6,10 @@ require $authFile;
 require TRIMPATH . '/src/env_setup.php';
 ob_end_clean();
 
-if (isset($_POST['id'])){
-	if ( $instance = Instance::getInstance( (int) $_POST['id'] ) ) {
-		$instance->unlock();
+if (isset($_POST['id'])) {
+    if ($instance = Instance::getInstance((int) $_POST['id'])) {
+        $instance->unlock();
     } else {
-        die( "Unknown instance." );
+        die("Unknown instance.");
     }
 }
-?>

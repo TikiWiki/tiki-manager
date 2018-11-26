@@ -10,7 +10,7 @@ class Channel
     private $user;
     private $pass;
 
-    private $channels = array();
+    private $channels = [];
 
     function __construct($channelHandlerUrl)
     {
@@ -25,7 +25,7 @@ class Channel
 
     function push($channelName, $data)
     {
-        $this->channels[] = array_merge($data, array('channel_name' => $channelName));
+        $this->channels[] = array_merge($data, ['channel_name' => $channelName]);
     }
 
     function process()
@@ -36,17 +36,17 @@ class Channel
             $header .= "Authorization: Basic $encoded\r\n";
         }
 
-        $content = http_build_query(array('channels' => $this->channels ), '', '&');
+        $content = http_build_query(['channels' => $this->channels ], '', '&');
 
         $context = stream_context_create(
-            array(
-                'http' => array(
+            [
+                'http' => [
                     'method' => 'POST',
                     'header' => $header,
                     'content' => $content,
                     'timeout' => 10,
-                ),
-            )
+                ],
+            ]
         );
 
         file_get_contents($this->url, false, $context);

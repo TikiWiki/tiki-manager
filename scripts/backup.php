@@ -19,7 +19,7 @@ if (! isset($_SERVER['argv'][1])) {
         $instances_to_exclude = explode(',', get_cli_option('exclude'));
 
         foreach ($instances as $key => $instance) {
-            if(in_array($instance->id, $instances_to_exclude)) {
+            if (in_array($instance->id, $instances_to_exclude)) {
                 unset($instances[$key]);
             }
         }
