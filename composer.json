@@ -1,19 +1,28 @@
 {
-  "name": "tiki/tiki-trim",
+  "name": "tiki/tiki-manager",
   "description": "Tiki Wiki CMS Groupware",
   "license": "LGPL-2.1",
   "homepage": "https://tiki.org",
   "minimum-stability": "stable",
   "require": {
+    "components/jquery": "^3.3.1",
+    "fortawesome/font-awesome": "^4.7.0",
+    "php": "^7.1",
     "phpseclib/phpseclib": "^2.0",
     "psy/psysh": "@stable",
-    "twitter/bootstrap": "^4.1.1",
-    "fortawesome/font-awesome": "^4.7.0",
-    "components/jquery": "^3.3.1",
-    "symfony/console": "^4.1"
+    "symfony/console": "^4.1",
+    "twitter/bootstrap": "^4.1.1"
   },
   "config": {
     "process-timeout": 5000
+  },
+  "autoload": {
+    "classmap": [
+      "src/"
+    ],
+    "psr-4": {
+      "App\\": "src/"
+    }
   },
   "repositories": [
     {
@@ -26,14 +35,9 @@
     "squizlabs/php_codesniffer": "^3.3"
   },
   "scripts": {
-      "tests": [
-          "find scripts src -name '*.php' -exec php -l {} \\;",
-          "./vendor/bin/phpunit --bootstrap src/env_includes.php tests"
-      ]
-  },
-  "autoload": {
-      "classmap": [
-          "src/"
-      ]
+    "tests": [
+      "find scripts src -name '*.php' -exec php -l {} \\;",
+      "./vendor/bin/phpunit --bootstrap src/env_includes.php tests"
+    ]
   }
 }
