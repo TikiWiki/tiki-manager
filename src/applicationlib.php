@@ -141,6 +141,17 @@ abstract class Application
     function performUpgrade(Instance $instance, $version, $abort_on_conflict = true)
     {
         $this->performActualUpgrade($version, $abort_on_conflict);
+
+        // Create a new version if process did not abort
+        $new = $instance->createVersion();
+        $new->type = $version->type;
+        $new->branch = $version->branch;
+        $new->date = $version->date;
+        $new->save();
+
+        info('Obtaining new checksum from source.');
+        $new->collectChecksumFromSource($instance);
+
     }
 
     function registerCurrentInstallation()

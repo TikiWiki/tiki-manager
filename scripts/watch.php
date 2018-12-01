@@ -33,6 +33,26 @@ foreach ($instances as $instance) {
         continue;
     }
 
+    $versionError = false;
+    $versionRevision = $version->revision;
+    $tikiRevision = $instance->getRevision();
+
+    if (empty($versionRevision)) {
+        $log .= "No revision detected for {$instance->name}\n";
+        $versionError = true;
+    } elseif ($versionRevision != $tikiRevision) {
+        $log .= "Check {$instance->name} version conflict\n";
+        $log .= "Expected revision {$versionRevision}, found revision {$tikiRevision} on instance.\n";
+        $versionError = true;
+    }
+
+    if ($versionError) {
+        $log .= "Fix this error with TRIM by running \"make check\" and choose instance \"{$instance->id}\".";
+        $log .= "\n\n";
+
+        continue;
+    }
+
     if ($version->hasChecksums()) {
         $result = $version->performCheck($instance);
 

@@ -179,6 +179,7 @@ switch ($version) {
             instance_id INTEGER,
             type VARCHAR(10),
             branch VARCHAR(50),
+            revision VARCHAR(25),
             date VARCHAR(25)
         );
 
@@ -248,6 +249,11 @@ switch ($version) {
                 ON CONFLICT REPLACE
         );
         UPDATE info SET value = '5' WHERE name = 'version';
+    ");
+case 5:
+	$db->exec("
+        ALTER TABLE version ADD COLUMN revision VARCHAR(25);
+        UPDATE info SET value = '6' WHERE name = 'version';
     ");
 }
 
