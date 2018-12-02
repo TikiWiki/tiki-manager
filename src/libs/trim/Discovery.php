@@ -147,22 +147,36 @@ class Discovery
         return $this->config['phpexec'];
     }
 
-    public function detectPHPLinux()
+    public function detectPHPLinux($options = null, $searchOrder = null)
     {
-        $access = $this->getAccess();
-        $command = $access->createCommand('locate', ['-r', 'bin/php$']);
-        $command->run();
+        if ($searchOrder === null) {
+            $searchOrder = [
+                ['command', ['-v', 'php']],
+                ['locate', ['-r', 'bin/php$']],
+            ];
+        }
 
-        $result = [];
-        if ($command->getReturn() === 0) {
-            $out = $command->getStdout();
-            $line = fgets($out);
-
-            while ($line !== false) {
-                $result[] = trim($line);
-                $line = fgets($out);
+        foreach ($searchOrder as $commandSearch) {
+            $access = $this->getAccess();
+            $command = $access->createCommand($commandSearch[0], $commandSearch[1]);
+            if (!empty($options) && is_array($options)) {
+                foreach ($options as $o => $v) {
+                    $command->setOption($o, $v);
+                }
             }
-            return $result;
+            $command->run();
+
+            $result = [];
+            if ($command->getReturn() === 0) {
+                $out = $command->getStdout();
+                $line = fgets($out);
+
+                while ($line !== false) {
+                    $result[] = trim($line);
+                    $line = fgets($out);
+                }
+                return $result;
+            }
         }
 
         throw new ConfigException(
@@ -179,24 +193,19 @@ class Discovery
         $command = $access->createCommand('test', ['-d', $webroot]);
         $command->run();
 
-        if ($command->getReturn() !== 0) {
-            return $this->detectPHPLinux();
-        }
-
-        $command = $access->createCommand('php', ['-r', 'echo PHP_BINARY;']);
-        $command->setOption('cwd', $webroot);
-        $command->run();
-
         if ($command->getReturn() === 0) {
-            $out = $command->getStdout();
-            $line = trim(fgets($out));
-            return empty($line) ? [] : [$line];
+            $options = ['cwd' => $webroot];
+        } else {
+            $options = null;
         }
 
-        throw new ConfigException(
-            sprintf("Failed to detect PHP: %s", $out),
-            ConfigException::DETECT_ERROR
-        );
+        $searchOrder = [
+            ['command', ['-v', '/usr/clearos/bin/php']], // preference to use the php wrapper
+            ['command', ['-v', 'php']],
+            ['locate', ['-r', 'bin/php$']],
+        ];
+
+        return $this->detectPHPLinux($options, $searchOrder);
     }
 
     public function detectPHPWindows()
