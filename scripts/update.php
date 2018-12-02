@@ -34,7 +34,16 @@ foreach ($selection as $instance) {
     info("Working on: {$instance->name}");
 
     $locked = $instance->lock();
-    $instance->detectPHP();
+
+    $phpVersion = $instance->detectPHP();
+
+    if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
+        $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
+    }
+
+    info("PHP version: " . $phpVersion);
+    info("PHP exec: " . $instance->phpexec);
+
     $app = $instance->getApplication();
 
     if (!$app->isInstalled()) {
