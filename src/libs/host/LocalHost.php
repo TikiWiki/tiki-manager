@@ -38,6 +38,16 @@ class Local_Host
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
         $env = !empty($options['env']) ? $options['env'] : $this->env;
 
+        if (empty($cwd)) {
+            $cwd = null;
+        }
+
+        if (empty($env)) {
+            $env = null;
+        } else {
+            $env = $this->mergeWithExistingEnvironmentVariables($env);
+        }
+
         $pipes = [];
         $descriptorspec = [
             0 => ["pipe", "r"],
@@ -194,6 +204,38 @@ class Local_Host
 
         debug($output, $prefix = "({$return_var})>>", "\n\n");
         return $return_var;
+    }
+
+    /**
+     * Merge the new variable list on top of the default environment variables
+     *
+     * @param array $newEnvironmentVariables
+     * @return array
+     */
+    protected function mergeWithExistingEnvironmentVariables($newEnvironmentVariables)
+    {
+        $env = [];
+
+        // getenv will only return all env variables starting 7.1.0
+        foreach ($_SERVER as $variable => $tmp) {
+            if ($value = getenv($variable)) {
+                if ($value !== false && is_string($value)) {
+                    $env[$variable] = $value;
+                }
+            }
+        }
+        foreach ($_ENV as $variable => $value) {
+            if (is_string($value)) {
+                $env[$variable] = $value;
+            }
+        }
+
+        // merge (and if need override) the current environment variables
+        foreach ($newEnvironmentVariables as $variable => $value) {
+            $env[$variable] = (string)$value;
+        }
+
+        return $env;
     }
 }
 

@@ -41,6 +41,15 @@ $access->save();
 echo color("Instance information saved.\n", 'green');
 
 info("Running on " . $discovery->detectDistro());
+
+$phpVersion = $discovery->detectPHPVersion();
+if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
+    $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
+}
+
+info("PHP version: " . $phpVersion);
+info("PHP exec: " . $discovery->detectPHP());
+
 if ($access instanceof ShellPrompt) {
     $webroot = promptUser('Web root', $discovery->detectWebroot());
     $testResult = $access->shellExec('test -d ' . escapeshellarg($webroot) .' && echo EXISTS');
