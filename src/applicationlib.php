@@ -8,7 +8,7 @@ abstract class Application
 {
     protected $instance;
 
-    function __construct(Instance $instance)
+    public function __construct(Instance $instance)
     {
         $this->instance = $instance;
     }
@@ -39,47 +39,47 @@ abstract class Application
         return $objects;
     }
 
-    abstract function getName();
+    abstract public function getName();
 
-    abstract function getVersions();
+    abstract public function getVersions();
 
-    abstract function isInstalled();
+    abstract public function isInstalled();
 
-    abstract function install(Version $version);
+    abstract public function install(Version $version);
 
-    abstract function getInstallType();
+    abstract public function getInstallType();
 
-    abstract function getBranch();
+    abstract public function getBranch();
 
-    abstract function getUpdateDate();
+    abstract public function getUpdateDate();
 
-    abstract function getSourceFile(Version $version, $filename);
+    abstract public function getSourceFile(Version $version, $filename);
 
-    abstract function performActualUpdate(Version $version);
+    abstract public function performActualUpdate(Version $version);
 
-    abstract function performActualUpgrade(Version $version, $abort_on_conflict);
+    abstract public function performActualUpgrade(Version $version, $abort_on_conflict);
 
-    abstract function extractTo(Version $version, $folder);
+    abstract public function extractTo(Version $version, $folder);
 
-    abstract function getFileLocations();
+    abstract public function getFileLocations();
 
-    abstract function requiresDatabase();
+    abstract public function requiresDatabase();
 
-    abstract function getAcceptableExtensions();
+    abstract public function getAcceptableExtensions();
 
-    abstract function setupDatabase(Database $database);
+    abstract public function setupDatabase(Database $database);
 
-    abstract function restoreDatabase(Database $database, $remoteFile);
+    abstract public function restoreDatabase(Database $database, $remoteFile);
 
-    abstract function backupDatabase($targetFile);
+    abstract public function backupDatabase($targetFile);
 
-    abstract function removeTemporaryFiles();
+    abstract public function removeTemporaryFiles();
 
-    function beforeChecksumCollect()
+    public function beforeChecksumCollect()
     {
     }
 
-    function performUpdate(Instance $instance, $version = null)
+    public function performUpdate(Instance $instance, $version = null)
     {
         $current = $instance->getLatestVersion();
 
@@ -138,7 +138,7 @@ abstract class Application
         ];
     }
 
-    function performUpgrade(Instance $instance, $version, $abort_on_conflict = true)
+    public function performUpgrade(Instance $instance, $version, $abort_on_conflict = true)
     {
         $this->performActualUpgrade($version, $abort_on_conflict);
 
@@ -153,7 +153,7 @@ abstract class Application
         $new->collectChecksumFromSource($instance);
     }
 
-    function registerCurrentInstallation()
+    public function registerCurrentInstallation()
     {
         if (! $this->isInstalled()) {
             return null;

@@ -12,23 +12,23 @@ class Channel
 
     private $channels = [];
 
-    function __construct($channelHandlerUrl)
+    public function __construct($channelHandlerUrl)
     {
         $this->url = $channelHandlerUrl;
     }
 
-    function setAuthentication($user, $password)
+    public function setAuthentication($user, $password)
     {
         $this->user = $user;
         $this->pass = $password;
     }
 
-    function push($channelName, $data)
+    public function push($channelName, $data)
     {
         $this->channels[] = array_merge($data, ['channel_name' => $channelName]);
     }
 
-    function process()
+    public function process()
     {
         $header = "Content-Type: application/x-www-form-urlencoded\r\n";
         if ($this->user && $this->pass) {

@@ -73,7 +73,7 @@ WHERE
 
 class ReportManager
 {
-    function getAvailableInstances()
+    public function getAvailableInstances()
     {
         $result = query(SQL_SELECT_AVAIL_INSTANCES);
 
@@ -83,7 +83,7 @@ class ReportManager
         return $this->buildInstancesArray($ids);
     }
 
-    function getReportContent($instance)
+    public function getReportContent($instance)
     {
         $result = query(SQL_SELECT_REPORT_CONTENT, [':id' => $instance->id]);
 
@@ -93,7 +93,7 @@ class ReportManager
         return $this->buildInstancesArray($ids);
     }
 
-    function getReportCandidates(Instance $instance)
+    public function getReportCandidates(Instance $instance)
     {
         $result = query(SQL_SELECT_REPORT_CANDIDATES, [':id' => $instance->id]);
 
@@ -121,7 +121,7 @@ class ReportManager
         return $instances;
     }
 
-    function reportOn($instance)
+    public function reportOn($instance)
     {
         $instance->getApplication()->installProfile('profiles.tiki.org', 'TRIM_Report_Receiver');
         $password = $instance->getBestAccess('scripting')->runPHP(
@@ -135,7 +135,7 @@ class ReportManager
         );
     }
 
-    function setInstances($receiver, $instances)
+    public function setInstances($receiver, $instances)
     {
         query(
             SQL_DELETE_REPORT_CONTENT_BY_RECEIVER,
@@ -150,7 +150,7 @@ class ReportManager
         }
     }
 
-    function sendReports()
+    public function sendReports()
     {
         $backup = new BackupReport;
 
@@ -181,7 +181,7 @@ class ReportManager
         return $out;
     }
 
-    function getReportInstances()
+    public function getReportInstances()
     {
         $instances = [];
 
@@ -192,7 +192,7 @@ class ReportManager
         return $instances;
     }
 
-    function removeInstances($receiver, $instances)
+    public function removeInstances($receiver, $instances)
     {
         foreach ($instances as $instance) {
             query(

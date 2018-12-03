@@ -11,7 +11,7 @@ class FTP_Host
     private $pass;
     private $conn;
 
-    function __construct($host, $user, $pass, $port)
+    public function __construct($host, $user, $pass, $port)
     {
         $this->host = $host;
         $this->user = $user;
@@ -19,14 +19,14 @@ class FTP_Host
         $this->port = $port;
     }
 
-    function __destruct()
+    public function __destruct()
     {
         if ($this->conn) {
             ftp_close($this->conn);
         }
     }
 
-    function connect()
+    public function connect()
     {
         if ($this->conn) {
             return;
@@ -44,7 +44,7 @@ class FTP_Host
         return false;
     }
 
-    function fileExists($filename)
+    public function fileExists($filename)
     {
         $this->connect();
 
@@ -62,7 +62,7 @@ class FTP_Host
         }
     }
 
-    function getContent($filename)
+    public function getContent($filename)
     {
         $this->connect();
         $fp = $this->getResource($filename);
@@ -80,7 +80,7 @@ class FTP_Host
         return $content;
     }
 
-    function getResource($filename, $type = FTP_ASCII)
+    public function getResource($filename, $type = FTP_ASCII)
     {
         $this->connect();
         $fp = tmpfile();
@@ -91,44 +91,44 @@ class FTP_Host
         return false;
     }
 
-    function sendFile($localFile, $remoteFile)
+    public function sendFile($localFile, $remoteFile)
     {
         $this->connect();
         ftp_put($this->conn, $remoteFile, $localFile, FTP_BINARY);
         ftp_chmod($this->conn, 0644, $remoteFile);
     }
 
-    function chmod($level, $remoteFile)
+    public function chmod($level, $remoteFile)
     {
         $this->connect();
         ftp_chmod($this->conn, $level, $remoteFile);
     }
 
-    function receiveFile($remoteFile, $localFile)
+    public function receiveFile($remoteFile, $localFile)
     {
         $this->connect();
         ftp_get($this->conn, $localFile, $remoteFile, FTP_BINARY);
     }
 
-    function removeFile($remoteFile)
+    public function removeFile($remoteFile)
     {
         $this->connect();
         ftp_delete($this->conn, $remoteFile);
     }
 
-    function getPWD()
+    public function getPWD()
     {
         $this->connect();
         return ftp_pwd($this->conn);
     }
 
-    function rename($from, $to)
+    public function rename($from, $to)
     {
         $this->connect();
         return ftp_rename($this->conn, $from, $to);
     }
 
-    function copy($from, $to)
+    public function copy($from, $to)
     {
         $this->connect();
         $fp = $this->getResource($from);

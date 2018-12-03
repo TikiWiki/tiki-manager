@@ -21,7 +21,7 @@ class SSH_Host
 
     private $copy_id_port_in_host;
 
-    function __construct($host, $user, $port, $adapter_class = null)
+    public function __construct($host, $user, $port, $adapter_class = null)
     {
         $this->host = $host ?: '';
         $this->user = $user ?: '';
@@ -35,12 +35,12 @@ class SSH_Host
         }
     }
 
-    function chdir($location)
+    public function chdir($location)
     {
         $this->location = $location;
     }
 
-    function checkCopyId()
+    public function checkCopyId()
     {
         $this->copy_id_port_in_host = true;
         $ph = popen('ssh-copy-id -h 2>&1', 'r');
@@ -54,13 +54,13 @@ class SSH_Host
         }
     }
 
-    function setenv($var, $value)
+    public function setenv($var, $value)
     {
         $this->env[$var] = $value;
         $this->adapter->setEnv($this->env);
     }
 
-    function setupKey($publicKeyFile)
+    public function setupKey($publicKeyFile)
     {
         $this->adapter->unsetHandle();
         $file = escapeshellarg($publicKeyFile);

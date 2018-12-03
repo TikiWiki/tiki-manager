@@ -53,15 +53,15 @@ class Text_Password
      *                 or numeric, alphabetical or alphanumeric.
      * @return string  Returns the generated password.
      */
-    static function create($length = 10, $type = 'pronounceable', $chars = '')
+    public static function create($length = 10, $type = 'pronounceable', $chars = '')
     {
         switch ($type) {
             case 'unpronounceable':
-                return Text_Password::_createUnpronounceable($length, $chars);
+                return Text_Password::createUnpronounceable($length, $chars);
 
             case 'pronounceable':
             default:
-                return Text_Password::_createPronounceable($length);
+                return Text_Password::createPronounceable($length);
         }
     }
 
@@ -80,7 +80,7 @@ class Text_Password
      *                 or numeric, alphabetical or alphanumeric.
      * @return array   Array containing the passwords
      */
-    static function createMultiple($number, $length = 10, $type = 'pronounceable', $chars = '')
+    public static function createMultiple($number, $length = 10, $type = 'pronounceable', $chars = '')
     {
         $passwords = [];
 
@@ -108,38 +108,38 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function createFromLogin($login, $type, $key = 0)
+    public static function createFromLogin($login, $type, $key = 0)
     {
         switch ($type) {
             case 'reverse':
                 return strrev($login);
 
             case 'shuffle':
-                return Text_Password::_shuffle($login);
+                return Text_Password::shuffle($login);
 
             case 'xor':
-                return Text_Password::_xor($login, $key);
+                return Text_Password::xor($login, $key);
 
             case 'rot13':
                 return str_rot13($login);
 
             case 'rotx':
-                return Text_Password::_rotx($login, $key);
+                return Text_Password::rotx($login, $key);
 
             case 'rotx++':
-                return Text_Password::_rotxpp($login, $key);
+                return Text_Password::rotxpp($login, $key);
 
             case 'rotx--':
-                return Text_Password::_rotxmm($login, $key);
+                return Text_Password::rotxmm($login, $key);
 
             case 'ascii_rotx':
-                return Text_Password::_asciiRotx($login, $key);
+                return Text_Password::asciiRotx($login, $key);
 
             case 'ascii_rotx++':
-                return Text_Password::_asciiRotxpp($login, $key);
+                return Text_Password::asciiRotxpp($login, $key);
 
             case 'ascii_rotx--':
-                return Text_Password::_asciiRotxmm($login, $key);
+                return Text_Password::asciiRotxmm($login, $key);
         }
     }
 
@@ -154,7 +154,7 @@ class Text_Password
      * @param  integer Key
      * @return array   Array containing the passwords
      */
-    static function createMultipleFromLogin($login, $type, $key = 0)
+    public static function createMultipleFromLogin($login, $type, $key = 0)
     {
         $passwords = [];
         $number    = count($login);
@@ -183,7 +183,7 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function _xor($login, $key)
+    private static function xor($login, $key)
     {
         $tmp = '';
 
@@ -211,7 +211,7 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function _rotx($login, $key)
+    private static function rotx($login, $key)
     {
         $tmp = '';
         $login = strtolower($login);
@@ -244,7 +244,7 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function _rotxpp($login, $key)
+    private static function rotxpp($login, $key)
     {
         $tmp = '';
         $login = strtolower($login);
@@ -277,7 +277,7 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function _rotxmm($login, $key)
+    private static function rotxmm($login, $key)
     {
         $tmp = '';
         $login = strtolower($login);
@@ -309,7 +309,7 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function _asciiRotx($login, $key)
+    private static function asciiRotx($login, $key)
     {
         $tmp = '';
 
@@ -343,7 +343,7 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function _asciiRotxpp($login, $key)
+    private static function asciiRotxpp($login, $key)
     {
         $tmp = '';
 
@@ -377,7 +377,7 @@ class Text_Password
      * @param  integer Key
      * @return string
      */
-    static function _asciiRotxmm($login, $key)
+    private static function asciiRotxmm($login, $key)
     {
         $tmp = '';
 
@@ -410,7 +410,7 @@ class Text_Password
      * @param  string  Login
      * @return string
      */
-    static function _shuffle($login)
+    private static function shuffle($login)
     {
         $tmp = [];
 
@@ -433,7 +433,7 @@ class Text_Password
      * @param  integer Length of the password
      * @return string  Returns the password
      */
-    static function _createPronounceable($length)
+    private static function createPronounceable($length)
     {
 
         global $_Text_Password_NumberOfPossibleCharacters;
@@ -479,7 +479,7 @@ class Text_Password
      *                 or numeric, alphabetical or alphanumeric.
      * @return string  Returns the password
      */
-    static function _createUnpronounceable($length, $chars)
+    private static function createUnpronounceable($length, $chars)
     {
         global $_Text_Password_NumberOfPossibleCharacters;
 

@@ -2,15 +2,15 @@
 
 class Wrapper
 {
-    private $__wrapped_object;
-    private $__wrapped_properties;
-    private $__wrapped_methods;
+    private $wrapped_object;
+    private $wrapped_properties;
+    private $wrapped_methods;
 
     public function __construct($obj, $props = [], $methods = [])
     {
-        $this->__wrapped_object = $obj;
-        $this->__wrapped_properties = $props ?: [];
-        $this->__wrapped_methods = $methods ?: [];
+        $this->wrapped_object = $obj;
+        $this->wrapped_properties = $props ?: [];
+        $this->wrapped_methods = $methods ?: [];
     }
 
     public function __call($name, $arguments = [])
@@ -19,11 +19,11 @@ class Wrapper
             ? $arguments
             : [];
 
-        $call = [$this->__wrapped_object, $name];
+        $call = [$this->wrapped_object, $name];
 
-        if (isset($this->__wrapped_methods[$name])
-            && is_callable($this->__wrapped_methods[$name])) {
-            $call = $this->__wrapped_methods[$name];
+        if (isset($this->wrapped_methods[$name])
+            && is_callable($this->wrapped_methods[$name])) {
+            $call = $this->wrapped_methods[$name];
         }
 
         return call_user_func_array($call, $arguments);
@@ -31,27 +31,27 @@ class Wrapper
 
     public function __get($name)
     {
-        if (isset($this->__wrapped_properties[$name])) {
-            return $this->__wrapped_properties[$name];
+        if (isset($this->wrapped_properties[$name])) {
+            return $this->wrapped_properties[$name];
         }
-        return $this->__wrapped_object->{$name};
+        return $this->wrapped_object->{$name};
     }
 
     public function __isset($name)
     {
-        return isset($this->__wrapped_properties[$name])
-            || property_exists($this->__wrapped_object, $name);
+        return isset($this->wrapped_properties[$name])
+            || property_exists($this->wrapped_object, $name);
     }
 
     public function __set($name, $value)
     {
-        $this->__wrapped_properties[$name] = $value;
+        $this->wrapped_properties[$name] = $value;
         return $value;
     }
 
     public function __unset($name)
     {
-        unset($this->__wrapped_properties[$name]);
-        unset($this->__wrapped_object->{$name});
+        unset($this->wrapped_properties[$name]);
+        unset($this->wrapped_object->{$name});
     }
 }
