@@ -62,12 +62,13 @@ class Version
         return Instance::getInstance($this->instance);
     }
 
-	function getRevision()
-	{
-		return $this->revision;
-	}
+    function getRevision()
+    {
+        return $this->revision;
+    }
 
-    function getBranch() {
+    function getBranch()
+    {
         return $this->branch;
     }
 

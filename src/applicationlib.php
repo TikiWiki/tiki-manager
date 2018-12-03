@@ -151,7 +151,6 @@ abstract class Application
 
         info('Obtaining new checksum from source.');
         $new->collectChecksumFromSource($instance);
-
     }
 
     function registerCurrentInstallation()

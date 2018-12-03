@@ -44,22 +44,22 @@ foreach ($selection as $instance) {
 
     info("Checking instance: {$instance->name}");
 
-	$versionRevision = $version->revision;
-	$tikiRevision = $instance->getRevision();
+    $versionRevision = $version->revision;
+    $tikiRevision = $instance->getRevision();
 
     if (! empty($versionRevision) && $versionRevision == $tikiRevision && $version->hasChecksums()) {
-		handleCheckResult($instance, $version, $version->performCheck($instance));
-		continue;
-	}
+        handleCheckResult($instance, $version, $version->performCheck($instance));
+        continue;
+    }
 
     $fetchChecksum = false;
 
-	if (empty($versionRevision)) {
+    if (empty($versionRevision)) {
         warning('No revision detected for instance.');
         $fetchChecksum = true;
-	}
+    }
 
-	if (!empty($versionRevision) && $versionRevision != $tikiRevision) {
+    if (!empty($versionRevision) && $versionRevision != $tikiRevision) {
         warning('Revision mismatch between trim version and instance.');
         $fetchChecksum = true;
     }
@@ -67,7 +67,7 @@ foreach ($selection as $instance) {
     if (empty($trimInstanceRevision) || $trimInstanceRevision != $tikiRevision) {
         warning('It is recommended to fetch new checksum information.');
         $fetchChecksum = true;
-	}
+    }
 
     if (! $version->hasChecksums()) {
         warning('No checksums exist.');
@@ -75,7 +75,6 @@ foreach ($selection as $instance) {
     }
 
     if ($fetchChecksum) {
-
         // Create a new version
         $version = $instance->createVersion();
         /** @var Application_Tiki $app */
@@ -86,7 +85,7 @@ foreach ($selection as $instance) {
         $version->save();
 
         $input = '';
-        $values = array('current', 'source', 'skip');
+        $values = ['current', 'source', 'skip'];
 
         echo "What do you want to do?\n";
         echo "  current - Use the files currently online for checksum.\n";

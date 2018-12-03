@@ -250,8 +250,8 @@ switch ($version) {
         );
         UPDATE info SET value = '5' WHERE name = 'version';
     ");
-case 5:
-	$db->exec("
+    case 5:
+        $db->exec("
         ALTER TABLE version ADD COLUMN revision VARCHAR(25);
         UPDATE info SET value = '6' WHERE name = 'version';
     ");

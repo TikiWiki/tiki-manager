@@ -678,7 +678,8 @@ class Instance
      *
      * @return mixed
      */
-    public function getRevision() {
+    public function getRevision()
+    {
 
         if ($this->app == 'tiki') {
             return $this->getApplication()->getRevision();

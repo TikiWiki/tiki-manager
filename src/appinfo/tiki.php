@@ -58,7 +58,8 @@ class Application_Tiki extends Application
      * @param string|null $folder If valid folder or null it will collect the svn revision from the folder|instance webroot.
      * @return int
      */
-    public function getRevision($folder = null) {
+    public function getRevision($folder = null)
+    {
 
         $svnInfo = '';
 
