@@ -6,7 +6,7 @@
 
 class BackupReport
 {
-    function queueChannels(Channel $channel, $instances)
+    public function queueChannels(Channel $channel, $instances)
     {
         $channel->push(
             'trim_backup_summary',

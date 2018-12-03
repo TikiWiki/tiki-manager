@@ -22,7 +22,7 @@ class Version
     public $date;
     public $audit;
 
-    function __construct($instance = null)
+    public function __construct($instance = null)
     {
         $this->instance = $instance;
     }
@@ -37,7 +37,7 @@ class Version
         return $v;
     }
 
-    function save()
+    public function save()
     {
         $params = [
             ':id' => $this->id,
@@ -57,22 +57,22 @@ class Version
         }
     }
 
-    function getInstance()
+    public function getInstance()
     {
         return Instance::getInstance($this->instance);
     }
 
-    function getRevision()
+    public function getRevision()
     {
         return $this->revision;
     }
 
-    function getBranch()
+    public function getBranch()
     {
         return $this->branch;
     }
 
-    function getBaseVersion()
+    public function getBaseVersion()
     {
         $branch = $this->getBranch();
         $result = null;
@@ -85,12 +85,12 @@ class Version
         return $result;
     }
 
-    function hasChecksums()
+    public function hasChecksums()
     {
         return Audit_Checksum::hasChecksums($this->id);
     }
 
-    function performCheck(Instance $instance)
+    public function performCheck(Instance $instance)
     {
         $access = $instance->getBestAccess('scripting');
         $app = $instance->getApplication();
@@ -103,7 +103,7 @@ class Version
         return Audit_Checksum::validate($this->id, $result);
     }
 
-    function collectChecksumFromSource(Instance $instance)
+    public function collectChecksumFromSource(Instance $instance)
     {
         $app = $instance->getApplication();
         $result = Audit_Checksum::checksumSource($this, $app);
@@ -116,7 +116,7 @@ class Version
         return Audit_Checksum::saveChecksums($this->id, $result);
     }
 
-    function collectChecksumFromInstance(Instance $instance)
+    public function collectChecksumFromInstance(Instance $instance)
     {
         // Update revision information
         $this->revision = $instance->getRevision();
@@ -131,32 +131,32 @@ class Version
         return Audit_Checksum::saveChecksums($this->id, $result);
     }
 
-    function recordFile($hash, $filename)
+    public function recordFile($hash, $filename)
     {
         return Audit_Checksum::addFile($this->id, $hash, $filename);
     }
 
-    function recordFiles($hashFiles = [])
+    public function recordFiles($hashFiles = [])
     {
         return Audit_Checksum::addFiles($this->id, $hashFiles);
     }
 
-    function removeFile($filename)
+    public function removeFile($filename)
     {
         return Audit_Checksum::removeFile($this->id, $filename);
     }
 
-    function replaceFile($hash, $filename, Application $app)
+    public function replaceFile($hash, $filename, Application $app)
     {
         return Audit_Checksum::replaceFile($this->id, $hash, $filename);
     }
 
-    function replaceFiles($hashFiles = [], $app = null)
+    public function replaceFiles($hashFiles = [], $app = null)
     {
         return Audit_Checksum::replaceFiles($this->id, $hashFiles);
     }
 
-    function getFileMap()
+    public function getFileMap()
     {
         return Audit_Checksum::getChecksums($this->id);
     }

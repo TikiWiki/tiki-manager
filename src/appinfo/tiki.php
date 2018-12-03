@@ -12,7 +12,7 @@ class Application_Tiki extends Application
     private $branch = null;
     private $installed = null;
 
-    function backupDatabase($target)
+    public function backupDatabase($target)
     {
         $access = $this->instance->getBestAccess('scripting');
         if ($access instanceof ShellPrompt) {
@@ -35,12 +35,12 @@ class Application_Tiki extends Application
         }
     }
 
-    function beforeChecksumCollect()
+    public function beforeChecksumCollect()
     {
         $this->removeTemporaryFiles();
     }
 
-    function extractTo(Version $version, $folder)
+    public function extractTo(Version $version, $folder)
     {
         if (file_exists($folder)) {
             `svn revert --recursive  $folder`;
@@ -84,7 +84,7 @@ class Application_Tiki extends Application
         return 0;
     }
 
-    function fixPermissions()
+    public function fixPermissions()
     {
         $access = $this->instance->getBestAccess('scripting');
 
@@ -114,12 +114,12 @@ class Application_Tiki extends Application
         }
     }
 
-    function getAcceptableExtensions()
+    public function getAcceptableExtensions()
     {
         return ['mysqli', 'mysql'];
     }
 
-    function getBranch()
+    public function getBranch()
     {
         if ($this->branch) {
             return $this->branch;
@@ -203,7 +203,7 @@ class Application_Tiki extends Application
         }
     }
 
-    function getFileLocations()
+    public function getFileLocations()
     {
         $access = $this->instance->getBestAccess('scripting');
         $out = $access->runPHP(
@@ -229,7 +229,7 @@ class Application_Tiki extends Application
         return $folders;
     }
 
-    function getInstallType()
+    public function getInstallType()
     {
         if (! is_null($this->installType)) {
             return $this->installType;
@@ -249,12 +249,12 @@ class Application_Tiki extends Application
         return $this->installType = 'tarball';
     }
 
-    function getName()
+    public function getName()
     {
         return 'tiki';
     }
 
-    function getSourceFile(Version $version, $filename)
+    public function getSourceFile(Version $version, $filename)
     {
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
@@ -272,7 +272,7 @@ class Application_Tiki extends Application
         return $local;
     }
 
-    function getUpdateDate()
+    public function getUpdateDate()
     {
         $access = $this->instance->getBestAccess('filetransfer');
         $date = $access->fileModificationDate($this->instance->getWebPath('tiki-setup.php'));
@@ -280,7 +280,7 @@ class Application_Tiki extends Application
         return $date;
     }
 
-    function getVersions()
+    public function getVersions()
     {
         $versions = [];
 
@@ -325,7 +325,7 @@ class Application_Tiki extends Application
         return $versions_sorted;
     }
 
-    function install(Version $version)
+    public function install(Version $version)
     {
         $access = $this->instance->getBestAccess('scripting');
         $host = $access->getHost();
@@ -364,7 +364,7 @@ class Application_Tiki extends Application
         $version->collectChecksumFromInstance($this->instance);
     }
 
-    function installProfile($domain, $profile)
+    public function installProfile($domain, $profile)
     {
         $access = $this->instance->getBestAccess('scripting');
 
@@ -374,7 +374,7 @@ class Application_Tiki extends Application
         );
     }
 
-    function isInstalled()
+    public function isInstalled()
     {
         if (! is_null($this->installed)) {
             return $this->installed;
@@ -386,7 +386,7 @@ class Application_Tiki extends Application
         return $this->installed;
     }
 
-    function performActualUpdate(Version $version)
+    public function performActualUpdate(Version $version)
     {
         switch ($this->getInstallType()) {
             case 'svn':
@@ -457,7 +457,7 @@ class Application_Tiki extends Application
         // TODO: Handle fallback
     }
 
-    function performActualUpgrade(Version $version, $abort_on_conflict)
+    public function performActualUpgrade(Version $version, $abort_on_conflict)
     {
         switch ($this->getInstallType()) {
             case 'svn':
@@ -508,7 +508,7 @@ class Application_Tiki extends Application
         }
     }
 
-    function removeTemporaryFiles()
+    public function removeTemporaryFiles()
     {
         $access = $this->instance->getBestAccess('scripting');
         $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
@@ -520,12 +520,12 @@ class Application_Tiki extends Application
         }
     }
 
-    function requiresDatabase()
+    public function requiresDatabase()
     {
         return true;
     }
 
-    function restoreDatabase(Database $database, $remoteFile)
+    public function restoreDatabase(Database $database, $remoteFile)
     {
         $tmp = tempnam(TEMP_FOLDER, 'dblocal');
 
@@ -556,7 +556,7 @@ class Application_Tiki extends Application
     }
 
 //----------------------------------------------------------------
-    function setupDatabase(Database $database)
+    public function setupDatabase(Database $database)
     {
         $tmp = tempnam(TEMP_FOLDER, 'dblocal');
         file_put_contents($tmp, "<?php"          . "\n"

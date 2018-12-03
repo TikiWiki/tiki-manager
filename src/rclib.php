@@ -27,7 +27,7 @@ class RC_SVN
         ]
     ];
 
-    function __construct($repository, $access)
+    public function __construct($repository, $access)
     {
         $this->repository = $repository;
         $this->access = $access;
