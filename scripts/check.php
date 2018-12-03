@@ -30,7 +30,10 @@ if (empty($selection)) {
     }
 }
 
+/** @var Instance $instance */
 foreach ($selection as $instance) {
+
+    /** @var Version $version */
     $version = $instance->getLatestVersion();
 
     if (! $version) {
@@ -41,12 +44,49 @@ foreach ($selection as $instance) {
 
     info("Checking instance: {$instance->name}");
 
-    if ($version->hasChecksums()) {
+    $versionRevision = $version->revision;
+    $tikiRevision = $instance->getRevision();
+
+    if (! empty($versionRevision) && $versionRevision == $tikiRevision && $version->hasChecksums()) {
         handleCheckResult($instance, $version, $version->performCheck($instance));
-    } else {
+        continue;
+    }
+
+    $fetchChecksum = false;
+
+    if (empty($versionRevision)) {
+        warning('No revision detected for instance.');
+        $fetchChecksum = true;
+    }
+
+    if (!empty($versionRevision) && $versionRevision != $tikiRevision) {
+        warning('Revision mismatch between trim version and instance.');
+        $fetchChecksum = true;
+    }
+
+    if (empty($trimInstanceRevision) || $trimInstanceRevision != $tikiRevision) {
+        warning('It is recommended to fetch new checksum information.');
+        $fetchChecksum = true;
+    }
+
+    if (! $version->hasChecksums()) {
+        warning('No checksums exist.');
+        $fetchChecksum = true;
+    }
+
+    if ($fetchChecksum) {
+        // Create a new version
+        $version = $instance->createVersion();
+        /** @var Application_Tiki $app */
+        $app = $instance->getApplication();
+        $version->type = $app->getInstallType();
+        $version->branch = $app->getBranch();
+        $version->date = date('Y-m-d');
+        $version->save();
+
         $input = '';
         $values = ['current', 'source', 'skip'];
-        warning('No checksums exist.');
+
         echo "What do you want to do?\n";
         echo "  current - Use the files currently online for checksum.\n";
         echo "   source - Get checksums from repository (best option).\n";
