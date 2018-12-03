@@ -6,7 +6,7 @@
 
 define('SQL_SELECT_INSTANCE', "
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision
 FROM
     instance i
 INNER JOIN access a
@@ -17,7 +17,7 @@ LEFT JOIN
 
 define('SQL_SELECT_INSTANCE_BY_ID', "
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision
 FROM
     instance i
 INNER JOIN access a
@@ -49,7 +49,7 @@ WHERE
 
 define('SQL_SELECT_LATEST_VERSION', "
 SELECT
-    version_id id, instance_id, type, branch, date
+    version_id id, instance_id, type, branch, date, revision
 FROM
     version
 WHERE
@@ -699,5 +699,20 @@ class Instance
         if (isset($this->$name)) {
             return $this->$name;
         }
+    }
+
+    /**
+     * Get instance application revision
+     *
+     * @return mixed
+     */
+    public function getRevision()
+    {
+
+        if ($this->app == 'tiki') {
+            return $this->getApplication()->getRevision();
+        }
+
+        return null;
     }
 }

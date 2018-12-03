@@ -9,15 +9,16 @@ class Version
     const SQL_INSERT_VERSION = "
         INSERT OR REPLACE INTO
             version
-            (version_id, instance_id, type, branch, date)
+            (version_id, instance_id, type, branch, revision, date)
         VALUES
-            (:id, :instance, :type, :branch, :date)
+            (:id, :instance, :type, :branch, :revision, :date)
         ;";
 
     private $id;
     private $instance;
     public $type;
     public $branch;
+    public $revision;
     public $date;
     public $audit;
 
@@ -43,6 +44,7 @@ class Version
             ':instance' => $this->instance,
             ':type' => $this->type,
             ':branch' => $this->branch,
+            ':revision' => $this->revision,
             ':date' => $this->date,
         ];
 
@@ -58,6 +60,11 @@ class Version
     function getInstance()
     {
         return Instance::getInstance($this->instance);
+    }
+
+    function getRevision()
+    {
+        return $this->revision;
     }
 
     function getBranch()
@@ -100,11 +107,21 @@ class Version
     {
         $app = $instance->getApplication();
         $result = Audit_Checksum::checksumSource($this, $app);
+
+        // Update revision information (requires cache folder created and populated in checksumSource)
+        $folder = cache_folder($app, $this);
+        $this->revision = $app->getRevision($folder);
+        $this->save();
+
         return Audit_Checksum::saveChecksums($this->id, $result);
     }
 
     function collectChecksumFromInstance(Instance $instance)
     {
+        // Update revision information
+        $this->revision = $instance->getRevision();
+        $this->save();
+
         $access = $instance->getBestAccess('scripting');
         $folder = $instance->webroot;
         $result = $instance->type === 'local'

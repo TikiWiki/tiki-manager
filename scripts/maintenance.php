@@ -58,6 +58,15 @@ $timeElapsed = $interval->format('%hh:%im:%ss');
         .bg-light{background-color:#f8f9fa!important}
         .rounded{border-radius:.25rem!important}
         .border{border:1px solid #dee2e6!important}
+        @media (max-width: 1024px) and (orientation: portrait) {
+            body{font-size:2.2rem; line-height:3.5rem}
+            .col-md-12{padding:0 5px 0px 5px;}
+            .container{max-width:94%;width:94%}
+        }
+        @media (max-width: 1024px) and (orientation: landscape) {
+            .pt-5, .py-5{padding-top:0.5rem !important;}
+            img{max-width:150px;}
+        }
     </style>
 </head>
 <body>
@@ -71,11 +80,11 @@ $timeElapsed = $interval->format('%hh:%im:%ss');
     <div class="col-md-12 pt-5">
         <div class="container bg-light rounded text-center p-5 border">
             <h4>
-            An update started on <b><?= $dateStart; ?><i>UTC</i></b><br />
-            It has progressed for <b><?= $timeElapsed; ?></b>.<br/> We regret any inconvenience, please try again in a few minutes<br>
+                An update started on <b><?= $dateStart; ?><i>UTC</i></b><br />
+                It has progressed for <b><?= $timeElapsed; ?></b>.<br/> We regret any inconvenience, please try again in few minutes<br>
             </h4>
         </div>
-        <div class="col-md-12 text-center">
+        <div class="col-md-12 text-center pt-5">
             Powered by Tiki Wiki CMS Groupware
         </div>
     </div>

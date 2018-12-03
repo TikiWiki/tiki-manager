@@ -52,6 +52,38 @@ class Application_Tiki extends Application
         }
     }
 
+    /**
+     * Get SVN revision information
+     *
+     * @param string|null $folder If valid folder or null it will collect the svn revision from the folder|instance webroot.
+     * @return int
+     */
+    public function getRevision($folder = null)
+    {
+
+        $svnInfo = '';
+
+        if (file_exists($folder)) {
+            $svnInfo = `svn info $folder`;
+        }
+
+        if (is_null($folder)) {
+            $access = $this->instance->getBestAccess('scripting');
+            if ($access instanceof ShellPrompt && $access->hasExecutable('svn')) {
+                $host = $access->getHost();
+                $svnInterpreter = $access->getSVNPath();
+                $svnInfo = $host->runCommands("$svnInterpreter info {$this->instance->webroot}");
+            }
+        }
+
+        if (! empty($svnInfo)) {
+            preg_match('/(.*Rev:\s+)(.*)/', $svnInfo, $matches);
+            return $matches[2];
+        }
+
+        return 0;
+    }
+
     function fixPermissions()
     {
         $access = $this->instance->getBestAccess('scripting');
