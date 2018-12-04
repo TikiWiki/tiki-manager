@@ -2720,10 +2720,7 @@ class Archive_Tar extends PEAR
                             $v_extract_file = true;
                             break;
                         }
-                    }
-
-                  // ----- It is a file, so compare the file names
-                    elseif ($p_file_list[$i] == $v_header['filename']) {
+                    } elseif ($p_file_list[$i] == $v_header['filename']) {
                         $v_extract_file = true;
                         break;
                     }
@@ -2774,10 +2771,7 @@ class Archive_Tar extends PEAR
                     if (filemtime($v_header['filename']) > $v_header['mtime']) {
                         // To be completed : An error or silent no replace ?
                     }
-                }
-
-        // ----- Check the directory availability and create it if necessary
-                elseif (($v_result
+                } elseif (($v_result
                 = $this->dirCheck(($v_header['typeflag'] == "5"
                               ?$v_header['filename']
                               :dirname($v_header['filename'])))) != 1) {
