@@ -57,7 +57,7 @@ foreach ($selection as $instance) {
     $instance->restore($single->app, $file);
 
     info("It is now time to test your site: {$instance->name}");
-    info("If there are issues, connect with make access to troubleshoot directly on the server.");
+    info("If there are issues, connect with 'tiki-manager instance:access' to troubleshoot directly on the server.");
     info("You'll need to login to this restored instance and update the file paths with the new values.");
 }
 

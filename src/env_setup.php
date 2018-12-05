@@ -23,7 +23,7 @@ if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
         sprintf(
             'Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
             'because DSA was deprecated in openssh-7.0. ' .
-            'If you need a new RSA key, run \'make copysshkey\' and TRIM will create a new one.' .
+            'If you need a new RSA key, run \'tiki-manager instance:copysshkey\' and TRIM will create a new one.' .
             'Copy the new key to all your instances.',
             SSH_KEY,
             SSH_PUBLIC_KEY

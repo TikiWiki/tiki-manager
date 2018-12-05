@@ -72,7 +72,7 @@ function perform_instance_installation(Instance $instance)
 
         info("Installing application...");
         echo color("If for any reason the installation fails (ex: wrong setup.sh parameters for tiki), " .
-           "you can use 'make access' to complete the installation manually.\n", 'yellow');
+           "you can use 'tiki-manager instance:access' to complete the installation manually.\n", 'yellow');
         $app->install($version);
 
         if ($app->requiresDatabase()) {
