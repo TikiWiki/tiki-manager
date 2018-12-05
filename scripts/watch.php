@@ -47,7 +47,7 @@ foreach ($instances as $instance) {
     }
 
     if ($versionError) {
-        $log .= "Fix this error with TRIM by running \"make check\" and choose instance \"{$instance->id}\".";
+        $log .= "Fix this error with TRIM by running \"tiki-manager instance:check\" and choose instance \"{$instance->id}\".";
         $log .= "\n\n";
 
         continue;
