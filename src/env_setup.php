@@ -179,7 +179,6 @@ switch ($version) {
             instance_id INTEGER,
             type VARCHAR(10),
             branch VARCHAR(50),
-            revision VARCHAR(25),
             date VARCHAR(25)
         );
 
