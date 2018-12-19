@@ -27,12 +27,16 @@
 
 	<!-- Check for compatibility for PHP >= 7.1 -->
 	<config name="installed_paths" value="vendor_bundled/vendor/wimg/php-compatibility" />
-	<config name="testVersion" value="7.1-"/>
+	<config name="testVersion" value="7.1"/>
 
 	<!-- Tiki Manager uses PSR-2 coding standards
 		reference: https://www.php-fig.org/psr/psr-2/ -->
 	<rule ref="PSR2"/>
-	<rule ref="Generic.Arrays.DisallowLongArraySyntax">
+
+	<rule ref="Squiz.WhiteSpace.SuperfluousWhitespace">
+		<properties>
+			<property name="ignoreBlankLines" value="false"/>
+		</properties>
 	</rule>
 
 	<!-- Change severity to be able to filter if too many lines over 120 using cli option warning-severity=5 -->

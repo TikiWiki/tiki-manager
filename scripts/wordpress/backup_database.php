@@ -20,19 +20,19 @@ $wpConfigContents = file("{$root}/wp-config.php");
 
 foreach ($wpConfigContents as $line) {
     $matches = [];
-    
+
     if (preg_match(getWpDbRegex('DB_NAME'), $line, $matches)) {
         $dbName = $matches[1];
     }
-    
+
     if (preg_match(getWpDbRegex('DB_USER'), $line, $matches)) {
         $dbUser = $matches[1];
     }
-    
+
     if (preg_match(getWpDbRegex('DB_PASSWORD'), $line, $matches)) {
         $dbPassword = $matches[1];
     }
-    
+
     if (preg_match(getWpDbRegex('DB_HOST'), $line, $matches)) {
         $dbHost = $matches[1];
     }

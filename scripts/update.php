@@ -94,7 +94,7 @@ foreach ($selection as $instance) {
 
         if ($counter) {
             printf("We detected PHP release %s\n", $instance->getPHPVersion());
-    
+
             if ($found_incompatibilities) {
                 warning('WARNING: If some versions are not offered, ' .
                     "it's likely because the host server doesn't meet the requirements " .

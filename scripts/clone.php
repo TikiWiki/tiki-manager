@@ -46,7 +46,7 @@ function getUpgradeVersion($instance)
             }
         }
     }
-    
+
     echo "[ -1] blank : none\n";
 
     $matches = [];
@@ -68,7 +68,7 @@ function getUpgradeVersion($instance)
 
     $input = promptUser('>>> ');
     $entries = getEntries($versions, $input);
-    
+
     return $entries[0];
 }
 

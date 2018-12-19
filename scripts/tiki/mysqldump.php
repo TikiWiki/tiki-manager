@@ -188,7 +188,7 @@ function _mysqldump($mysql_database)
     if ($result) {
         while ($row= fetch_row($result)) {
             _mysqldump_table_structure($row[0]);
-            
+
             _mysqldump_table_data($row[0]);
         }
     } else {
@@ -202,7 +202,7 @@ function _mysqldump_table_structure($table)
 {
     echo "/* Table structure for table `$table` */\n";
     echo "DROP TABLE IF EXISTS `$table`;\n\n";
-    
+
     $sql = "show create table `$table`;";
     $result = query($sql);
     if ($result) {
@@ -220,15 +220,15 @@ function _mysqldump_table_data($table)
     $result = query($sql);
     $num_rows = fetch_row($result);
     $num_rows = $num_rows[0];
-    
+
     $sql = "select * from `$table`;";
     $result = unbuffered_query($sql);
     if ($result) {
         $num_fields = num_fields($result);
-        
+
         if ($num_rows > 0) {
             echo "/* dumping data for table `$table` */\n";
-            
+
             $i = 0;
             $field_type = [];
             while ($i < $num_fields) {
@@ -265,7 +265,7 @@ function _mysqldump_table_data($table)
                 }
 
                 echo ')';
-                
+
                 if ($index < $num_rows - 1) {
                     if ($output_length > 100000) {
                         $output_length = 0;
@@ -279,7 +279,7 @@ function _mysqldump_table_data($table)
                 }
 
                 echo "\n";
-                
+
                 $index++;
             }
         }

@@ -140,7 +140,7 @@ if (! file_exists(DB_FILE)) {
     } catch (PDOException $e) {
         die(error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}"));
     }
-    
+
     $db->exec('CREATE TABLE info (name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name));');
     $db->exec("INSERT INTO info (name, value) VALUES('version', '0');");
     $db = null;

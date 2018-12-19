@@ -67,7 +67,7 @@ class SSH_Host_Seclib_Adapter
     {
         return $this->host;
     }
-    
+
     private function getLocation()
     {
         return $this->location;

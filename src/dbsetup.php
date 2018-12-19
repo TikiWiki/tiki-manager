@@ -35,7 +35,7 @@ function perform_instance_installation(Instance $instance)
                 }
             }
         }
-        
+
         echo "[ -1] blank : none\n";
 
         $matches = [];
@@ -150,7 +150,7 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             $valid = $dbRoot->testConnection();
         }
         debug('Connected to MySQL with adminstrative privileges');
-        
+
         $type = strtolower(promptUser(
             'Should a new database and user be created now (both)? ',
             'y',
@@ -222,7 +222,7 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
             }
         }
     }
-    
+
     if ($remoteBackupFile) {
         $instance->getApplication()->restoreDatabase($dbUser, $remoteBackupFile);
     } else {
