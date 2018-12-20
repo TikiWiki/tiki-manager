@@ -5,6 +5,9 @@
 	<!-- Paths to check -->
 	<file>.</file>
 
+    <!-- Exclude scripts that have PEAR classes (old code to run on PHP 5.3) -->
+    <exclude-pattern>./scripts/*_tar.php</exclude-pattern>
+
 	<!-- Exclude libraries and other folders that should not contain code -->
 
 	<!-- vendor folders -->
