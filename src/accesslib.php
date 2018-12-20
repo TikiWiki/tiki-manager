@@ -75,7 +75,7 @@ abstract class Access
 
         return $access;
     }
-    
+
     function save()
     {
         $params = [
@@ -125,7 +125,7 @@ abstract class Access
     abstract function deleteFile($filename);
 
     abstract function moveFile($remoteSource, $remoteTarget);
-    
+
     abstract function copyFile($remoteSource, $remoteTarget);
 
     abstract function localizeFolder($remoteLocation, $localMirror);
@@ -291,7 +291,7 @@ class Access_Local extends Access implements ShellPrompt
     function getSVNPath()
     {
         $host = $this->getHost();
-        
+
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             $svn_name='svn.exe';
             $sets = [
@@ -627,7 +627,7 @@ class Access_SSH extends Access implements ShellPrompt
     function getInterpreterPath($instance2 = null)
     {
         $host = $this->getHost();
-        
+
         $sets = [
             ['which php', 'which php5', 'which php4'],
         ];
@@ -684,7 +684,7 @@ class Access_SSH extends Access implements ShellPrompt
     function getSVNPath()
     {
         $host = $this->getHost();
-        
+
         $sets = [
                 ['which svn'],
         ];
@@ -1164,7 +1164,7 @@ class Access_FTP extends Access implements Mountable
         if (! file_exists($localMirror)) {
             mkdir($localMirror);
         }
-        
+
         chdir($localMirror);
 
         $eLoc = escapeshellarg($localized);

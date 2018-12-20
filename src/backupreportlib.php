@@ -12,7 +12,7 @@ class BackupReport
             'trim_backup_summary',
             ['body' => $this->getSummary($instances)]
         );
-        
+
         foreach ($instances as $instance) {
             $channel->push(
                 'trim_backup_detail',

@@ -11,7 +11,7 @@ class Application_Tiki extends Application
     private $installType = null;
     private $branch = null;
     private $installed = null;
-    
+
     function backupDatabase($target)
     {
         $access = $this->instance->getBestAccess('scripting');
@@ -436,7 +436,7 @@ class Application_Tiki extends Application
                         [$this->instance->webroot]
                     );
                 }
-            
+
                 info('Fixing permissions...');
 
                 $this->fixPermissions();

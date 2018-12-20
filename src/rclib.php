@@ -49,7 +49,7 @@ class RC_SVN
         $result = $this->access->shellExec($command, true);
         return $result;
     }
-    
+
     public function getBranchUrl($branch)
     {
         return "{$this->repository}/$branch";

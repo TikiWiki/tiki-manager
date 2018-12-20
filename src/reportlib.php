@@ -128,7 +128,7 @@ class ReportManager
             dirname(__FILE__) . '/../scripts/tiki/remote_setup_channels.php',
             [$instance->webroot, $instance->contact]
         );
-        
+
         query(
             SQL_INSERT_REPORT_RECEIVER,
             [':id' => $instance->id, ':user' => 'trim_user', ':pass' => $password]
@@ -173,7 +173,7 @@ class ReportManager
         while ($row = $senders->fetch()) {
             $instance = new Instance;
             $instance = $instance->getInstance($row['instance_id']);
-            
+
             $row['instance'] = $instance;
             $out[] = $row;
         }

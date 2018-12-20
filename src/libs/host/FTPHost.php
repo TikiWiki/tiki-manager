@@ -50,7 +50,7 @@ class FTP_Host
 
         $dir = dirname($filename);
         $base = basename($filename);
-        
+
         $list = ftp_nlist($this->conn, $dir);
 
         if (in_array($filename, $list) || in_array($base, $list)) {
@@ -67,11 +67,11 @@ class FTP_Host
         $this->connect();
         $fp = $this->getResource($filename);
         $content = '';
-    
+
         if (!is_resource($pf)) {
             return $content;
         }
-    
+
         while (!feof($fp)) {
             $content .= fread($fp, 8192);
         }

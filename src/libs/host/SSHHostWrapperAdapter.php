@@ -16,7 +16,7 @@ class SSH_Host_Wrapper_Adapter
         $this->env  = $_ENV ?: [];
         $this->location = '';
     }
-    
+
     private function getCommandPrefix($options = [])
     {
         $options['-i'] = !empty($options['pubkey']) ? $options['pubkey'] : SSH_KEY;
@@ -165,7 +165,7 @@ class SSH_Host_Wrapper_Adapter
         $output = implode("\n", $output);
         return $output;
     }
-    
+
     public function sendFile($localFile, $remoteFile)
     {
         $localFile = escapeshellarg($localFile);

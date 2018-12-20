@@ -87,7 +87,7 @@ class Host_CommandTest extends TestCase
         fclose($pipes[0]);
 
         $process = $command->setProcess($process);
-        
+
         // setting stdout as resource
         $command->setStdout($pipes[1]);
         $command->setStderr($pipes[2]);
