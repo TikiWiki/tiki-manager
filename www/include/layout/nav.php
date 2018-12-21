@@ -1,7 +1,7 @@
 <header>
     <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="<?php echo html(url('')) ?>">TRIM Web Admin</a>
+            <a class="navbar-brand" href="<?php echo html(url('')) ?>">Tiki Manager Web Admin</a>
             <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>

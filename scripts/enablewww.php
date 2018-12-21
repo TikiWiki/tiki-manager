@@ -15,7 +15,7 @@ if (function_exists('posix_getuid')) {
 }
 
 echo <<<INFO
-TRIM web administration files are located in the TRIM directory. In order to
+Tiki Manager web administration files are located in the Tiki Manager's directory. In order to
 make the interface available externally, the files will be copied to a web
 accessible location.
 
@@ -24,7 +24,7 @@ access the files.
 
 For example, if your web root is /var/www/virtual/webtrim.example.com
 * Files will be copied to /var/www/virtual/webtrim.example.com/html
-* TRIM web administration will be accessible from:
+* Tiki Manager web administration will be accessible from:
     http://webtrim.example.com
 * You must have write access in /var/www/virtual
 
@@ -34,12 +34,12 @@ access to the administration panel to local users (safer).
 
 INFO;
 
-echo "This will enable the TRIM administration web panel.\n";
+echo "This will enable the Tiki Manager administration web panel.\n";
 if ('confirm' != promptUser('Type \'confirm\' to continue', '')) {
     exit(1);
 }
 
-$webTrimDirectory = promptUser('WWW Trim directory (ex: /var/www/virtual/webtrim.example.com/html)');
+$webTrimDirectory = promptUser('WWW Tiki Manager directory (ex: /var/www/virtual/webtrim.example.com/html)');
 $cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -a composer.phar ' . $webTrimDirectory;
 exec($cmd);
 
@@ -70,7 +70,7 @@ define('RESTRICT', $restrict);
 define('TIMEOUT', 0);
 define('TRIMPATH', '$trimpath');
 define('THEME', 'default');
-define('TITLE', 'TRIM Web Administration');
+define('TITLE', 'Tiki Manager Web Administration');
 CONFIG
     );
 }
@@ -87,5 +87,5 @@ $archive = ARCHIVE_FOLDER;
 `(cd $webTrimDirectory && rm -rf vendor && php composer.phar install)`;
 `(cd $webTrimDirectory && chown -R $owner vendor)`;
 
-echo "WWW Trim is now enabled.\n";
+echo "WWW Tiki Manager is now enabled.\n";
 echo "Enjoy!\n";

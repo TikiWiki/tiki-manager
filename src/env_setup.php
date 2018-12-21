@@ -7,7 +7,7 @@
 require_once dirname(__FILE__) . '/env_includes.php';
 require_once dirname(__FILE__) . '/libs/helpers/PDOWrapper.php';
 
-debug('Running TRIM at ' . TRIM_ROOT);
+debug('Running Tiki Manager at ' . TRIM_ROOT);
 
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     define('TRIM_TEMP', getenv('TEMP')."\\trim_temp");
@@ -21,9 +21,9 @@ if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
     !defined('SSH_PUBLIC_KEY')) {
     warning(
         sprintf(
-            'Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
+            'Ssh-dsa key (%s and %s) was found but Tiki Manager won\'t used it, ' .
             'because DSA was deprecated in openssh-7.0. ' .
-            'If you need a new RSA key, run \'make copysshkey\' and TRIM will create a new one.' .
+            'If you need a new RSA key, run \'tiki-manager instance:copysshkey\' and Tiki Manager will create a new one.' .
             'Copy the new key to all your instances.',
             SSH_KEY,
             SSH_PUBLIC_KEY
@@ -37,9 +37,9 @@ if (file_exists(TRIM_ROOT . "/data/id_dsa") &&
     !defined('SSH_PUBLIC_KEY')) {
     warning(
         sprintf(
-            'Ssh-dsa key (%s and %s) was found but TRIM won\'t used it, ' .
+            'Ssh-dsa key (%s and %s) was found but Tiki Manager won\'t used it, ' .
             'because DSA was deprecated in openssh-7.0. ' .
-            'If you need a new RSA key, run \'make copysshkey\' and TRIM will create a new one.' .
+            'If you need a new RSA key, run \'make copysshkey\' and Tiki Manager will create a new one.' .
             'Copy the new key to all your instances.',
             SSH_KEY,
             SSH_PUBLIC_KEY
@@ -73,7 +73,7 @@ if (! file_exists(SSH_KEY) || ! file_exists(SSH_PUBLIC_KEY)) {
     }
 
     echo 'If you enter a passphrase, you will need to enter it every time you run ' .
-        'TRIM, and thus, automatic, unattended operations (like backups, file integrity ' .
+        'Tiki Manager, and thus, automatic, unattended operations (like backups, file integrity ' .
         "checks, etc.) will not be possible.\n";
 
     $key = SSH_KEY;
