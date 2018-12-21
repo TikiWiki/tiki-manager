@@ -241,7 +241,7 @@ class Backup
         $instance = $instance ?: $this->instance;
         $symlinkPath = $symlinkPath ?: dirname($instance->webroot) . '/backup';
 
-        // If TRIM archive dir is a link, swap link and target
+        // If Tiki Manager archive dir is a link, swap link and target
         if (is_link($archiveDir)) {
             $realArchiveDir = readlink($archiveDir);
             unlink($archiveDir);
@@ -302,7 +302,7 @@ class BackupCopyException extends Exception
         }
         $EOL = "\r\n";
 
-        $message = "! Backup has failed while downloading files into TRIM."
+        $message = "! Backup has failed while downloading files into Tiki Manager."
             . $EOL
             . $EOL . "!! Failures:"
             . $EOL;

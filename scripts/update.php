@@ -127,7 +127,7 @@ foreach ($selection as $instance) {
             $version = $instance->getLatestVersion();
             handleCheckResult($instance, $version, $filesToResolve);
         } else {
-            echo color("\nError: Tiki Application branch is different than the one stored in the TRIM db.\n\n", 'red');
+            echo color("\nError: Tiki Application branch is different than the one stored in the Tiki Manager db.\n\n", 'red');
         }
     }
 

@@ -196,7 +196,7 @@ class SSH_Host
         $returnVar = $command->getReturn();
 
         if ($returnVar != 0) {
-            $message = "Your ssh keys are not properly set up. Please use 'make copysshkey' command.\n";
+            $message = "Your ssh keys are not properly set up. Please use 'tiki-manager instance:copysshkey' command.\n";
             warning($message);
             return false;
         }

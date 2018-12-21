@@ -3,7 +3,7 @@
 ## Installation
 
 The preferred way to install this extension is through composer.
-To install Tiki-Manager it is required to have [composer](https://getcomposer.org/download/) installed.
+To install Tiki Manager it is required to have [composer](https://getcomposer.org/download/) installed.
 
 ```
 php composer.phar install

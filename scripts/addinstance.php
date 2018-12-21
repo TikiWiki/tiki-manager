@@ -9,7 +9,7 @@ include_once dirname(__FILE__) . '/../src/dbsetup.php';
 
 define('ARG_BLANK', $_SERVER['argc'] == 2 && $_SERVER['argv'][1] == 'blank');
 
-echo color("\nAnswer the following to add a new TRIM instance.\n\n", 'yellow');
+echo color("\nAnswer the following to add a new Tiki Manager instance.\n\n", 'yellow');
 
 $instance = new Instance();
 $instance->type = strtolower(promptUser('Connection type ', null, explode(',', Instance::TYPES)));
@@ -62,11 +62,11 @@ if ($access instanceof ShellPrompt) {
         }
 
         if ($confirmAnswer != 'yes') {
-            echo die(color("Webroot directory not created. Unable to continue, TRIM requires an existing webroot directory.\n", 'yellow'));
+            echo die(color("Webroot directory not created. Unable to continue, Tiki Manager requires an existing webroot directory.\n", 'yellow'));
         }
 
         if ($createResult != 'SUCCESS') {
-            echo die(color("Unable to create webroot directory. Unable to continue, TRIM requires an existing webroot directory.\n", 'yellow'));
+            echo die(color("Unable to create webroot directory. Unable to continue, Tiki Manager requires an existing webroot directory.\n", 'yellow'));
         }
     }
 

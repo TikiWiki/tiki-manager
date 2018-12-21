@@ -10,7 +10,7 @@ SELECT
 FROM
     instance i
 INNER JOIN access a
-    ON i.instance_id=a.instance_id
+    ON i.instance_id = a.instance_id
 LEFT JOIN
     version v ON i.instance_id = v.instance_id
 ;");
@@ -21,7 +21,7 @@ SELECT
 FROM
     instance i
 INNER JOIN access a
-    ON i.instance_id=a.instance_id
+    ON i.instance_id = a.instance_id
 LEFT JOIN
     version v ON i.instance_id = v.instance_id
 WHERE
@@ -30,11 +30,13 @@ WHERE
 
 define('SQL_SELECT_UPDATABLE_INSTANCE', "
 SELECT
-    instance.instance_id id, name, contact, webroot, weburl, tempdir, phpexec, app, version.branch
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type
 FROM
-    instance
+    instance i
+INNER JOIN access a
+    ON i.instance_id = a.instance_id
 INNER JOIN
-    version ON instance.instance_id = version.instance_id
+    version v ON i.instance_id = v.instance_id
 INNER JOIN (
     SELECT
         MAX(version_id) version
@@ -42,9 +44,9 @@ INNER JOIN (
         version
     GROUP BY
         instance_id
-    ) t ON t.version = version.version_id
+    ) t ON t.version = v.version_id
 WHERE
-    type = 'svn' OR type = 'tarball'
+    v.type = 'svn' OR v.type = 'tarball'
 ;");
 
 define('SQL_SELECT_LATEST_VERSION', "
@@ -211,6 +213,34 @@ class Instance
         }
 
         return $instances;
+    }
+
+    static function getTikiInstances()
+    {
+        $allInstances = self::getInstances();
+
+        $tikiInstances = [];
+        foreach ($allInstances as $instance) {
+            if ($instance->getApplication() instanceof Application_Tiki) {
+                $tikiInstances[$instance->id] = $instance;
+            }
+        }
+
+        return $tikiInstances;
+    }
+
+    static function getNoTikiInstances()
+    {
+        $allInstances = self::getInstances();
+
+        $noTikiInstances = [];
+        foreach ($allInstances as $instance) {
+            if (! $instance->getApplication()) {
+                $noTikiInstances[$instance->id] = $instance;
+            }
+        }
+
+        return $noTikiInstances;
     }
 
     static function getInstance($id)

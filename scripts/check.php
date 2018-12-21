@@ -60,7 +60,7 @@ foreach ($selection as $instance) {
     }
 
     if (!empty($versionRevision) && $versionRevision != $tikiRevision) {
-        warning('Revision mismatch between trim version and instance.');
+        warning('Revision mismatch between Tiki Manager version and instance.');
         $fetchChecksum = true;
     }
 

@@ -187,7 +187,7 @@ function secure_trim_data($should_set = false)
         $chmod_success = $should_set && chmod(TRIM_DATA, $exp_mode);
 
         if (!$chmod_success) {
-            error("Your TRIM data is unsafe! ");
+            error("Your Tiki Manager data is unsafe! ");
             error(sprintf(
                 '  Currently it is: d%s%s%s	%s:%s	%s',
                 $modes[ ($cur_mode >> 6) & 0b111 ],

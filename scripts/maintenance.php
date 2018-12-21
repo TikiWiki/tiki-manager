@@ -25,7 +25,7 @@ $timeElapsed = $interval->format('%hh:%im:%ss');
 ?><!DOCTYPE html>
 <html>
 <head>
-    <title>Trim Maintenance Page</title>
+    <title>Tiki Manager Maintenance Page</title>
 
     <style type="text/css">
         @-ms-viewport{width:device-width}article,aside,figcaption,figure,footer,header,hgroup,main,nav,section{display:block}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;text-align:left;background-color:#fff}
