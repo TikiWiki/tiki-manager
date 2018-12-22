@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $access->user = $discovery->detectUser();
     $backup_user = $access->user;
     $backup_perm = 0770;
-
+    $class = '';
 switch ($discovery->detectDistro()) {
     case "ClearOS":
         $backup_group = 'apache';
@@ -95,6 +95,7 @@ switch ($discovery->detectDistro()) {
 
 if ($import) {
     $webroot = $_POST['tikiwebroot'];
+    $class = 'hidden';
 }
 ?>
 
@@ -102,10 +103,7 @@ if ($import) {
     <div class="trim-instance-new center">
         <h1><?php echo TITLE; ?></h1>
         <h2><?php echo $page_title; ?></h2>
-
-        <div class="searching <?php if ($import) {
-            echo 'hide';
-} ?>">
+        <div class="searching <?= $class ?>">
             <?php if ($notfound) : ?>
             <div class="alert alert-danger" role="alert">
                 No instances found at <?php echo $_POST['tikiwebroot']; ?>
@@ -135,9 +133,7 @@ if ($import) {
             </form>
         </div>
 
-        <div class="importing <?php if (! $import) {
-            echo 'hide';
-} ?>">
+        <div class="importing <?= $class ?>">
             <div class="alert alert-info" role="alert">
                 Tiki instance found at <?php echo $_POST['tikiwebroot']; ?>
             </div>

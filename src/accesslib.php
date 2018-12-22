@@ -32,13 +32,13 @@ abstract class Access
     public $password;
     public $port;
 
-    function __construct(Instance $instance, $type)
+    public function __construct(Instance $instance, $type)
     {
         $this->instance = $instance;
         $this->type = $type;
     }
 
-    static function getClassFor($type)
+    public static function getClassFor($type)
     {
         $types = [
             'ftp'        => 'Access_FTP',
@@ -54,7 +54,7 @@ abstract class Access
         throw new Exception("Unknown type: $type", 1);
     }
 
-    static function getAccessFor(Instance $instance)
+    public static function getAccessFor(Instance $instance)
     {
         $result = query(SQL_SELECT_ACCESS, [':id' => $instance->id]);
 
@@ -76,7 +76,7 @@ abstract class Access
         return $access;
     }
 
-    function save()
+    public function save()
     {
         $params = [
             ':instance' => $this->instance->id,
@@ -96,7 +96,7 @@ abstract class Access
         }
     }
 
-    function changeType($type)
+    public function changeType($type)
     {
         if (strpos($type, "{$this->type}::") === false) {
             $this->type = $type;
@@ -106,53 +106,53 @@ abstract class Access
         }
     }
 
-    abstract function firstConnect();
+    abstract public function firstConnect();
 
-    abstract function getInterpreterPath($instance2 = null);
+    abstract public function getInterpreterPath($instance2 = null);
 
-    abstract function fileExists($filename);
+    abstract public function fileExists($filename);
 
-    abstract function fileGetContents($filename);
+    abstract public function fileGetContents($filename);
 
-    abstract function fileModificationDate($filename);
+    abstract public function fileModificationDate($filename);
 
-    abstract function runPHP($localFile, $args = []);
+    abstract public function runPHP($localFile, $args = []);
 
-    abstract function downloadFile($filename);
+    abstract public function downloadFile($filename);
 
-    abstract function uploadFile($filename, $remoteLocation);
+    abstract public function uploadFile($filename, $remoteLocation);
 
-    abstract function deleteFile($filename);
+    abstract public function deleteFile($filename);
 
-    abstract function moveFile($remoteSource, $remoteTarget);
+    abstract public function moveFile($remoteSource, $remoteTarget);
 
-    abstract function copyFile($remoteSource, $remoteTarget);
+    abstract public function copyFile($remoteSource, $remoteTarget);
 
-    abstract function localizeFolder($remoteLocation, $localMirror);
+    abstract public function localizeFolder($remoteLocation, $localMirror);
 }
 
 interface ShellPrompt
 {
-    function shellExec($command);
+    public function shellExec($command);
 
-    function openShell($workingDir = '');
+    public function openShell($workingDir = '');
 
-    function chdir($location);
+    public function chdir($location);
 
-    function setenv($var, $value);
+    public function setenv($var, $value);
 
-    function hasExecutable($name);
+    public function hasExecutable($name);
 
-    function createCommand($bin, $args = [], $stdin = '');
+    public function createCommand($bin, $args = [], $stdin = '');
 
-    function runCommand($command, $options = []);
+    public function runCommand($command, $options = []);
 }
 
 interface Mountable
 {
-    function mount($target);
-    function umount();
-    function synchronize($source, $mirror, $keepFolderName = false);
+    public function mount($target);
+    public function umount();
+    public function synchronize($source, $mirror, $keepFolderName = false);
 }
 
 class Access_Local extends Access implements ShellPrompt
@@ -162,7 +162,7 @@ class Access_Local extends Access implements ShellPrompt
     private $hostlib = null;
     private $changeLocation = null;
 
-    function __construct(Instance $instance)
+    public function __construct(Instance $instance)
     {
         parent::__construct($instance, 'local');
     }
@@ -219,12 +219,12 @@ class Access_Local extends Access implements ShellPrompt
         return $host;
     }
 
-    function firstConnect()
+    public function firstConnect()
     {
         return true;
     }
 
-    function getInterpreterPath($instance2 = null)
+    public function getInterpreterPath($instance2 = null)
     {
         $host = $this->getHost();
 
@@ -288,7 +288,7 @@ class Access_Local extends Access implements ShellPrompt
         return $valid[$version];
     }
 
-    function getSVNPath()
+    public function getSVNPath()
     {
         $host = $this->getHost();
 
@@ -356,14 +356,14 @@ class Access_Local extends Access implements ShellPrompt
         }
     }
 
-    function getInterpreterVersion($interpreter)
+    public function getInterpreterVersion($interpreter)
     {
         $host = $this->getHost();
         $versionInfo = $host->runCommands("$interpreter -r \"echo PHP_VERSION_ID;\"");
         return $versionInfo;
     }
 
-    function getDistributionName($interpreter)
+    public function getDistributionName($interpreter)
     {
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             return "Windows";
@@ -378,7 +378,7 @@ class Access_Local extends Access implements ShellPrompt
         return $linuxName;
     }
 
-    function fileExists($filename)
+    public function fileExists($filename)
     {
         if (!$this->isLocalPath($filename)) {
             $filename = $this->instance->getWebPath($filename);
@@ -387,17 +387,17 @@ class Access_Local extends Access implements ShellPrompt
         return file_exists($filename);
     }
 
-    function fileGetContents($filename)
+    public function fileGetContents($filename)
     {
         return @file_get_contents($filename);
     }
 
-    function fileModificationDate($filename)
+    public function fileModificationDate($filename)
     {
         return date("Y-m-d", filemtime($filename));
     }
 
-    function runPHP($localFile, $args = [])
+    public function runPHP($localFile, $args = [])
     {
         $host = $this->getHost();
 
@@ -412,7 +412,7 @@ class Access_Local extends Access implements ShellPrompt
         return $output;
     }
 
-    function downloadFile($filename)
+    public function downloadFile($filename)
     {
         if (!$this->isLocalPath($filename)) {
             $filename = $this->instance->getWebPath($filename);
@@ -432,7 +432,7 @@ class Access_Local extends Access implements ShellPrompt
         return $local . $ext;
     }
 
-    function uploadFile($filename, $remoteLocation)
+    public function uploadFile($filename, $remoteLocation)
     {
         $host = $this->getHost();
         if ($this->isLocalPath($remoteLocation)) {
@@ -442,7 +442,7 @@ class Access_Local extends Access implements ShellPrompt
         }
     }
 
-    function deleteFile($filename)
+    public function deleteFile($filename)
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
@@ -451,7 +451,7 @@ class Access_Local extends Access implements ShellPrompt
         unlink($filename);
     }
 
-    function moveFile($remoteSource, $remoteTarget)
+    public function moveFile($remoteSource, $remoteTarget)
     {
         if (!$this->isLocalPath($remoteSource)) {
             $remoteSource = $this->instance->getWebPath($remoteSource);
@@ -463,7 +463,7 @@ class Access_Local extends Access implements ShellPrompt
         rename($remoteSource, $remoteTarget);
     }
 
-    function copyFile($remoteSource, $remoteTarget)
+    public function copyFile($remoteSource, $remoteTarget)
     {
         if (!$this->isLocalPath($remoteSource)) {
             $remoteSource = $this->instance->getWebPath($remoteSource);
@@ -475,17 +475,17 @@ class Access_Local extends Access implements ShellPrompt
         copy($remoteSource, $remoteTarget);
     }
 
-    function chdir($location)
+    public function chdir($location)
     {
         $this->location = $location;
     }
 
-    function setenv($var, $value)
+    public function setenv($var, $value)
     {
         $this->env[$var] = $value;
     }
 
-    function shellExec($commands, $output = false)
+    public function shellExec($commands, $output = false)
     {
         if (! is_array($commands)) {
             $commands = func_get_args();
@@ -502,7 +502,7 @@ class Access_Local extends Access implements ShellPrompt
         return $host->runCommands($commands, $output);
     }
 
-    function createCommand($bin, $args = [], $stdin = '')
+    public function createCommand($bin, $args = [], $stdin = '')
     {
         $options = [];
 
@@ -519,7 +519,7 @@ class Access_Local extends Access implements ShellPrompt
         return $command;
     }
 
-    function runCommand($command, $options = [])
+    public function runCommand($command, $options = [])
     {
         $host = $this->getHost();
 
@@ -533,13 +533,13 @@ class Access_Local extends Access implements ShellPrompt
         return $command->run($host);
     }
 
-    function openShell($workingDir = '')
+    public function openShell($workingDir = '')
     {
         $host = $this->getHost();
         $host->openShell($workingDir);
     }
 
-    function hasExecutable($command)
+    public function hasExecutable($command)
     {
         $command = escapeshellcmd($command);
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -551,7 +551,7 @@ class Access_Local extends Access implements ShellPrompt
         return ! empty($exists);
     }
 
-    function localizeFolder($remoteLocation, $localMirror)
+    public function localizeFolder($remoteLocation, $localMirror)
     {
         $host = $this->getHost();
         return $host->rsync([
@@ -567,7 +567,7 @@ class Access_SSH extends Access implements ShellPrompt
     private $env = [];
     private $changeLocation = null;
 
-    function __construct(Instance $instance)
+    public function __construct(Instance $instance)
     {
         parent::__construct($instance, 'ssh');
         $this->port = 22;
@@ -601,7 +601,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $host;
     }
 
-    function firstConnect()
+    public function firstConnect()
     {
         $host = $this->getHost();
         $host->setupKey(SSH_PUBLIC_KEY);
@@ -624,7 +624,7 @@ class Access_SSH extends Access implements ShellPrompt
     }
 
 // FIXME: Expect all remote to be Unix-like machines
-    function getInterpreterPath($instance2 = null)
+    public function getInterpreterPath($instance2 = null)
     {
         $host = $this->getHost();
 
@@ -681,7 +681,7 @@ class Access_SSH extends Access implements ShellPrompt
         }
     }
 
-    function getSVNPath()
+    public function getSVNPath()
     {
         $host = $this->getHost();
 
@@ -738,14 +738,14 @@ class Access_SSH extends Access implements ShellPrompt
         }
     }
 
-    function getInterpreterVersion($interpreter)
+    public function getInterpreterVersion($interpreter)
     {
         $host = $this->getHost();
         $versionInfo = $host->runCommands("$interpreter -r 'echo PHP_VERSION_ID;'");
         return $versionInfo;
     }
 
-    function getDistributionName($interpreter)
+    public function getDistributionName($interpreter)
     {
         $host = $this->getHost();
         $command = file_get_contents(
@@ -756,7 +756,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $linuxName;
     }
 
-    function fileExists($filename)
+    public function fileExists($filename)
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
@@ -765,7 +765,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $command->run()->getReturn() === 0;
     }
 
-    function fileGetContents($filename)
+    public function fileGetContents($filename)
     {
         $host = $this->getHost();
         $filename = escapeshellarg($filename);
@@ -773,7 +773,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $host->runCommands("cat $filename");
     }
 
-    function fileModificationDate($filename)
+    public function fileModificationDate($filename)
     {
         $host = $this->getHost();
         $root = escapeshellarg($filename);
@@ -786,7 +786,7 @@ class Access_SSH extends Access implements ShellPrompt
         }
     }
 
-    function runPHP($localFile, $args = [])
+    public function runPHP($localFile, $args = [])
     {
         $host = $this->getHost();
 
@@ -806,7 +806,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $output;
     }
 
-    function downloadFile($filename)
+    public function downloadFile($filename)
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
@@ -826,7 +826,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $local . $ext;
     }
 
-    function uploadFile($filename, $remoteLocation)
+    public function uploadFile($filename, $remoteLocation)
     {
         $host = $this->getHost();
         if ($remoteLocation{0} == '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -836,7 +836,7 @@ class Access_SSH extends Access implements ShellPrompt
         }
     }
 
-    function deleteFile($filename)
+    public function deleteFile($filename)
     {
         if ($filename{0} != '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             $filename = $this->instance->getWebPath($filename);
@@ -848,7 +848,7 @@ class Access_SSH extends Access implements ShellPrompt
         $host->runCommands("rm $path");
     }
 
-    function moveFile($remoteSource, $remoteTarget)
+    public function moveFile($remoteSource, $remoteTarget)
     {
         if ($remoteSource{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
@@ -863,7 +863,7 @@ class Access_SSH extends Access implements ShellPrompt
         $this->shellExec("mv $a $b");
     }
 
-    function copyFile($remoteSource, $remoteTarget)
+    public function copyFile($remoteSource, $remoteTarget)
     {
         if ($remoteSource{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
@@ -878,17 +878,17 @@ class Access_SSH extends Access implements ShellPrompt
         $this->shellExec("cp $a $b");
     }
 
-    function chdir($location)
+    public function chdir($location)
     {
         $this->location = $location;
     }
 
-    function setenv($var, $value)
+    public function setenv($var, $value)
     {
         $this->env[$var] = $value;
     }
 
-    function shellExec($commands, $output = false)
+    public function shellExec($commands, $output = false)
     {
         if (!is_array($commands)) {
             $argv = func_get_args();
@@ -911,7 +911,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $host->runCommands($commands, $output);
     }
 
-    function createCommand($bin, $args = [], $stdin = '')
+    public function createCommand($bin, $args = [], $stdin = '')
     {
         $options = [];
 
@@ -928,7 +928,7 @@ class Access_SSH extends Access implements ShellPrompt
         return $command;
     }
 
-    function runCommand($command, $options = [])
+    public function runCommand($command, $options = [])
     {
         $host = $this->getHost();
 
@@ -942,13 +942,13 @@ class Access_SSH extends Access implements ShellPrompt
         return $command->run($host);
     }
 
-    function openShell($workingDir = '')
+    public function openShell($workingDir = '')
     {
         $host = $this->getHost();
         $host->openShell($workingDir);
     }
 
-    function hasExecutable($command)
+    public function hasExecutable($command)
     {
         $command = escapeshellcmd($command);
         $exists = $this->shellExec("which $command");
@@ -956,7 +956,7 @@ class Access_SSH extends Access implements ShellPrompt
         return ! empty($exists);
     }
 
-    function localizeFolder($remoteLocation, $localMirror)
+    public function localizeFolder($remoteLocation, $localMirror)
     {
         $host = $this->getHost();
         return $host->rsync([
@@ -970,14 +970,14 @@ class Access_FTP extends Access implements Mountable
 {
     private $lastMount;
 
-    function __construct(Instance $instance)
+    public function __construct(Instance $instance)
     {
         parent::__construct($instance, 'ftp');
         $this->port = 21;
     }
 
     // TODO: change directory using FTP
-    function openShell($workingDir = '')
+    public function openShell($workingDir = '')
     {
         echo "User: {$this->user}, Pass: {$this->password}\n";
         passthru("ftp {$this->host} {$this->port}");
@@ -988,14 +988,14 @@ class Access_FTP extends Access implements Mountable
         return new FTP_Host($this->host, $this->user, $this->password, $this->port);
     }
 
-    function firstConnect()
+    public function firstConnect()
     {
         $conn = $this->getHost();
 
         return $conn->connect();
     }
 
-    function getInterpreterPath($instance2 = null)
+    public function getInterpreterPath($instance2 = null)
     {
         if ($instance2 instanceof Instance) {
             $this->instance = $instance2;
@@ -1011,22 +1011,22 @@ class Access_FTP extends Access implements Mountable
         }
     }
 
-    function getSVNPath()
+    public function getSVNPath()
     {
         return 1;
     }
 
-    function getInterpreterVersion($interpreter)
+    public function getInterpreterVersion($interpreter)
     {
         return 99999;
     }
 
-    function getDistributionName($interpreter)
+    public function getDistributionName($interpreter)
     {
         return 'Unknown';
     }
 
-    function fileExists($filename)
+    public function fileExists($filename)
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
@@ -1036,17 +1036,17 @@ class Access_FTP extends Access implements Mountable
         return $ftp->fileExists($filename);
     }
 
-    function fileGetContents($filename)
+    public function fileGetContents($filename)
     {
         $ftp = $this->getHost();
         return $ftp->getContent($filename);
     }
 
-    function fileModificationDate($filename)
+    public function fileModificationDate($filename)
     {
     }
 
-    function runPHP($localFile, $args = [])
+    public function runPHP($localFile, $args = [])
     {
         foreach ($args as & $potentialPath) {
             if ($potentialPath{0} == '/') {
@@ -1072,7 +1072,7 @@ class Access_FTP extends Access implements Mountable
         return $output;
     }
 
-    function downloadFile($filename)
+    public function downloadFile($filename)
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
@@ -1092,7 +1092,7 @@ class Access_FTP extends Access implements Mountable
         return $local . $ext;
     }
 
-    function uploadFile($filename, $remoteLocation)
+    public function uploadFile($filename, $remoteLocation)
     {
         $host = $this->getHost();
         if ($remoteLocation{0} == '/') {
@@ -1102,7 +1102,7 @@ class Access_FTP extends Access implements Mountable
         }
     }
 
-    function moveFile($remoteSource, $remoteTarget)
+    public function moveFile($remoteSource, $remoteTarget)
     {
         if ($remoteSource{0} != '/') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
@@ -1115,7 +1115,7 @@ class Access_FTP extends Access implements Mountable
         $host->rename($remoteSource, $remoteTarget);
     }
 
-    function copyFile($remoteSource, $remoteTarget)
+    public function copyFile($remoteSource, $remoteTarget)
     {
         if ($remoteSource{0} != '/') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
@@ -1128,7 +1128,7 @@ class Access_FTP extends Access implements Mountable
         $host->copy($remoteSource, $remoteTarget);
     }
 
-    function deleteFile($filename)
+    public function deleteFile($filename)
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
@@ -1138,7 +1138,7 @@ class Access_FTP extends Access implements Mountable
         $host->removeFile($filename);
     }
 
-    function localizeFolder($remoteLocation, $localMirror)
+    public function localizeFolder($remoteLocation, $localMirror)
     {
         if ($remoteLocation{0} != '/') {
             $remoteLocation = $this->instance->getWebPath($remoteLocation);
@@ -1177,7 +1177,7 @@ class Access_FTP extends Access implements Mountable
         chdir($current);
     }
 
-    static function obtainRelativePathTo($targetFolder, $originFolder)
+    public static function obtainRelativePathTo($targetFolder, $originFolder)
     {
         $parts = [];
         while ((0 !== strpos($targetFolder, $originFolder))
@@ -1200,7 +1200,7 @@ class Access_FTP extends Access implements Mountable
         return $out;
     }
 
-    function mount($target)
+    public function mount($target)
     {
         if ($this->lastMount) {
             return false;
@@ -1221,7 +1221,7 @@ class Access_FTP extends Access implements Mountable
         return true;
     }
 
-    function umount()
+    public function umount()
     {
         if ($this->lastMount) {
             $loc = escapeshellarg($this->lastMount);
@@ -1230,7 +1230,7 @@ class Access_FTP extends Access implements Mountable
         }
     }
 
-    function synchronize($source, $mirror, $keepFolderName = false)
+    public function synchronize($source, $mirror, $keepFolderName = false)
     {
         $source = rtrim($source, '/') . ($keepFolderName ? '' : '/');
         $mirror = rtrim($mirror, '/') . '/';
@@ -1244,7 +1244,7 @@ class Access_FTP extends Access implements Mountable
         passthru($cmd);
     }
 
-    function copyLocalFolder($localFolder, $remoteFolder = '')
+    public function copyLocalFolder($localFolder, $remoteFolder = '')
     {
         if ($remoteFolder{0} != '/') {
             $remoteFolder = $this->instance->getWebPath($remoteFolder);

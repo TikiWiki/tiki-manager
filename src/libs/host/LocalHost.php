@@ -12,28 +12,28 @@ class Local_Host
     private $last_command_exit_code = 0;
     private $location;
 
-    function __construct()
+    public function __construct()
     {
         $this->env = $_ENV ?: [];
     }
 
-    function chdir($location)
+    public function chdir($location)
     {
         chdir($location);
         $this->location = $location;
     }
 
-    function setenv($var, $value)
+    public function setenv($var, $value)
     {
         $this->env[$var] = $value;
     }
 
-    function hasErrors()
+    public function hasErrors()
     {
         return $this->last_command_exit_code !== 0;
     }
 
-    function runCommand($command, $options = [])
+    public function runCommand($command, $options = [])
     {
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
         $env = !empty($options['env']) ? $options['env'] : $this->env;
@@ -82,7 +82,7 @@ class Local_Host
         return $command;
     }
 
-    function runCommands($commands, $output = false)
+    public function runCommands($commands, $output = false)
     {
         if (! is_array($commands)) {
             $commands = func_get_args();
@@ -137,7 +137,7 @@ class Local_Host
         return $contents;
     }
 
-    function sendFile($localFile, $remoteFile)
+    public function sendFile($localFile, $remoteFile)
     {
         $command = sprintf(
             'rsync -av %s %s',
@@ -147,7 +147,7 @@ class Local_Host
         $this->runCommands($command);
     }
 
-    function receiveFile($remoteFile, $localFile)
+    public function receiveFile($remoteFile, $localFile)
     {
         $command = sprintf(
             'rsync -av %s %s',
@@ -157,7 +157,7 @@ class Local_Host
         $this->runCommands($command);
     }
 
-    function openShell($workingDir = '')
+    public function openShell($workingDir = '')
     {
         if (empty($workingDir)) {
             return;
@@ -173,7 +173,7 @@ class Local_Host
         passthru($command);
     }
 
-    function rsync($args = [])
+    public function rsync($args = [])
     {
         $return_val = -1;
 

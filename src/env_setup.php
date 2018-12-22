@@ -198,6 +198,7 @@ switch ($version) {
 
         UPDATE info SET value = '1' WHERE name = 'version';
     ");
+    // no break
     case 1:
         $db->exec("
         CREATE TABLE backup (
@@ -212,6 +213,7 @@ switch ($version) {
 
         UPDATE info SET value = '2' WHERE name = 'version';
     ");
+    // no break
     case 2:
         $db->exec("
         CREATE TABLE report_receiver (
@@ -230,6 +232,7 @@ switch ($version) {
 
         UPDATE info SET value = '3' WHERE name = 'version';
     ");
+    // no break
     case 3:
         $db->exec("
         UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh';
@@ -238,6 +241,7 @@ switch ($version) {
 
         UPDATE info SET value = '4' WHERE name = 'version';
     ");
+    // no break
     case 4:
         $db->exec("
         CREATE TABLE property (
@@ -249,11 +253,13 @@ switch ($version) {
         );
         UPDATE info SET value = '5' WHERE name = 'version';
     ");
+    // no break
     case 5:
         $db->exec("
         ALTER TABLE version ADD COLUMN revision VARCHAR(25);
         UPDATE info SET value = '6' WHERE name = 'version';
     ");
+    // no break
 }
 
 // Database access

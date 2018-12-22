@@ -192,12 +192,12 @@ class Instance
 
     private $access = [];
 
-    function getId()
+    public function getId()
     {
         return $this->id;
     }
 
-    static function getInstances($exclude_blank = false)
+    public static function getInstances($exclude_blank = false)
     {
         $result = query(SQL_SELECT_INSTANCE);
 
@@ -215,7 +215,7 @@ class Instance
         return $instances;
     }
 
-    static function getTikiInstances()
+    public static function getTikiInstances()
     {
         $allInstances = self::getInstances();
 
@@ -229,7 +229,7 @@ class Instance
         return $tikiInstances;
     }
 
-    static function getNoTikiInstances()
+    public static function getNoTikiInstances()
     {
         $allInstances = self::getInstances();
 
@@ -243,14 +243,14 @@ class Instance
         return $noTikiInstances;
     }
 
-    static function getInstance($id)
+    public static function getInstance($id)
     {
         $result = query(SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);
         $instance = $result->fetchObject('Instance');
         return $instance;
     }
 
-    static function getUpdatableInstances()
+    public static function getUpdatableInstances()
     {
         $result = query(SQL_SELECT_UPDATABLE_INSTANCE);
 
@@ -262,7 +262,7 @@ class Instance
         return $instances;
     }
 
-    static function getRestorableInstances()
+    public static function getRestorableInstances()
     {
         $dp = opendir(BACKUP_FOLDER);
 
@@ -282,7 +282,7 @@ class Instance
         return $backups;
     }
 
-    function save()
+    public function save()
     {
         $params = [
             ':id' => $this->id,
@@ -340,7 +340,7 @@ class Instance
         }
     }
 
-    function delete()
+    public function delete()
     {
         query(SQL_DELETE_ACCESS, [':id' => $this->id]);
         query(SQL_DELETE_BACKUP, [':id' => $this->id]);
@@ -352,7 +352,7 @@ class Instance
         query(SQL_DELETE_ALL_INSTANCE_PROPERTIES, [':id' => $this->id]);
     }
 
-    function registerAccessMethod($type, $host, $user, $password = null, $port = null)
+    public function registerAccessMethod($type, $host, $user, $password = null, $port = null)
     {
         if (! $class = Access::getClassFor($type)) {
             return;
@@ -375,7 +375,7 @@ class Instance
         }
     }
 
-    function getBestAccess($type)
+    public function getBestAccess($type)
     {
         if (empty($this->access)) {
             $this->access = Access::getAccessFor($this);
@@ -388,7 +388,7 @@ class Instance
         return reset($this->access);
     }
 
-    function getWebUrl($relativePath)
+    public function getWebUrl($relativePath)
     {
         $weburl = rtrim($this->weburl, '/');
 
@@ -398,7 +398,7 @@ class Instance
         return $path;
     }
 
-    function getWebPath($relativePath)
+    public function getWebPath($relativePath)
     {
         $path = "{$this->webroot}/$relativePath";
         $path = str_replace('/./', '/', $path);
@@ -406,12 +406,12 @@ class Instance
         return $path;
     }
 
-    function getWorkPath($relativePath)
+    public function getWorkPath($relativePath)
     {
         return "{$this->tempdir}/$relativePath";
     }
 
-    function getProp($key)
+    public function getProp($key)
     {
         $result = query(SQL_GET_INSTANCE_PROPERTY, [':id' => $this->id, ':key' => $key]);
         $result = $result->fetchObject();
@@ -420,7 +420,7 @@ class Instance
         }
     }
 
-    function setProp($key, $value)
+    public function setProp($key, $value)
     {
         $result = query(SQL_SET_INSTANCE_PROPERTY, [
             ':id' => $this->id,
@@ -429,7 +429,7 @@ class Instance
         ]);
     }
 
-    function createWorkPath($access = null)
+    public function createWorkPath($access = null)
     {
         if (is_null($access)) {
             $access = $this->getBestAccess('scripting');
@@ -442,7 +442,7 @@ class Instance
         return $this->tempdir;
     }
 
-    function getPHPVersion()
+    public function getPHPVersion()
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
@@ -450,7 +450,7 @@ class Instance
         return $version;
     }
 
-    function detectPHP()
+    public function detectPHP()
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
@@ -481,7 +481,7 @@ class Instance
         exit(1);
     }
 
-    function detectSVN()
+    public function detectSVN()
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getSVNPath();
@@ -493,14 +493,14 @@ class Instance
         return false;
     }
 
-    function detectDistribution()
+    public function detectDistribution()
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath();
         return $access->getDistributionName($path);
     }
 
-    function getExtensions()
+    public function getExtensions()
     {
         $access = $this->getBestAccess('scripting');
         $content = $access->runPHP(TRIM_ROOT . '/scripts/get_extensions.php');
@@ -509,7 +509,7 @@ class Instance
         return $modules;
     }
 
-    function findApplication()
+    public function findApplication()
     {
         foreach (Application::getApplications($this) as $app) {
             if ($app->isInstalled()) {
@@ -521,12 +521,12 @@ class Instance
         return null;
     }
 
-    function createVersion()
+    public function createVersion()
     {
         return new Version($this->getId());
     }
 
-    function getLatestVersion()
+    public function getLatestVersion()
     {
         $result = query(SQL_SELECT_LATEST_VERSION, [':id' => $this->id]);
         $object = $result->fetchObject('Version', [$this]);
@@ -540,7 +540,7 @@ class Instance
      *
      * @return bool
      */
-    function hasConsole()
+    public function hasConsole()
     {
         $current = $this->getLatestVersion();
         $hasConsole = $current->branch === 'trunk'
@@ -551,7 +551,7 @@ class Instance
         return $hasConsole;
     }
 
-    function getApplication()
+    public function getApplication()
     {
         if (empty($this->app)) {
             return false;
@@ -567,7 +567,7 @@ class Instance
         return new $class($this);
     }
 
-    function backup()
+    public function backup()
     {
         $backup = new Backup($this);
 
@@ -579,7 +579,7 @@ class Instance
         return $tar;
     }
 
-    function restore($src_app, $archive, $clone = false)
+    public function restore($src_app, $archive, $clone = false)
     {
         $access = $this->getBestAccess('scripting');
 
@@ -620,7 +620,7 @@ class Instance
         );
     }
 
-    function getExtraBackups()
+    public function getExtraBackups()
     {
         $result = query(SQL_SELECT_BACKUP_LOCATION, [':id' => $this->id]);
 
@@ -632,7 +632,7 @@ class Instance
         return $list;
     }
 
-    function setExtraBackups($paths)
+    public function setExtraBackups($paths)
     {
         query(SQL_DELETE_BACKUP, [':id' => $this->id]);
 
@@ -643,13 +643,13 @@ class Instance
         }
     }
 
-    function getArchives()
+    public function getArchives()
     {
         $backup = new Backup($this);
         return $backup->getArchives();
     }
 
-    function isLocked()
+    public function isLocked()
     {
         $access = $this->getBestAccess('scripting');
         $base_htaccess = TRIM_ROOT . '/scripts/maintenance.htaccess';
@@ -659,7 +659,7 @@ class Instance
             && file_get_contents($base_htaccess) === $access->fileGetContents($curr_htaccess);
     }
 
-    function lock()
+    public function lock()
     {
         if ($this->isLocked()) {
             return true;
@@ -678,7 +678,7 @@ class Instance
         return $this->isLocked();
     }
 
-    function unlock()
+    public function unlock()
     {
         if (!$this->isLocked()) {
             return true;
@@ -696,7 +696,7 @@ class Instance
         return !$this->isLocked();
     }
 
-    function __get($name)
+    public function __get($name)
     {
         if (isset($this->$name)) {
             return $this->$name;
