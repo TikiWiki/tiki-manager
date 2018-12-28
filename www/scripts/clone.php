@@ -7,7 +7,7 @@ require TRIMPATH . '/src/env_setup.php';
 ob_end_clean();
 
 if (isset($_POST['id'])) {
-    if (( $instance = Instance::getInstance((int) $_POST['id']) ) && ( $source = Instance::getInstance((int) $_POST['source']) )) {
+    if (( $instance = TikiManager\Application\Instance::getInstance((int) $_POST['id']) ) && ( $source = TikiManager\Application\Instance::getInstance((int) $_POST['source']) )) {
         warning("Initiating backup of {$source->name}");
         $archive = web_backup($source);
 

@@ -1,12 +1,14 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use TikiManager\Libs\Host\Command;
+use TikiManager\Libs\Host\Exception\CommandException;
 
-class Host_CommandTest extends TestCase
+class HostCommandTest extends TestCase
 {
     public function testCreateCommand()
     {
-        $command = new Host_Command('cat', [], 'Hello World');
+        $command = new Command('cat', array(), 'Hello World');
         $this->assertTrue(is_object($command));
         $this->assertEquals('cat', $command->getCommand());
         $this->assertEquals('cat', $command->getFullCommand());
@@ -14,7 +16,7 @@ class Host_CommandTest extends TestCase
 
     public function testPassStdinAsString()
     {
-        $command = new Host_Command('cat', [], 'Hello World');
+        $command = new Command('cat', array(), 'Hello World');
 
         $stdin = $command->getStdin();
         $this->assertTrue(is_resource($stdin), 'stdin is a resource');
@@ -26,7 +28,7 @@ class Host_CommandTest extends TestCase
     public function testPassStdinAsResource()
     {
         $res = fopen(__FILE__, 'r');
-        $command = new Host_Command('cat', [], $res);
+        $command = new Command('cat', array(), $res);
 
         $stdin = $command->getStdin();
         $this->assertTrue(is_resource($stdin), 'stdin is a resource');
@@ -36,7 +38,7 @@ class Host_CommandTest extends TestCase
         fclose($res);
 
         $res = fopen(__FILE__, 'r');
-        $command = new Host_Command('cat', [], $res);
+        $command = new Command('cat', array(), $res);
         $stdin = $command->getStdinContent();
         $this->assertEquals(file_get_contents(__FILE__), $stdin);
 
@@ -45,13 +47,13 @@ class Host_CommandTest extends TestCase
 
     public function testPassStdoutAsString()
     {
-        $command = new Host_Command('head', ['-n1'], 'TikiWiki');
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-        ];
+        $command = new Command('head', array('-n1'), 'TikiWiki');
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+        );
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -73,13 +75,13 @@ class Host_CommandTest extends TestCase
 
     public function testStdoutAsResource()
     {
-        $command = new Host_Command('head', ['-n1'], 'TikiWiki');
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-        ];
+        $command = new Command('head', array('-n1'), 'TikiWiki');
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+        );
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -102,14 +104,14 @@ class Host_CommandTest extends TestCase
     public function testPassStderrAsString()
     {
         // -l1 is a wrong parameter for head command
-        $command = new Host_Command('head', ['-l1'], 'TikiWiki');
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-            3 => ["pipe", "w"],
-        ];
+        $command = new Command('head', array('-l1'), 'TikiWiki');
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+            3 => array("pipe", "w"),
+        );
 
         $commandLine = $command->getFullCommand();
         $commandLine .= '; echo $? >&3'; // https://bugs.php.net/bug.php?id=29123
@@ -138,14 +140,14 @@ class Host_CommandTest extends TestCase
     public function testPassStderrAsResource()
     {
         // -l1 is a wrong parameter for head command
-        $command = new Host_Command('head', ['-l1'], 'TikiWiki');
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-            3 => ["pipe", "w"],
-        ];
+        $command = new Command('head', array('-l1'), 'TikiWiki');
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+            3 => array("pipe", "w"),
+        );
 
         $commandLine = $command->getFullCommand();
         $commandLine .= '; echo $? >&3'; // https://bugs.php.net/bug.php?id=29123
@@ -173,20 +175,20 @@ class Host_CommandTest extends TestCase
 
     public function testPreparedArgs()
     {
-        $command = new Host_Command('cat', ['-n', '/my/file']);
+        $command = new Command('cat', array('-n', '/my/file'));
         $args = $command->getArgs();
 
         $this->assertEquals(2, count($args));
         $this->assertEquals("-n", $args[0]);
         $this->assertEquals("'/my/file'", $args[1]);
 
-        $command = new Host_Command('cat', ['-n', '/my/weird file']);
+        $command = new Command('cat', array('-n', '/my/weird file'));
         $args = $command->getArgs();
         $this->assertEquals("-n", $args[0]);
         $this->assertEquals(2, count($args));
         $this->assertEquals("'/my/weird file'", $args[1]);
 
-        $command = new Host_Command('fakecom', ['--name=/my/weird file']);
+        $command = new Command('fakecom', array('--name=/my/weird file'));
         $args = $command->getArgs();
         $this->assertEquals(1, count($args));
         $this->assertEquals("--name='/my/weird file'", $args[0]);
@@ -194,13 +196,13 @@ class Host_CommandTest extends TestCase
 
     public function testResourcesAreCleanedOnFinish()
     {
-        $command = new Host_Command('head', ['-n1'], 'TikiWiki');
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-        ];
+        $command = new Command('head', array('-n1'), 'TikiWiki');
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+        );
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -227,13 +229,13 @@ class Host_CommandTest extends TestCase
 
     public function testResourcesAreCleanedOnDestruct()
     {
-        $command = new Host_Command('head', ['-n1'], 'TikiWiki');
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-        ];
+        $command = new Command('head', array('-n1'), 'TikiWiki');
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+        );
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -261,13 +263,13 @@ class Host_CommandTest extends TestCase
 
     public function testRunAlreadyProcessedCommandThrowsError()
     {
-        $command = new Host_Command('head', ['-n1'], 'TikiWiki');
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-        ];
+        $command = new Command('head', array('-n1'), 'TikiWiki');
+        $pipes = array();
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"),
+        );
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -281,9 +283,9 @@ class Host_CommandTest extends TestCase
 
         try {
             $command->run(null);
-        } catch (Host_CommandException $e) {
+        } catch (CommandException $e) {
             $this->assertEquals(
-                'Host_Command cannot run twice',
+                'TikiManager\Libs\Host\Command cannot run twice',
                 $e->getMessage()
             );
         }

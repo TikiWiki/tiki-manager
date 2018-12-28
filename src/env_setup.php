@@ -4,8 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Libs\Helpers\PDOWrapper;
+
 require_once dirname(__FILE__) . '/env_includes.php';
-require_once dirname(__FILE__) . '/libs/helpers/PDOWrapper.php';
 
 debug('Running Tiki Manager at ' . TRIM_ROOT);
 
@@ -137,7 +138,7 @@ if (! file_exists(DB_FILE)) {
 
     try {
         $db = new PDOWrapper('sqlite:' . DB_FILE);
-    } catch (PDOException $e) {
+    } catch (\PDOException $e) {
         die(error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}"));
     }
 
@@ -150,7 +151,7 @@ if (! file_exists(DB_FILE)) {
 
 try {
     $db = new PDOWrapper('sqlite:' . DB_FILE);
-} catch (PDOException $e) {
+} catch (\PDOException $e) {
     die(error("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}"));
 }
 

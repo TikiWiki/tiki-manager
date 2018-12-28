@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use TikiManager\Libs\Host\SSH;
 
 require_once(__DIR__) . '/SSHHostCommonTest.php';
 
@@ -8,11 +9,11 @@ class SSH_HostWrapperTest extends SSH_HostCommonTest
 {
     public function getInstance()
     {
-        return new SSH_Host(
+        return new SSH(
             self::TARGET_HOST,
             self::TARGET_USER,
             self::TARGET_PORT,
-            'SSH_Host_Wrapper_Adapter'
+            'TikiManager\Libs\Host\SSHWrapperAdapter'
         );
     }
 }

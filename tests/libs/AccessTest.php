@@ -1,12 +1,14 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use TikiManager\Access\Local;
+use TikiManager\Application\Instance;
 
 class AccessLocalTest extends TestCase
 {
     public function getAccessInstance()
     {
         $instance = $this->createMock(Instance::class);
-        $access = new Access_Local($instance);
+        $access = new Local($instance);
         return $access;
     }
 

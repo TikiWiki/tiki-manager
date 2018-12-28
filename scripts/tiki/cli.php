@@ -3,6 +3,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Application\Instance;
+use TikiManager\Application\Tiki as ApplicationTiki;
+
 include_once dirname(__FILE__) . '/../../src/env_setup.php';
 include_once dirname(__FILE__) . '/../../src/check.php';
 
@@ -10,7 +13,7 @@ $all = Instance::getInstances();
 
 $instances = [];
 foreach ($all as $instance) {
-    if ($instance->getApplication() instanceof Application_Tiki) {
+    if ($instance->getApplication() instanceof ApplicationTiki) {
         $instances[$instance->id] = $instance;
     }
 }

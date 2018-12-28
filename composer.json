@@ -17,11 +17,8 @@
     "process-timeout": 5000
   },
   "autoload": {
-    "classmap": [
-      "src/"
-    ],
     "psr-4": {
-      "App\\": "src/"
+      "TikiManager\\": "src/"
     }
   },
   "repositories": [

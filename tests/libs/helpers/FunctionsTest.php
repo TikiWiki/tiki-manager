@@ -1,5 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class FunctionsTest extends TestCase
 {
@@ -20,7 +21,7 @@ class FunctionsTest extends TestCase
 
         foreach ($data as $counter => $test) {
             list($expected, $input) = $test;
-            $this->assertEquals($expected, get_absolute_path($input));
+            $this->assertEquals($expected, ApplicationHelper::getAbsolutePath($input));
         }
     }
 }

@@ -4,6 +4,10 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Application\Instance;
+use TikiManager\Libs\Database\Database;
+use TikiManager\Application\Version;
+
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/dbsetup.php';
 

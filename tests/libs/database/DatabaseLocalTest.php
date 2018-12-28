@@ -1,5 +1,9 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Database\Exception\DatabaseErrorException;
+use TikiManager\Access\Local;
+use TikiManager\Application\Instance;
 
 class DatabaseLocalTest extends TestCase
 {
@@ -20,7 +24,7 @@ class DatabaseLocalTest extends TestCase
     public function getInstance()
     {
         $instance = $this->createMock(Instance::class);
-        $access = new Access_Local($instance);
+        $access = new Local($instance);
         $instance->method('getBestAccess')
              ->willReturn($access);
         $instance->method('getExtensions')
@@ -115,7 +119,7 @@ class DatabaseLocalTest extends TestCase
             $db->connect();
         } catch(Exception $e) {
             $hasError = true;
-            $this->assertInstanceOf(DatabaseError::class, $e);
+            $this->assertInstanceOf(DatabaseErrorException::class, $e);
         }
 
         $this->assertTrue($hasError);

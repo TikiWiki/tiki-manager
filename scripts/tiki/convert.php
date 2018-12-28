@@ -4,6 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Access\ShellPrompt;
+use TikiManager\Application\Instance;
+
 include_once dirname(__FILE__) . '/../../src/env_setup.php';
 
 $instances = [];

@@ -4,6 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Application\Instance;
+use TikiManager\Application\Tiki;
+
 include_once dirname(__DIR__) . '/src/env_setup.php';
 include_once dirname(__DIR__) . '/src/check.php';
 
@@ -77,7 +80,7 @@ foreach ($selection as $instance) {
     if ($fetchChecksum) {
         // Create a new version
         $version = $instance->createVersion();
-        /** @var Application_Tiki $app */
+        /** @var Tiki $app */
         $app = $instance->getApplication();
         $version->type = $app->getInstallType();
         $version->branch = $app->getBranch();
