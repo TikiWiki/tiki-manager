@@ -4,6 +4,8 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Application\Instance;
+
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/check.php';
 
@@ -14,7 +16,7 @@ if (count($args) === 2 && $args[1] === 'switch') {
     define('ARG_SWITCH', true);
 } else {
     $args = array_filter($args, 'is_numeric');
-    $selection = array_map(['Instance', 'getInstance'], $args);
+    $selection = array_map(['TikiManager\Application\Instance', 'getInstance'], $args);
     $selection = array_filter($selection, 'is_object');
 }
 

@@ -2,7 +2,7 @@
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['instance']) && is_array($_POST['instance'])) {
         foreach ($_POST['instance'] as $id) {
-            if ($instance = Instance::getInstance((int) $id)) {
+            if ($instance = TikiManager\Application\Instance::getInstance((int) $id)) {
                 ob_start();
                 shell_exec('rm -f ' . $_POST['filename']);
                 ob_end_clean();
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $page_title = 'Manage backups';
     require dirname(__FILE__) . "/layout/head.php";
     require dirname(__FILE__) . "/layout/nav.php";
-    $instances = Instance::getInstances(true);
+    $instances = TikiManager\Application\Instance::getInstances(true);
 ?>
 
 <div class="container">

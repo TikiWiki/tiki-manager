@@ -1,5 +1,7 @@
 <?php
 
+use TikiManager\Application\Backup;
+
 function web_backup($instance)
 {
     info('Checking permissions before backup...');

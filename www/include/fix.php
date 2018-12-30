@@ -2,7 +2,7 @@
     $page_title = 'Fixing an instance';
     require dirname(__FILE__) . "/layout/head.php";
     require dirname(__FILE__) . "/layout/nav.php";
-    $instances = Instance::getInstances(true);
+    $instances = TikiManager\Application\Instance::getInstances(true);
 ?>
 
 <div class="container">

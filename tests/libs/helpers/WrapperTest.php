@@ -1,5 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use TikiManager\Libs\Helpers\Wrapper;
+use TikiManager\Libs\Host\Command;
 
 class WrapperTest extends TestCase
 {
@@ -80,7 +82,7 @@ class WrapperTest extends TestCase
 
     public function testWrapperPassMethodCalls()
     {
-        $command = new Host_Command('cat', '-n', 'Hello World');
+        $command = new Command('cat', '-n', 'Hello World');
         $wrapper = new Wrapper($command);
 
         $expected = $command->getCommand();
@@ -91,7 +93,7 @@ class WrapperTest extends TestCase
 
     public function testWrapperOverloadMethodCalls()
     {
-        $command = new Host_Command('cat', '-n', 'Hello World');
+        $command = new Command('cat', '-n', 'Hello World');
 
         $methods = [
             'getCommand' => function () {

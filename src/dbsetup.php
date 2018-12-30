@@ -4,6 +4,13 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Access\ShellPrompt;
+use TikiManager\Libs\Database\Database;
+use TikiManager\Application\Application;
+use TikiManager\Application\Instance;
+use TikiManager\Application\Version;
+use TikiManager\Libs\Database\Exception\DatabaseErrorException;
+
 function perform_instance_installation(Instance $instance)
 {
     if (! $app = $instance->findApplication()) {
@@ -190,7 +197,7 @@ function perform_database_setup(Instance $instance, $remoteBackupFile = null)
 
                 try {
                     $dbUser = $dbRoot->createAccess($username, $dbname);
-                } catch (DatabaseError $e) {
+                } catch (DatabaseErrorException $e) {
                     error("Can't setup database!");
                     error($e->getMessage());
 

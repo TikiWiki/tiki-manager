@@ -4,6 +4,9 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Application\Instance;
+use TikiManager\Command\Helper\CommandHelper;
+
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 
 if ($_SERVER['argc'] < 2) {
@@ -14,10 +17,10 @@ $log = '';
 $email = $_SERVER['argv'][1];
 
 $instances = Instance::getInstances();
-$excluded_option = get_cli_option('exclude');
+$excluded_option = CommandHelper::getCliOption('exclude');
 
 if (! empty($excluded_option)) {
-    $instances_to_exclude = explode(',', get_cli_option('exclude'));
+    $instances_to_exclude = explode(',', CommandHelper::getCliOption('exclude'));
 
     foreach ($instances as $key => $instance) {
         if (in_array($instance->id, $instances_to_exclude)) {

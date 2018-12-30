@@ -2,7 +2,7 @@
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['instance']) && is_array($_POST['instance'])) {
         foreach ($_POST['instance'] as $id) {
-            if ($instance = Instance::getInstance((int) $id)) {
+            if ($instance = TikiManager\Application\Instance::getInstance((int) $id)) {
                 ob_start();
                 $instance->delete();
                 ob_end_clean();
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $page_title = 'Delete an instance';
     require dirname(__FILE__) . "/layout/head.php";
     require dirname(__FILE__) . "/layout/nav.php";
-    $instances = Instance::getInstances();
+    $instances = TikiManager\Application\Instance::getInstances();
 ?>
 
 <div class="container">

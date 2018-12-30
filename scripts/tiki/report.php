@@ -4,6 +4,11 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use TikiManager\Report\Manager as ReportManager;
+use TikiManager\Report\Backup as ReportBackup;
+use TikiManager\Report\Channel;
+use TikiManager\Application\Instance;
+
 include_once dirname(__FILE__) . '/../../src/env_setup.php';
 
 $values = [];
@@ -112,7 +117,7 @@ do {
 /*
 $channel = new Channel('http://localhost/trunk/tiki-channel.php');
 
-$report = new BackupReport;
+$report = new ReportBackup;
 $report->queueChannels($channel);
 
 $channel->process();

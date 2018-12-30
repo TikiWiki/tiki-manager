@@ -2,7 +2,7 @@
     $page_title = 'Instance List';
     require dirname(__FILE__) . "/layout/head.php";
     require dirname(__FILE__) . "/layout/nav.php";
-    $instances = Instance::getInstances();
+    $instances = TikiManager\Application\Instance::getInstances();
 ?>
 
 <div class="container">
@@ -48,7 +48,7 @@
                             <a href="#" class="fa-check" title="Check this instance"></a>
                             <a href="#" class="fa-arrow-up" title="Upgrade this instance"></a>
 -->
-                    <?php if ($instance->getApplication() instanceof Application_Tiki) : ?>
+                    <?php if ($instance->getApplication() instanceof TikiManager\Application\Tiki) : ?>
                         <a href="" class="fa-eye" title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="watch"></a>
                         <a href="" class="fa-repeat" title="Update this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="update"></a>
                         <a href="" class="fa-floppy-o" title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="backup"></a>

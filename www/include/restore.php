@@ -2,7 +2,7 @@
     $page_title = 'Restoring an instance';
     require dirname(__FILE__) . "/layout/head.php";
     require dirname(__FILE__) . "/layout/nav.php";
-    $instances = Instance::getInstances();
+    $instances = TikiManager\Application\Instance::getInstances();
 
     $blank = false;
 foreach ($instances as $instance) {
@@ -23,7 +23,7 @@ foreach ($instances as $instance) {
             <h3>Which instance do you want to restore from?</h3>
 
             <div id="accordion">
-            <?php foreach (Instance::getInstances(true) as $instance) : ?>
+            <?php foreach (TikiManager\Application\Instance::getInstances(true) as $instance) : ?>
                 <?php $version = $instance->getLatestVersion() ?>
                 <div class="card">
                     <div class="card-header" id="heading-<?php echo html("{$instance->id}") ?>">

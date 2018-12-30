@@ -1,6 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use TikiManager\Libs\Host\Command;
+use TikiManager\Libs\Host\SSH;
 
 abstract class SSH_HostCommonTest extends TestCase
 {
@@ -10,7 +12,7 @@ abstract class SSH_HostCommonTest extends TestCase
 
     public function getInstance()
     {
-        return new SSH_Host(
+        return new SSH(
             self::TARGET_HOST,
             self::TARGET_USER,
             self::TARGET_PORT
@@ -20,13 +22,13 @@ abstract class SSH_HostCommonTest extends TestCase
     public function testCreateSSHHost()
     {
         $host = $this->getInstance();
-        $this->assertTrue(is_object($host), 'SSH_Host is an object');
+        $this->assertTrue(is_object($host), 'SSHHost is an object');
     }
 
     public function testRunCommand()
     {
         $host = $this->getInstance();
-        $command = new Host_Command(':');
+        $command = new Command(':');
 
         $command->run($host);
         $stdout = $command->getStdoutContent();
@@ -38,7 +40,7 @@ abstract class SSH_HostCommonTest extends TestCase
     public function testRunCommandWithArgs()
     {
         $host = $this->getInstance();
-        $command = new Host_Command('echo', ['-n', 'Hello World']);
+        $command = new Command('echo', array('-n', 'Hello World'));
 
         $command->run($host);
         $stdout = $command->getStdoutContent();
@@ -51,7 +53,7 @@ abstract class SSH_HostCommonTest extends TestCase
     public function testRunCommandWithStdin()
     {
         $host = $this->getInstance();
-        $command = new Host_Command('cat', [], 'Hello World');
+        $command = new Command('cat', array(), 'Hello World');
 
         $command->run($host);
         $stdout = $command->getStdoutContent();
@@ -64,7 +66,7 @@ abstract class SSH_HostCommonTest extends TestCase
     public function testRunCommandWithArgsAndStdin()
     {
         $host = $this->getInstance();
-        $command = new Host_Command('head', ['-c', 5], "Hello\nWorld");
+        $command = new Command('head', array('-c', 5), "Hello\nWorld");
 
         $command->run($host);
         $stdout = $command->getStdoutContent();
@@ -79,7 +81,7 @@ abstract class SSH_HostCommonTest extends TestCase
     public function testRunCommandWithEnvVars()
     {
         $host = $this->getInstance();
-        $command = new Host_Command('echo', ['-n', '$TEST1 $TEST2 $USER']);
+        $command = new Command('echo', array('-n', '$TEST1 $TEST2 $USER'));
         $host->setenv('TEST1', 'Hello');
         $host->setenv('TEST2', 'World');
 
@@ -96,7 +98,7 @@ abstract class SSH_HostCommonTest extends TestCase
     public function testRunCommandWithEnvVarsAndStdin()
     {
         $host = $this->getInstance();
-        $command = new Host_Command('bash', [], 'echo -n $TEST1\ $TEST2\ $USER');
+        $command = new Command('bash', array(), 'echo -n $TEST1\ $TEST2\ $USER');
         $host->setenv('TEST1', 'Hello');
         $host->setenv('TEST2', 'World');
 
@@ -115,7 +117,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $host = $this->getInstance();
         $code = "<?php echo explode(' ', getenv('SSH_CONNECTION'))[2];";
 
-        $command = new Host_Command('php', [], $code);
+        $command = new Command('php', array(), $code);
         $command->run($host);
 
         $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
@@ -128,7 +130,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $host = $this->getInstance();
         $text = "Hello,\n\nThis text has 31 bytes.";
 
-        $command = new Host_Command('wc', ['-c'], $text);
+        $command = new Command('wc', array('-c'), $text);
         $command->run($host);
 
         $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
@@ -137,7 +139,7 @@ abstract class SSH_HostCommonTest extends TestCase
 
         $text = "Olá,\nO stdin não pode ter seu tamanho alterado.";
 
-        $command = new Host_Command('wc', ['-c'], $text);
+        $command = new Command('wc', array('-c'), $text);
         $command->run($host);
 
         $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
@@ -150,7 +152,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $host = $this->getInstance();
         $text = "Hello,\n\nThis text has 31 bytes.";
 
-        $command = new Host_Command('md5sum', [], $text);
+        $command = new Command('md5sum', array(), $text);
         $command->run($host);
 
         $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
@@ -204,12 +206,12 @@ abstract class SSH_HostCommonTest extends TestCase
         file_put_contents($localfile, $filedata);
         $host->sendFile($localfile, $remotefile);
 
-        $command = new Host_Command('cat', [$remotefile]);
+        $command = new Command('cat', array($remotefile));
         $host->runCommand($command);
         $testdata = $command->getStdoutContent();
         $this->assertEquals($filedata, $testdata);
 
-        $command = new Host_Command('rm', [$remotefile]);
+        $command = new Command('rm', array($remotefile));
         $host->runCommand($command);
         $testdata = $command->getReturn();
         $this->assertEquals(0, $testdata);
@@ -227,16 +229,16 @@ abstract class SSH_HostCommonTest extends TestCase
         $filedata = uniqid();
         $filesize = strlen($filedata);
 
-        $command = new Host_Command('tee', [$remotefile], $filedata);
+        $command = new Command('tee', array($remotefile), $filedata);
         $host->runCommand($command);
         $this->assertEquals(0, $command->getReturn());
 
-        $command = new Host_Command('stat', ['-c', '%s', $remotefile]);
+        $command = new Command('stat', array('-c', '%s', $remotefile));
         $host->runCommand($command);
         $testdata = (int) $command->getStdoutContent();
         $this->assertEquals($filesize, $testdata, 'Could not create remote file');
 
-        $command = new Host_Command('cat', [$remotefile]);
+        $command = new Command('cat', array($remotefile));
         $host->runCommand($command);
         $testdata = $command->getStdoutContent();
         $this->assertEquals($filedata, $testdata, 'Could not create remote file');
@@ -245,7 +247,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $testdata = file_get_contents($localfile, FILE_BINARY);
         $this->assertEquals($filedata, $testdata, 'The local copy differs from remote source.');
 
-        $command = new Host_Command('rm', [$remotefile]);
+        $command = new Command('rm', array($remotefile));
         $host->runCommand($command);
         $testdata = $command->getReturn();
         $this->assertEquals(0, $testdata);

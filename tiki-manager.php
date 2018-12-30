@@ -11,30 +11,30 @@ use Symfony\Component\Console\Application;
 
 $application = new Application();
 
-$application->add(new \App\Command\CreateInstanceCommand());
-$application->add(new \App\Command\AccessInstanceCommand());
-$application->add(new \App\Command\DeleteInstanceCommand());
-$application->add(new \App\Command\EnableWebManagerCommand());
-$application->add(new \App\Command\CopySshKeyCommand());
-$application->add(new \App\Command\WatchInstanceCommand());
-$application->add(new \App\Command\DetectInstanceCommand());
-$application->add(new \App\Command\EditInstanceCommand());
-$application->add(new \App\Command\BlankInstanceCommand());
-$application->add(new \App\Command\CheckInstanceCommand());
-$application->add(new \App\Command\VerifyInstanceCommand());
-$application->add(new \App\Command\UpdateInstanceCommand());
-$application->add(new \App\Command\UpgradeInstanceCommand());
-$application->add(new \App\Command\RestoreInstanceCommand());
-$application->add(new \App\Command\CloneInstanceCommand());
-$application->add(new \App\Command\CloneAndUpgradeInstanceCommand());
-$application->add(new \App\Command\BackupInstanceCommand());
-$application->add(new \App\Command\FixPermissionsInstanceCommand());
+$application->add(new \TikiManager\Command\CreateInstanceCommand());
+$application->add(new \TikiManager\Command\AccessInstanceCommand());
+$application->add(new \TikiManager\Command\DeleteInstanceCommand());
+$application->add(new \TikiManager\Command\EnableWebManagerCommand());
+$application->add(new \TikiManager\Command\CopySshKeyCommand());
+$application->add(new \TikiManager\Command\WatchInstanceCommand());
+$application->add(new \TikiManager\Command\DetectInstanceCommand());
+$application->add(new \TikiManager\Command\EditInstanceCommand());
+$application->add(new \TikiManager\Command\BlankInstanceCommand());
+$application->add(new \TikiManager\Command\CheckInstanceCommand());
+$application->add(new \TikiManager\Command\VerifyInstanceCommand());
+$application->add(new \TikiManager\Command\UpdateInstanceCommand());
+$application->add(new \TikiManager\Command\UpgradeInstanceCommand());
+$application->add(new \TikiManager\Command\RestoreInstanceCommand());
+$application->add(new \TikiManager\Command\CloneInstanceCommand());
+$application->add(new \TikiManager\Command\CloneAndUpgradeInstanceCommand());
+$application->add(new \TikiManager\Command\BackupInstanceCommand());
+$application->add(new \TikiManager\Command\FixPermissionsInstanceCommand());
 
-$application->add(new \App\Command\ApplyProfileCommand());
+$application->add(new \TikiManager\Command\ApplyProfileCommand());
 
-$application->add(new \App\Command\CliTrimCommand());
-$application->add(new \App\Command\ReportTrimCommand());
+$application->add(new \TikiManager\Command\CliTrimCommand());
+$application->add(new \TikiManager\Command\ReportTrimCommand());
 
-$application->add(new \App\Command\ViewDatabaseCommand());
+$application->add(new \TikiManager\Command\ViewDatabaseCommand());
 
 $application->run();

@@ -1,5 +1,9 @@
 <?php
 
+use TikiManager\Access\Access;
+use TikiManager\Application\Discovery;
+use TikiManager\Application\Instance;
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $type = $name = $contact = $webroot = $weburl = $tempdir = '';
 
@@ -17,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $instance->type = $type;
     $access = Access::getClassFor($instance->type);
     $access = new $access($instance);
-    $discovery = new \trim\instance\Discovery($instance, $access);
+    $discovery = new Discovery($instance, $access);
 
     if ($type == 'local') {
         $access->host = 'localhost';
@@ -51,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $instance->type = 'local';
     $access = Access::getClassFor($instance->type);
     $access = new $access($instance);
-    $discovery = new \trim\instance\Discovery($instance, $access);
+    $discovery = new Discovery($instance, $access);
 
     $name = 'localhost';
     $weburl = "http://$name";

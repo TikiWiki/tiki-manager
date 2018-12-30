@@ -58,7 +58,7 @@ if (! in_array($op, [ 'backup', 'blank', 'clone', 'delete', 'edit', 'fix', 'impo
 if (in_array($op, [ 'view', 'edit' ]) && $id == 0) {
     die("ID required.");
 } else {
-    $instance = Instance::getInstance($id);
+    $instance = TikiManager\Application\Instance::getInstance($id);
 }
 
 require "include/$op.php";

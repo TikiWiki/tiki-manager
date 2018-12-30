@@ -5,7 +5,7 @@ require TRIMPATH . '/src/env_setup.php';
 ob_end_clean();
 
 if (isset($_POST['id'])) {
-    if ($instance = Instance::getInstance((int) $_POST['id'])) {
+    if ($instance = TikiManager\Application\Instance::getInstance((int) $_POST['id'])) {
         $locked = (md5_file(TRIMPATH . '/scripts/maintenance.htaccess') == md5_file($instance->getWebPath('.htaccess')));
         if (! $locked) {
             $locked = $instance->lock();
