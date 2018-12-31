@@ -38,5 +38,6 @@ $application->add(new \TikiManager\Command\ReportManagerCommand());
 
 $application->add(new \TikiManager\Command\ViewDatabaseCommand());
 $application->add(new \TikiManager\Command\DeleteDatabaseCommand());
+$application->add(new \TikiManager\Command\ClearCacheCommand());
 
 $application->run();
