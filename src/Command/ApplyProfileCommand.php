@@ -13,7 +13,7 @@ class ApplyProfileCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('profile:apply')
+            ->setName('instance:profile:apply')
             ->setDescription('Apply profile to instance')
             ->setHelp('This command allows you to apply a profile to an instance');
     }
