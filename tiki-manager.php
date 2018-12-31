@@ -32,8 +32,8 @@ $application->add(new \TikiManager\Command\FixPermissionsInstanceCommand());
 
 $application->add(new \TikiManager\Command\ApplyProfileCommand());
 
-$application->add(new \TikiManager\Command\CliTrimCommand());
-$application->add(new \TikiManager\Command\ReportTrimCommand());
+$application->add(new \TikiManager\Command\ConsoleInstanceCommand());
+$application->add(new \TikiManager\Command\ReportManagerCommand());
 
 $application->add(new \TikiManager\Command\ViewDatabaseCommand());
 

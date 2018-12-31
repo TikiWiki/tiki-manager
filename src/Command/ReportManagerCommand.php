@@ -10,12 +10,12 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 use TikiManager\Report\Manager as ReportManager;
 use TikiManager\Command\Helper\CommandHelper;
 
-class ReportTrimCommand extends Command
+class ReportManagerCommand extends Command
 {
     protected function configure()
     {
         $this
-            ->setName('trim:report')
+            ->setName('manager:report')
             ->setDescription('Manage reports')
             ->setHelp('This command allows you perform actions related to reports (add, modify, remove and send');
     }
