@@ -28,6 +28,7 @@ $application->add(new \TikiManager\Command\RestoreInstanceCommand());
 $application->add(new \TikiManager\Command\CloneInstanceCommand());
 $application->add(new \TikiManager\Command\CloneAndUpgradeInstanceCommand());
 $application->add(new \TikiManager\Command\BackupInstanceCommand());
+$application->add(new \TikiManager\Command\DeleteBackupCommand());
 $application->add(new \TikiManager\Command\FixPermissionsInstanceCommand());
 
 $application->add(new \TikiManager\Command\ApplyProfileCommand());
