@@ -8,12 +8,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
 
-class CliTrimCommand extends Command
+class ConsoleInstanceCommand extends Command
 {
     protected function configure()
     {
         $this
-            ->setName('trim:cli')
+            ->setName('instance:console')
             ->setDescription('Run Tiki console commands')
             ->setHelp('This command allows you to run any console command from Tiki');
     }
