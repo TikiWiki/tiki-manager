@@ -2,8 +2,11 @@
 
 namespace TikiManager\Command\Helper;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
 
 class CommandHelper
@@ -239,5 +242,70 @@ class CommandHelper
         }
 
         return $default;
+    }
+
+    /**
+     * Remove folder contents
+     *
+     * @param array|string $dirs
+     * @param LoggerInterface $logger
+     * @return bool
+     */
+    public static function clearFolderContents($dirs, LoggerInterface $logger)
+    {
+        if (!is_array($dirs)) {
+            $dirs = [$dirs];
+        }
+
+        try {
+            $fileSystem = new Filesystem();
+            foreach ($dirs as $dir) {
+                if (!$fileSystem->exists($dir)) {
+                    continue;
+                }
+
+                $iterator = new \FilesystemIterator($dir);
+                foreach ($iterator as $file) {
+                    $fileSystem->remove($file->getPathName());
+                }
+            }
+        } catch (IOException $e) {
+            $message = sprintf("An error occurred while removing folder contents:\n%s", $e->getMessage());
+            $logger->error($message);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Remove one or more files from filesystem
+     *
+     * @param string|array $files A string or array with files full path to remove
+     * @param LoggerInterface $logger
+     * @return bool
+     */
+    public static function removeFiles($files, LoggerInterface $logger)
+    {
+        if (!is_array($files)) {
+            $files = [$files];
+        }
+
+        try {
+            $fileSystem = new Filesystem();
+            foreach ($files as $file) {
+                if (!$fileSystem->exists($file)) {
+                    continue;
+                }
+
+                $fileSystem->remove($file);
+            }
+        } catch (IOException $e) {
+            $message = sprintf("An error occurred while removing file:\n%s", $e->getMessage());
+            $logger->error($message);
+            return false;
+        }
+
+        return true;
     }
 }

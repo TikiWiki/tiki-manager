@@ -9,8 +9,10 @@
     "fortawesome/font-awesome": "^4.7.0",
     "php": "^7.1",
     "phpseclib/phpseclib": "^2.0",
+    "psr/log": "^1.1",
     "psy/psysh": "@stable",
     "symfony/console": "^4.1",
+    "symfony/filesystem": "^4.1",
     "twitter/bootstrap": "^4.1.1"
   },
   "config": {
