@@ -158,6 +158,7 @@ try {
 // Obtain the current database version
 $result = $db->query("SELECT value FROM info WHERE name = 'version'");
 $version = (int)$result->fetchColumn();
+unset($result);
 
 // Update the schema to the latest version
 // One case per version, no breaks, no failures

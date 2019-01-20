@@ -44,6 +44,7 @@ class EditInstanceCommand extends Command
 
                 $result = query(Access::SQL_SELECT_ACCESS, [':id' => $instance->id]);
                 $instanceType = $result->fetch()['type'];
+                unset($result);
 
                 if ($instanceType != 'local') {
                     $question = CommandHelper::getQuestion('Host name', $instance->name);
