@@ -52,6 +52,16 @@ class Discovery
     {
         $distro = null;
 
+        $os = !empty($this->config['os']) ? $this->config['os'] : $this->detectOS();
+
+        if ($os == 'DARWIN') {
+            $distro = 'OSX';
+        }
+
+        if (substr($os, 0, 3) === 'WIN') {
+            $distro = 'Windows';
+        }
+
         // attempt 1: check distro on modern Linux (>= 2012)
         $found = $this->detectDistroSystemd();
         if ($found) {
