@@ -551,7 +551,7 @@ SQL;
     public function getLatestVersion()
     {
         $result = query(self::SQL_SELECT_LATEST_VERSION, [':id' => $this->id]);
-        $object = $result->fetchObject('TikiManager\Application\Version', [$this]);
+        $object = $result->fetchObject('TikiManager\Application\Version', [$this->id]);
 
         return $object;
     }
