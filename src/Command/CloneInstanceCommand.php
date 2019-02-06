@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
+use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 
 class CloneInstanceCommand extends Command
@@ -94,7 +95,7 @@ class CloneInstanceCommand extends Command
                 $upgrade_version = [];
                 if ($cloneUpgrade) {
                     if (! empty($arguments[2])) {
-                        $upgrade_version = \Version::buildFake('svn', $arguments[2]);
+                        $upgrade_version = Version::buildFake('svn', $arguments[2]);
                     } else {
                         $upgrade_version = $this->getUpgradeVersion($selectedSourceInstances[0], $helper, $input, $output);
                     }
