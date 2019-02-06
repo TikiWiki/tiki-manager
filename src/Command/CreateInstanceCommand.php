@@ -14,6 +14,7 @@ use TikiManager\Access\ShellPrompt;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class CreateInstanceCommand extends Command
 {
@@ -38,8 +39,10 @@ class CreateInstanceCommand extends Command
 
         $instance = new Instance();
 
+        $instanceTypes = ApplicationHelper::isWindows() ? 'local' : Instance::TYPES;
+
         $helper = $this->getHelper('question');
-        $question = new ChoiceQuestion('Connection type:', explode(',', Instance::TYPES));
+        $question = new ChoiceQuestion('Connection type:', explode(',', $instanceTypes));
         $question->setErrorMessage('Connection type %s is invalid.');
         $instance->type = $type = $helper->ask($input, $output, $question);
 
