@@ -431,7 +431,7 @@ SQL;
 
     public function getWorkPath($relativePath)
     {
-        return "{$this->tempdir}/$relativePath";
+        return $this->tempdir . DIRECTORY_SEPARATOR . $relativePath;
     }
 
     public function getProp($key)
@@ -635,8 +635,14 @@ SQL;
         }
 
         $version->collectChecksumFromInstance($this);
+
+        $flags = '-Rf';
+        if (ApplicationHelper::isWindows()) {
+            $flags = "-r";
+        }
+
         echo $access->shellExec(
-            "rm -Rf {$this->tempdir}/restore"
+            sprintf("rm %s %s", $flags, $this->tempdir . DIRECTORY_SEPARATOR . 'restore')
         );
     }
 
