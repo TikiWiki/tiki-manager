@@ -458,9 +458,9 @@ SQL;
             $access = $this->getBestAccess('scripting');
         }
 
-        echo $access->shellExec(
-            "mkdir -p {$this->tempdir}"
-        );
+        $path = $access->getInterpreterPath($this);
+        $script = sprintf("mkdir('%s', 0777, true);", $this->tempdir);
+        $access->createCommand($path, ["-r {$script}"])->run();
 
         return $this->tempdir;
     }
@@ -687,8 +687,10 @@ SQL;
         info('Locking website...');
 
         $access = $this->getBestAccess('scripting');
+        $path = $access->getInterpreterPath($this);
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.php', 'maintenance.php');
-        $access->shellExec('touch maintenance.php');
+
+        $access->shellExec("{$path} -r 'touch(\'maintenance.php\');'");
 
         if ($access->fileExists($this->getWebPath('.htaccess'))) {
             $access->moveFile('.htaccess', '.htaccess.bak');

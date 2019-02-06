@@ -414,7 +414,10 @@ class Tiki extends Application
                     $svn->cleanup($webroot);
 
                     $svn->updateInstanceTo($this->instance->webroot, $version->branch);
-                    $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
+                    foreach ([$escaped_temp_path, $escaped_cache_path] as $path) {
+                        $script = sprintf('chmod(%s, 0777);', $path);
+                        $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+                    }
 
                     if ($this->instance->hasConsole()) {
                         info('Updating composer');
@@ -477,7 +480,10 @@ class Tiki extends Application
 
                     $svn = new SVN(SVN_TIKIWIKI_URI, $access);
                     $svn->updateInstanceTo($this->instance->webroot, $version->branch);
-                    $access->shellExec('chmod 0777 temp temp/cache');
+                    foreach (['temp', 'temp/cache'] as $path) {
+                        $script = sprintf('chmod(%s, 0777);', $path);
+                        $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+                    }
 
                     if ($this->instance->hasConsole()) {
                         info('Updating composer...');
@@ -576,10 +582,19 @@ class Tiki extends Application
 
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
-        $access->shellExec("chmod 0664 {$this->instance->webroot}/db/local.php");
-        // TODO: Hard-coding: 'apache:apache'
-        // TODO: File ownership under the webroot should be configurable per instance.
-        $access->shellExec("chown apache:apache {$this->instance->webroot}/db/local.php");
+
+        if ($access instanceof ShellPrompt) {
+            $script = sprintf("chmod('%s', 0664);", "{$this->instance->webroot}/db/local.php");
+            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+
+            // TODO: Hard-coding: 'apache:apache'
+            // TODO: File ownership under the webroot should be configurable per instance.
+            $script = sprintf("chown('%s', 'apache');", "{$this->instance->webroot}/db/local.php");
+            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+
+            $script = sprintf("chgrp('%s', 'apache');", "{$this->instance->webroot}/db/local.php");
+            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+        }
 
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
             info("Updating svn, composer, perms & database...");

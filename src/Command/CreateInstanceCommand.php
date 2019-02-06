@@ -116,8 +116,13 @@ class CreateInstanceCommand extends Command
             $path = $helper->ask($input, $output, $question);
 
             if ($access instanceof ShellPrompt) {
-                $testResult = $access->shellExec('test -d ' . escapeshellarg($path) . ' && echo EXISTS');
-                if ($testResult != 'EXISTS') {
+                $phpPath = $access->getInterpreterPath();
+
+                $script = sprintf("echo is_dir('%s');", $path);
+                $command = $access->createCommand($phpPath, ["-r {$script}"]);
+                $command->run();
+
+                if (empty($command->getStdoutContent())) {
                     $output->writeln('Directory [' . $path . '] does not exist.');
 
                     $helper = $this->getHelper('question');
@@ -129,8 +134,11 @@ class CreateInstanceCommand extends Command
                          continue;
                     }
 
-                    $createResult = $access->shellExec('mkdir -m777 -p ' . escapeshellarg($path) . ' && echo SUCCESS');
-                    if ($createResult != 'SUCCESS') {
+                    $script = sprintf("echo mkdir('%s', 0777, true);", $path);
+                    $command = $access->createCommand($phpPath, ["-r {$script}"]);
+                    $command->run();
+
+                    if (empty($command->getStdoutContent())) {
                         $output->writeln('<error>Unable to create directory ['.$path.']</error>');
                         $errors[] = $path;
                         continue;
