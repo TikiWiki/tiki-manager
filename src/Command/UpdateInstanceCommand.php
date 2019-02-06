@@ -8,6 +8,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Discovery;
+use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 
 class UpdateInstanceCommand extends Command
@@ -140,7 +141,7 @@ class UpdateInstanceCommand extends Command
                         $versionSel = getEntries($versions, $selectedVersion);
 
                         if (empty($versionSel) && ! empty($selectedVersion)) {
-                            $target = \Version::buildFake('svn', $selectedVersion);
+                            $target = Version::buildFake('svn', $selectedVersion);
                         } else {
                             $target = reset($versionSel);
                         }
