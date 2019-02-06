@@ -208,31 +208,32 @@ class SVN
 
         $xml = $this->execute('info', $args);
         $xml = simplexml_load_string($xml);
+        if ($xml) {
+            $cur_node = $xml->entry;
+            $result = [];
+            $stack = [
+                [$cur_node, &$result]
+            ];
 
-        $cur_node = $xml->entry;
-        $result = [];
-        $stack = [
-            [$cur_node, &$result]
-        ];
+            while (!empty($stack)) {
+                $stack_item = array_pop($stack);
+                $cur_node = $stack_item[0];
+                $output = &$stack_item[1];
 
-        while (!empty($stack)) {
-            $stack_item = array_pop($stack);
-            $cur_node = $stack_item[0];
-            $output = &$stack_item[1];
+                $node_name = $cur_node->getName();
+                $node_children = $cur_node->children();
 
-            $node_name = $cur_node->getName();
-            $node_children = $cur_node->children();
+                if (empty($node_children)) {
+                    $value = sprintf('%s', $cur_node);
+                    $value = is_numeric($value) ? float($value) : $value;
+                    $output[ $node_name ] = $value;
+                    continue;
+                } else {
+                    $output[ $node_name ] = [];
 
-            if (empty($node_children)) {
-                $value = sprintf('%s', $cur_node);
-                $value = is_numeric($value) ? float($value) : $value;
-                $output[ $node_name ] = $value;
-                continue;
-            } else {
-                $output[ $node_name ] = [];
-
-                foreach ($node_children as $node_child) {
-                    $stack[] = [$node_child, &$output[ $node_name ]];
+                    foreach ($node_children as $node_child) {
+                        $stack[] = [$node_child, &$output[ $node_name ]];
+                    }
                 }
             }
         }
