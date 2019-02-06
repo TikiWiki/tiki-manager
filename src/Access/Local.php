@@ -9,6 +9,7 @@ namespace TikiManager\Access;
 use TikiManager\Libs\Host\Local as LocalHost;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Application\Instance;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Local extends Access implements ShellPrompt
 {
@@ -409,9 +410,21 @@ class Local extends Access implements ShellPrompt
     public function localizeFolder($remoteLocation, $localMirror)
     {
         $host = $this->getHost();
-        return $host->rsync([
-            'src' => $remoteLocation,
-            'dest' => $localMirror
-        ]);
+        if (ApplicationHelper::isWindows()) {
+            $localMirror .= DIRECTORY_SEPARATOR . basename($remoteLocation);
+            $result = $host->windowsSync(
+                $remoteLocation,
+                $localMirror,
+                null,
+                ['.svn/tmp']
+            );
+
+            return $result > 8 ? $result : 0;
+        } else {
+            return $host->rsync([
+                'src' => $remoteLocation,
+                'dest' => $localMirror
+            ]);
+        }
     }
 }

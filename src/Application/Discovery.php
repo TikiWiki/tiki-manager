@@ -37,7 +37,7 @@ class Discovery
         $user = $this->getConf('user') ?: $this->detectUser();
         $distro = $this->getConf('distro') ?: $this->detectDistro();
 
-        if ($os === 'WINDOWS') {
+        if ($os === 'WINDOWS' || $os === 'WINNT') {
             return ['Administrator', 'Administrator', 0750];
         }
 
@@ -146,7 +146,7 @@ class Discovery
         $distro = $this->getConf('distro') ?: $this->detectDistro();
         $sel = !is_numeric($sel) ? null : intval($sel, 10);
 
-        if ($os === 'WINDOWS') {
+        if ($os === 'WINDOWS' || $os === 'WINNT') {
             $result = $this->detectPHPWindows();
         } elseif ($distro === 'ClearOS') {
             $result = $this->detectPHPClearOS();
@@ -335,6 +335,7 @@ class Discovery
         $access = $this->getAccess();
         $distro = $this->getConf('distro') ?: $this->detectDistro();
         $user = $this->getConf('user') ?: $this->detectUser();
+        $os = $this->getConf('os') ?: $this->detectOS();
 
         $folder = [
             'base' => '/var/www/html',
@@ -345,6 +346,11 @@ class Discovery
             $folder = [
                 'base' => '/var/www/virtual',
                 'target' => '/var/www/virtual/' . $instance->name . '/html'
+            ];
+        } elseif ($os === 'WINDOWS' || $os === 'WINNT') {
+            $folder = [
+                'base' => getenv('systemdrive'),
+                'target' => implode(DIRECTORY_SEPARATOR, [getenv('systemdrive') , $instance->name])
             ];
         }
 
