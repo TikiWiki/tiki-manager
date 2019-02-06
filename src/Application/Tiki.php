@@ -681,6 +681,38 @@ class Tiki extends Application
 
         return false;
     }
+
+    /**
+     * Return a list of the compatible versions of Tiki in instance
+     *
+     * @param bool $withBlank
+     * @return array
+     */
+    public function getCompatibleVersions($withBlank = true)
+    {
+        $versions = $this->getVersions();
+
+        $compatible = [];
+        foreach ($versions as $key => $version) {
+            preg_match('/(\d+\.|trunk)/', $version->branch, $matches);
+            if (!array_key_exists(0, $matches)) {
+                continue;
+            }
+
+            if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($this->instance->phpversion < 50500)) {
+                // Nothing to do, this match is incompatible...
+                continue;
+            }
+
+            $compatible[$key] = $version;
+        }
+
+        if ($withBlank) {
+            $compatible['-1'] = 'blank : none';
+        }
+
+        return $compatible;
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

@@ -170,6 +170,11 @@ SQL;
     {
         return Checksum::saveChecksums($this->id);
     }
+
+    public function __toString()
+    {
+        return $this->type . ' : ' . $this->branch;
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

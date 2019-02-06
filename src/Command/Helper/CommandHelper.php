@@ -4,10 +4,18 @@ namespace TikiManager\Command\Helper;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Application\Application;
 use TikiManager\Application\Instance;
+use TikiManager\Application\Version;
+use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 
 class CommandHelper
 {
@@ -307,5 +315,161 @@ class CommandHelper
         }
 
         return true;
+    }
+
+    /**
+     * Handle application install for a new instance.
+     *
+     * @param Instance $instance
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return bool
+     */
+    public static function performInstall(Instance $instance, InputInterface $input, OutputInterface $output)
+    {
+
+        $io = new SymfonyStyle($input, $output);
+
+        if ($instance->findApplication()) {
+            $io->error('Unable to install. An application was detected in this instance.');
+            return false;
+        }
+
+        $apps = Application::getApplications($instance);
+        $selection = getEntries($apps, 0);
+        /** @var Application $app */
+        $app = reset($selection);
+
+        $io->writeln('Fetching compatible versions. Please wait...');
+        $io->note([
+            "If some versions are not offered, it's likely because the host",
+            "server doesn't meet the requirements for that version (ex: PHP version is too old)"
+        ]);
+
+        $versions = $app->getCompatibleVersions();
+        $selection = $io->choice('Which version do you want to install?', $versions);
+
+        $details = array_map('trim', explode(':', $selection));
+
+        if ($details[0] == 'blank') {
+            $io->success('No version to install. This is a blank instance.');
+            return true;
+        }
+
+        $version = Version::buildFake($details[0], $details[1]);
+
+        $io->writeln('Installing application...');
+        $io->note([
+            'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
+            'you can use \'tiki-manager instance:access\' to complete the installation manually.'
+        ]);
+
+        $app->install($version);
+
+        if ($app->requiresDatabase()) {
+            $dbConn = self::setupDatabaseConnection($instance, $input, $output);
+            $app->setupDatabase($dbConn);
+        }
+
+        $io->success('Please test your site at ' . $instance->weburl);
+        return true;
+    }
+
+    /**
+     * Check, configure and  test database connection for a given instance
+     *
+     * @param Instance $instance
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return Database|null
+     */
+    public static function setupDatabaseConnection(Instance $instance, InputInterface $input, OutputInterface $output)
+    {
+
+        $dbUser = null;
+        $io = new SymfonyStyle($input, $output);
+
+        $io->section(sprintf('Setup database connection in %s', $instance->name));
+        $io->note('Creating databases and users requires root privileges on MySQL.');
+
+        $dbRoot = new Database($instance);
+
+        $valid = false;
+        while (!$valid) {
+            $dbRoot->host = $io->ask('Database host', $dbRoot->host ?: 'localhost');
+            $dbRoot->user = $io->ask('Database user', $dbRoot->user ?: 'root');
+            $dbRoot->pass = $io->askHidden('Database password');
+
+            $valid = $dbRoot->testConnection();
+        }
+
+        $logger = new ConsoleLogger($output);
+        $logger->debug('Connected to MySQL with administrative privileges');
+
+        $create = $io->confirm('Should a new database and user be created now (both)?');
+
+        if (!$create) {
+            $dbUser = $dbRoot;
+            $dbUser->dbname = $io->ask('Database name', 'tiki_db');
+        } else {
+            $maxPrefixLength = $dbRoot->getMaxUsernameLength() - 5;
+            $io->note("Prefix is a string with maximum of {$maxPrefixLength} chars");
+
+            $prefix = 'tiki';
+            while (!is_object($dbUser)) {
+                $prefix = $io->ask('Prefix to use for username and database', $prefix);
+
+                if (strlen($prefix) > $maxPrefixLength) {
+                    $io->error("Prefix is a string with maximum of {$maxPrefixLength} chars");
+                    $prefix = substr($prefix, 0, $maxPrefixLength);
+                    continue;
+                }
+
+                $username = "{$prefix}_user";
+                if ($dbRoot->userExists($username)) {
+                    $io->error("User '$username' already exists, can't proceed.");
+                    continue;
+                }
+
+                $dbname = "{$prefix}_db";
+                if ($dbRoot->databaseExists($dbname)) {
+                    $io->warning("Database '$dbname' already exists.");
+                    if (!$io->confirm('Continue?')) {
+                        continue;
+                    }
+                }
+
+                try {
+                    $dbUser = $dbRoot->createAccess($username, $dbname);
+                } catch (DatabaseErrorException $e) {
+                    $io->error("Can't setup database!");
+                    $io->error($e->getMessage());
+
+                    $option = $io->choice('What do you want to do?', ['a' => 'Abort', 'r' => 'Retry'], 'a');
+
+                    if ($option === 'a') {
+                        $io->comment('Aborting');
+                        return;
+                    }
+                }
+            }
+
+            $types = $dbUser->getUsableExtensions();
+            $type = getenv('MYSQL_DRIVER');
+            $dbUser->type = $type;
+
+            if (count($types) == 1) {
+                $dbUser->type = reset($types);
+            } elseif (empty($type)) {
+                $options = [];
+                foreach ($types as $key => $name) {
+                    $options[$key] = $name;
+                }
+
+                $dbUser->type = $io->choice('Which extension should be used?', $options);
+            }
+        }
+
+        return $dbUser;
     }
 }

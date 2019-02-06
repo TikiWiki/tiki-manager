@@ -6,6 +6,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 
 class RestoreInstanceCommand extends Command
@@ -44,6 +45,7 @@ class RestoreInstanceCommand extends Command
             });
 
             $selectedInstances = $helper->ask($input, $output, $question);
+            /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Instance to restore to: ' . $instance->name . '</>');
 
@@ -63,12 +65,17 @@ class RestoreInstanceCommand extends Command
                 }
 
                 $question = CommandHelper::getQuestion('Which backup do you want to restore', null, '?');
-                $seletecArchive = $helper->ask($input, $output, $question);
+                $selectedArchive = $helper->ask($input, $output, $question);
+                $selection = getEntries($files, $selectedArchive);
 
-                if (! $file = reset(getEntries($files, $seletecArchive))) {
+                if (! $file = reset($selection)) {
                     $output->writeln('<comment>Skip: No archive file selected.</comment>');
                     continue;
                 }
+
+                $instance->app = $restorableInstance->app; // Required to setup database connection
+                $databaseConfig = CommandHelper::setupDatabaseConnection($instance, $input, $output);
+                $instance->setDatabaseConfig($databaseConfig);
 
                 $instance->restore($restorableInstance->app, $file);
 

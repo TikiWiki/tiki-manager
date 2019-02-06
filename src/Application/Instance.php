@@ -7,6 +7,8 @@
 namespace TikiManager\Application;
 
 use TikiManager\Access\Access;
+use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Instance
 {
@@ -211,6 +213,8 @@ SQL;
     public $phpversion;
     public $app;
     public $type;
+
+    protected $databaseConfig;
 
     private $access = [];
 
@@ -599,7 +603,7 @@ SQL;
         return $tar;
     }
 
-    public function restore($src_app, $archive, $clone = false)
+    public function restore($src_app, $archive)
     {
         $access = $this->getBestAccess('scripting');
 
@@ -614,8 +618,13 @@ SQL;
         $version = null;
         $oldVersion = $this->getLatestVersion();
 
-        perform_database_setup($this, $database_dump);
-        perform_instance_installation($this); // a version is created in this call
+        $databaseConfig = $this->getDatabaseConfig();
+        $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+
+        if (!$this->findApplication()) { // a version is created in this call
+            error('Something when wrong with restore. Unable to read application details.');
+            return;
+        }
 
         if (!$oldVersion) {
             $version = $this->getLatestVersion();
@@ -744,5 +753,21 @@ SQL;
         }
 
         return null;
+    }
+
+    /**
+     * @param Database $config
+     */
+    public function setDatabaseConfig(Database $config)
+    {
+        $this->databaseConfig = $config;
+    }
+
+    /**
+     * @return Database
+     */
+    public function getDatabaseConfig()
+    {
+        return $this->databaseConfig;
     }
 }

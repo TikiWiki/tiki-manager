@@ -8,7 +8,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-
+use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Access\Access;
 use TikiManager\Access\ShellPrompt;
 use TikiManager\Application\Discovery;
@@ -28,6 +28,10 @@ class CreateInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $io = new SymfonyStyle($input, $output);
+
+        $io->title('Create a new instance');
+
         $blank = $input->getArgument('blank') == 'blank' ? true : false;
 
         $output->writeln('<comment>Answer the following to add a new Tiki Manager instance.</comment>');
@@ -131,7 +135,7 @@ class CreateInstanceCommand extends Command
                     if (!$helper->ask($input, $output, $question)) {
                         $output->writeln('<error>Directory ['.$path.'] not created.</error>');
                         $errors[$key] = $path;
-                         continue;
+                        continue;
                     }
 
                     $script = sprintf("echo mkdir('%s', 0777, true);", $path);
@@ -177,14 +181,20 @@ class CreateInstanceCommand extends Command
         if (array_key_exists('webroot', $errors) && $instance->type !== 'ftp') {
             $output->writeln('<error>Webroot directory is missing in filesystem. You need to create it manually.</error>');
             $output->writeln('<fg=blue>Instance configured as blank (empty).</>');
-            exit(0);
+            return 0;
         }
 
         if ($blank) {
             $output->writeln('<fg=blue>This is a blank (empty) instance. This is useful to restore a backup later.</>');
-        } else {
-            perform_instance_installation($instance);
-            $output->writeln('<fg=blue>Please test your site at ' . $instance->weburl . '</>');
+            return 0;
         }
+
+        $result = CommandHelper::performInstall($instance, $input, $output);
+
+        if ($result === false) {
+            return 1;
+        }
+
+        return 0;
     }
 }
