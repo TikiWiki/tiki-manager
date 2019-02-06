@@ -301,6 +301,7 @@ SQL;
         }
 
         closedir($dp);
+        ksort($backups);
         return $backups;
     }
 
