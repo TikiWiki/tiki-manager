@@ -22,7 +22,7 @@ class Tiki extends Application
     public function backupDatabase($target)
     {
         $access = $this->instance->getBestAccess('scripting');
-        if ($access instanceof ShellPrompt) {
+        if ($access instanceof ShellPrompt && !(ApplicationHelper::isWindows() && $this->instance->type == 'local')) {
             $randomName = md5(time() . 'trimbackup') . '.sql.gz';
             $remoteFile = $this->instance->getWorkPath($randomName);
             $access->runPHP(

@@ -300,7 +300,9 @@ class Local extends Access implements ShellPrompt
 
     public function deleteFile($filename)
     {
-        if ($filename{0} != '/') {
+        preg_match('/^([a-zA-Z]\:[\/,\\\\]).{1,}/', $filename, $matches);
+
+        if ($filename{0} != '/' && empty($matches)) {
             $filename = $this->instance->getWebPath($filename);
         }
 
