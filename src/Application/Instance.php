@@ -705,7 +705,7 @@ SQL;
         $path = $access->getInterpreterPath($this);
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.php', 'maintenance.php');
 
-        $access->shellExec("{$path} -r 'touch(\'maintenance.php\');'");
+        $access->shellExec(sprintf('%s -r "touch(\'maintenance.php\');"', $path));
 
         if ($access->fileExists($this->getWebPath('.htaccess'))) {
             $access->moveFile('.htaccess', '.htaccess.bak');
