@@ -389,6 +389,19 @@ class CommandHelper
         $dbUser = null;
         $io = new SymfonyStyle($input, $output);
 
+        $access = $instance->getBestAccess('scripting');
+        $remoteFile = "{$instance->webroot}/db/local.php";
+
+        if ($access->fileExists($remoteFile)) {
+            $localFile = $access->downloadFile($remoteFile);
+            $dbUser = Database::createFromConfig($instance, $localFile);
+            unlink($localFile);
+
+            if ($dbUser instanceof Database) {
+                return $dbUser;
+            }
+        }
+
         $io->section(sprintf('Setup database connection in %s', $instance->name));
         $io->note('Creating databases and users requires root privileges on MySQL.');
 

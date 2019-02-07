@@ -603,7 +603,7 @@ SQL;
         return $tar;
     }
 
-    public function restore($src_app, $archive)
+    public function restore($src_app, $archive, $clone = false)
     {
         $access = $this->getBestAccess('scripting');
 
