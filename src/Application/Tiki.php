@@ -103,7 +103,7 @@ class Tiki extends Application
             if ($instance->hasConsole()) {
                 if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
                     // TODO INSTALL COMPOSER IF NOT FOUND
-                    $access->shellExec("cd $webroot && composer install -d vendor_bundled");
+                    $access->shellExec("cd $webroot && composer install -d vendor_bundled --no-interaction --prefer-source");
                 } else {
                     $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
                 }
@@ -503,7 +503,7 @@ class Tiki extends Application
 
                         if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
                             // TODO INSTALL COMPOSER IF NOT FOUND
-                            $access->shellExec('composer install -d vendor_bundled');
+                            $access->shellExec('composer install -d vendor_bundled --no-interaction --prefer-source');
                         } else {
                             $access->shellExec("sh setup.sh composer");
                         }
