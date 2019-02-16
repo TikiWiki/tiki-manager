@@ -74,4 +74,14 @@ class ApplicationHelper
 
         return $path . implode(DIRECTORY_SEPARATOR, $absolutes);
     }
+
+    /**
+     * Check if application is running on Windows
+     *
+     * @return bool
+     */
+    public static function isWindows()
+    {
+        return substr(PHP_OS, 0, 3) == 'WIN';
+    }
 }

@@ -9,6 +9,7 @@ namespace TikiManager\Application;
 use TikiManager\Access\ShellPrompt;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Repository\SVN;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 define('SVN_TIKIWIKI_URI', getenv('SVN_TIKIWIKI_URI') ?: 'https://svn.code.sf.net/p/tikiwiki/code');
 
@@ -21,7 +22,7 @@ class Tiki extends Application
     public function backupDatabase($target)
     {
         $access = $this->instance->getBestAccess('scripting');
-        if ($access instanceof ShellPrompt) {
+        if ($access instanceof ShellPrompt && !(ApplicationHelper::isWindows() && $this->instance->type == 'local')) {
             $randomName = md5(time() . 'trimbackup') . '.sql.gz';
             $remoteFile = $this->instance->getWorkPath($randomName);
             $access->runPHP(
@@ -49,9 +50,9 @@ class Tiki extends Application
     public function extractTo(Version $version, $folder)
     {
         if (file_exists($folder)) {
-            `svn revert --recursive  $folder`;
-            `svn cleanup $folder`;
-            `svn up --non-interactive $folder`;
+            `svn revert --recursive  "$folder"`;
+            `svn cleanup "$folder"`;
+            `svn up --non-interactive "$folder"`;
         } else {
             $command = $this->getExtractCommand($version, $folder);
             `$command`;
@@ -70,7 +71,7 @@ class Tiki extends Application
         $svnInfo = '';
 
         if (file_exists($folder)) {
-            $svnInfo = `svn info $folder`;
+            $svnInfo = `svn info "$folder"`;
         }
 
         if (is_null($folder)) {
@@ -92,17 +93,23 @@ class Tiki extends Application
 
     public function fixPermissions()
     {
-        $access = $this->instance->getBestAccess('scripting');
+        $instance = $this->instance;
+        $access = $instance->getBestAccess('scripting');
 
         if ($access instanceof ShellPrompt) {
-            $webroot = $this->instance->webroot;
-            $access->chdir($this->instance->webroot);
+            $webroot = $instance->webroot;
+            $access->chdir($instance->webroot);
 
-            if ($this->instance->hasConsole()) {
-                $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
+            if ($instance->hasConsole()) {
+                if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
+                    // TODO INSTALL COMPOSER IF NOT FOUND
+                    $access->shellExec("cd $webroot && composer install -d vendor_bundled --no-interaction --prefer-source");
+                } else {
+                    $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
+                }
             } else {
                 warning('Old Tiki detected, running bundled Tiki Manager setup.sh script.');
-                $filename = $this->instance->getWorkPath('setup.sh');
+                $filename = $instance->getWorkPath('setup.sh');
                 $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
                 $ret = $access->shellExec("cd $webroot && bash " . escapeshellarg($filename));
             }
@@ -205,7 +212,7 @@ class Tiki extends Application
             $branch = SVN_TIKIWIKI_URI . "/{$version->branch}";
             $branch = str_replace('/./', '/', $branch);
             $branch = escapeshellarg($branch);
-            return "svn co $branch $folder";
+            return "svn co $branch \"$folder\"";
         }
     }
 
@@ -340,10 +347,19 @@ class Tiki extends Application
         $this->extractTo($version, $folder);
 
         if ($access instanceof ShellPrompt) {
-            $host->rsync([
-                'src' =>  rtrim($folder, '/') . '/',
+            if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
+                $host->windowsSync(
+                    $folder,
+                    $this->instance->webroot,
+                    null,
+                    ['.svn/tmp']
+                );
+            } else {
+                $host->rsync([
+                'src' => rtrim($folder, '/') . '/',
                 'dest' => rtrim($this->instance->webroot, '/') . '/'
-            ]);
+                ]);
+            }
         } else {
             $access->copyLocalFolder($folder);
         }
@@ -362,10 +378,7 @@ class Tiki extends Application
             );
         }
 
-        if ($access instanceof ShellPrompt) {
-            $access->shellExec('touch ' .
-                escapeshellarg($this->instance->getWebPath('db/lock')));
-        }
+        $this->setDbLock();
 
         $version->collectChecksumFromInstance($this->instance);
     }
@@ -414,7 +427,10 @@ class Tiki extends Application
                     $svn->cleanup($webroot);
 
                     $svn->updateInstanceTo($this->instance->webroot, $version->branch);
-                    $access->shellExec("chmod 0777 {$escaped_temp_path} {$escaped_cache_path}");
+                    foreach ([$escaped_temp_path, $escaped_cache_path] as $path) {
+                        $script = sprintf('chmod(%s, 0777);', $path);
+                        $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+                    }
 
                     if ($this->instance->hasConsole()) {
                         info('Updating composer');
@@ -446,7 +462,7 @@ class Tiki extends Application
                 info('Fixing permissions...');
 
                 $this->fixPermissions();
-                $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
+                $this->setDbLock();
 
                 if ($this->instance->hasConsole()) {
                     info('Rebuilding Index...');
@@ -477,28 +493,41 @@ class Tiki extends Application
 
                     $svn = new SVN(SVN_TIKIWIKI_URI, $access);
                     $svn->updateInstanceTo($this->instance->webroot, $version->branch);
-                    $access->shellExec('chmod 0777 temp temp/cache');
+                    foreach (['temp', 'temp/cache'] as $path) {
+                        $script = sprintf('chmod(%s, 0777);', $path);
+                        $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+                    }
 
                     if ($this->instance->hasConsole()) {
                         info('Updating composer...');
 
-                        $ret = $access->shellExec([
-                        "sh setup.sh composer",
-                        "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
-                        ]);
+                        if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
+                            // TODO INSTALL COMPOSER IF NOT FOUND
+                            $access->shellExec('composer install -d vendor_bundled --no-interaction --prefer-source');
+                        } else {
+                            $access->shellExec("sh setup.sh composer");
+                        }
+
+                        $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
                     }
 
                     info('Updating database schema...');
 
-                    $access->runPHP(
-                        dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                        [$this->instance->webroot]
-                    );
+                    if ($this->instance->hasConsole()) {
+                        $access->shellExec([
+                            "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
+                        ]);
+                    } else {
+                        $access->runPHP(
+                            dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
+                            [$this->instance->webroot]
+                        );
+                    }
 
                     info('Fixing permissions...');
 
                     $this->fixPermissions();
-                    $access->shellExec('touch ' . escapeshellarg($this->instance->getWebPath('db/lock')));
+                    $this->setDbLock();
 
                     if ($this->instance->hasConsole()) {
                         info('Rebuilding Index...');
@@ -535,7 +564,7 @@ class Tiki extends Application
     {
         $tmp = tempnam(TEMP_FOLDER, 'dblocal');
 
-        if (!empty($database->dbLocalContent)) {
+        if (! empty($database->dbLocalContent)) {
             file_put_contents($tmp, $database->dbLocalContent);
         } else {
             file_put_contents($tmp, "<?php"          . "\n"
@@ -576,20 +605,27 @@ class Tiki extends Application
 
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
-        $access->shellExec("chmod 0664 {$this->instance->webroot}/db/local.php");
-        // TODO: Hard-coding: 'apache:apache'
-        // TODO: File ownership under the webroot should be configurable per instance.
-        $access->shellExec("chown apache:apache {$this->instance->webroot}/db/local.php");
+
+        if ($access instanceof ShellPrompt) {
+            $script = sprintf("chmod('%s', 0664);", "{$this->instance->webroot}/db/local.php");
+            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+
+            // TODO: Hard-coding: 'apache:apache'
+            // TODO: File ownership under the webroot should be configurable per instance.
+            $script = sprintf("chown('%s', 'apache');", "{$this->instance->webroot}/db/local.php");
+            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+
+            $script = sprintf("chgrp('%s', 'apache');", "{$this->instance->webroot}/db/local.php");
+            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+        }
 
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
             info("Updating svn, composer, perms & database...");
 
             $access = $this->instance->getBestAccess('scripting');
             $access->chdir($this->instance->webroot);
-            $ret = $access->shellExec([
-                "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:install",
-                'touch ' . escapeshellarg($this->instance->getWebPath('db/lock')),
-            ]);
+            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php database:install");
+            $this->setDbLock();
         } elseif ($access->fileExists('installer/shell.php')) {
             if ($access instanceof ShellPrompt) {
                 $access = $this->instance->getBestAccess('scripting');
@@ -626,6 +662,56 @@ class Tiki extends Application
             ."\$client_charset = 'utf8';"        . "\n"
             ."// generated by Tiki Manager " . date('Y-m-d H:i:s +Z')
             . "\n";
+    }
+
+    /**
+     * Set db/lock in instance
+     *
+     * @return bool
+     */
+    public function setDbLock()
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        if ($access instanceof ShellPrompt) {
+            $script = "echo touch('db/lock');";
+            $command = $access->createCommand($access->getInterpreterPath(), ["-r {$script}"])->run();
+
+            return $command->getStdoutContent() == 1;
+        }
+
+        return false;
+    }
+
+    /**
+     * Return a list of the compatible versions of Tiki in instance
+     *
+     * @param bool $withBlank
+     * @return array
+     */
+    public function getCompatibleVersions($withBlank = true)
+    {
+        $versions = $this->getVersions();
+
+        $compatible = [];
+        foreach ($versions as $key => $version) {
+            preg_match('/(\d+\.|trunk)/', $version->branch, $matches);
+            if (!array_key_exists(0, $matches)) {
+                continue;
+            }
+
+            if ((($matches[0] >= 13) || ($matches[0] == 'trunk')) && ($this->instance->phpversion < 50500)) {
+                // Nothing to do, this match is incompatible...
+                continue;
+            }
+
+            $compatible[$key] = $version;
+        }
+
+        if ($withBlank) {
+            $compatible['-1'] = 'blank : none';
+        }
+
+        return $compatible;
     }
 }
 

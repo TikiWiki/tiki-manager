@@ -6,6 +6,8 @@
 
 namespace TikiManager\Libs\Host;
 
+use TikiManager\Libs\Helpers\ApplicationHelper;
+
 class Local
 {
     private static $resources = [];
@@ -59,7 +61,8 @@ class Local
         ];
 
         $commandLine = $command->getFullCommand();
-        $commandLine .= '; echo $? >&3';
+        $commandLine .= ApplicationHelper::isWindows() ? '' : '; echo $? >&3';
+
         $process = proc_open($commandLine, $descriptorspec, $pipes, $cwd, $env);
 
         if (!is_resource($process)) {
@@ -86,7 +89,7 @@ class Local
 
     public function runCommands($commands, $output = false)
     {
-        if (! is_array($commands)) {
+        if (!is_array($commands)) {
             $commands = func_get_args();
         }
 
@@ -101,13 +104,15 @@ class Local
             array_unshift($commandPrefixArray, 'cd ' . escapeshellarg($this->location));
         }
 
-        foreach ($this->env as $name => $value) {
-            array_unshift($commandPrefixArray, "export $name=$value");
-        }
+        if (!ApplicationHelper::isWindows()) {
+            foreach ($this->env as $name => $value) {
+                array_unshift($commandPrefixArray, "export $name=$value");
+            }
 
-        if (count($commandPrefixArray)) {
-            $commandPrefixArray[] = '';
-            $commandPrefix = implode(' ;', $commandPrefixArray);
+            if (count($commandPrefixArray)) {
+                $commandPrefixArray[] = '';
+                $commandPrefix = implode(' ;', $commandPrefixArray);
+            }
         }
 
         $contents = '';
@@ -141,21 +146,45 @@ class Local
 
     public function sendFile($localFile, $remoteFile)
     {
-        $command = sprintf(
-            'rsync -av %s %s',
-            escapeshellarg($localFile),
-            escapeshellarg($remoteFile)
-        );
+        if (ApplicationHelper::isWindows()) {
+            $localFile = str_replace('/', DIRECTORY_SEPARATOR, $localFile);
+            $remoteFile = str_replace('/', DIRECTORY_SEPARATOR, $remoteFile);
+
+            $command = sprintf(
+                'echo f | xcopy %s %s /k /y /q',
+                escapeshellarg($localFile),
+                escapeshellarg($remoteFile)
+            );
+        } else {
+            $command = sprintf(
+                'rsync -av %s %s',
+                escapeshellarg($localFile),
+                escapeshellarg($remoteFile)
+            );
+        }
+
         $this->runCommands($command);
     }
 
     public function receiveFile($remoteFile, $localFile)
     {
-        $command = sprintf(
-            'rsync -av %s %s',
-            escapeshellarg($remoteFile),
-            escapeshellarg($localFile)
-        );
+        if (ApplicationHelper::isWindows()) {
+            $remoteFile = str_replace('/', DIRECTORY_SEPARATOR, $remoteFile);
+            $localFile = str_replace('/', DIRECTORY_SEPARATOR, $localFile);
+
+            $command = sprintf(
+                'echo f | xcopy %s %s /k /y /q',
+                escapeshellarg($remoteFile),
+                escapeshellarg($localFile)
+            );
+        } else {
+            $command = sprintf(
+                'rsync -av %s %s',
+                escapeshellarg($remoteFile),
+                escapeshellarg($localFile)
+            );
+        }
+
         $this->runCommands($command);
     }
 
@@ -194,7 +223,6 @@ class Local
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
             $output = trim(stream_get_contents($ph));
-            ;
             $return_var = pclose($ph);
         }
 
@@ -206,6 +234,69 @@ class Local
 
         debug($output, $prefix = "({$return_var})>>", "\n\n");
         return $return_var;
+    }
+
+    /**
+     * Syncs one folder to another, similar to rsync but in windows environment
+     * This method does not allow copy files and rename file on target.
+     *
+     * @param $remoteLocation
+     * @param $localMirror
+     * @param array $files
+     * @param array $exclusions
+     *
+     * @return int The exit code
+     */
+    public function windowsSync($remoteLocation, $localMirror, $files = [], $exclusions = [])
+    {
+
+        $exclude = '';
+        $returnVar = 0;
+        $output = '';
+
+        $remoteLocation = str_replace('/', DIRECTORY_SEPARATOR, $remoteLocation);
+        $localMirror = str_replace('/', DIRECTORY_SEPARATOR, $localMirror);
+
+        if (!empty($files)) {
+            $files = implode(' ', array_map(function ($var) {
+                $var = str_replace('/', DIRECTORY_SEPARATOR, $var);
+                return escapeshellarg($var);
+            }, $files));
+        } else {
+            $files = '';
+        }
+
+        if (!empty($exclusions)) {
+            $exclude = '/xf ' . implode(' ', array_map(function ($var) {
+                    $var = str_replace('/', DIRECTORY_SEPARATOR, $var);
+                    return escapeshellarg($var);
+            }, $exclusions));
+        }
+
+        $command = sprintf(
+            'robocopy %s %s %s /e /purge /sl %s',
+            escapeshellarg($remoteLocation),
+            escapeshellarg($localMirror),
+            $files,
+            $exclude
+        );
+
+        debug($command);
+
+        $ph = popen($command, 'r');
+        if (is_resource($ph)) {
+            $output = trim(stream_get_contents($ph));
+            $returnVar = pclose($ph);
+        }
+        if ($returnVar > 8) {
+            // Any value greater than 8 indicates that there was at least one failure during the copy operation.
+            warning($command);
+            error("ROBOCOPY exit code: $returnVar");
+            error($output);
+        }
+
+        debug($output, $prefix = "({$returnVar})>>", PHP_EOL . PHP_EOL);
+        return $returnVar;
     }
 
     /**

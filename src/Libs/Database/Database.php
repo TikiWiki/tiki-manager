@@ -10,6 +10,7 @@ use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 use TikiManager\Ext\Password;
 use TikiManager\Application\Instance;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Database
 {
@@ -201,6 +202,13 @@ class Database
             '-s'
         );
         $args = array_merge($args, $this->mysqlArgs);
+
+        if (ApplicationHelper::isWindows()) {
+            $args = implode(' ', $args);
+            $command = 'echo ' . $sql . ' | mysql -f ' . $args;
+            $command_result = $this->access->shellExec($command);
+            return isset($command_result) ? rtrim($command_result, PHP_EOL) : 0;
+        }
 
         $command = new Command('mysql', $args, $sql);
         $this->access->runCommand($command);

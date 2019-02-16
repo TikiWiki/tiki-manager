@@ -23,8 +23,7 @@ foreach ($selection as $instance) {
     info("Applying profile on {$instance->name}");
 
     $instance->getApplication()->installProfile($repository, $profile);
+    perform_archive_cleanup($instance->id, $instance->name);
 }
-
-perform_archive_cleanup();
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

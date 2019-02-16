@@ -13,7 +13,7 @@ if (! function_exists('readline')) {
 function color($string, $color)
 {
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-        return;
+        return $string;
     }
 
     $avail = [

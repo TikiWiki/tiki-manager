@@ -149,9 +149,15 @@ if (function_exists('mysqli_query')) {
 
 // }}}
 
+$db_config = 'db/local.php';
+if (! file_exists($db_config)) {
+    file_put_contents('php://stderr', "File does not exist: '{$db_config}'");
+    exit(1);
+}
+
 $mysqldump_version="1.02";
 
-include_once 'db/local.php';
+include_once "{$db_config}";
 
 if ($host_tiki) {
     $parts = explode(';', $host_tiki);
@@ -159,9 +165,8 @@ if ($host_tiki) {
     // Parse the MySQL port from a DSN string
     if (isset($parts[1]) && strpos($parts[1], 'port=') !== false) {
         $port = substr($parts[1], 5);
+        $host_tiki = $parts[0] . ":$port";
     }
-
-    $host_tiki = $parts[0] . ":$port";
 }
 
 $mysql_host = $host_tiki;

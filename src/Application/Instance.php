@@ -7,6 +7,8 @@
 namespace TikiManager\Application;
 
 use TikiManager\Access\Access;
+use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Instance
 {
@@ -211,6 +213,8 @@ SQL;
     public $phpversion;
     public $app;
     public $type;
+
+    protected $databaseConfig;
 
     private $access = [];
 
@@ -431,7 +435,7 @@ SQL;
 
     public function getWorkPath($relativePath)
     {
-        return "{$this->tempdir}/$relativePath";
+        return $this->tempdir . DIRECTORY_SEPARATOR . $relativePath;
     }
 
     public function getProp($key)
@@ -458,9 +462,9 @@ SQL;
             $access = $this->getBestAccess('scripting');
         }
 
-        echo $access->shellExec(
-            "mkdir -p {$this->tempdir}"
-        );
+        $path = $access->getInterpreterPath($this);
+        $script = sprintf("mkdir('%s', 0777, true);", $this->tempdir);
+        $access->createCommand($path, ["-r {$script}"])->run();
 
         return $this->tempdir;
     }
@@ -614,8 +618,13 @@ SQL;
         $version = null;
         $oldVersion = $this->getLatestVersion();
 
-        perform_database_setup($this, $database_dump);
-        perform_instance_installation($this); // a version is created in this call
+        $databaseConfig = $this->getDatabaseConfig();
+        $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+
+        if (!$this->findApplication()) { // a version is created in this call
+            error('Something when wrong with restore. Unable to read application details.');
+            return;
+        }
 
         if (!$oldVersion) {
             $version = $this->getLatestVersion();
@@ -635,8 +644,14 @@ SQL;
         }
 
         $version->collectChecksumFromInstance($this);
+
+        $flags = '-Rf';
+        if (ApplicationHelper::isWindows()) {
+            $flags = "-r";
+        }
+
         echo $access->shellExec(
-            "rm -Rf {$this->tempdir}/restore"
+            sprintf("rm %s %s", $flags, $this->tempdir . DIRECTORY_SEPARATOR . 'restore')
         );
     }
 
@@ -687,8 +702,10 @@ SQL;
         info('Locking website...');
 
         $access = $this->getBestAccess('scripting');
+        $path = $access->getInterpreterPath($this);
         $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.php', 'maintenance.php');
-        $access->shellExec('touch maintenance.php');
+
+        $access->shellExec(sprintf('%s -r "touch(\'maintenance.php\');"', $path));
 
         if ($access->fileExists($this->getWebPath('.htaccess'))) {
             $access->moveFile('.htaccess', '.htaccess.bak');
@@ -736,5 +753,21 @@ SQL;
         }
 
         return null;
+    }
+
+    /**
+     * @param Database $config
+     */
+    public function setDatabaseConfig(Database $config)
+    {
+        $this->databaseConfig = $config;
+    }
+
+    /**
+     * @return Database
+     */
+    public function getDatabaseConfig()
+    {
+        return $this->databaseConfig;
     }
 }

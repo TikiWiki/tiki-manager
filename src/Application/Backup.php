@@ -7,6 +7,7 @@
 namespace TikiManager\Application;
 
 use TikiManager\Application\Exception\BackupCopyException;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Backup
 {
@@ -30,11 +31,11 @@ class Backup
         $this->access = $this->getAccess($instance);
         $this->app = $instance->getApplication();
         $this->workpath = $instance->createWorkPath($this->access);
-        $this->archiveRoot = rtrim(ARCHIVE_FOLDER, '/');
-        $this->backupRoot = rtrim(BACKUP_FOLDER, '/');
-        $this->backupDirname = "{$instance->id}-{$instance->name}";
-        $this->backupDir = "{$this->backupRoot}/{$this->backupDirname}";
-        $this->archiveDir = "{$this->archiveRoot}/{$this->backupDirname}";
+        $this->archiveRoot = rtrim(ARCHIVE_FOLDER, DIRECTORY_SEPARATOR);
+        $this->backupRoot = rtrim(BACKUP_FOLDER, DIRECTORY_SEPARATOR);
+        $this->backupDirname = sprintf('%s-%s', $instance->id, $instance->name);
+        $this->backupDir = $this->backupRoot . DIRECTORY_SEPARATOR . $this->backupDirname;
+        $this->archiveDir = $this->archiveRoot . DIRECTORY_SEPARATOR . $this->backupDirname;
         $this->filePerm = intval($instance->getProp('backup_perm')) ?: 0770;
         $this->fileUser = $instance->getProp('backup_user');
         $this->fileGroup = $instance->getProp('backup_group');
@@ -53,7 +54,7 @@ class Backup
         foreach ($targets as $target) {
             list($type, $dir) = $target;
             $hash = md5($dir);
-            $destDir = "{$backupDir}/{$hash}";
+            $destDir = $backupDir . DIRECTORY_SEPARATOR . $hash;
             $error_code = $access->localizeFolder($dir, $destDir);
 
             if ($error_code) {
@@ -105,13 +106,27 @@ class Backup
     public function createArchive($archiveDir = null)
     {
         $archiveDir = $archiveDir ?: $this->archiveDir;
-        $tarDate = date('Y-m-d_H-i-s');
-        $tarPath = "{$archiveDir}/{$this->backupDirname}_{$tarDate}.tar.bz2";
 
-        $command = 'nice -n 19 tar -cjp'
-            . ' -C ' . escapeshellarg($this->backupRoot)
-            . ' -f ' . escapeshellarg($tarPath)
-            . ' '    . escapeshellarg($this->backupDirname);
+        $nice = 'nice -n 19';
+        $bzipStep = false;
+
+        // If its windows we need to tar first and then bzip2 the tar
+        if (ApplicationHelper::isWindows()) {
+            $bzipStep = true;
+            $nice = '';
+        }
+
+        $fileName = sprintf('%s_%s.tar%s', $this->backupDirname, date('Y-m-d_H-i-s'), $bzipStep ? '' : '.bz2');
+        $tarPath = $archiveDir . DIRECTORY_SEPARATOR . $fileName;
+
+        $command = sprintf(
+            "%s tar -cp%s -C %s -f %s %s",
+            $nice,
+            $bzipStep ? '' : 'j',
+            escapeshellarg($this->backupRoot),
+            escapeshellarg($tarPath),
+            escapeshellarg($this->backupDirname)
+        );
 
         exec($command, $output, $return_var);
 
@@ -119,6 +134,18 @@ class Backup
             error("TAR exit code: $return_var");
         }
 
+        if (!$bzipStep) {
+            $success = $return_var === 0
+                && file_exists($tarPath)
+                && filesize($tarPath) > 0;
+
+            return $success ? $tarPath : false;
+        }
+
+        $command = sprintf('bzip2 %s', $tarPath);
+        exec($command, $output, $return_var);
+
+        $tarPath .= '.bz2';
         $success = $return_var === 0
             && file_exists($tarPath)
             && filesize($tarPath) > 0;
@@ -150,7 +177,7 @@ class Backup
     {
         $app = $app ?: $this->app;
         $backupDir = $backupDir ?: $this->backupDir;
-        $sqlpath = "{$backupDir}/database_dump.sql";
+        $sqlpath = $backupDir . DIRECTORY_SEPARATOR . 'database_dump.sql';
 
         file_exists($sqlpath) && unlink($sqlpath);
         $app->backupDatabase($sqlpath);
@@ -166,11 +193,11 @@ class Backup
     public function createManifest($data, $backupDir = null)
     {
         $backupDir = $backupDir ?: $this->backupDir;
-        $manifestFile = "{$backupDir}/manifest.txt";
+        $manifestFile = $backupDir . DIRECTORY_SEPARATOR . 'manifest.txt';
         $file = fopen($manifestFile, 'w');
 
         foreach ($data as $location) {
-            $line = vsprintf("%s    %s    %s\n", $location);
+            $line = vsprintf("%s    %s    %s" . PHP_EOL, $location);
             fwrite($file, $line);
         }
 
@@ -215,7 +242,12 @@ class Backup
     {
         $archiveRoot = $archiveRoot ?: $this->archiveRoot;
         $instance = $instance ?: $this->instance;
-        $globPattern = "{$archiveRoot}/{$instance->id}-*/{$instance->id}*_*.tar.bz2";
+
+        $globPattern = implode(DIRECTORY_SEPARATOR, [
+            $archiveRoot,
+            $instance->id . '-*',
+            $instance->id . '*_*.tar.bz2',
+        ]);
         return array_reverse(glob($globPattern));
     }
 
@@ -247,7 +279,7 @@ class Backup
     {
         $archiveDir = $archiveDir ?: $this->archiveDir;
         $instance = $instance ?: $this->instance;
-        $symlinkPath = $symlinkPath ?: dirname($instance->webroot) . '/backup';
+        $symlinkPath = $symlinkPath ?: dirname($instance->webroot) . DIRECTORY_SEPARATOR . 'backup';
 
         // If Tiki Manager archive dir is a link, swap link and target
         if (is_link($archiveDir)) {

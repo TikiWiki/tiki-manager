@@ -110,6 +110,11 @@ class CloneInstanceCommand extends Command
 
                 foreach ($selectedDestinationInstances as $destinationInstance) {
                     $output->writeln('<fg=cyan>Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name . '</>');
+
+                    $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
+                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance, $input, $output);
+                    $destinationInstance->setDatabaseConfig($databaseConfig);
+
                     $destinationInstance->lock();
                     $destinationInstance->restore($selectedSourceInstances[0]->app, $archive, true);
 
