@@ -599,8 +599,7 @@ SQL;
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
         }
 
-        $tar = $backup->create();
-        return $tar;
+        return $backup->create();
     }
 
     public function restore($src_app, $archive, $clone = false)

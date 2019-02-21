@@ -103,7 +103,7 @@ class CloneInstanceCommand extends Command
 
                 $output->writeln('<fg=cyan>Creating snapshot of: ' . $selectedSourceInstances[0]->name . '</>');
                 $archive = $selectedSourceInstances[0]->backup();
-                if ($archive === null) {
+                if (empty($archive)) {
                     $output->writeln('<error>Error: Snapshot creation failed.</error>');
                     exit(-1);
                 }

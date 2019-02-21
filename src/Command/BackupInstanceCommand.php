@@ -65,7 +65,10 @@ class BackupInstanceCommand extends Command
 
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Performing backup for ' . $instance->name . '</>');
-                $instance->backup();
+                if (empty($instance->backup())) {
+                    $output->writeln('<error>Snapshot creation failed.</error>');
+                    continue;
+                }
                 perform_archive_cleanup($instance->id, $instance->name);
             }
         } else {
