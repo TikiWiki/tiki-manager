@@ -80,7 +80,6 @@ class Backup
 
     public function create($skipArchive = false, $backupDir = null)
     {
-        $access = $this->getAccess();
         $backupDir = $backupDir ?: $this->backupDir;
 
         $this->app->removeTemporaryFiles();
@@ -98,6 +97,10 @@ class Backup
         if (!$skipArchive) {
             info('Creating archive');
             $result = $this->createArchive($this->archiveDir, $backupDir);
+
+            if (!$result) {
+                return false;
+            }
         }
 
         return $result;
