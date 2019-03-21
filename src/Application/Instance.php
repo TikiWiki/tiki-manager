@@ -1,8 +1,11 @@
 <?php
-// Copyright (c) 2016, Avan.Tech, et. al.
-// Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
-// All Rights Reserved. See copyright.txt for details and a complete list of authors.
-// Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
+/**
+ * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
+ *     See copyright.txt for details and a complete list of authors.
+ * @copyright (c) 2016, Avan.Tech, et. al.
+ * @copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
+ * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
+ */
 
 namespace TikiManager\Application;
 
@@ -59,6 +62,18 @@ INNER JOIN (
     ) t ON t.version = v.version_id
 WHERE
     v.type = 'svn' OR v.type = 'tarball'
+;
+SQL;
+
+    const SQL_COUNT_NUM_INSTANCES = <<<SQL
+SELECT
+    COUNT(i.instance_id) numInstances
+FROM
+    instance i
+INNER JOIN access a
+    ON i.instance_id=a.instance_id
+WHERE
+    (a.host = :host OR a.host IS NULL) AND i.webroot = :webroot
 ;
 SQL;
 
@@ -365,6 +380,21 @@ SQL;
         if (!empty($this->backup_perm)) {
             $this->setProp('backup_perm', $this->backup_perm);
         }
+    }
+
+    /**
+     * Count the number of instances in database through host and webroot
+     *
+     * @param $host
+     * @param $webroot
+     * @return int
+     */
+    public static function countNumInstances($host, $webroot)
+    {
+        $result = query(self::SQL_COUNT_NUM_INSTANCES, [':host' => $host, ':webroot' => $webroot]);
+        $count = $result->fetchObject();
+
+        return isset($count->numInstances) ? $count->numInstances : 0;
     }
 
     public function delete()

@@ -1,8 +1,11 @@
 <?php
-// Copyright (c) 2016, Avan.Tech, et. al.
-// Copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
-// All Rights Reserved. See copyright.txt for details and a complete list of authors.
-// Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
+/**
+ * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
+ *     See copyright.txt for details and a complete list of authors.
+ * @copyright (c) 2016, Avan.Tech, et. al.
+ * @copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
+ * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
+ */
 
 namespace TikiManager\Application;
 
@@ -170,6 +173,7 @@ abstract class Application
         $update->type = $this->getInstallType();
         $update->branch = $this->getBranch();
         $update->date = $this->getUpdateDate();
+        $update->revision = $this->getRevision($this->instance->webroot);
         $update->save();
 
         return $update;
