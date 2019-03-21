@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
+ *     See copyright.txt for details and a complete list of authors.
+ * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
+ */
 
 namespace TikiManager\Command;
 
@@ -11,6 +16,7 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Access\Access;
 use TikiManager\Access\ShellPrompt;
+use TikiManager\Application\Application;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
@@ -185,6 +191,38 @@ class CreateInstanceCommand extends Command
             $output->writeln('<error>Webroot directory is missing in filesystem. You need to create it manually.</error>');
             $output->writeln('<fg=blue>Instance configured as blank (empty).</>');
             return 0;
+        }
+
+        $countInstances = Instance::countNumInstances($access->host, $instance->webroot);
+        $isInstalled = false;
+
+        foreach (Application::getApplications($instance) as $app) {
+            if ($app->isInstalled()) {
+                $isInstalled = true;
+            }
+        }
+
+        if ($isInstalled) {
+            if ($countInstances == 1) {
+                $helper = $this->getHelper('question');
+                $question = new ConfirmationQuestion('An application was detected in [' . $instance->webroot . '], do you want add it to the list? [y]: ', true);
+
+                if (! $helper->ask($input, $output, $question)) {
+                    $instance->delete();
+                    return 1;
+                }
+                $result = $app->registerCurrentInstallation();
+                $resultInstance = $result->getInstance();
+
+                if ($instance->id === $resultInstance->id) {
+                    $io->success('Please test your site at ' . $instance->weburl);
+                    return 0;
+                }
+            } else {
+                $instance->delete();
+                $io->error('Unable to install. An application was detected in this instance.');
+                return 1;
+            }
         }
 
         if ($blank) {
