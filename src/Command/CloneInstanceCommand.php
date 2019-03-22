@@ -4,6 +4,7 @@ namespace TikiManager\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,7 +19,14 @@ class CloneInstanceCommand extends Command
             ->setName('instance:clone')
             ->setDescription('Clone instance')
             ->setHelp('This command allows you make another identical copy of Tiki')
-            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL);
+            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
+            ->addOption(
+                'skip-checksum',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip files checksum check for a faster result. Files checksum change won\'t be saved on the DB. Only used in mode upgrade.'
+            )
+        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
