@@ -1,4 +1,15 @@
 <?php
+/**
+ * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
+ *     See copyright.txt for details and a complete list of authors.
+ * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
+ */
+
+if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
+    $message = 'ERROR:' . PHP_EOL . 'Cannot locate autoloader file. Please run "composer install".';
+    print(PHP_EOL . $message . PHP_EOL . PHP_EOL);
+    exit(-1);
+}
 
 require __DIR__.'/vendor/autoload.php';
 
