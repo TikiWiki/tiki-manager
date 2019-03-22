@@ -4,6 +4,7 @@ namespace TikiManager\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,7 +20,13 @@ class UpdateInstanceCommand extends Command
             ->setName('instance:update')
             ->setDescription('Update instance')
             ->setHelp('This command allows you update an instance')
-            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL);
+            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
+            ->addOption(
+                'skip-checksum',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip files checksum check for a faster result. Files checksum change won\'t be saved on the DB.'
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -75,6 +82,8 @@ class UpdateInstanceCommand extends Command
                 $selectedInstances = $helper->ask($input, $output, $question);
             }
 
+            $skipChecksum = $input->getOption('skip-checksum');
+
             foreach ($selectedInstances as $instance) {
                 $access = $instance->getBestAccess('scripting');
                 $discovery = new Discovery($instance, $access);
@@ -105,6 +114,7 @@ class UpdateInstanceCommand extends Command
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();
                 $branch_version = $version->getBaseVersion();
+                $skip_checksum = $input->getOption('skip-checksum');
 
                 if ($switch) {
                     $versions = [];
@@ -147,9 +157,11 @@ class UpdateInstanceCommand extends Command
                         }
 
                         if (count($versionSel) > 0) {
-                            $filesToResolve = $app->performUpdate($instance, $target);
+                            $filesToResolve = $app->performUpdate($instance, $target, $skipChecksum);
                             $version = $instance->getLatestVersion();
-                            handleCheckResult($instance, $version, $filesToResolve);
+                            if (!$skipChecksum) {
+                                handleCheckResult($instance, $version, $filesToResolve);
+                            }
                         } else {
                             $output->writeln('<comment>No version selected. Nothing to perform.</comment>');
                         }
@@ -160,9 +172,11 @@ class UpdateInstanceCommand extends Command
                 } else {
                     $app_branch = $app->getBranch();
                     if ($app_branch == $branch_name) {
-                        $filesToResolve = $app->performUpdate($instance);
+                        $filesToResolve = $app->performUpdate($instance, null, $skipChecksum);
                         $version = $instance->getLatestVersion();
-                        handleCheckResult($instance, $version, $filesToResolve);
+                        if (!$skipChecksum) {
+                            handleCheckResult($instance, $version, $filesToResolve);
+                        }
                     } else {
                         $output->writeln('<error>Error: Tiki Application branch is different than the one stored in the Tiki Manager db.</error>');
                         exit(-1);

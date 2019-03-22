@@ -86,7 +86,14 @@ abstract class Application
     {
     }
 
-    public function performUpdate(Instance $instance, $version = null)
+    /**
+     * Perform an instance branch update/upgrade
+     * @param Instance $instance
+     * @param null $version
+     * @param bool $skipChecksum Skip checksum check as it quickens the process.
+     * @return array
+     */
+    public function performUpdate(Instance $instance, $version = null, $skipChecksum = false)
     {
         $current = $instance->getLatestVersion();
 
@@ -105,13 +112,25 @@ abstract class Application
             $new->date = $version->date;
             $new->save();
         }
-        info('Checking old instance checksums.');
-        $oldPristine = $current->performCheck($instance);
-        $oldPristine = $oldPristine['pri'] ?: [];
 
-        info('Obtaining checksum from source.');
-        $new->collectChecksumFromSource($instance);
+        if (! $skipChecksum) {
+            info('Checking old instance checksums.');
+            $oldPristine = $current->performCheck($instance);
+            $oldPristine = $oldPristine['pri'] ?: [];
+
+            info('Obtaining checksum from source.');
+            $new->collectChecksumFromSource($instance);
+        }
+
         $this->performActualUpdate($new);
+
+        if ($skipChecksum) {
+            return [
+                'new' => [],
+                'mod' => [],
+                'del' => [],
+            ];
+        }
 
         info('Checking new instance checksums.');
         $newDiff = $new->performCheck($instance);
@@ -145,7 +164,7 @@ abstract class Application
         ];
     }
 
-    public function performUpgrade(Instance $instance, $version, $abort_on_conflict = true)
+    public function performUpgrade(Instance $instance, $version, $abort_on_conflict = true, $skipChecksum = false)
     {
         $this->performActualUpgrade($version, $abort_on_conflict);
 
@@ -156,8 +175,10 @@ abstract class Application
         $new->date = $version->date;
         $new->save();
 
-        info('Obtaining new checksum from source.');
-        $new->collectChecksumFromSource($instance);
+        if (!$skipChecksum) {
+            info('Obtaining new checksum from source.');
+            $new->collectChecksumFromSource($instance);
+        }
     }
 
     public function registerCurrentInstallation()
