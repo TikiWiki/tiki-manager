@@ -229,7 +229,6 @@ class Checksum
 
             $input = 'z';
             while (stripos('drs', $input{0}) === false) {
-
                 $io->writeln("<comment>What do you want to do about it?</comment>");
                 $io->listing([
                     "(R)estore version in repository",

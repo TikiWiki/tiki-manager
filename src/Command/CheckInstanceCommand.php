@@ -37,10 +37,10 @@ class CheckInstanceCommand extends Command
 
             if (empty($instancesOption)) {
                 $io->newLine();
-                $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+                CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                 $io->newLine();
-                $output->writeln('<comment>In case you want to check more than one instance, please use a comma (,) between the values</comment>');
+                $io->writeln('<comment>In case you want to check more than one instance, please use a comma (,) between the values</comment>');
 
                 $question = CommandHelper::getQuestion('Which instance(s) do you want to check', null, '?');
                 $question->setValidator(function ($answer) use ($instances) {
@@ -58,11 +58,11 @@ class CheckInstanceCommand extends Command
                 $version = $instance->getLatestVersion();
 
                 if (! $version) {
-                    $output->writeln('<comment>Instance [' . $instance->id . '] (' . $instance->name . ') does not have a registered version. Skip.</comment>');
+                    $io->writeln('<comment>Instance [' . $instance->id . '] (' . $instance->name . ') does not have a registered version. Skip.</comment>');
                     continue;
                 }
 
-                $output->writeln('<fg=cyan>Checking instance: ' . $instance->name . '...</>');
+                $io->writeln('<fg=cyan>Checking instance: ' . $instance->name . '...</>');
 
                 $versionRevision = $version->revision;
                 $tikiRevision = $instance->getRevision();
@@ -106,7 +106,7 @@ class CheckInstanceCommand extends Command
 
                     $updateFromOption = $input->getOption('update-from');
                     if (empty($updateFromOption)) {
-                        $output->writeln('<comment>No checksums exist.</comment>');
+                        $io->writeln('<comment>No checksums exist.</comment>');
                         $io->newLine();
                         CommandHelper::renderCheckOptionsAndActions($output);
                         $io->newLine();
@@ -142,7 +142,7 @@ class CheckInstanceCommand extends Command
                 }
             }
         } else {
-            $output->writeln('<comment>No instances available to check.</comment>');
+            $io->writeln('<comment>No instances available to check.</comment>');
         }
     }
 }

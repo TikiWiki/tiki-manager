@@ -41,10 +41,9 @@ class UpdateInstanceCommand extends Command
 
             $auto = false;
             $switch = false;
-            $offset = 0;
 
             $argument = $input->getArgument('mode');
-            if (isset($argument) && ! empty($argument)) {
+            if (isset($argument) && !empty($argument)) {
                 if (is_array($argument)) {
                     $auto = $input->getArgument('mode')[0] == 'auto' ? true : false;
                     $switch = $input->getArgument('mode')[0] == 'switch' ? true : false;
@@ -68,14 +67,13 @@ class UpdateInstanceCommand extends Command
                     $action = 'upgrade';
                 }
 
-
-                $output->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
-
-                $io->newLine();
-                $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+                $io->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
 
                 $io->newLine();
-                $output->writeln('<comment>In case you want to ' . $action .' more than one instance, please use a comma (,) between the values</comment>');
+                CommandHelper::renderInstancesTable($output, $instancesInfo);
+
+                $io->newLine();
+                $io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
 
                 $question = CommandHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
                 $question->setValidator(function ($answer) use ($instances) {
@@ -96,7 +94,7 @@ class UpdateInstanceCommand extends Command
                     $php_version_output = "$matches[1].$matches[2].$matches[3]";
                 }
 
-                $output->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $php_version_output found at " . $discovery->detectPHP() .'</>');
+                $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $php_version_output found at " . $discovery->detectPHP() . '</>');
 
                 $locked = $instance->lock();
                 $instance->detectPHP();
@@ -117,7 +115,6 @@ class UpdateInstanceCommand extends Command
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();
                 $branch_version = $version->getBaseVersion();
-                $skip_checksum = $input->getOption('skip-checksum');
 
                 if ($switch) {
                     $versions = [];
@@ -128,7 +125,7 @@ class UpdateInstanceCommand extends Command
                         }
                     }
 
-                    $output->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
+                    $io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
 
                     $counter = 0;
                     $found_incompatibilities = false;
@@ -144,7 +141,7 @@ class UpdateInstanceCommand extends Command
 
                         if ($compatible) {
                             $counter++;
-                            $output->writeln('[' . $key .'] ' . $version->type . ' : ' . $version->branch);
+                            $io->writeln('[' . $key . '] ' . $version->type . ' : ' . $version->branch);
                         }
                     }
 
@@ -153,7 +150,7 @@ class UpdateInstanceCommand extends Command
                         $selectedVersion = $helper->ask($input, $output, $question);
                         $versionSel = getEntries($versions, $selectedVersion);
 
-                        if (empty($versionSel) && ! empty($selectedVersion)) {
+                        if (empty($versionSel) && !empty($selectedVersion)) {
                             $target = Version::buildFake('svn', $selectedVersion);
                         } else {
                             $target = reset($versionSel);
@@ -166,11 +163,11 @@ class UpdateInstanceCommand extends Command
                                 Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                             }
                         } else {
-                            $output->writeln('<comment>No version selected. Nothing to perform.</comment>');
+                            $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
                         }
                     } else {
-                        $output->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-                        $output->writeln('<comment>the latest version permitted by the server.</comment>');
+                        $io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
+                        $io->writeln('<comment>the latest version permitted by the server.</comment>');
                     }
                 } else {
                     $app_branch = $app->getBranch();
@@ -181,7 +178,7 @@ class UpdateInstanceCommand extends Command
                             Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                         }
                     } else {
-                        $output->writeln('<error>Error: Tiki Application branch is different than the one stored in the Tiki Manager db.</error>');
+                        $io->writeln('<error>Error: Tiki Application branch is different than the one stored in the Tiki Manager db.</error>');
                         exit(-1);
                     }
                 }
@@ -191,7 +188,7 @@ class UpdateInstanceCommand extends Command
                 }
             }
         } else {
-            $output->writeln('<comment>No instances available to update/upgrade.</comment>');
+            $io->writeln('<comment>No instances available to update/upgrade.</comment>');
         }
     }
 }
