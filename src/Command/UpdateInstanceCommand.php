@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Libs\Helpers\Checksum;
 
 class UpdateInstanceCommand extends Command
 {
@@ -33,6 +34,8 @@ class UpdateInstanceCommand extends Command
     {
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        $io = new SymfonyStyle($input, $output);
+
         if (isset($instancesInfo)) {
             $helper = $this->getHelper('question');
 
@@ -65,7 +68,7 @@ class UpdateInstanceCommand extends Command
                     $action = 'upgrade';
                 }
 
-                $io = new SymfonyStyle($input, $output);
+
                 $output->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
 
                 $io->newLine();
@@ -160,7 +163,7 @@ class UpdateInstanceCommand extends Command
                             $filesToResolve = $app->performUpdate($instance, $target, $skipChecksum);
                             $version = $instance->getLatestVersion();
                             if (!$skipChecksum) {
-                                handleCheckResult($instance, $version, $filesToResolve);
+                                Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                             }
                         } else {
                             $output->writeln('<comment>No version selected. Nothing to perform.</comment>');
@@ -175,7 +178,7 @@ class UpdateInstanceCommand extends Command
                         $filesToResolve = $app->performUpdate($instance, null, $skipChecksum);
                         $version = $instance->getLatestVersion();
                         if (!$skipChecksum) {
-                            handleCheckResult($instance, $version, $filesToResolve);
+                            Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                         }
                     } else {
                         $output->writeln('<error>Error: Tiki Application branch is different than the one stored in the Tiki Manager db.</error>');

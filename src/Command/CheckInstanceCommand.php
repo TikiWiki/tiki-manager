@@ -10,6 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Libs\Helpers\Checksum;
 
 class CheckInstanceCommand extends Command
 {
@@ -66,8 +67,8 @@ class CheckInstanceCommand extends Command
                 $versionRevision = $version->revision;
                 $tikiRevision = $instance->getRevision();
 
-                if (! empty($versionRevision) && $versionRevision == $tikiRevision && $version->hasChecksums()) {
-                    handleCheckResult($instance, $version, $version->performCheck($instance));
+                if (!empty($versionRevision) && $versionRevision == $tikiRevision && $version->hasChecksums()) {
+                    Checksum::handleCheckResult($instance, $version, $version->performCheck($instance), $io);
                     continue;
                 }
 
@@ -132,7 +133,7 @@ class CheckInstanceCommand extends Command
                     switch ($option) {
                         case 'source':
                             $version->collectChecksumFromSource($instance);
-                            handleCheckResult($instance, $version, $version->performCheck($instance));
+                            Checksum::handleCheckResult($instance, $version, $version->performCheck($instance), $io);
                             break;
                         case 'current':
                             $version->collectChecksumFromInstance($instance);
