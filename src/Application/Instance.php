@@ -19,7 +19,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type
 FROM
     instance i
 INNER JOIN access a
@@ -31,7 +31,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type
 FROM
     instance i
 INNER JOIN access a
@@ -45,7 +45,7 @@ SQL;
 
     const SQL_SELECT_UPDATABLE_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type
 FROM
     instance i
 INNER JOIN access a
@@ -61,7 +61,7 @@ INNER JOIN (
         instance_id
     ) t ON t.version = v.version_id
 WHERE
-    v.type = 'svn' OR v.type = 'tarball'
+    v.type = 'svn' OR v.type = 'tarball' OR v.type = 'git'
 ;
 SQL;
 
@@ -600,7 +600,7 @@ SQL;
     public function hasConsole()
     {
         $current = $this->getLatestVersion();
-        $hasConsole = $current->branch === 'trunk'
+        $hasConsole = $current->branch === 'trunk' || $current->branch === 'master'
             || (
                 preg_match('/(\d+)\.?/', $current->branch, $matches)
                 && floatval($matches[1]) >= 11

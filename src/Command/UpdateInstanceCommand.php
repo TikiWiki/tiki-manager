@@ -67,8 +67,6 @@ class UpdateInstanceCommand extends Command
                     $action = 'upgrade';
                 }
 
-                $io->writeln('<comment>WARNING: Only SVN instances can be ' . $action . 'd.</comment>');
-
                 $io->newLine();
                 CommandHelper::renderInstancesTable($output, $instancesInfo);
 
@@ -107,7 +105,7 @@ class UpdateInstanceCommand extends Command
                     ob_end_clean();
 
                     $matches = [];
-                    if (preg_match('/(\d+\.|trunk)/', $contents, $matches)) {
+                    if (preg_match('/(\d+\.|trunk|master)/', $contents, $matches)) {
                         $branch_name = $matches[0];
                     }
                 }
@@ -120,7 +118,7 @@ class UpdateInstanceCommand extends Command
                     $versions = [];
                     $versions_raw = $app->getVersions();
                     foreach ($versions_raw as $version) {
-                        if ($version->type == 'svn') {
+                        if ($version->type == 'svn' || $version->type == 'git') {
                             $versions[] = $version;
                         }
                     }
@@ -136,6 +134,7 @@ class UpdateInstanceCommand extends Command
                         $compatible |= $base_version >= 13;
                         $compatible &= $base_version >= $branch_version;
                         $compatible |= $base_version === 'trunk';
+                        $compatible |= $base_version === 'master';
                         $compatible &= $instance->phpversion > 50500;
                         $found_incompatibilities |= !$compatible;
 
