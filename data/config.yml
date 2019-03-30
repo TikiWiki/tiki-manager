@@ -1,0 +1,2 @@
+instance:
+  default_version_control_system: 'SVN' # Currently accepting SVN and GIT

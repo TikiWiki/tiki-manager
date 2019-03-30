@@ -81,7 +81,7 @@ SQL;
     {
         $branch = $this->getBranch();
         $result = null;
-        if (preg_match('/((\d+)(\.\d+)?|trunk)/', $branch, $matches)) {
+        if (preg_match('/((\d+)(\.\d+)?|trunk|master)/', $branch, $matches)) {
             $result = $matches[0];
             $result = is_numeric($result)
                 ? floatval($result)
