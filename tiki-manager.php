@@ -15,7 +15,6 @@ require __DIR__.'/vendor/autoload.php';
 
 include_once __DIR__.'/src/env_setup.php';
 include_once __DIR__.'/src/dbsetup.php';
-include_once __DIR__.'/src/clean.php';
 
 use Symfony\Component\Console\Application;
 

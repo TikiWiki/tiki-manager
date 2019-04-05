@@ -11,7 +11,7 @@ if (isset($_POST['id'])) {
     if ($instance = TikiManager\Application\Instance::getInstance((int) $_POST['id'])) {
         web_backup($instance);
 //        $instance->backup();
-//        perform_archive_cleanup($instance->id, $instance->name);
+//        TikiManager\Helpers\Archive::performArchiveCleanup($instance->id, $instance->name);
     } else {
         die("Unknown instance.");
     }

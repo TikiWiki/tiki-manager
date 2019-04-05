@@ -6,6 +6,7 @@
 
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Helpers\Archive;
 
 include_once dirname(__FILE__) . '/../src/env_setup.php';
 include_once dirname(__FILE__) . '/../src/clean.php';
@@ -36,7 +37,7 @@ if (! isset($_SERVER['argv'][1])) {
 foreach ($selection as $instance) {
     info("Performing backup for {$instance->name}");
     $instance->backup();
-    perform_archive_cleanup($instance->id, $instance->name);
+    Archive::performArchiveCleanup($instance->id, $instance->name);
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

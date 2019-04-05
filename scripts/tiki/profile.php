@@ -5,6 +5,7 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 use TikiManager\Application\Instance;
+use TikiManager\Helpers\Archive;
 
 include_once dirname(__FILE__) . '/../../src/env_setup.php';
 include_once dirname(__FILE__) . '/../../src/clean.php';
@@ -23,7 +24,7 @@ foreach ($selection as $instance) {
     info("Applying profile on {$instance->name}");
 
     $instance->getApplication()->installProfile($repository, $profile);
-    perform_archive_cleanup($instance->id, $instance->name);
+    Archive::performArchiveCleanup($instance->id, $instance->name);
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
