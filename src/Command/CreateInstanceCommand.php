@@ -102,13 +102,7 @@ class CreateInstanceCommand extends Command
 
         $output->writeln('<info>Instance information saved.</info>');
 
-        $phpVersion = $discovery->detectPHPVersion();
-        if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-            $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
-        }
-
         $output->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
-        $output->writeln('<info>PHP Version: ' . $phpVersion  . '</info>');
         $output->writeln('<info>PHP exec: ' . $discovery->detectPHP() . '</info>');
 
         $folders = [
