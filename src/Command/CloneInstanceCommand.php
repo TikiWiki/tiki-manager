@@ -76,6 +76,7 @@ class CloneInstanceCommand extends Command
             }
 
             $instances_pruned = [];
+            $instances = CommandHelper::getInstances('all');
             foreach ($instances as $instance) {
                 if ($instance->getId() == $selectedSourceInstances[0]->getId()) {
                     continue;
@@ -109,6 +110,12 @@ class CloneInstanceCommand extends Command
                     }
                 }
 
+                foreach ($selectedDestinationInstances as $destinationInstance) {
+                    $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
+                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance, $input, $output);
+                    $destinationInstance->setDatabaseConfig($databaseConfig);
+                }
+
                 $output->writeln('<fg=cyan>Creating snapshot of: ' . $selectedSourceInstances[0]->name . '</>');
                 $archive = $selectedSourceInstances[0]->backup();
                 if (empty($archive)) {
@@ -118,10 +125,6 @@ class CloneInstanceCommand extends Command
 
                 foreach ($selectedDestinationInstances as $destinationInstance) {
                     $output->writeln('<fg=cyan>Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name . '</>');
-
-                    $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
-                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance, $input, $output);
-                    $destinationInstance->setDatabaseConfig($databaseConfig);
 
                     $destinationInstance->lock();
                     $destinationInstance->restore($selectedSourceInstances[0]->app, $archive, true);
