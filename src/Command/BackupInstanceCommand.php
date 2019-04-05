@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Helpers\Archive;
 
 class BackupInstanceCommand extends Command
 {
@@ -69,7 +70,7 @@ class BackupInstanceCommand extends Command
                     $output->writeln('<error>Snapshot creation failed.</error>');
                     continue;
                 }
-                perform_archive_cleanup($instance->id, $instance->name);
+                Archive::performArchiveCleanup($instance->id, $instance->name);
             }
         } else {
             $output->writeln('<comment>No instances available to backup.</comment>');

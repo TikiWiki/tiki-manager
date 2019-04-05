@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Helpers\Archive;
 
 class ApplyProfileCommand extends Command
 {
@@ -58,7 +59,7 @@ class ApplyProfileCommand extends Command
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Applying profile to ' . $instance->name . '...</>');
                 $instance->getApplication()->installProfile($repository, $profile);
-                perform_archive_cleanup($instance->id, $instance->name);
+                Archive::performArchiveCleanup($instance->id, $instance->name);
             }
         } else {
             $output->writeln('<comment>No Tiki instances available to apply a profile.</comment>');
