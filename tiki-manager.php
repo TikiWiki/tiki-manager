@@ -52,4 +52,6 @@ $application->add(new \TikiManager\Command\DeleteDatabaseCommand());
 $application->add(new \TikiManager\Command\ClearCacheCommand());
 $application->add(new \TikiManager\Command\ClearLogsCommand());
 
+$application->add(new \TikiManager\Command\TikiVersionCommand());
+
 $application->run();

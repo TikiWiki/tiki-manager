@@ -12,6 +12,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Application;
+use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Database\Database;
@@ -484,5 +485,70 @@ class CommandHelper
         }
 
         return $dbUser;
+    }
+
+    /**
+     * Get VCS Versions (SVN || GIT)
+     *
+     * @param string $vcsType
+     * @return array
+     */
+    public static function getVersions($vcsType = '')
+    {
+        $instance = new Instance();
+        if (! empty($vcsType)) {
+            $instance->vcs_type = $vcsType;
+        }
+        $instance->phpversion = 50500;
+        $tikiApplication = new Tiki($instance);
+        $versions = $tikiApplication->getCompatibleVersions();
+
+        return $versions;
+    }
+
+    /**
+     * Get information from Version Object
+     *
+     * @param $versions
+     * @return array|null
+     */
+    public static function getVersionsInfo($versions)
+    {
+        $versionsInfo = null;
+
+        if (! empty($versions)) {
+            foreach ($versions as $version) {
+                $versionsInfo[] = [
+                    $version->type,
+                    $version->branch
+                ];
+            }
+        }
+
+        return $versionsInfo;
+    }
+
+    /**
+     * Render a table with all Versions (SVN || GIT)
+     *
+     * @param $output
+     * @param $rows
+     */
+    public static function renderVersionsTable($output, $rows)
+    {
+        if (empty($rows)) {
+            return;
+        }
+
+        $versionsTableHeaders = [
+            'Type',
+            'Name'
+        ];
+
+        $table = new Table($output);
+        $table
+            ->setHeaders($versionsTableHeaders)
+            ->setRows($rows);
+        $table->render();
     }
 }
