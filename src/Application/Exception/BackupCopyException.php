@@ -45,7 +45,7 @@ class BackupCopyException extends \Exception
         }
         $EOL = "\r\n";
 
-        $message = "! Backup has failed while downloading files into TRIM."
+        $message = "! Backup has failed while downloading files into Tiki Manager."
             . $EOL
             . $EOL . "!! Failures:"
             . $EOL;

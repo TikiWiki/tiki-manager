@@ -88,6 +88,21 @@ class Backup
         info('Downloading files locally');
         $copyResult = $this->copyDirectories($targets, $backupDir);
 
+        info('Checking system ini config file');
+        $targetSystemIniConfigFile = $this->getSystemIniConfigFile();
+        if (!empty($targetSystemIniConfigFile)) {
+            $parts = explode('||', $targetSystemIniConfigFile);
+            if (isset($parts[0]) && isset($parts[1])) {
+                $targetSystemIniConfigFile = $parts[0];
+
+                if ($parts[1] == 'external') {
+                    info('Downloading system ini config file');
+                }
+
+                $this->copySystemIniConfigFile($targetSystemIniConfigFile, $backupDir, $copyResult, $parts[1]);
+            }
+        }
+
         info('Creating manifest');
         $this->createManifest($copyResult, $backupDir);
 
@@ -276,6 +291,45 @@ class Backup
         }
 
         return $targets;
+    }
+
+    /**
+     * Get system ini config file path
+     *
+     * @return mixed
+     */
+    public function getSystemIniConfigFile()
+    {
+        return $this->app->getSystemIniConfigFilePath();
+    }
+
+    /**
+     * Copy system ini config file to backup folder
+     *
+     * @param $path
+     * @param $backupDir
+     * @param $copyResult
+     * @param $location
+     */
+    public function copySystemIniConfigFile($path, $backupDir, &$copyResult, $location)
+    {
+        $backupDir = $backupDir ?: $this->backupDir;
+
+        $file = basename($path);
+
+        if ($location == 'external') {
+            $filePath = $path;
+            if ($path{0} !== DIRECTORY_SEPARATOR) {
+                $webroot = rtrim($this->instance->webroot, DIRECTORY_SEPARATOR);
+                $filePath = $webroot . DIRECTORY_SEPARATOR . $path;
+                $filePath = ApplicationHelper::getAbsolutePath($filePath);
+            }
+
+            $access = $this->getAccess();
+            $access->downloadFile($filePath, $backupDir);
+        }
+
+        $copyResult[] = [$file, 'conf_' . $location, $path];
     }
 
     public function setArchiveSymlink($symlinkPath = null, $archiveDir = null, $instance = null)
