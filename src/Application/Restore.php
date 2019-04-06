@@ -11,8 +11,13 @@ use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Restore extends Backup
 {
+    const CLONE_PROCESS = 'clone';
+    const RESTORE_PROCESS = 'restore';
+
     protected $restoreRoot;
     protected $restoreDirname;
+    protected $process;
+    public $iniFilesToExclude = [];
 
     public function __construct($instance)
     {
@@ -105,7 +110,11 @@ class Restore extends Backup
         foreach ($manifest as $line) {
             list($hash, $type, $destination) = explode('    ', $line, 3);
 
-            $source = implode(DIRECTORY_SEPARATOR, [$archiveFolder, $hash, basename($destination)]);
+            if ($type == 'conf_local') {
+                continue;
+            }
+
+            $source = ($type == 'conf_external') ? $archiveFolder . DIRECTORY_SEPARATOR . $hash : $archiveFolder . DIRECTORY_SEPARATOR . $hash . DIRECTORY_SEPARATOR . basename($destination);
 
             $windowsAbsolutePaths = (preg_match($windowsAbsolutePathsRegex, $destination, $matches)) ? true : false;
 
@@ -148,13 +157,20 @@ class Restore extends Backup
 
     public function restoreFilesFromFolder($srcFolder)
     {
-        $instance = $this->instance;
         $manifest = "{$srcFolder}/manifest.txt";
         $folders = $this->readManifest($manifest);
 
+        $this->setIniFilesToExclude($manifest);
+
         foreach ($folders as $key => $folder) {
             list($type, $src, $target) = $folder;
-            $this->restoreFolder($src, $target);
+            if ($type == 'conf_external') {
+                // system configuration file
+                $access = $this->getAccess();
+                $access->uploadFile($src, $target);
+            } else {
+                $this->restoreFolder($src, $target);
+            }
         }
     }
 
@@ -187,16 +203,24 @@ class Restore extends Backup
         }
 
         if (ApplicationHelper::isWindows() && $instance->type == 'local') {
+            $toExclude = [
+                $src . DIRECTORY_SEPARATOR . '.htaccess',
+                $src . DIRECTORY_SEPARATOR . 'maintenance.php',
+                $src . DIRECTORY_SEPARATOR . 'db' . DIRECTORY_SEPARATOR . 'local.php',
+            ];
+
+            if ($this->getProcess() == self::CLONE_PROCESS && !empty($this->iniFilesToExclude)) {
+                foreach ($this->iniFilesToExclude as $iniFile) {
+                    $toExclude[] = $src . DIRECTORY_SEPARATOR . $iniFile;
+                }
+            }
+
             $host = $this->access->getHost();
             $returnVal = $host->windowsSync(
                 $src,
                 $target,
                 null,
-                [
-                    $src . DIRECTORY_SEPARATOR . '.htaccess',
-                    $src . DIRECTORY_SEPARATOR . 'maintenance.php',
-                    $src . DIRECTORY_SEPARATOR . 'db' . DIRECTORY_SEPARATOR . 'local.php',
-                ]
+                $toExclude
             );
 
             if ($returnVal > 8) {
@@ -213,19 +237,38 @@ class Restore extends Backup
                 );
             }
         } else {
-            $command = $access->createCommand('rsync');
-            $command->setArgs([
+            $rsyncFlags = [
                 '-a',
-                '--delete',
+                '--delete'
+            ];
+
+            $rsyncExcludes = [
                 '--exclude',
                 '/.htaccess',
                 '--exclude',
                 '/maintenance.php',
                 '--exclude',
-                '/db/local.php',
+                '/db/local.php'
+            ];
+
+            if ($this->getProcess() == self::CLONE_PROCESS && !empty($this->iniFilesToExclude)) {
+                foreach ($this->iniFilesToExclude as $iniFile) {
+                    $rsyncExcludes[] = '--exclude';
+                    $rsyncExcludes[] = $iniFile;
+                }
+            }
+
+            $rsyncFolders = [
                 $src . '/',
                 $target . '/'
-            ]);
+            ];
+
+            $rsyncContent = array_merge($rsyncFlags, $rsyncExcludes, $rsyncFolders);
+
+            $command = $access->createCommand('rsync');
+            $command->setArgs(
+                $rsyncContent
+            );
             $command->run();
 
             if ($command->getReturn() !== 0) {
@@ -310,5 +353,79 @@ class Restore extends Backup
         if ($bzipStep && file_exists($archive)) {
             unlink($archive);
         }
+    }
+
+    /**
+     * @param $process
+     */
+    public function setProcess($process)
+    {
+        $this->process = $process ? self::CLONE_PROCESS : self::RESTORE_PROCESS;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getProcess()
+    {
+        return $this->process;
+    }
+
+    /**
+     * @param $manifest_file
+     */
+    public function setIniFilesToExclude($manifest_file)
+    {
+        $system_config_file_info = $this->readSystemIniConfigFileFromManifest($manifest_file);
+
+        if ($this->getProcess() == self::CLONE_PROCESS) {
+            // src
+            if (isset($system_config_file_info['location']) && $system_config_file_info['location'] == 'local') {
+                $this->iniFilesToExclude[] = $system_config_file_info['file'];
+            }
+
+            // remote
+            $remoteSystemConfgFilePath = $this->app->getSystemIniConfigFilePath();
+            if (!empty($remoteSystemConfgFilePath)) {
+                $parts = explode('||', $remoteSystemConfgFilePath);
+                if (isset($parts[0]) && isset($parts[1]) && $parts[1] == 'local') {
+                    $this->iniFilesToExclude[] = $parts[0];
+                }
+            }
+        }
+    }
+
+    /**
+     * @param $manifest_file
+     * @return array
+     */
+    public function readSystemIniConfigFileFromManifest($manifest_file)
+    {
+        $result = [];
+        $access = $this->getAccess();
+        $manifest = $access->fileGetContents($manifest_file);
+
+        $manifest = explode(PHP_EOL, $manifest);
+        $manifest = array_map('trim', $manifest);
+        $manifest = array_filter($manifest, 'strlen');
+
+        if (!empty($manifest)) {
+            foreach ($manifest as $line) {
+                list($hash, $type, $path) = explode('    ', $line, 3);
+
+                if ($type == 'conf_local' || $type == 'conf_external') {
+                    $this->instance->system_config_file = $path;
+
+                    $result = [
+                        'location' => $type,
+                        'file' => $hash
+                    ];
+
+                    break;
+                }
+            }
+        }
+
+        return $result;
     }
 }

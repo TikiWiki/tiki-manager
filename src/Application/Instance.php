@@ -638,6 +638,7 @@ SQL;
 
         info("Restoring files from '{$archive}' into {$this->name}");
         $restore = new Restore($this);
+        $restore->setProcess($clone);
         $restore->restoreFiles($archive);
 
         $this->app = $src_app;

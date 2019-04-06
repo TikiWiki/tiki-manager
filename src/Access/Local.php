@@ -263,12 +263,14 @@ class Local extends Access implements ShellPrompt
         $host->sendFile($localFile, $remoteFile);
         $arg = implode(' ', array_map('escapeshellarg', $args));
         $output = $host->runCommands("{$this->instance->phpexec} -d memory_limit=256M {$remoteFile} {$arg}");
-        unlink($remoteFile);
+        if (file_exists($remoteFile)) {
+            unlink($remoteFile);
+        }
 
         return $output;
     }
 
-    public function downloadFile($filename)
+    public function downloadFile($filename, $dest = '')
     {
         if (!$this->isLocalPath($filename)) {
             $filename = $this->instance->getWebPath($filename);
@@ -277,13 +279,15 @@ class Local extends Access implements ShellPrompt
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
 
-        $local = tempnam(TEMP_FOLDER, 'trim');
+        $local = empty($dest) ? tempnam(TEMP_FOLDER, 'trim') : $dest;
 
         $host = $this->getHost();
         $host->receiveFile($filename, $local);
 
-        rename($local, $local . $ext);
-        chmod($local . $ext, 0644);
+        if (empty($dest)) {
+            rename($local, $local . $ext);
+            chmod($local . $ext, 0644);
+        }
 
         return $local . $ext;
     }
@@ -306,7 +310,9 @@ class Local extends Access implements ShellPrompt
             $filename = $this->instance->getWebPath($filename);
         }
 
-        unlink($filename);
+        if (file_exists($filename)) {
+            unlink($filename);
+        }
     }
 
     public function moveFile($remoteSource, $remoteTarget)

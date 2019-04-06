@@ -255,7 +255,7 @@ class SSH extends Access implements ShellPrompt
         return $output;
     }
 
-    public function downloadFile($filename)
+    public function downloadFile($filename, $dest = '')
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
@@ -264,13 +264,15 @@ class SSH extends Access implements ShellPrompt
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
 
-        $local = tempnam(TEMP_FOLDER, 'trim');
+        $local = empty($dest) ? tempnam(TEMP_FOLDER, 'trim') : $dest;
 
         $host = $this->getHost();
         $host->receiveFile($filename, $local);
 
-        rename($local, $local . $ext);
-        chmod($local . $ext, 0644);
+        if (empty($dest)) {
+            rename($local, $local . $ext);
+            chmod($local . $ext, 0644);
+        }
 
         return $local . $ext;
     }
