@@ -194,7 +194,7 @@ class Svn extends VersionControlSystem
 
     public function checkoutBranch($target_folder, $branch)
     {
-        return $this->exec($target_folder, "switch $target_folder $branch");
+        return $this->exec($target_folder, "--non-interactive switch $branch $target_folder");
     }
 
     public function upgrade($target_folder, $branch)
@@ -208,6 +208,7 @@ class Svn extends VersionControlSystem
         $info = $this->info($target_folder);
         $root = $info['repository']['root'];
         $url = $info['url'];
+        $branchUrl = $root . "/" . $branch;
 
         if ($root != $this->repository_url) {
             error("Trying to upgrade '{$this->repository_url}' to different repository: {$root}");
@@ -232,7 +233,7 @@ class Svn extends VersionControlSystem
         if ($this->isUpgrade($url, $branch)) {
             info("Upgrading to '{$branch}'");
             $this->revert($target_folder);
-            $this->upgrade($target_folder, $branch);
+            $this->upgrade($target_folder, $branchUrl);
         } else {
             info("Updating '{$branch}'");
             $this->revert($target_folder);
