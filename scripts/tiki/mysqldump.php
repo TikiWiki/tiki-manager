@@ -235,7 +235,7 @@ function _mysqldump_table_data($table)
             echo "/* dumping data for table `$table` */\n";
 
             $i = 0;
-            $field_type = [];
+            $field_type = array();
             while ($i < $num_fields) {
                 $meta = fetch_field($result, $i);
                 array_push($field_type, $meta->type);

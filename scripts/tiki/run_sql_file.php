@@ -13,7 +13,7 @@ $sqlfile = $_SERVER['argv'][2];
 
 include "$root/db/local.php";
 
-$args = [];
+$args = array();
 if ($user_tiki) {
     $args[] = '-u' . escapeshellarg($user_tiki);
 }

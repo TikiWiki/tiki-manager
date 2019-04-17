@@ -19,7 +19,7 @@ if (!file_exists($db_config)) {
 
 include "{$db_config}";
 
-$args = [];
+$args = array();
 if ($user_tiki) {
     $args[] = '-u' . escapeshellarg($user_tiki);
 }
