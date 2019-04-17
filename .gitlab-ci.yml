@@ -25,6 +25,25 @@ composer:
 # Lint
 #
 
+php-53-scripts:
+  image: helder/php-5.3:latest
+  stage: quality
+  script:
+    - php -l scripts/checkversion.php
+    - php -l scripts/package_tar.php
+    - php -l scripts/extract_tar.php
+    - php -l scripts/get_extensions.php
+    - php -l scripts/tiki/backup_database.php
+    - php -l scripts/tiki/get_directory_list.php
+    - php -l scripts/tiki/get_system_config_ini_file.php
+    - php -l scripts/tiki/remote_install_profile.php
+    - php -l scripts/tiki/sqlupgrade.php
+    - php -l scripts/tiki/run_sql_file.php
+    - php -l scripts/tiki/tiki_dbinstall_ftp.php
+    - php -l scripts/tiki/remote_setup_channels.php
+    - php -l scripts/tiki/mysqldump.php
+  allow_failure: false
+
 phpcs:
   stage: quality
   script:
