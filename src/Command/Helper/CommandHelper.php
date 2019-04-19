@@ -551,4 +551,18 @@ class CommandHelper
             ->setRows($rows);
         $table->render();
     }
+
+    /**
+     * Display PHP Version
+     *
+     * @param $phpVersion
+     * @param $io
+     */
+    public static function displayPhpVersion($phpVersion, $io)
+    {
+        if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
+            $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
+        }
+        $io->writeln('<info>PHP Version: ' . $phpVersion  . '</info>');
+    }
 }

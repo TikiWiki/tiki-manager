@@ -172,6 +172,7 @@ class Discovery
             ];
         }
 
+        $out = null;
         foreach ($searchOrder as $commandSearch) {
             $access = $this->getAccess();
             $command = $access->createCommand($commandSearch[0], $commandSearch[1]);
@@ -235,6 +236,7 @@ class Discovery
         $command->run();
 
         $result = [];
+        $out = null;
         if ($command->getReturn() === 0) {
             $out = $command->getStdout();
             $line = fgets($out);
@@ -257,6 +259,7 @@ class Discovery
         $phpexec = $this->getConf('phpexec') ?: $this->detectPHP();
         $command = $access->createCommand($phpexec, ['-r', 'echo PHP_VERSION_ID;']);
         $command->run();
+        $out = null;
         if ($command->getReturn() === 0) {
             $version = trim($command->getStdoutContent());
             $version = intval($version, 10);

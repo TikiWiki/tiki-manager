@@ -160,6 +160,9 @@ class CreateInstanceCommand extends Command
             $instance->$key = $path;
         }
 
+        $phpVersion = $discovery->detectPHPVersion();
+        CommandHelper::displayPhpVersion($phpVersion, $io);
+
         list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 
         $question = CommandHelper::getQuestion('Backup owner', $backup_user);
