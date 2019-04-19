@@ -1,4 +1,4 @@
-# TRIM Ignore 
+# Tiki-manager Ignore
 # Ignore caches, logs and other working directories
 backup/
 cache/

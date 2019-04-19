@@ -38,7 +38,6 @@ class Configuration
     public function readConfiguration()
     {
         if (! file_exists(CONFIGURATION_FILE_PATH)) {
-            warning('config.yml file not found.');
             return;
         }
 
