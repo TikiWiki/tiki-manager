@@ -46,13 +46,6 @@ $access->save();
 echo color("Instance information saved.\n", 'green');
 
 info("Running on " . $discovery->detectDistro());
-
-$phpVersion = $discovery->detectPHPVersion();
-if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-    $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
-}
-
-info("PHP version: " . $phpVersion);
 info("PHP exec: " . $discovery->detectPHP());
 
 if ($access instanceof ShellPrompt) {
@@ -82,6 +75,12 @@ if ($access instanceof ShellPrompt) {
 } else {
     echo die(color("Shell access is required to create the working and web root directory. You will need to create it manually.\n", 'yellow'));
 }
+
+$phpVersion = $discovery->detectPHPVersion();
+if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
+    $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
+}
+info("PHP version: " . $phpVersion);
 
 list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 $instance->backup_user = promptUser('Backup owner', $backup_user);
