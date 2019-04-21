@@ -11,6 +11,8 @@ use TikiManager\Application\Version;
 
 class Svn extends VersionControlSystem
 {
+    const SVN_TEMP_FOLDER_PATH = DIRECTORY_SEPARATOR . '.svn' . DIRECTORY_SEPARATOR . 'tmp';
+
     /**
      * SVN constructor.
      * @param $access
@@ -228,6 +230,12 @@ class Svn extends VersionControlSystem
             ))) {
                 exit;
             }
+        }
+
+        if (! $this->access->fileExists($target_folder . self::SVN_TEMP_FOLDER_PATH)) {
+            $path = $this->access->getInterpreterPath($this);
+            $script = sprintf("mkdir('%s', 0777, true);", $target_folder . self::SVN_TEMP_FOLDER_PATH);
+            $this->access->createCommand($path, ["-r {$script}"])->run();
         }
 
         if ($this->isUpgrade($url, $branch)) {
