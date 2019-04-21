@@ -21,12 +21,11 @@ class CloneInstanceCommand extends Command
             ->setHelp('This command allows you make another identical copy of Tiki')
             ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
             ->addOption(
-                'skip-checksum',
+                'check',
                 null,
                 InputOption::VALUE_NONE,
-                'Skip files checksum check for a faster result. Files checksum change won\'t be saved on the DB. Only used in mode upgrade.'
-            )
-        ;
+                'Check files checksum after operation has been performed. (Only in upgrade mode)'
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -41,6 +40,7 @@ class CloneInstanceCommand extends Command
             $cloneUpgrade = false;
             $offset = 0;
 
+            $checksumCheck = $input->getOption('check');
             $argument = $input->getArgument('mode');
             if (isset($argument) && ! empty($argument)) {
                 if (is_array($argument)) {
@@ -132,7 +132,7 @@ class CloneInstanceCommand extends Command
                     if ($cloneUpgrade) {
                         $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
                         $app = $destinationInstance->getApplication();
-                        $app->performUpgrade($destinationInstance, $upgrade_version, false);
+                        $app->performUpgrade($destinationInstance, $upgrade_version, $checksumCheck);
                     }
                     $destinationInstance->unlock();
                 }

@@ -23,10 +23,10 @@ class UpdateInstanceCommand extends Command
             ->setHelp('This command allows you update an instance')
             ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
             ->addOption(
-                'skip-checksum',
+                'check',
                 null,
                 InputOption::VALUE_NONE,
-                'Skip files checksum check for a faster result. Files checksum change won\'t be saved on the DB.'
+                'Check files checksum after operation has been performed.'
             );
     }
 
@@ -81,7 +81,7 @@ class UpdateInstanceCommand extends Command
                 $selectedInstances = $helper->ask($input, $output, $question);
             }
 
-            $skipChecksum = $input->getOption('skip-checksum');
+            $checksumCheck = $input->getOption('check');
 
             foreach ($selectedInstances as $instance) {
                 $access = $instance->getBestAccess('scripting');
@@ -156,9 +156,10 @@ class UpdateInstanceCommand extends Command
                         }
 
                         if (count($versionSel) > 0) {
-                            $filesToResolve = $app->performUpdate($instance, $target, $skipChecksum);
+                            $filesToResolve = $app->performUpdate($instance, $target, $checksumCheck);
                             $version = $instance->getLatestVersion();
-                            if (!$skipChecksum) {
+
+                            if ($checksumCheck) {
                                 Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                             }
                         } else {
@@ -171,9 +172,10 @@ class UpdateInstanceCommand extends Command
                 } else {
                     $app_branch = $app->getBranch();
                     if ($app_branch == $branch_name) {
-                        $filesToResolve = $app->performUpdate($instance, null, $skipChecksum);
+                        $filesToResolve = $app->performUpdate($instance, null, $checksumCheck);
                         $version = $instance->getLatestVersion();
-                        if (!$skipChecksum) {
+
+                        if ($checksumCheck) {
                             Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                         }
                     } else {
