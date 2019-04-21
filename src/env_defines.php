@@ -59,3 +59,9 @@ if (array_key_exists('DIFF', $_ENV)) {
 } else {
     define('DIFF', 'diff');
 }
+
+if (file(__DIR__ . "/../composer.phar")) {
+    define("COMPOSER_PATH", "php " . TRIM_ROOT . "/composer.phar");
+} else {
+    define("COMPOSER_PATH", "composer");
+}
