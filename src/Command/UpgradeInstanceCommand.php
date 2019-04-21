@@ -18,10 +18,10 @@ class UpgradeInstanceCommand extends Command
             ->setDescription('Upgrade instance')
             ->setHelp('This command allows you to upgrade an instance')
             ->addOption(
-                'skip-checksum',
+                'check',
                 null,
                 InputOption::VALUE_NONE,
-                'Skip files checksum check for a faster result. Files checksum change won\'t be saved on the DB.'
+                'Check files checksum after operation has been performed.'
             );
     }
 
@@ -33,8 +33,8 @@ class UpgradeInstanceCommand extends Command
             'mode'    => 'switch'
         ];
 
-        if ($input->getOption('skip-checksum')) {
-            $arguments['--skip-checksum'] = true;
+        if ($input->getOption('check')) {
+            $arguments['--check'] = true;
         }
 
         $verifyInstanceInput = new ArrayInput($arguments);

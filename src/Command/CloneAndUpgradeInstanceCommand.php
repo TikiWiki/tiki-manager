@@ -19,10 +19,10 @@ class CloneAndUpgradeInstanceCommand extends Command
             ->setHelp('This command allows you make another identical copy of Tiki with an extra upgrade operation')
             ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
             ->addOption(
-                'skip-checksum',
+                'check',
                 null,
                 InputOption::VALUE_NONE,
-                'Skip files checksum check for a faster result. Files checksum change won\'t be saved on the DB.'
+                'Check files checksum after operation has been performed.'
             );
     }
 
@@ -44,8 +44,8 @@ class CloneAndUpgradeInstanceCommand extends Command
             'mode' => $argumentsToAdd,
         ];
 
-        if ($input->getOption('skip-checksum')) {
-            $arguments['--skip-checksum'] = true;
+        if ($input->getOption('check')) {
+            $arguments['--check'] = true;
         }
 
         $verifyInstanceInput = new ArrayInput($arguments);

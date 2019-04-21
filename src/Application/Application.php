@@ -90,10 +90,10 @@ abstract class Application
      * Perform an instance branch update/upgrade
      * @param Instance $instance
      * @param null $version
-     * @param bool $skipChecksum Skip checksum check as it quickens the process.
+     * @param bool $checksumCheck
      * @return array
      */
-    public function performUpdate(Instance $instance, $version = null, $skipChecksum = false)
+    public function performUpdate(Instance $instance, $version = null, $checksumCheck = false)
     {
         $current = $instance->getLatestVersion();
 
@@ -113,7 +113,7 @@ abstract class Application
             $new->save();
         }
 
-        if (! $skipChecksum) {
+        if ($checksumCheck) {
             info('Checking old instance checksums.');
             $oldPristine = $current->performCheck($instance);
             $oldPristine = $oldPristine['pri'] ?: [];
@@ -124,7 +124,7 @@ abstract class Application
 
         $this->performActualUpdate($new);
 
-        if ($skipChecksum) {
+        if (! $checksumCheck) {
             return [
                 'new' => [],
                 'mod' => [],
@@ -164,7 +164,14 @@ abstract class Application
         ];
     }
 
-    public function performUpgrade(Instance $instance, $version, $abort_on_conflict = true, $skipChecksum = false)
+    /**
+     * Perform instance upgrade to a higher branch version
+     * @param Instance $instance
+     * @param $version
+     * @param bool $abort_on_conflict
+     * @param bool $checksumCheck
+     */
+    public function performUpgrade(Instance $instance, $version, $abort_on_conflict = true, $checksumCheck = false)
     {
         $this->performActualUpgrade($version, $abort_on_conflict);
 
@@ -175,7 +182,7 @@ abstract class Application
         $new->date = $version->date;
         $new->save();
 
-        if (!$skipChecksum) {
+        if ($checksumCheck) {
             info('Obtaining new checksum from source.');
             $new->collectChecksumFromSource($instance);
         }
