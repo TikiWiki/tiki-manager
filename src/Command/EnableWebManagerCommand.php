@@ -71,7 +71,7 @@ Continue with this action (y,n)? ', false);
             return $value;
         });
         $webTrimDirectory = $helper->ask($input, $output, $question);
-        $cmd = 'cp -a www/. ' . $webTrimDirectory . '; cp -a composer.phar ' . $webTrimDirectory;
+        $cmd = 'cp -a www/. ' . $webTrimDirectory;
         exec($cmd);
 
         $owner = fileowner($webTrimDirectory . '/index.php');
@@ -118,13 +118,14 @@ CONFIG
         $data = TRIM_DATA;
         $backup = BACKUP_FOLDER;
         $archive = ARCHIVE_FOLDER;
+        $composer = COMPOSER_PATH;
         `chmod 0666 $db`;
         `chmod 0700 $data`;
         `chown apache:apache $data`;
         `chown apache:apache $backup`;
         `chown apache:apache $archive`;
-        `(cd $webTrimDirectory && rm -rf vendor && php composer.phar install)`;
-        `(cd $webTrimDirectory && chown -R $owner vendor)`;
+        `(rm -rf $webTrimDirectory/vendor && $composer install -d $webTrimDirectory)`;
+        `(chown -R $owner $webTrimDirectory/vendor)`;
 
         $output->writeln('<info>WWW Tiki Manager is now enabled.</info>');
         $output->writeln('<info>Enjoy!</info>');
