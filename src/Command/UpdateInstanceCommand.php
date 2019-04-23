@@ -97,19 +97,6 @@ class UpdateInstanceCommand extends Command
                 $locked = $instance->lock();
                 $instance->detectPHP();
                 $app = $instance->getApplication();
-
-                if (!$app->isInstalled()) {
-                    ob_start();
-                    perform_instance_installation($instance);
-                    $contents = $string = trim(preg_replace('/\s\s+/', ' ', ob_get_contents()));
-                    ob_end_clean();
-
-                    $matches = [];
-                    if (preg_match('/(\d+\.|trunk|master)/', $contents, $matches)) {
-                        $branch_name = $matches[0];
-                    }
-                }
-
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();
                 $branch_version = $version->getBaseVersion();

@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
+ *     See copyright.txt for details and a complete list of authors.
+ * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
+ */
 
 namespace TikiManager\Command;
 
@@ -7,6 +12,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Access\Access;
+use TikiManager\Application\Discovery;
 
 class DetectInstanceCommand extends Command
 {
@@ -39,33 +46,27 @@ class DetectInstanceCommand extends Command
 
             $selectedInstances = $helper->ask($input, $output, $question);
             foreach ($selectedInstances as $instance) {
+                $io->section($instance->name);
                 if (! $instance->detectPHP()) {
                     if ($instance->phpversion < 50300) {
-                        $output->writeln('<error>PHP Interpreter version is less than 5.3.</error>');
-                        die(-1);
+                        $io->error('PHP Interpreter version is less than 5.3.');
+                        continue;
                     } else {
-                        $output->writeln('<error>PHP Interpreter could not be found on remote host.</error>');
-                        die(-1);
+                        $io->error('PHP Interpreter could not be found on remote host.');
+                        continue;
                     }
                 }
 
-                perform_instance_installation($instance);
+                $access = Access::getClassFor($instance->type);
+                $access = new $access($instance);
+                $discovery = new Discovery($instance, $access);
+                $phpVersion = $discovery->detectPHPVersion();
+                CommandHelper::displayPhpVersion($phpVersion, $io);
 
-                $matches = [];
-                preg_match(
-                    '/(\d+)(\d{2})(\d{2})$/',
-                    $instance->phpversion,
-                    $matches
-                );
-
-                if (count($matches) == 4) {
-                    info(sprintf(
-                        "Detected PHP : %d.%d.%d",
-                        $matches[1],
-                        $matches[2],
-                        $matches[3]
-                    ));
-                }
+                ob_start(); // Prevent output to be displayed
+                $branch = $instance->getApplication()->getBranch();
+                ob_end_clean();
+                $io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');
             }
         } else {
             $output->writeln('<comment>No instances available to detect.</comment>');
