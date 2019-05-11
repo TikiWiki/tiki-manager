@@ -410,6 +410,9 @@ class Tiki extends Application
             if ($this->instance->hasConsole()) {
                 info('Updating composer');
 
+                $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
+                $access->setenv('COMPOSER_NO_INTERACTION', '1');
+
                 $ret = $access->shellExec([
                     "sh {$escaped_root_path}/setup.sh composer",
                     "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
@@ -470,6 +473,9 @@ class Tiki extends Application
 
             if ($this->instance->hasConsole()) {
                 info('Updating composer...');
+
+                $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
+                $access->setenv('COMPOSER_NO_INTERACTION', '1');
 
                 if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
                     // TODO INSTALL COMPOSER IF NOT FOUND
