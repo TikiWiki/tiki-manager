@@ -22,6 +22,7 @@ class UpdateInstanceCommand extends Command
             ->setDescription('Update instance')
             ->setHelp('This command allows you update an instance')
             ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
+            ->addOption('instances', null, InputOption::VALUE_OPTIONAL, 'List of instance IDs to be updated, separated by comma (,)')
             ->addOption(
                 'check',
                 null,
@@ -38,6 +39,7 @@ class UpdateInstanceCommand extends Command
 
         if (isset($instancesInfo)) {
             $helper = $this->getHelper('question');
+            $instancesOption = $input->getOption('instances');
 
             $auto = false;
             $switch = false;
@@ -67,18 +69,24 @@ class UpdateInstanceCommand extends Command
                     $action = 'upgrade';
                 }
 
-                $io->newLine();
-                CommandHelper::renderInstancesTable($output, $instancesInfo);
+                if (empty($instancesOption)) {
+                    $io->newLine();
+                    CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-                $io->newLine();
-                $io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
+                    $io->newLine();
+                    $io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
 
-                $question = CommandHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
-                $question->setValidator(function ($answer) use ($instances) {
-                    return CommandHelper::validateInstanceSelection($answer, $instances);
-                });
+                    $question = CommandHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
+                    $question->setValidator(function ($answer) use ($instances) {
+                        return CommandHelper::validateInstanceSelection($answer, $instances);
+                    });
 
-                $selectedInstances = $helper->ask($input, $output, $question);
+                    $selectedInstances = $helper->ask($input, $output, $question);
+                } else {
+                    CommandHelper::validateInstanceSelection($instancesOption, $instances);
+                    $instancesOption = explode(',', $instancesOption);
+                    $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
+                }
             }
 
             $checksumCheck = $input->getOption('check');
