@@ -61,4 +61,21 @@ if (in_array($op, [ 'view', 'edit' ]) && $id == 0) {
     $instance = TikiManager\Application\Instance::getInstance($id);
 }
 
+/**
+ * Get current location base URL
+ * @return string
+ */
+function getBaseUrl(){
+    $baseUrl = '';
+
+    if (isset($_SERVER['HTTP_HOST'])) {
+        $http = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off' ? 'https' : 'http';
+        $hostname = $_SERVER['HTTP_HOST'];
+        $dir =  str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
+        $baseUrl = sprintf('%s://%s%s', $http, $hostname, $dir);
+    }
+
+    return $baseUrl;
+}
+
 require "include/$op.php";
