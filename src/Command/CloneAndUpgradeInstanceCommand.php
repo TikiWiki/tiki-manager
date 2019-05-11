@@ -23,6 +23,23 @@ class CloneAndUpgradeInstanceCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Check files checksum after operation has been performed.'
+            )
+            ->addOption(
+                'source',
+                's',
+                InputOption::VALUE_REQUIRED,
+                'Source instance.'
+            )
+            ->addOption(
+                'target',
+                't',
+                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+                'Destination instance(s).'
+            )->addOption(
+                'branch',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'Select Branch.'
             );
     }
 
@@ -33,7 +50,7 @@ class CloneAndUpgradeInstanceCommand extends Command
         $argumentsToAdd = ['upgrade'];
 
         $args = $input->getArgument('mode');
-        if (isset($args) && ! empty($args)) {
+        if (isset($args) && !empty($args)) {
             $offset = $args[0] == 'upgrade' ? 1 : 0;
             $args = array_slice($args, $offset);
 
@@ -46,6 +63,17 @@ class CloneAndUpgradeInstanceCommand extends Command
 
         if ($input->getOption('check')) {
             $arguments['--check'] = true;
+        }
+        if ($source = $input->getOption("source")) {
+            $arguments['--source'] = $source;
+        }
+
+        if ($target = $input->getOption("target")) {
+            $arguments['--target'] = $target;
+        }
+
+        if ($branch = $input->getOption("branch")) {
+            $arguments['--branch'] = $branch;
         }
 
         $verifyInstanceInput = new ArrayInput($arguments);
