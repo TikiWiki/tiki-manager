@@ -25,6 +25,23 @@ class CloneInstanceCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Check files checksum after operation has been performed. (Only in upgrade mode)'
+            )
+            ->addOption(
+                'source',
+                's',
+                InputOption::VALUE_REQUIRED,
+                'Source instance.'
+            )
+            ->addOption(
+                'target',
+                't',
+                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+                'Destination instance(s).'
+            )->addOption(
+                'branch',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'Select Branch.'
             );
     }
 
@@ -42,7 +59,7 @@ class CloneInstanceCommand extends Command
 
             $checksumCheck = $input->getOption('check');
             $argument = $input->getArgument('mode');
-            if (isset($argument) && ! empty($argument)) {
+            if (isset($argument) && !empty($argument)) {
                 if (is_array($argument)) {
                     $clone = $input->getArgument('mode')[0] == 'clone' ? true : false;
                     $cloneUpgrade = $input->getArgument('mode')[0] == 'upgrade' ? true : false;
@@ -51,15 +68,15 @@ class CloneInstanceCommand extends Command
                 }
             }
 
-            if ($clone == false && $cloneUpgrade == false) {
-                $clone = true;
-            } else {
+            if ($clone != false || $cloneUpgrade != false) {
                 $offset = 1;
             }
 
             $arguments = array_slice($input->getArgument('mode'), $offset);
-            if (! empty($arguments[0])) {
+            if (!empty($arguments[0])) {
                 $selectedSourceInstances = getEntries($instances, $arguments[0]);
+            } elseif ($sourceOption = $input->getOption("source")) {
+                $selectedSourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
             } else {
                 $io->newLine();
                 $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
@@ -87,8 +104,10 @@ class CloneInstanceCommand extends Command
 
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
             if (isset($instancesInfo)) {
-                if (! empty($arguments[1])) {
+                if (!empty($arguments[1])) {
                     $selectedDestinationInstances = getEntries($instances, $arguments[1]);
+                } elseif ($targetOption = implode(',', $input->getOption("target"))) {
+                    $selectedDestinationInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
                 } else {
                     $io->newLine();
                     $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
@@ -103,8 +122,10 @@ class CloneInstanceCommand extends Command
 
                 $upgrade_version = [];
                 if ($cloneUpgrade) {
-                    if (! empty($arguments[2])) {
+                    if (!empty($arguments[2])) {
                         $upgrade_version = Version::buildFake('svn', $arguments[2]);
+                    } elseif ($branch = $input->getOption("branch")) {
+                        $upgrade_version = Version::buildFake('svn', $branch);
                     } else {
                         $upgrade_version = $this->getUpgradeVersion($selectedSourceInstances[0], $helper, $input, $output);
                     }
