@@ -22,7 +22,17 @@ class UpdateInstanceCommand extends Command
             ->setDescription('Update instance')
             ->setHelp('This command allows you update an instance')
             ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
-            ->addOption('instances', null, InputOption::VALUE_OPTIONAL, 'List of instance IDs to be updated, separated by comma (,)')
+            ->addOption('instances',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'List of instance IDs to be updated, separated by comma (,)'
+            )
+            ->addOption(
+                'branch',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'Instance branch to update'
+            )
             ->addOption(
                 'check',
                 null,
@@ -110,6 +120,8 @@ class UpdateInstanceCommand extends Command
                 $branch_version = $version->getBaseVersion();
 
                 if ($switch) {
+                    $versionSel = [];
+                    $branch = $input->getOption('branch');
                     $versions = [];
                     $versions_raw = $app->getVersions();
                     foreach ($versions_raw as $version) {
@@ -135,14 +147,30 @@ class UpdateInstanceCommand extends Command
 
                         if ($compatible) {
                             $counter++;
-                            $io->writeln('[' . $key . '] ' . $version->type . ' : ' . $version->branch);
+                            if (empty($branch)) {
+                                $output->writeln('[' . $key . '] ' . $version->type . ' : ' . $version->branch);
+                            } elseif (($branch == $version->getBranch()) || ($branch === $base_version)) {
+                                $branch = $key;
+                            }
                         }
                     }
 
                     if ($counter) {
-                        $question = CommandHelper::getQuestion('Which version do you want to upgrade to', null, '?');
-                        $selectedVersion = $helper->ask($input, $output, $question);
-                        $versionSel = getEntries($versions, $selectedVersion);
+                        if (! empty($branch)) {
+                            $selectedVersion = $branch;
+                            if (!array_key_exists($selectedVersion, $versions)) {
+                                $output->writeln('Branch ' . $input->getOption('branch') . ' not found');
+                                if ($locked) {
+                                    $instance->unlock();
+                                }
+                                return;
+                            }
+                            $versionSel = getEntries($versions, $selectedVersion);
+                        } else {
+                            $question = CommandHelper::getQuestion('Which version do you want to upgrade to', null, '?');
+                            $selectedVersion = $helper->ask($input, $output, $question);
+                            $versionSel = getEntries($versions, $selectedVersion);
+                        }
 
                         if (empty($versionSel) && !empty($selectedVersion)) {
                             $target = Version::buildFake('svn', $selectedVersion);
