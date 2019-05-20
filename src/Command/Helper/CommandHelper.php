@@ -239,6 +239,60 @@ class CommandHelper
     }
 
     /**
+     * Validate time input in the format "<hours>:<minutes>"
+     *
+     * @param $answer
+     * @return array
+     */
+    public static function validateTimeInput($answer)
+    {
+        if (empty($answer)) {
+            throw new \RuntimeException(
+                'You must provide a valid time'
+            );
+        }
+
+        if (! preg_match('/\d{1,2}:\d{1,2}/', $answer)) {
+            throw new \RuntimeException(
+                'Invalid time format. Please provide a value in the format <hours>:<minutes>'
+            );
+        }
+
+        list($hour, $minutes) = explode(':', $answer);
+
+        if (! in_array($hour, range(0, 23))) {
+            throw new \RuntimeException(
+                'Invalid hour.'
+            );
+        }
+
+        if (! in_array($minutes, range(0, 59))) {
+            throw new \RuntimeException(
+                'Invalid minutes.'
+            );
+        }
+
+        return [$hour, $minutes];
+    }
+
+    /**
+     * Retrieve instance IDs given an array with multiple instances
+     *
+     * @param $instances
+     * @return array
+     */
+    public static function getInstanceIds($instances)
+    {
+        $payload = [];
+
+        foreach ($instances as $instance) {
+            $payload[] = is_object($instance) ? $instance->id : $instance['id'];
+        }
+
+        return $payload;
+    }
+
+    /**
      * Gets a CLI option given the option name eg: "--<option>="
      *
      * @param $option
