@@ -39,17 +39,20 @@ $application->add(new \TikiManager\Command\BackupInstanceCommand());
 $application->add(new \TikiManager\Command\DeleteBackupCommand());
 $application->add(new \TikiManager\Command\FixPermissionsInstanceCommand());
 $application->add(new \TikiManager\Command\ListInstanceCommand());
+$application->add(new \TikiManager\Command\MaintenanceInstanceCommand());
+$application->add(new \TikiManager\Command\ConsoleInstanceCommand());
 
 $application->add(new \TikiManager\Command\ApplyProfileCommand());
 
-$application->add(new \TikiManager\Command\ConsoleInstanceCommand());
 $application->add(new \TikiManager\Command\ResetManagerCommand());
 $application->add(new \TikiManager\Command\ReportManagerCommand());
-$application->add(new \TikiManager\Command\MaintenanceInstanceCommand());
+$application->add(new \TikiManager\Command\SetupWatchManagerCommand());
 
 $application->add(new \TikiManager\Command\ViewDatabaseCommand());
 $application->add(new \TikiManager\Command\DeleteDatabaseCommand());
+
 $application->add(new \TikiManager\Command\ClearCacheCommand());
+
 $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());

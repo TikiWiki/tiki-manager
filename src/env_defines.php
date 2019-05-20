@@ -24,6 +24,8 @@ define('PDO_DIE_ON_EXCEPTION_THROWN', true);
 define('CONFIGURATION_FILE_PATH', TRIM_ROOT . '/data/config.yml');
 define('DEFAULT_VERSION_CONTROL_SYSTEM', 'SVN');
 
+define('TIKI_MANAGER_EXECUTABLE', 'tiki-manager');
+
 if (TRIM_OS === 'WIN') {
     define('INTERACTIVE', php_sapi_name() === 'cli'
         && getenv('NONINTERACTIVE') !== 'true');

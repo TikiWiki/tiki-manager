@@ -15,12 +15,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
 
-class WatchInstanceCommand extends Command
+class SetupWatchManagerCommand extends Command
 {
     protected function configure()
     {
         $this
-            ->setName('instance:watch')
+            ->setName('manager:setup-watch')
             ->setDescription('Set-up cron job to perform an hash check')
             ->setHelp('This command allows you to set-up a cron job on the Tiki Manager master to perform the Hash check automatically every day.')
             ->addOption(
@@ -28,6 +28,12 @@ class WatchInstanceCommand extends Command
                 'e',
                 InputOption::VALUE_REQUIRED,
                 'Email address to contact.'
+            )
+            ->addOption(
+                'time',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'The time update should run'
             )
             ->addOption(
                 'exclude',
@@ -55,6 +61,14 @@ class WatchInstanceCommand extends Command
         }
         $input->setOption('email', $email);
 
+        if (empty($input->getOption('time'))) {
+            $helper = $this->getHelper('question');
+            $answer = $io->ask('What time should it run at?', '00:00', function ($answer) {
+                return CommandHelper::validateTimeInput($answer);
+            });
+            $input->setOption('time', implode(':', $answer));
+        }
+
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo) && empty($input->getOption('exclude'))) {
@@ -79,85 +93,42 @@ class WatchInstanceCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
+        $helper = $this->getHelper('question');
         $email = $input->getOption('email');
 
         if (empty($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidOptionException('Email cannot be empty');
         }
 
+        $time = $input->getOption('time');
+
+        // Check if option (set in cli is also valid)
+        list($hours, $minutes) = CommandHelper::validateTimeInput($time);
+
+        $arguments = '--email=' . $email . ' --no-interaction';
+
         $excludedInstances = $input->getOption('exclude');
-        $noInteraction = $input->getOption('no-interaction');
-
-        $log = '';
-        $instances = CommandHelper::getInstances('update');
-
         if (! empty($excludedInstances)) {
-            $instancesToExclude = explode(',', $excludedInstances);
-
-            foreach ($instances as $key => $instance) {
-                if (in_array($instance->id, $instancesToExclude)) {
-                    unset($instances[$key]);
-                }
-            }
+            $arguments .= ' --exclude=' . $excludedInstances;
         }
 
-        foreach ($instances as $instance) {
-            $version = $instance->getLatestVersion();
+        $managerPath = realpath(dirname(__FILE__) . '/../..');
+        $entry = sprintf(
+            "%d %d * * * cd %s && %s -d memory_limit=256M %s instance:watch %s\n",
+            $minutes,
+            $hours,
+            $managerPath,
+            PHP_BINARY,
+            TIKI_MANAGER_EXECUTABLE,
+            $arguments
+        );
 
-            if (! $version) {
-                continue;
-            }
+        file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
 
-            $versionError = false;
-            $versionRevision = $version->revision;
-            $tikiRevision = $instance->getRevision();
+        $io->newLine();
+        $io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');
+        $io->text($entry);
 
-            if (empty($versionRevision)) {
-                $log .= 'No revision detected for ' . $instance->name . '\n';
-                $versionError = true;
-            } elseif ($versionRevision != $tikiRevision) {
-                $log .= 'Check ' . $instance->name . ' version conflict\n';
-                $log .= 'Expected revision ' . $versionRevision . ', found revision ' . $tikiRevision . ' on instance.\n';
-                $versionError = true;
-            }
-
-            if ($versionError) {
-                $log .= 'Fix this error with Tiki Manager by running "tiki-manager instance:check" and choose instance "' . $instance->id . '.';
-                $log .= '\n\n';
-
-                continue;
-            }
-
-            if ($version->hasChecksums()) {
-                $result = $version->performCheck($instance);
-
-                if (count($result['new']) || count($result['mod']) || count($result['del'])) {
-                    $log .= $instance->name . ' (' . $instance->weburl . ')\n';
-
-                    foreach ($result['new'] as $file => $hash) {
-                        $log .= '+ ' . $file . '\n';
-                    }
-                    foreach ($result['mod'] as $file => $hash) {
-                        $log .= 'o ' . $file . '\n';
-                    }
-                    foreach ($result['del'] as $file => $hash) {
-                        $log .= '- ' . $file . '\n';
-                    }
-
-                    $log .= '\n\n';
-                }
-            }
-        }
-
-        if (! empty($log)) {
-            $mailSent = mail($email, '[Tiki-Manager] Potential intrusions detected.', $log);
-            if (! $noInteraction) {
-                if ($mailSent) {
-                    $io->note('Email sent, please check your inbox.');
-                } else {
-                    $io->error('Something went wrong when sending email, please check email configurations.');
-                }
-            }
-        }
+        `crontab $file`;
     }
 }
