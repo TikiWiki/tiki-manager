@@ -7,7 +7,9 @@
 
 namespace TikiManager\Libs\VersionControl;
 
+use Exception;
 use TikiManager\Application\Version;
+use TikiManager\Libs\Host\Command;
 
 class Svn extends VersionControlSystem
 {
@@ -21,7 +23,7 @@ class Svn extends VersionControlSystem
     {
         parent::__construct($access);
         $this->command = 'svn';
-        $this->repository_url = SVN_TIKIWIKI_URI;
+        $this->repositoryUrl = SVN_TIKIWIKI_URI;
     }
 
     /**
@@ -33,16 +35,16 @@ class Svn extends VersionControlSystem
         return SVN_TIKIWIKI_URI;
     }
 
-    public function getRepositoryBranch($target_folder)
+    public function getRepositoryBranch($targetFolder)
     {
-        $info = $this->info($target_folder);
+        $info = $this->info($targetFolder);
         $url = $info['url'];
         $root = $info['repository']['root'];
-        $branch_index = strlen($root);
-        $branch_name = substr($url, $branch_index);
-        $branch_name = trim($branch_name, '/');
+        $branchIndex = strlen($root);
+        $branchName = substr($url, $branchIndex);
+        $branchName = trim($branchName, '/');
 
-        return $branch_name;
+        return $branchName;
     }
 
     public function getAvailableBranches()
@@ -50,7 +52,7 @@ class Svn extends VersionControlSystem
         $versions = [];
         $versionsTemp = [];
 
-        foreach (explode("\n", `svn ls $this->repository_url/tags`) as $line) {
+        foreach (explode("\n", `svn ls $this->repositoryUrl/tags`) as $line) {
             $line = trim($line);
             if (empty($line)) {
                 continue;
@@ -64,7 +66,7 @@ class Svn extends VersionControlSystem
         $versions = array_merge($versions, $versionsTemp);
 
         $versionsTemp = [];
-        foreach (explode("\n", `svn ls $this->repository_url/branches`) as $line) {
+        foreach (explode("\n", `svn ls $this->repositoryUrl/branches`) as $line) {
             $line = trim($line);
             if (empty($line)) {
                 continue;
@@ -80,69 +82,76 @@ class Svn extends VersionControlSystem
         // Trunk as last option
         $versions[] = 'svn:trunk';
 
-        $versions_sorted = [];
+        $versionsSorted = [];
         foreach ($versions as $version) {
             list($type, $branch) = explode(':', $version);
-            $versions_sorted[] = Version::buildFake($type, $branch);
+            $versionsSorted[] = Version::buildFake($type, $branch);
         }
 
-        return $versions_sorted;
+        return $versionsSorted;
     }
 
-    public function exec($target_folder, $to_append, $force_path_on_command = false)
+    public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
-        return $this->access->shellExec($this->command . " " . $to_append);
+        $command = new Command($this->command . " " . $toAppend);
+        $result = $this->access->runCommand($command);
+
+        if ($result->getReturn() !== 0) {
+            throw new Exception($result->getStderrContent());
+        }
+
+        return rtrim($result->getStdoutContent(), "\n");
     }
 
-    public function clone($branch_name, $target_folder)
+    public function clone($branchName, $targetFolder)
     {
-        $branch = $this->repository_url . "/$branch_name";
+        $branch = $this->repositoryUrl . "/$branchName";
         $branch = str_replace('/./', '/', $branch);
         $branch = escapeshellarg($branch);
 
-        return $this->exec($target_folder, "co $branch $target_folder");
+        return $this->exec($targetFolder, "co $branch $targetFolder");
     }
 
-    public function revert($target_folder)
+    public function revert($targetFolder)
     {
-        return $this->exec($target_folder, "reset $target_folder --recursive")
-            && $this->cleanup($target_folder);
+        return $this->exec($targetFolder, "revert $targetFolder --recursive")
+            && $this->cleanup($targetFolder);
     }
 
-    public function pull($target_folder)
+    public function pull($targetFolder)
     {
-        return $this->cleanup($target_folder) &&
-            $this->exec($target_folder, "up --non-interactive $target_folder");
+        return $this->cleanup($targetFolder) &&
+            $this->exec($targetFolder, "up --non-interactive $targetFolder");
     }
 
-    public function cleanup($target_folder)
+    public function cleanup($targetFolder)
     {
-        return $this->exec($target_folder, "cleanup $target_folder");
+        return $this->exec($targetFolder, "cleanup $targetFolder");
     }
 
-    public function merge($target_folder, $branch)
+    public function merge($targetFolder, $branch)
     {
-        $to_append = '';
+        $toAppend = '';
 
         if (preg_match('/^(\w+):(\w+)$/', $branch)) {
-            $to_append .= "--revision {$branch} ";
+            $toAppend .= "--revision {$branch} ";
         } elseif (is_numeric($branch)) {
-            $to_append .= "--change {$branch}";
+            $toAppend .= "--change {$branch}";
         } else {
             $branch = $this->getBranchUrl($branch);
         }
 
-        return $this->exec($target_folder, "merge $to_append --accept theirs-full --allow-mixed-revisions --dry-run");
+        return $this->exec($targetFolder, "merge $toAppend --accept theirs-full --allow-mixed-revisions --dry-run");
     }
 
-    public function info($target_folder, $raw = false)
+    public function info($targetFolder, $raw = false)
     {
-        $cmd = "info $target_folder";
+        $cmd = "info $targetFolder";
         if (! $raw) {
             $cmd .= ' --xml';
         }
 
-        $xml = $this->exec($target_folder, $cmd);
+        $xml = $this->exec($targetFolder, $cmd);
 
         if ($raw) {
             return $xml;
@@ -150,30 +159,30 @@ class Svn extends VersionControlSystem
 
         $xml = simplexml_load_string($xml);
 
-        $cur_node = $xml->entry;
+        $curNode = $xml->entry;
         $result = [];
         $stack = [
-            [$cur_node, &$result]
+            [$curNode, &$result]
         ];
 
         while (! empty($stack)) {
             $stack_item = array_pop($stack);
-            $cur_node = $stack_item[0];
+            $curNode = $stack_item[0];
             $output = &$stack_item[1];
 
-            $node_name = $cur_node->getName();
-            $node_children = $cur_node->children();
+            $nodeName = $curNode->getName();
+            $node_children = $curNode->children();
 
             if (empty($node_children)) {
-                $value = sprintf('%s', $cur_node);
+                $value = sprintf('%s', $curNode);
                 $value = is_numeric($value) ? float($value) : $value;
-                $output[ $node_name ] = $value;
+                $output[ $nodeName ] = $value;
                 continue;
             } else {
-                $output[ $node_name ] = [];
+                $output[ $nodeName ] = [];
 
-                foreach ($node_children as $node_child) {
-                    $stack[] = [$node_child, &$output[ $node_name ]];
+                foreach ($node_children as $nodeChild) {
+                    $stack[] = [$nodeChild, &$output[ $nodeName ]];
                 }
             }
         }
@@ -182,9 +191,9 @@ class Svn extends VersionControlSystem
         return $result;
     }
 
-    public function getRevision($target_folder)
+    public function getRevision($targetFolder)
     {
-        $info = $this->info($target_folder, true);
+        $info = $this->info($targetFolder, true);
 
         if (! empty($info)) {
             preg_match('/(.*Rev:\s+)(.*)/', $info, $matches);
@@ -194,30 +203,30 @@ class Svn extends VersionControlSystem
         return 0;
     }
 
-    public function checkoutBranch($target_folder, $branch)
+    public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($target_folder, "--non-interactive switch $branch $target_folder");
+        return $this->exec($targetFolder, "--non-interactive switch $branch $target_folder");
     }
 
-    public function upgrade($target_folder, $branch)
+    public function upgrade($targetFolder, $branch)
     {
-        $this->revert($target_folder);
-        return $this->checkoutBranch($target_folder, $branch);
+        $this->revert($targetFolder);
+        return $this->checkoutBranch($targetFolder, $branch);
     }
 
-    public function update($target_folder, $branch)
+    public function update($targetFolder, $branch)
     {
-        $info = $this->info($target_folder);
+        $info = $this->info($targetFolder);
         $root = $info['repository']['root'];
         $url = $info['url'];
         $branchUrl = $root . "/" . $branch;
 
-        if ($root != $this->repository_url) {
-            error("Trying to upgrade '{$this->repository_url}' to different repository: {$root}");
+        if ($root != $this->repositoryUrl) {
+            error("Trying to upgrade '{$this->repositoryUrl}' to different repository: {$root}");
             return false;
         }
 
-        $conflicts = $this->merge($target_folder, 'BASE:HEAD');
+        $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
 
         if (strlen(trim($conflicts)) > 0 &&
             preg_match('/conflicts:/i', $conflicts)) {
@@ -240,14 +249,14 @@ class Svn extends VersionControlSystem
 
         if ($this->isUpgrade($url, $branch)) {
             info("Upgrading to '{$branch}'");
-            $this->revert($target_folder);
-            $this->upgrade($target_folder, $branchUrl);
+            $this->revert($targetFolder);
+            $this->upgrade($targetFolder, $branch);
         } else {
             info("Updating '{$branch}'");
-            $this->revert($target_folder);
-            $this->exec($target_folder, "update $target_folder --accept theirs-full --force");
+            $this->revert($targetFolder);
+            $this->exec($targetFolder, "update $targetFolder --accept theirs-full --force");
         }
 
-        $this->cleanup($target_folder);
+        $this->cleanup($targetFolder);
     }
 }

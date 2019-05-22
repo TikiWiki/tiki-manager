@@ -7,7 +7,9 @@
 
 namespace TikiManager\Libs\VersionControl;
 
+use Exception;
 use TikiManager\Application\Version;
+use TikiManager\Libs\Host\Command;
 
 class Git extends VersionControlSystem
 {
@@ -19,7 +21,7 @@ class Git extends VersionControlSystem
     {
         parent::__construct($access);
         $this->command = 'git';
-        $this->repository_url = GIT_TIKIWIKI_URI;
+        $this->repositoryUrl = GIT_TIKIWIKI_URI;
     }
 
     /**
@@ -30,7 +32,7 @@ class Git extends VersionControlSystem
     {
         $versions = [];
 
-        foreach (explode("\n", `git ls-remote $this->repository_url`) as $line) {
+        foreach (explode("\n", `git ls-remote $this->repositoryUrl`) as $line) {
             $parsed = explode("\t", $line);
 
             if (! isset($parsed[1])) {
@@ -52,93 +54,101 @@ class Git extends VersionControlSystem
         }
 
         sort($versions, SORT_NATURAL);
-        $sorted_versions = [];
+        $sortedVersions = [];
 
         foreach ($versions as $version) {
-            $sorted_versions[] = Version::buildFake('git', $version);
+            $sortedVersions[] = Version::buildFake('git', $version);
         }
 
-        return $sorted_versions;
+        return $sortedVersions;
     }
 
 
-    public function getRepositoryBranch($target_folder)
+    public function getRepositoryBranch($targetFolder)
     {
-        return $this->info($target_folder);
+        return $this->info($targetFolder);
     }
 
-    public function exec($target_folder, $to_append, $force_path_on_command = false)
+    public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
-        if ($force_path_on_command) {
-            $this->access->chdir($target_folder);
+        if ($forcePathOnCommand) {
+            $this->access->chdir($targetFolder);
         }
 
-        return $this->access->shellExec(sprintf('%s %s', $this->command, $to_append));
+        $command = new Command(sprintf('%s %s', $this->command, $toAppend));
+        $result = $this->access->runCommand($command);
+
+        if ($result->getReturn() !== 0) {
+            throw new Exception($result->getStderrContent());
+        }
+
+        return rtrim($result->getStdoutContent(), "\n");
     }
 
-    public function clone($branch_name, $target_folder)
+    public function clone($branchName, $targetFolder)
     {
-        $branch = escapeshellarg($branch_name);
-        $repoUrl = escapeshellarg($this->repository_url);
-        $folder = escapeshellarg($target_folder);
-        return $this->exec($target_folder, sprintf('clone --depth 1 --no-single-branch -b %s %s %s', $branch, $repoUrl, $folder));
+        $branch = escapeshellarg($branchName);
+        $repoUrl = escapeshellarg($this->repositoryUrl);
+        $folder = escapeshellarg($targetFolder);
+        return $this->exec($targetFolder, sprintf('clone --depth 1 --no-single-branch -b %s %s %s', $branch, $repoUrl, $folder));
     }
 
-    public function revert($target_folder)
+    public function revert($targetFolder)
     {
-        return $this->exec($target_folder, 'reset', true);
+        return $this->exec($targetFolder, 'reset --hard', true);
     }
 
-    public function pull($target_folder)
+    public function pull($targetFolder)
     {
-        return $this->cleanup($target_folder) &&
-            $this->exec($target_folder, 'pull', true);
+        return $this->cleanup($targetFolder) &&
+            $this->exec($targetFolder, 'pull', true);
     }
 
-    public function cleanup($target_folder)
+    public function cleanup($targetFolder)
     {
-        return $this->exec($target_folder, 'gc', true);
+        return $this->exec($targetFolder, 'gc', true);
     }
 
-    public function merge($target_folder, $branch)
+    public function merge($targetFolder, $branch)
     {
         die('[Merge] missing implementation for Git');
     }
 
-    public function info($target_folder, $raw = false)
+    public function info($targetFolder, $raw = false)
     {
-        return $this->exec($target_folder, "rev-parse --abbrev-ref HEAD", true);
+        return $this->exec($targetFolder, "rev-parse --abbrev-ref HEAD", true);
     }
 
-    public function getRevision($target_folder)
+    public function getRevision($targetFolder)
     {
-        return $this->exec($target_folder, "rev-parse --short HEAD", true);
+        return $this->exec($targetFolder, "rev-parse --short HEAD", true);
     }
 
-    public function checkoutBranch($target_folder, $branch)
+    public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($target_folder, "checkout $branch", true);
+        return $this->exec($targetFolder, "checkout $branch", true);
     }
 
-    public function upgrade($target_folder, $branch)
+    public function upgrade($targetFolder, $branch)
     {
-        $this->revert($target_folder);
-        return $this->checkoutBranch($target_folder, $branch);
+        $this->revert($targetFolder);
+        $this->exec($targetFolder, 'fetch --all', true);
+        return $this->checkoutBranch($targetFolder, $branch);
     }
 
-    public function update($target_folder, $branch)
+    public function update($targetFolder, $branch)
     {
-        $this->revert($target_folder);
-        $branch_info = $this->info($target_folder);
+        $this->revert($targetFolder);
+        $branchInfo = $this->info($targetFolder);
 
-        if ($this->isUpgrade($branch_info, $branch)) {
+        if ($this->isUpgrade($branchInfo, $branch)) {
             info("Upgrading to '{$branch}'");
-            $this->upgrade($target_folder, $branch);
+            $this->upgrade($targetFolder, $branch);
         }
 
         info("Updating '{$branch}'");
-        $this->exec($target_folder, "pull", true);
+        $this->exec($targetFolder, "pull", true);
 
-        $this->cleanup($target_folder);
+        $this->cleanup($targetFolder);
     }
 }
