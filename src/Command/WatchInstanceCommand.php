@@ -21,8 +21,8 @@ class WatchInstanceCommand extends Command
     {
         $this
             ->setName('instance:watch')
-            ->setDescription('Set-up cron job to perform an hash check')
-            ->setHelp('This command allows you to set-up a cron job on the Tiki Manager master to perform the Hash check automatically every day.')
+            ->setDescription('Perform an hash check')
+            ->setHelp('This command allows you to perform the Hash check.')
             ->addOption(
                 'email',
                 'e',
