@@ -14,13 +14,13 @@ abstract class VersionControlSystem
 {
     protected $command;
     protected $access;
-    protected $repository_url;
+    protected $repositoryUrl;
 
     /**
      * VersionControlSystem constructor.
      * @param $access
      */
-    function __construct($access)
+    public function __construct($access)
     {
         $this->access = $access;
     }
@@ -32,7 +32,7 @@ abstract class VersionControlSystem
      */
     public function getBranchUrl($branch)
     {
-        return "{$this->repository_url}/$branch";
+        return "{$this->repositoryUrl}/$branch";
     }
 
     /**
@@ -51,12 +51,12 @@ abstract class VersionControlSystem
 
     /**
      * Get current VCS identifier based on the command used to execute it
-     * @param $is_capitalized Should the identifier come capitalized?
+     * @param $isCapitalized Should the identifier come capitalized?
      * @return string
      */
-    public function getIdentifier($is_capitalized = false)
+    public function getIdentifier($isCapitalized = false)
     {
-        return $is_capitalized ? ucfirst($this->command) : strtoupper($this->command);
+        return $isCapitalized ? ucfirst($this->command) : strtoupper($this->command);
     }
 
     /**
@@ -67,9 +67,9 @@ abstract class VersionControlSystem
     {
         $type = DEFAULT_VERSION_CONTROL_SYSTEM;
         $access = $instance->getBestAccess('scripting');
-        $configuration_instance = new Configuration();
-        $config = $configuration_instance->get();
-        $vcs_instance = null;
+        $configurationInstance = new Configuration();
+        $config = $configurationInstance->get();
+        $vcsInstance = null;
 
         if (! empty($config['instance']['default_version_control_system'])) {
             $type = $config['instance']['default_version_control_system'];
@@ -77,14 +77,14 @@ abstract class VersionControlSystem
 
         switch (strtoupper($type)) {
             case 'SVN':
-                $vcs_instance = new Svn($access);
+                $vcsInstance = new Svn($access);
                 break;
             case 'GIT':
-                $vcs_instance = new Git($access);
+                $vcsInstance = new Git($access);
                 break;
         }
 
-        return $vcs_instance;
+        return $vcsInstance;
     }
 
     /**
@@ -95,95 +95,95 @@ abstract class VersionControlSystem
 
     /**
      * Get current repository branch
-     * @param $target_folder
+     * @param $targetFolder
      * @return mixed
      */
-    abstract protected function getRepositoryBranch($target_folder);
+    abstract protected function getRepositoryBranch($targetFolder);
 
     /**
      * Main function to execute a command. Small part of logic will should be placed here.
      * This function was created to prevent redundancy.
-     * @param $target_folder
-     * @param $to_append
-     * @param $force_path_on_command
+     * @param $targetFolder
+     * @param $toAppend
+     * @param $forcePathOnCommand
      * @return mixed
      */
-    abstract public function exec($target_folder, $to_append, $force_path_on_command = false);
+    abstract public function exec($targetFolder, $toAppend, $forcePathOnCommand = false);
 
     /**
      * Clones a specific branch within a repository
-     * @param string $branch_name
-     * @param string $target_folder
+     * @param string $branchName
+     * @param string $targetFolder
      * @return mixed
      */
-    abstract public function clone($branch_name, $target_folder);
+    abstract public function clone($branchName, $targetFolder);
 
     /**
      * Reverts/discards changes previously made
-     * @param $target_folder
+     * @param $targetFolder
      * @return mixed
      */
-    abstract public function revert($target_folder);
+    abstract public function revert($targetFolder);
 
     /**
      * Pulls recent changes from a repository
-     * @param $target_folder
+     * @param $targetFolder
      * @return mixed
      */
-    abstract public function pull($target_folder);
+    abstract public function pull($targetFolder);
 
     /**
      * Clean and complete VCS related operations
-     * @param $target_folder
+     * @param $targetFolder
      * @return mixed
      */
-    abstract public function cleanup($target_folder);
+    abstract public function cleanup($targetFolder);
 
     /**
      * Merges current modifications in a specific branch
-     * @param $target_folder
+     * @param $targetFolder
      * @param $branch
      * @return mixed
      */
-    abstract public function merge($target_folder, $branch);
+    abstract public function merge($targetFolder, $branch);
 
     /**
      * Gets information related to the current branch
-     * @param $target_folder
+     * @param $targetFolder
      * @param $raw Should return in raw form
      * @return mixed
      */
-    abstract public function info($target_folder, $raw = false);
+    abstract public function info($targetFolder, $raw = false);
 
     /**
      * Get current revision from the current folder branch
-     * @param $target_folder
+     * @param $targetFolder
      * @return mixed
      */
-    abstract public function getRevision($target_folder);
+    abstract public function getRevision($targetFolder);
 
     /**
      * Checkout a branch given a branch name
-     * @param $target_folder
+     * @param $targetFolder
      * @param $branch
      * @return mixed
      */
-    abstract public function checkoutBranch($target_folder, $branch);
+    abstract public function checkoutBranch($targetFolder, $branch);
 
     /**
      * Upgrade an instance with a specific branch
-     * @param $target_folder
+     * @param $targetFolder
      * @param $branch
      * @return mixed
      */
-    abstract public function upgrade($target_folder, $branch);
+    abstract public function upgrade($targetFolder, $branch);
 
     /**
      * Update current instance's branch
-     * @param $target_folder
+     * @param $targetFolder
      * @return mixed
      */
-    abstract public function update($target_folder, $branch);
+    abstract public function update($targetFolder, $branch);
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
