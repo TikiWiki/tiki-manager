@@ -132,7 +132,11 @@ $(document).ready(function () {
             '\\[36m': '<span class="cyan">',
             '\\[33m': '<span class="orange">',
             '\\[31m': '<span class="red">',
-            '\x1B\\[0m': '</span>'
+            '\\[0m': '</span>'
+        };
+
+        var replaceable_ascii = {
+            27 : '<br/>'
         };
 
         var button = $(event.relatedTarget);
@@ -174,10 +178,23 @@ $(document).ready(function () {
                 backup: ins_backup
             }
         }).done(function (log) {
-            for (var key in ansi) {
-                log = log.replace(new RegExp(key, 'g'), ansi[key]);
+            var parsed_log = '';
+
+            for (var i = 0; i < log.length; i++) {
+                var char = log[i];
+
+                if (replaceable_ascii[log.charCodeAt(i)] !== undefined) {
+                    char = replaceable_ascii[log.charCodeAt(i)];
+                }
+
+                parsed_log += char;
             }
-            modal.find('.log').append(log);
+
+            for (var key in ansi) {
+                parsed_log = parsed_log.replace(new RegExp(key, 'g'), ansi[key]);
+            }
+
+            modal.find('.log').append(parsed_log);
             modal.find('.log').append('\n<span class="cyan">Done!</span>');
             modal.find('.modal-footer button').show();
         });
