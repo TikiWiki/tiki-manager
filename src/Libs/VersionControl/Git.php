@@ -22,6 +22,10 @@ class Git extends VersionControlSystem
         parent::__construct($access);
         $this->command = 'git';
         $this->repositoryUrl = GIT_TIKIWIKI_URI;
+
+        if (isset($this->configuration['instance']['git_repository_url'])) {
+            $this->repositoryUrl = $this->configuration['instance']['git_repository_url'];
+        }
     }
 
     /**
@@ -62,7 +66,6 @@ class Git extends VersionControlSystem
 
         return $sortedVersions;
     }
-
 
     public function getRepositoryBranch($targetFolder)
     {

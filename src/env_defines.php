@@ -26,6 +26,9 @@ define('DEFAULT_VERSION_CONTROL_SYSTEM', 'SVN');
 
 define('TIKI_MANAGER_EXECUTABLE', 'tiki-manager');
 
+define('SVN_TIKIWIKI_URI', getenv('SVN_TIKIWIKI_URI') ?: 'https://svn.code.sf.net/p/tikiwiki/code');
+define('GIT_TIKIWIKI_URI', getenv('GIT_TIKIWIKI_URI') ?: 'https://gitlab.com/tikiwiki/tiki.git');
+
 if (TRIM_OS === 'WIN') {
     define('INTERACTIVE', php_sapi_name() === 'cli'
         && getenv('NONINTERACTIVE') !== 'true');

@@ -14,9 +14,6 @@ use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 
-define('SVN_TIKIWIKI_URI', getenv('SVN_TIKIWIKI_URI') ?: 'https://svn.code.sf.net/p/tikiwiki/code');
-define('GIT_TIKIWIKI_URI', getenv('GIT_TIKIWIKI_URI') ?: 'https://gitlab.com/tikiwiki/tiki.git');
-
 class Tiki extends Application
 {
     private $installType = null;

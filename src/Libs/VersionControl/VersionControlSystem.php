@@ -15,6 +15,7 @@ abstract class VersionControlSystem
     protected $command;
     protected $access;
     protected $repositoryUrl;
+    protected $configuration;
 
     /**
      * VersionControlSystem constructor.
@@ -22,7 +23,10 @@ abstract class VersionControlSystem
      */
     public function __construct($access)
     {
+        $configuration = new Configuration();
+
         $this->access = $access;
+        $this->configuration = $configuration->get();
     }
 
     /**
