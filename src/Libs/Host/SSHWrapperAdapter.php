@@ -76,8 +76,8 @@ class SSHWrapperAdapter
         }
         foreach ($env as $key => $value) {
             $value = preg_replace('/(\s)/', '\\\$1', $value);
-            $value = sprintf('export %s=%s', $key, $value);
-            $line .= escapeshellarg($value) . '\;';
+            $value = sprintf('export %s=%s;', $key, escapeshellarg($value));
+            $line .= $value;
         }
         return $line;
     }
@@ -112,9 +112,7 @@ class SSHWrapperAdapter
 
         $commandLine = $this->getCommandPrefix();
         $commandLine .= ' ';
-        $commandLine .= $env;
-        $commandLine .= $command->getFullCommand();
-        $commandLine .= '; echo $? >&3';
+        $commandLine .= escapeshellarg($env . $cwd . $command->getFullCommand() . '; echo $? >&3');
 
         $process = proc_open($commandLine, $descriptorspec, $pipes);
 

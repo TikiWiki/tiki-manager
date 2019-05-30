@@ -37,6 +37,7 @@ class SSH
     public function chdir($location)
     {
         $this->location = $location;
+        $this->adapter->setLocation($location);
     }
 
     public function checkCopyId()

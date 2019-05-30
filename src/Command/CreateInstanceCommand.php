@@ -190,7 +190,7 @@ class CreateInstanceCommand extends Command
             return 0;
         }
 
-        $countInstances = Instance::countNumInstances($access->host, $instance->webroot);
+        $countInstances = Instance::countNumInstances($instance);
         $isInstalled = false;
 
         foreach (Application::getApplications($instance) as $app) {
