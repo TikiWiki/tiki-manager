@@ -210,8 +210,11 @@ class SSH extends Access implements ShellPrompt
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);
         }
-        $command = $this->createCommand('test', ['-f', $filename]);
-        return $command->run()->getReturn() === 0;
+
+        $phpexec = $this->instance->phpexec ?? $this->getInterpreterPath($this->instance);
+
+        $command = $this->createCommand($phpexec, ['-r', 'echo (int) file_exists(\''.$filename.'\');']);
+        return $command->run()->getStdoutContent() === 1;
     }
 
     public function fileGetContents($filename)
