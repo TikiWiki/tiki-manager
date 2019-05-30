@@ -385,13 +385,21 @@ SQL;
     /**
      * Count the number of instances in database through host and webroot
      *
-     * @param $host
-     * @param $webroot
+     * @param Instance $instance
      * @return int
      */
-    public static function countNumInstances($host, $webroot)
+    public static function countNumInstances($instance)
     {
-        $result = query(self::SQL_COUNT_NUM_INSTANCES, [':host' => $host, ':webroot' => $webroot]);
+        $access = $instance->getBestAccess('scripting');
+
+        $host = $access->host;
+        $port = $access->port;
+
+        if ($host) {
+            $host = sprintf('%s:%s', $host, $port);
+        }
+
+        $result = query(self::SQL_COUNT_NUM_INSTANCES, [':host' => $host, ':webroot' => $instance->webroot]);
         $count = $result->fetchObject();
 
         return isset($count->numInstances) ? $count->numInstances : 0;
@@ -432,6 +440,10 @@ SQL;
         }
     }
 
+    /**
+     * @param string $type
+     * @return Access
+     */
     public function getBestAccess($type)
     {
         if (empty($this->access)) {
