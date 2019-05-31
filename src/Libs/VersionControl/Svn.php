@@ -141,7 +141,7 @@ class Svn extends VersionControlSystem
             $branch = $this->getBranchUrl($branch);
         }
 
-        return $this->exec($targetFolder, "merge $toAppend --accept theirs-full --allow-mixed-revisions --dry-run");
+        return $this->exec($targetFolder, "merge $toAppend --accept theirs-full --allow-mixed-revisions --dry-run .");
     }
 
     public function info($targetFolder, $raw = false)
@@ -205,7 +205,7 @@ class Svn extends VersionControlSystem
 
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "--non-interactive switch $branch $target_folder");
+        return $this->exec($targetFolder, "--non-interactive switch $branch $targetFolder");
     }
 
     public function upgrade($targetFolder, $branch)
@@ -226,6 +226,12 @@ class Svn extends VersionControlSystem
             return false;
         }
 
+        if (! $this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
+            $path = $this->access->getInterpreterPath($this);
+            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
+            $this->access->createCommand($path, ["-r {$script}"])->run();
+        }
+
         $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
 
         if (strlen(trim($conflicts)) > 0 &&
@@ -241,13 +247,7 @@ class Svn extends VersionControlSystem
             }
         }
 
-        if (! $this->access->fileExists($target_folder . self::SVN_TEMP_FOLDER_PATH)) {
-            $path = $this->access->getInterpreterPath($this);
-            $script = sprintf("mkdir('%s', 0777, true);", $target_folder . self::SVN_TEMP_FOLDER_PATH);
-            $this->access->createCommand($path, ["-r {$script}"])->run();
-        }
-
-        if ($this->isUpgrade($url, $branch)) {
+        if ($this->isUpgrade($url, $branchUrl)) {
             info("Upgrading to '{$branch}'");
             $this->revert($targetFolder);
             $this->upgrade($targetFolder, $branch);
