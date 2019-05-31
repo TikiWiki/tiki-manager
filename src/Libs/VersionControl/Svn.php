@@ -205,7 +205,7 @@ class Svn extends VersionControlSystem
 
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "--non-interactive switch $branch $target_folder");
+        return $this->exec($targetFolder, "--non-interactive switch $branch $targetFolder");
     }
 
     public function upgrade($targetFolder, $branch)
@@ -241,9 +241,9 @@ class Svn extends VersionControlSystem
             }
         }
 
-        if (! $this->access->fileExists($target_folder . self::SVN_TEMP_FOLDER_PATH)) {
+        if (! $this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
             $path = $this->access->getInterpreterPath($this);
-            $script = sprintf("mkdir('%s', 0777, true);", $target_folder . self::SVN_TEMP_FOLDER_PATH);
+            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }
 
