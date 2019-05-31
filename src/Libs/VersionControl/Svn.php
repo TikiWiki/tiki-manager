@@ -226,6 +226,12 @@ class Svn extends VersionControlSystem
             return false;
         }
 
+        if (! $this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
+            $path = $this->access->getInterpreterPath($this);
+            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
+            $this->access->createCommand($path, ["-r {$script}"])->run();
+        }
+
         $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
 
         if (strlen(trim($conflicts)) > 0 &&
@@ -239,12 +245,6 @@ class Svn extends VersionControlSystem
             ))) {
                 exit;
             }
-        }
-
-        if (! $this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
-            $path = $this->access->getInterpreterPath($this);
-            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
-            $this->access->createCommand($path, ["-r {$script}"])->run();
         }
 
         if ($this->isUpgrade($url, $branchUrl)) {
