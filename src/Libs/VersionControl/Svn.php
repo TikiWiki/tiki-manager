@@ -141,7 +141,7 @@ class Svn extends VersionControlSystem
             $branch = $this->getBranchUrl($branch);
         }
 
-        return $this->exec($targetFolder, "merge $toAppend --accept theirs-full --allow-mixed-revisions --dry-run");
+        return $this->exec($targetFolder, "merge $toAppend --accept theirs-full --allow-mixed-revisions --dry-run .");
     }
 
     public function info($targetFolder, $raw = false)
@@ -247,7 +247,7 @@ class Svn extends VersionControlSystem
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }
 
-        if ($this->isUpgrade($url, $branch)) {
+        if ($this->isUpgrade($url, $branchUrl)) {
             info("Upgrading to '{$branch}'");
             $this->revert($targetFolder);
             $this->upgrade($targetFolder, $branch);
