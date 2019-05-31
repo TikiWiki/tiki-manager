@@ -15,6 +15,10 @@ class Svn extends VersionControlSystem
 {
     const SVN_TEMP_FOLDER_PATH = DIRECTORY_SEPARATOR . '.svn' . DIRECTORY_SEPARATOR . 'tmp';
 
+    private $globalOptions = [
+        '--non-interactive',
+    ];
+
     /**
      * SVN constructor.
      * @param $access
@@ -93,7 +97,9 @@ class Svn extends VersionControlSystem
 
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
-        $command = new Command($this->command . " " . $toAppend);
+        $globalOptions = implode(' ', $this->globalOptions);
+        $commandLine = implode(' ', [$this->command, $globalOptions, $toAppend]);
+        $command = new Command($commandLine);
         $result = $this->access->runCommand($command);
 
         if ($result->getReturn() !== 0) {
@@ -109,19 +115,19 @@ class Svn extends VersionControlSystem
         $branch = str_replace('/./', '/', $branch);
         $branch = escapeshellarg($branch);
 
-        return $this->exec($targetFolder, "co $branch $targetFolder");
+        return $this->exec($targetFolder, "co $branch $targetFolder --quiet");
     }
 
     public function revert($targetFolder)
     {
-        return $this->exec($targetFolder, "revert $targetFolder --recursive")
+        return $this->exec($targetFolder, "revert $targetFolder --recursive --quiet")
             && $this->cleanup($targetFolder);
     }
 
     public function pull($targetFolder)
     {
         return $this->cleanup($targetFolder) &&
-            $this->exec($targetFolder, "up --non-interactive $targetFolder");
+            $this->exec($targetFolder, "up $targetFolder");
     }
 
     public function cleanup($targetFolder)
@@ -205,7 +211,7 @@ class Svn extends VersionControlSystem
 
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "--non-interactive switch $branch $targetFolder");
+        return $this->exec($targetFolder, "switch $branch $targetFolder");
     }
 
     public function upgrade($targetFolder, $branch)
@@ -250,7 +256,7 @@ class Svn extends VersionControlSystem
         if ($this->isUpgrade($url, $branchUrl)) {
             info("Upgrading to '{$branch}'");
             $this->revert($targetFolder);
-            $this->upgrade($targetFolder, $branch);
+            $this->upgrade($targetFolder, $branchUrl);
         } else {
             info("Updating '{$branch}'");
             $this->revert($targetFolder);
