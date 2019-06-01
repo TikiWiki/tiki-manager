@@ -211,7 +211,7 @@ class Svn extends VersionControlSystem
 
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "switch $branch $targetFolder");
+        return $this->exec($targetFolder, "switch $branch $targetFolder --quiet");
     }
 
     public function upgrade($targetFolder, $branch)
