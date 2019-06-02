@@ -42,26 +42,23 @@ class Local extends Access implements ShellPrompt
             $this->hostlib = new LocalHost();
         }
         $host = $this->hostlib;
+        $cwd = $this->instance->webroot;
 
         // change cwd before executing commands, for instance in CoreOS it may influence what
         // php interpreter version is used to execute commands, if the dir is not available
         // try the parent directory
-        if ($this->changeLocation === null && !empty($this->instance->webroot)) {
+        if ($this->changeLocation === null && !empty($cwd)) {
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                if (chdir($this->instance->webroot)) {
-                    $this->changeLocation = $this->instance->webroot;
-                } elseif (chdir(dirname($this->instance->webroot))) {
-                    $this->changeLocation = dirname($this->instance->webroot);
+                if (chdir($cwd)) {
+                    $this->changeLocation = $cwd;
+                } elseif (chdir(dirname($cwd))) {
+                    $this->changeLocation = dirname($cwd);
                 }
             } else {
-                $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
-                if ($output == "EXISTS") {
-                    $this->changeLocation = $this->instance->webroot;
-                } else {
-                    $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
-                    if ($output == "EXISTS") {
-                        $this->changeLocation = dirname($this->instance->webroot);
-                    }
+                if ($this->fileExists($cwd)) {
+                    $this->changeLocation = $cwd;
+                } elseif ($this->fileExists(dirname($cwd))) {
+                    $this->changeLocation = dirname($cwd);
                 }
                 if ($this->changeLocation === null) {
                     $this->changeLocation = false;
