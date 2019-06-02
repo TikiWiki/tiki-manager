@@ -228,6 +228,10 @@ SQL;
     public $phpversion;
     public $app;
     public $type;
+    public $backup_user;
+    public $backup_group;
+    public $backup_perm;
+    public $selection;
 
     protected $databaseConfig;
 

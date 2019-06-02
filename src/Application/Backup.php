@@ -282,7 +282,9 @@ class Backup
 
         foreach ($locations as $type => $directories) {
             foreach ($directories as $dir) {
-                $targets[] = [$type, $dir];
+                if (file_exists($dir)) {
+                    $targets[] = [$type, $dir];
+                }
             }
         }
 

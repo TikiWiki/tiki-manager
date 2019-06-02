@@ -22,6 +22,7 @@ use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Database\Exception\DatabaseErrorException;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class CommandHelper
 {
@@ -383,9 +384,10 @@ class CommandHelper
      * @param Instance $instance
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @param boolean $nonInteractive
      * @return bool
      */
-    public static function performInstall(Instance $instance, InputInterface $input, OutputInterface $output)
+    public static function performInstall(Instance $instance, InputInterface $input, OutputInterface $output, $nonInteractive = false)
     {
 
         $io = new SymfonyStyle($input, $output);
@@ -396,19 +398,23 @@ class CommandHelper
         }
 
         $apps = Application::getApplications($instance);
+
         $selection = getEntries($apps, 0);
         /** @var Application $app */
         $app = reset($selection);
 
-        $io->writeln('Fetching compatible versions. Please wait...');
-        $io->note([
-            "If some versions are not offered, it's likely because the host",
-            "server doesn't meet the requirements for that version (ex: PHP version is too old)"
-        ]);
+        if (! $nonInteractive) {
+            $io->writeln('Fetching compatible versions. Please wait...');
+            $io->note([
+                "If some versions are not offered, it's likely because the host",
+                "server doesn't meet the requirements for that version (ex: PHP version is too old)"
+            ]);
 
-        $versions = $app->getCompatibleVersions();
-        $selection = $io->choice('Which version do you want to install?', $versions);
-
+            $versions = $app->getCompatibleVersions();
+            $selection = $io->choice('Which version do you want to install?', $versions);
+        } else {
+            $selection = $instance->selection;
+        }
         $details = array_map('trim', explode(':', $selection));
 
         if ($details[0] == 'blank') {
@@ -427,7 +433,7 @@ class CommandHelper
         $app->install($version);
 
         if ($app->requiresDatabase()) {
-            $dbConn = self::setupDatabaseConnection($instance, $input, $output);
+            $dbConn = self::setupDatabaseConnection($instance, $input, $output, $nonInteractive);
             $app->setupDatabase($dbConn);
         }
 
@@ -441,9 +447,10 @@ class CommandHelper
      * @param Instance $instance
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @param boolean $nonInteractive
      * @return Database|null
      */
-    public static function setupDatabaseConnection(Instance $instance, InputInterface $input, OutputInterface $output)
+    public static function setupDatabaseConnection(Instance $instance, InputInterface $input, OutputInterface $output, $nonInteractive = false)
     {
 
         $dbUser = null;
@@ -467,79 +474,88 @@ class CommandHelper
 
         $dbRoot = new Database($instance);
 
-        $valid = false;
-        while (!$valid) {
-            $dbRoot->host = $io->ask('Database host', $dbRoot->host ?: 'localhost');
-            $dbRoot->user = $io->ask('Database user', $dbRoot->user ?: 'root');
-            $dbRoot->pass = $io->askHidden('Database password');
-
-            $valid = $dbRoot->testConnection();
-        }
-
-        $logger = new ConsoleLogger($output);
-        $logger->debug('Connected to MySQL with administrative privileges');
-
-        $create = $io->confirm('Should a new database and user be created now (both)?');
-
-        if (!$create) {
-            $dbUser = $dbRoot;
-            $dbUser->dbname = $io->ask('Database name', 'tiki_db');
-        } else {
-            $maxPrefixLength = $dbRoot->getMaxUsernameLength() - 5;
-            $io->note("Prefix is a string with maximum of {$maxPrefixLength} chars");
-
-            $prefix = 'tiki';
-            while (!is_object($dbUser)) {
-                $prefix = $io->ask('Prefix to use for username and database', $prefix);
-
-                if (strlen($prefix) > $maxPrefixLength) {
-                    $io->error("Prefix is a string with maximum of {$maxPrefixLength} chars");
-                    $prefix = substr($prefix, 0, $maxPrefixLength);
-                    continue;
-                }
-
-                $username = "{$prefix}_user";
-                if ($dbRoot->userExists($username)) {
-                    $io->error("User '$username' already exists, can't proceed.");
-                    continue;
-                }
-
-                $dbname = "{$prefix}_db";
-                if ($dbRoot->databaseExists($dbname)) {
-                    $io->warning("Database '$dbname' already exists.");
-                    if (!$io->confirm('Continue?')) {
-                        continue;
-                    }
-                }
-
-                try {
-                    $dbUser = $dbRoot->createAccess($username, $dbname);
-                } catch (DatabaseErrorException $e) {
-                    $io->error("Can't setup database!");
-                    $io->error($e->getMessage());
-
-                    $option = $io->choice('What do you want to do?', ['a' => 'Abort', 'r' => 'Retry'], 'a');
-
-                    if ($option === 'a') {
-                        $io->comment('Aborting');
-                        return;
-                    }
-                }
-            }
+        if ($nonInteractive) {
+            $dbUser = $instance->database;
 
             $types = $dbUser->getUsableExtensions();
             $type = getenv('MYSQL_DRIVER');
             $dbUser->type = $type;
+            $dbUser->type = reset($types);
+        } else {
+            $valid = false;
+            while (!$valid) {
+                $dbRoot->host = $io->ask('Database host', $dbRoot->host ?: 'localhost');
+                $dbRoot->user = $io->ask('Database user', $dbRoot->user ?: 'root');
+                $dbRoot->pass = $io->askHidden('Database password');
 
-            if (count($types) == 1) {
-                $dbUser->type = reset($types);
-            } elseif (empty($type)) {
-                $options = [];
-                foreach ($types as $key => $name) {
-                    $options[$key] = $name;
+                $valid = $dbRoot->testConnection();
+            }
+
+            $logger = new ConsoleLogger($output);
+            $logger->debug('Connected to MySQL with administrative privileges');
+
+            $create = $io->confirm('Should a new database and user be created now (both)?');
+
+            if (!$create) {
+                $dbUser = $dbRoot;
+                $dbUser->dbname = $io->ask('Database name', 'tiki_db');
+            } else {
+                $maxPrefixLength = $dbRoot->getMaxUsernameLength() - 5;
+                $io->note("Prefix is a string with maximum of {$maxPrefixLength} chars");
+
+                $prefix = 'tiki';
+                while (!is_object($dbUser)) {
+                    $prefix = $io->ask('Prefix to use for username and database', $prefix);
+
+                    if (strlen($prefix) > $maxPrefixLength) {
+                        $io->error("Prefix is a string with maximum of {$maxPrefixLength} chars");
+                        $prefix = substr($prefix, 0, $maxPrefixLength);
+                        continue;
+                    }
+
+                    $username = "{$prefix}_user";
+                    if ($dbRoot->userExists($username)) {
+                        $io->error("User '$username' already exists, can't proceed.");
+                        continue;
+                    }
+
+                    $dbname = "{$prefix}_db";
+                    if ($dbRoot->databaseExists($dbname)) {
+                        $io->warning("Database '$dbname' already exists.");
+                        if (!$io->confirm('Continue?')) {
+                            continue;
+                        }
+                    }
+
+                    try {
+                        $dbUser = $dbRoot->createAccess($username, $dbname);
+                    } catch (DatabaseErrorException $e) {
+                        $io->error("Can't setup database!");
+                        $io->error($e->getMessage());
+
+                        $option = $io->choice('What do you want to do?', ['a' => 'Abort', 'r' => 'Retry'], 'a');
+
+                        if ($option === 'a') {
+                            $io->comment('Aborting');
+                            return;
+                        }
+                    }
                 }
 
-                $dbUser->type = $io->choice('Which extension should be used?', $options);
+                $types = $dbUser->getUsableExtensions();
+                $type = getenv('MYSQL_DRIVER');
+                $dbUser->type = $type;
+
+                if (count($types) == 1) {
+                    $dbUser->type = reset($types);
+                } elseif (empty($type)) {
+                    $options = [];
+                    foreach ($types as $key => $name) {
+                        $options[$key] = $name;
+                    }
+
+                    $dbUser->type = $io->choice('Which extension should be used?', $options);
+                }
             }
         }
 
