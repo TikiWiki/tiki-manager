@@ -332,6 +332,22 @@ class Discovery
         );
     }
 
+    public function detectVcsType()
+    {
+        $instance = $this->instance;
+        $webroot = rtrim($instance->webroot, DIRECTORY_SEPARATOR);
+
+        if (is_dir($webroot . DIRECTORY_SEPARATOR . ".svn")) {
+            return 'SVN';
+        }
+
+        if (is_dir($webroot . DIRECTORY_SEPARATOR . ".git")) {
+            return 'GIT';
+        }
+
+        return 'TARBALL';
+    }
+
     public function detectWebroot()
     {
         $instance = $this->instance;

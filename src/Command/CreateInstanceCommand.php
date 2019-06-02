@@ -320,6 +320,7 @@ class CreateInstanceCommand extends Command
             $instance->backup_perm = octdec($backup_perm);
         }
 
+        $instance->vcs_type = $discovery->detectVcsType();
         $instance->phpexec = $discovery->detectPHP();
         $instance->phpversion = $discovery->detectPHPVersion();
 
