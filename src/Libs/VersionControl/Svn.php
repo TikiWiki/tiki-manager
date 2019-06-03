@@ -115,12 +115,12 @@ class Svn extends VersionControlSystem
         $branch = str_replace('/./', '/', $branch);
         $branch = escapeshellarg($branch);
 
-        return $this->exec($targetFolder, "co $branch $targetFolder --quiet");
+        return $this->exec($targetFolder, "co $branch $targetFolder");
     }
 
     public function revert($targetFolder)
     {
-        return $this->exec($targetFolder, "revert $targetFolder --recursive --quiet")
+        return $this->exec($targetFolder, "revert $targetFolder --recursive")
             && $this->cleanup($targetFolder);
     }
 
@@ -211,7 +211,7 @@ class Svn extends VersionControlSystem
 
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "switch $branch $targetFolder --quiet");
+        return $this->exec($targetFolder, "switch $branch $targetFolder");
     }
 
     public function upgrade($targetFolder, $branch)

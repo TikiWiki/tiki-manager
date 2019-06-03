@@ -127,12 +127,14 @@ class SSHWrapperAdapter
         }
         fclose($pipes[0]);
 
+        $stdOut = stream_get_contents($pipes[1]);
+        $stdErr = stream_get_contents($pipes[2]);
         $return = stream_get_contents($pipes[3]);
         $return = intval(trim($return));
         fclose($pipes[3]);
 
-        $command->setStdout($pipes[1]);
-        $command->setStderr($pipes[2]);
+        $command->setStdout($stdOut);
+        $command->setStderr($stdErr);
         $command->setProcess($process);
         $command->setReturn($return);
 
