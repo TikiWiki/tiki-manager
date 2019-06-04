@@ -262,14 +262,17 @@ class Tiki extends Application
         }
 
         $access = $this->instance->getBestAccess('filetransfer');
+
         $checkpaths = [
-            $this->instance->getWebPath('.svn/entries'),
-            $this->instance->getWebPath('.svn/wc.db')
+            $this->instance->getWebPath('.svn/entries') => 'svn',
+            $this->instance->getWebPath('.svn/wc.db')   => 'svn',
+            $this->instance->getWebPath('.git/HEAD')    => 'git',
         ];
 
-        foreach ($checkpaths as $path) {
+        foreach ($checkpaths as $path => $type) {
             if ($access->fileExists($path)) {
-                return $this->installType = 'svn';
+                $this->installType = $type;
+                return $this->installType;
             }
         }
         return $this->installType = 'tarball';

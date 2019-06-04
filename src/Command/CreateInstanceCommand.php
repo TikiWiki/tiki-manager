@@ -237,10 +237,6 @@ class CreateInstanceCommand extends Command
 
             $instance->save();
             $access->save();
-
-            $output->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
-            $output->writeln('<info>PHP exec: ' . $discovery->detectPHP() . '</info>');
-
             $output->writeln('<info>Instance information saved.</info>');
 
             $phpVersion = $discovery->detectPHPVersion();
@@ -324,6 +320,7 @@ class CreateInstanceCommand extends Command
             $instance->backup_perm = octdec($backup_perm);
         }
 
+        $instance->vcs_type = $discovery->detectVcsType();
         $instance->phpexec = $discovery->detectPHP();
         $instance->phpversion = $discovery->detectPHPVersion();
 
