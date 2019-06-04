@@ -7,5 +7,6 @@ logs/
 tmp/
 # Ignore vendor folders, they are managed by composer
 /vendor/
-# Ignore PhpStorm
+# Ignore IDE/Editor files
 .idea/
+.vscode/
