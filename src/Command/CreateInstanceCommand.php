@@ -470,7 +470,7 @@ class CreateInstanceCommand extends Command
             $instance->tempdir = $tempdir;
             $instance->backup_user = $backupUser;
             $instance->backup_group = $backupGroup;
-            $instance->backup_perm = $backupPerm;
+            $instance->backup_perm = octdec($backupPerm);
 
             $access = Access::getClassFor($type);
             $access = new $access($instance);
