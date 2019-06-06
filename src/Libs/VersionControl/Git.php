@@ -74,12 +74,18 @@ class Git extends VersionControlSystem
 
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
+        $command = sprintf('%s %s', $this->command, $toAppend);
+
+        if ($this->runLocally) {
+            return `$command`;
+        }
+
         if ($forcePathOnCommand) {
             $this->access->chdir($targetFolder);
         }
 
-        $command = new Command(sprintf('%s %s', $this->command, $toAppend));
-        $result = $this->access->runCommand($command);
+        $commandInstance = new Command($command);
+        $result = $this->access->runCommand($commandInstance);
 
         if ($result->getReturn() !== 0) {
             throw new Exception($result->getStderrContent());

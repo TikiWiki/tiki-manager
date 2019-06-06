@@ -98,9 +98,14 @@ class Svn extends VersionControlSystem
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
         $globalOptions = implode(' ', $this->globalOptions);
-        $commandLine = implode(' ', [$this->command, $globalOptions, $toAppend]);
-        $command = new Command($commandLine);
-        $result = $this->access->runCommand($command);
+        $command = implode(' ', [$this->command, $globalOptions, $toAppend]);
+
+        if ($this->runLocally) {
+            return `$command`;
+        }
+
+        $commandInstance = new Command($command);
+        $result = $this->access->runCommand($commandInstance);
 
         if ($result->getReturn() !== 0) {
             throw new Exception($result->getStderrContent());
@@ -120,8 +125,8 @@ class Svn extends VersionControlSystem
 
     public function revert($targetFolder)
     {
-        return $this->exec($targetFolder, "revert $targetFolder --recursive")
-            && $this->cleanup($targetFolder);
+        return $this->cleanup($targetFolder) &&
+            $this->exec($targetFolder, "revert $targetFolder --recursive");
     }
 
     public function pull($targetFolder)
