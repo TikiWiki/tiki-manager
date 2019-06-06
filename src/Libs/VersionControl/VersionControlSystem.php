@@ -16,6 +16,7 @@ abstract class VersionControlSystem
     protected $access;
     protected $repositoryUrl;
     protected $configuration;
+    protected $runLocally = false;
 
     /**
      * VersionControlSystem constructor.
@@ -89,6 +90,15 @@ abstract class VersionControlSystem
         }
 
         return $vcsInstance;
+    }
+
+    /**
+     * runLocally variable setter
+     * @param bool $runLocally
+     */
+    public function setRunLocally(bool $runLocally)
+    {
+        $this->runLocally = $runLocally;
     }
 
     /**

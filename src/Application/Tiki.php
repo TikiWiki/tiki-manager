@@ -73,12 +73,16 @@ class Tiki extends Application
 
     public function extractTo(Version $version, $folder)
     {
+        $this->vcs_instance->setRunLocally(true);
+
         if (file_exists($folder)) {
             $this->vcs_instance->revert($folder);
             $this->vcs_instance->pull($folder);
         } else {
             $this->vcs_instance->clone($version->branch, $folder);
         }
+
+        $this->vcs_instance->setRunLocally(false);
     }
 
     /**
