@@ -15,6 +15,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Libs\Database\Database;
 
 class CloneInstanceCommand extends Command
 {
@@ -107,6 +108,9 @@ class CloneInstanceCommand extends Command
             }
             $instances = $instances_pruned;
 
+            $databaseConfig = CommandHelper::setupDatabaseConnection($selectedSourceInstances[0], $input, $output);
+            $selectedSourceInstances[0]->setDatabaseConfig($databaseConfig);
+
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
             if (isset($instancesInfo)) {
                 if (!empty($arguments[1])) {
@@ -149,7 +153,19 @@ class CloneInstanceCommand extends Command
                     exit(-1);
                 }
 
+                $sourceAccess = $selectedSourceInstances[0]->getBestAccess('scripting');
+                $sourceDB = $selectedSourceInstances[0]->getDatabaseConfig();
+
                 foreach ($selectedDestinationInstances as $destinationInstance) {
+                    $targetAccess = $destinationInstance->getBestAccess('scripting');
+                    $targetDB = $destinationInstance->getDatabaseConfig();
+                    if (($sourceAccess->host == $targetAccess->host ||
+                            ($sourceAccess->host != $targetAccess->host && !in_array($targetDB->host, ['127.0.0.1', 'localhost'])))
+                        && Database::compareDatabase($sourceDB, $targetDB)) {
+                        $output->writeln('<error>Database host and name are the same in the source (' . $selectedSourceInstances[0]->id . ') and destination (' . $destinationInstance->id . ').</error>');
+                        continue;
+                    }
+
                     $output->writeln('<fg=cyan>Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name . '</>');
 
                     $destinationInstance->lock();
