@@ -84,6 +84,23 @@ class Database
         return $this;
     }
 
+    /**
+     * Verify if the databases are equal
+     * @param $database1 Database
+     * @param $database2 Database
+     * @return boolean
+     */
+    public static function compareDatabase($database1, $database2)
+    {
+        return (!is_null($database1) &&
+            !is_null($database2) &&
+            ($database1->host === $database2->host &&
+                $database1->host === $database2->host &&
+                $database1->dbname === $database2->dbname &&
+                $database1->user === $database2->user
+            ));
+    }
+
     public static function createFromConfig($instance, $db_local_path)
     {
         if (! (file_exists($db_local_path) && filesize($db_local_path) > 0)) {
