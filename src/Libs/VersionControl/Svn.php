@@ -243,7 +243,19 @@ class Svn extends VersionControlSystem
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }
 
-        $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
+        try {
+            $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
+        } catch (Exception $e) {
+            // SVN is unable to merge when there are deleted files but not removed from SVN index.
+            // Example:
+            // svn: E195016: Merge tracking not allowed with missing subtrees; try restoring these items first:
+            // temp/README
+            // temp/web.config
+            // temp/index.php
+
+            error($e->getMessage()); // TODO change this to log error symfony way
+            $conflicts = '';
+        }
 
         if (strlen(trim($conflicts)) > 0 &&
             preg_match('/conflicts:/i', $conflicts)) {
