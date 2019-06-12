@@ -41,6 +41,7 @@
 
                     <div class="contact">
                         <span class="left">contact: <a href="mailto:<?php echo html("{$instance->contact}") ?>"><?php echo html("{$instance->contact}") ?></a></span>
+                        <span class="right">last update: <b><?php echo html("{$version->date}") ?></b></span>
                     </div>
 
                     <div class="buttons fa">
