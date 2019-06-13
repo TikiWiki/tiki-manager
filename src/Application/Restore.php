@@ -55,6 +55,11 @@ class Restore extends Backup
         return rtrim($this->restoreRoot, '/\\');
     }
 
+    /**
+     * @param $srcArchive
+     * @return string
+     * @throws RestoreErrorException
+     */
     public function prepareArchiveFolder($srcArchive)
     {
         $access = $this->access;
@@ -66,23 +71,33 @@ class Restore extends Backup
             $archivePath = $this->uploadArchive($srcArchive);
         }
 
-        $path = $this->access->getInterpreterPath();
-        $script = sprintf("echo mkdir('%s', 0777, true);", $archiveRoot);
-        $command = $access->createCommand($path, ["-r {$script}"]);
-        $command->run();
+        $path = $access->getInterpreterPath();
+        if (!$access->fileExists($archiveRoot)) {
+            $script = sprintf("echo mkdir('%s', 0777, true);", $archiveRoot);
+            $command = $access->createCommand($path, ["-r {$script}"]);
+            $command->run();
 
-        if (empty($command->getStdoutContent())) {
+            if (empty($command->getStdoutContent())) {
+                throw new RestoreErrorException(
+                    "Can't create '$archiveRoot': "
+                    . $command->getStderrContent(),
+                    RestoreErrorException::CREATEDIR_ERROR
+                );
+            }
+        }
+
+        $this->restoreDirname = $this->getFolderNameFromArchive($srcArchive);
+        $archiveFolder = $archiveRoot . DIRECTORY_SEPARATOR . $this->restoreDirname;
+
+        if ($access->fileExists($archiveFolder)) {
             throw new RestoreErrorException(
-                "Can't create '$archiveRoot': "
-                . $command->getStderrContent(),
+                sprintf("Restore folder %s detected.", $archiveFolder),
                 RestoreErrorException::CREATEDIR_ERROR
             );
         }
 
         $this->decompressArchive($archiveRoot, $archivePath);
 
-        $this->restoreDirname = $this->getFolderNameFromArchive($srcArchive);
-        $archiveFolder = $archiveRoot . DIRECTORY_SEPARATOR . $this->restoreDirname;
         return $archiveFolder;
     }
 
