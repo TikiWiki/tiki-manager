@@ -48,6 +48,7 @@ $application->add(new \TikiManager\Command\ResetManagerCommand());
 $application->add(new \TikiManager\Command\ReportManagerCommand());
 $application->add(new \TikiManager\Command\SetupUpdateCommand());
 $application->add(new \TikiManager\Command\SetupWatchManagerCommand());
+$application->add(new \TikiManager\Command\SetupBackupManagerCommand());
 
 $application->add(new \TikiManager\Command\ViewDatabaseCommand());
 $application->add(new \TikiManager\Command\DeleteDatabaseCommand());
