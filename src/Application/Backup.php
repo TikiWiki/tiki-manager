@@ -6,11 +6,13 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Access\Access;
 use TikiManager\Application\Exception\BackupCopyException;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Backup
 {
+    /** @var Access $access */
     protected $access;
     protected $app;
     protected $archiveDir;
