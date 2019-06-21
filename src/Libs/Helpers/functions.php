@@ -240,3 +240,8 @@ function run_composer_install()
 
     return !empty($result);
 }
+
+function isWindows()
+{
+    return substr(PHP_OS, 0, 3) == 'WIN';
+}
