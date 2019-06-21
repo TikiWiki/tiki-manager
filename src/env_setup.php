@@ -5,8 +5,10 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
 use TikiManager\Libs\Helpers\PDOWrapper;
+use TikiManager\Libs\Requirements\Requirements;
 
 require_once dirname(__FILE__) . '/env_includes.php';
+
 
 debug('Running Tiki Manager at ' . TRIM_ROOT);
 
@@ -48,23 +50,14 @@ if (file_exists(TRIM_ROOT . "/data/id_dsa") &&
     );
 }
 
-// Check for required extensions
-if (! in_array('sqlite', PDO::getAvailableDrivers())) {
-    die(error("The SQLite PHP extension is not available. Install to continue."));
+if (! Requirements::getInstance()->check('PHPSqlite')) {
+    error(Requirements::getInstance()->getRequirementMessage('PHPSqlite'));
+    exit;
 }
 
-// Check for required system dependencies
-if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-    $ssh = 'where ssh';
-    $kg = 'where ssh-keygen';
-} else {
-    $ssh = `export PATH; which ssh`;
-    $kg = `export PATH; which ssh-keygen`;
-}
-
-if (empty($ssh) || empty($kg)) {
-    die(error("SSH tools not installed on current machine. " .
-        "Make sure 'ssh' and 'ssh-keygen' and are installed.\n"));
+if (! Requirements::getInstance()->check('ssh')) {
+    error(Requirements::getInstance()->getRequirementMessage('ssh'));
+    exit;
 }
 
 // Make sure SSH is set-up
