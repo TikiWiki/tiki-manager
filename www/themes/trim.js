@@ -199,6 +199,10 @@ $(document).ready(function () {
             modal.find('.log').append(parsed_log);
             modal.find('.log').append('\n<span class="cyan">Done!</span>');
             modal.find('.modal-footer button').show();
+        }).fail(function(response) {
+            modal.find('.log').append('\n<span class="red">Something went wrong while performing this operation!</span>')
+                .append('<span class="red">Status code: ' + response.status + ' (' + response.statusText + ')</span>')
+                .append('<span>' + response.responseText + '</span>');
         });
     });
 
