@@ -1,3 +1,5 @@
+const BASE_URL = document.getElementsByTagName('base')[0].href;
+
 $(document).ready(function () {
     $('.trim-instance-main-list .lock a').click(function () {
         var fa = $(this).find('span');
@@ -14,7 +16,7 @@ $(document).ready(function () {
         }
 
         $.ajax({
-            url: '/scripts/' + ins_type + '.php',
+            url: BASE_URL + '/scripts/' + ins_type + '.php',
             type: 'POST',
             data: {
                 id: ins_id
@@ -170,7 +172,7 @@ $(document).ready(function () {
         }
 
         $.ajax({
-            url: '/scripts/' + ins_type + '.php',
+            url: BASE_URL + '/scripts/' + ins_type + '.php',
             type: 'POST',
             data: {
                 id: ins_id,
