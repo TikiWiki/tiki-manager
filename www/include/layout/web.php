@@ -39,7 +39,7 @@ function web_backup($instance)
     info('Creating archive...');
     $archive = $backup->createArchive($archiveDir, $backupDir);
     if ($archive === null) {
-        echo color("\nError: Snapshot creation failed.\n", 'red');
+        error("\nError: Snapshot creation failed.\n");
         exit(1);
     }
 

@@ -107,13 +107,13 @@ while (key($all) != $instance->id) {
                 <span class="fa fa-pencil"></span> Edit
             </a>
         <?php if ($instance->getApplication()) : ?>
-            <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="fix">
+            <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="fix" data-backdrop="static">
                 <span class="fa fa-wrench"></span> Fix
             </a>
-            <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="backup">
+            <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="backup" data-backdrop="static">
                 <span class="fa fa-floppy-o"></span> Backup
             </a>
-            <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="update">
+            <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="update" data-backdrop="static">
                 <span class="fa fa-repeat"></span> Update
             </a>
         <?php endif; ?>

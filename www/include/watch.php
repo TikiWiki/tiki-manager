@@ -13,7 +13,7 @@
         <?php if (!empty($instances)) : ?>
             <ul class="clearfix">
             <?php foreach ($instances as $instance) : ?>
-                <li title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="watch">
+                <li title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="watch" data-backdrop="static">
                     <?php require dirname(__FILE__) . "/layout/url.php"; ?>
                     <div class="buttons fa">
                         <a href="javascript:void(0);" class="fa-eye" title="Watch this instance"></a>

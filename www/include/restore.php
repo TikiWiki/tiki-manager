@@ -73,7 +73,7 @@ foreach ($instances as $instance) {
                 <span class="fa fa-angle-double-left"></span>
                 Back to list
             </a>
-            <button class="restore btn btn-success" data-toggle="modal" data-target="#trimModal" data-id="" data-name="" data-sourceid="" data-backup="" data-type="restore" disabled>
+            <button class="restore btn btn-success" data-toggle="modal" data-target="#trimModal" data-id="" data-name="" data-sourceid="" data-backup="" data-type="restore" data-backdrop="static" disabled>
                 <span class="fa fa-undo"></span> Restore
             </button>
         </p>
