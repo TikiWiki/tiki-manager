@@ -97,24 +97,33 @@ function stringfy($sub)
     return var_export($sub, true);
 }
 
+function appendFlush() {
+    // By default php-fpm uses 4096B buffers.
+    // This forces the buffer to get enough data to output.
+    return PHP_SAPI != 'cli' ? str_pad('', 4 * 1024) : '';
+}
+
 function info($text, $prefix = null)
 {
     $output = prefix(stringfy($text), $prefix) . "\n";
-    echo color("$text\n", 'cyan');
+    $outputText = $text . appendFlush();
+    echo color("$outputText\n", 'cyan');
     return $text;
 }
 
 function warning($text, $prefix = null)
 {
     $output = prefix(stringfy($text), $prefix) . "\n";
-    echo color("$text\n", 'yellow');
+    $outputText = $text . appendFlush();
+    echo color("$outputText\n", 'yellow');
     return $text;
 }
 
 function error($text, $prefix = null)
 {
     $output = prefix(stringfy($text), $prefix) . "\n";
-    echo color("$text\n", 'red');
+    $outputText = $text . appendFlush();
+    echo color("$outputText\n", 'red');
     return $text;
 }
 

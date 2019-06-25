@@ -29,7 +29,9 @@ $(document).ready(function () {
     });
 
     $('.trim-instance-main-list li').click(function (event) {
-        if (event.target.localName === 'li') window.location.href = $(this).attr('data-href');
+        if (event.target.localName === 'li') {
+            window.location.href = $(this).attr('data-href');
+        }
     });
 
     // restoring
@@ -59,7 +61,8 @@ $(document).ready(function () {
 
 
     // cloning
-    function clonecolors(selector) {
+    function clonecolors(selector)
+    {
         $(selector).each(function () {
             $(this).css('background-color', 'transparent');
         });
@@ -78,7 +81,9 @@ $(document).ready(function () {
         $('.trim-instance-list.clone ul.destination').removeClass('hide');
         $('.trim-instance-list.clone ul.destination li').each(function () {
             $(this).removeClass('hide');
-            if ($(this).data('id') == id) $(this).addClass('hide');
+            if ($(this).data('id') == id) {
+                $(this).addClass('hide');
+            }
         });
     });
 
@@ -138,7 +143,7 @@ $(document).ready(function () {
         };
 
         var replaceable_ascii = {
-            27 : '<br/>'
+            27 : ''
         };
 
         var button = $(event.relatedTarget);
@@ -171,8 +176,45 @@ $(document).ready(function () {
             modal.find('.log').html('<span class="cyan">Cloning ' + ins_name + '...</span>');
         }
 
+        var loading = "<i id=\"loading-icon\" class=\"fa fa-circle-o-notch fa-spin fa-fw cyan\"></i>\n" +
+            "<span class=\"sr-only\">Loading...</span>";
+        modal.find('.log').append(loading);
+
+        var last_response_len = false;
         $.ajax({
             url: BASE_URL + '/scripts/' + ins_type + '.php',
+            xhrFields:{
+                onprogress: function (e) {
+                    var this_response, response = e.currentTarget.response;
+                    if (last_response_len === false) {
+                        this_response = response;
+                        last_response_len = response.length;
+                    } else {
+                        this_response = response.substring(last_response_len);
+                        last_response_len = response.length;
+                    }
+                    log = this_response;
+                    var parsed_log = '';
+
+                    for (var i = 0; i < log.length; i++) {
+                        var char = log[i];
+
+                        if (replaceable_ascii[log.charCodeAt(i)] !== undefined) {
+                            char = replaceable_ascii[log.charCodeAt(i)];
+                        }
+
+                        parsed_log += char;
+                    }
+
+                    for (var key in ansi) {
+                        parsed_log = parsed_log.replace(new RegExp(key, 'g'), ansi[key]);
+                    }
+
+                    modal.find('#loading-icon').before(parsed_log);
+                    $(".log").scrollTop($(".log")[0].scrollHeight);
+
+                }
+            },
             type: 'POST',
             data: {
                 id: ins_id,
@@ -180,26 +222,10 @@ $(document).ready(function () {
                 backup: ins_backup
             }
         }).done(function (log) {
-            var parsed_log = '';
-
-            for (var i = 0; i < log.length; i++) {
-                var char = log[i];
-
-                if (replaceable_ascii[log.charCodeAt(i)] !== undefined) {
-                    char = replaceable_ascii[log.charCodeAt(i)];
-                }
-
-                parsed_log += char;
-            }
-
-            for (var key in ansi) {
-                parsed_log = parsed_log.replace(new RegExp(key, 'g'), ansi[key]);
-            }
-
-            modal.find('.log').append(parsed_log);
+            modal.find('#loading-icon').hide();
             modal.find('.log').append('\n<span class="cyan">Done!</span>');
             modal.find('.modal-footer button').show();
-        }).fail(function(response) {
+        }).fail(function (response) {
             modal.find('.log').append('\n<span class="red">Something went wrong while performing this operation!</span>')
                 .append('<span class="red">Status code: ' + response.status + ' (' + response.statusText + ')</span>')
                 .append('<span>' + response.responseText + '</span>');
