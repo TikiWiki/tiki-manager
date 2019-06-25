@@ -193,7 +193,7 @@ $(document).ready(function () {
                         this_response = response.substring(last_response_len);
                         last_response_len = response.length;
                     }
-                    log = this_response;
+                    log = this_response.trim();
                     var parsed_log = '';
 
                     for (var i = 0; i < log.length; i++) {

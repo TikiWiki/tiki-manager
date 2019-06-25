@@ -105,25 +105,19 @@ function appendFlush() {
 
 function info($text, $prefix = null)
 {
-    $output = prefix(stringfy($text), $prefix) . "\n";
-    $outputText = $text . appendFlush();
-    echo color("$outputText\n", 'cyan');
+    echo color("$text\n", 'cyan') . appendFlush();
     return $text;
 }
 
 function warning($text, $prefix = null)
 {
-    $output = prefix(stringfy($text), $prefix) . "\n";
-    $outputText = $text . appendFlush();
-    echo color("$outputText\n", 'yellow');
+    echo color("$text\n", 'yellow') . appendFlush();
     return $text;
 }
 
 function error($text, $prefix = null)
 {
-    $output = prefix(stringfy($text), $prefix) . "\n";
-    $outputText = $text . appendFlush();
-    echo color("$outputText\n", 'red');
+    echo color("$text\n", 'red') . appendFlush();
     return $text;
 }
 
