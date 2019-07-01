@@ -8,7 +8,6 @@ use TikiManager\Application\Instance;
 use TikiManager\Helpers\Archive;
 
 include_once dirname(__FILE__) . '/../../src/env_setup.php';
-include_once dirname(__FILE__) . '/../../src/clean.php';
 
 $instances = Instance::getInstances();
 
@@ -26,5 +25,4 @@ foreach ($selection as $instance) {
     $instance->getApplication()->installProfile($repository, $profile);
     Archive::performArchiveCleanup($instance->id, $instance->name);
 }
-
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

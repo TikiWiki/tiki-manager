@@ -2,6 +2,10 @@
 use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 
+/**
+ * Class FunctionsTest
+ * @group unit
+ */
 class FunctionsTest extends TestCase
 {
     public function testGetAbsolutePath()

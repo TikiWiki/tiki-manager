@@ -5,6 +5,10 @@ use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 use TikiManager\Access\Local;
 use TikiManager\Application\Instance;
 
+/**
+ * Class DatabaseLocalTest
+ * @group unit
+ */
 class DatabaseLocalTest extends TestCase
 {
     private static $pdo;
@@ -15,8 +19,9 @@ class DatabaseLocalTest extends TestCase
 
     public function getConnection()
     {
-        if(!self::$pdo) {
-            self::$pdo = new PDO('mysql:host=mariadb.docker;charset=utf8', 'root', 'mysql');
+        if (!self::$pdo) {
+            $dsn = sprintf('mysql:host=%s;charset=utf8', $_ENV['DB_HOST']);
+            self::$pdo = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASS']);
         }
         return self::$pdo;
     }
@@ -36,9 +41,9 @@ class DatabaseLocalTest extends TestCase
     {
         $instance = $this->getInstance();
         $db = new Database($instance);
-        $db->host = 'localhost';
-        $db->user = 'root';
-        $db->pass = 'mysql';
+        $db->host = $_ENV['DB_HOST'];
+        $db->user = $_ENV['DB_USER'];
+        $db->pass = $_ENV['DB_PASS'];
         $db->dbname = 'tiki_db';
         $db->connect();
         return $db;
@@ -56,14 +61,14 @@ class DatabaseLocalTest extends TestCase
     public function tearDown()
     {
         $pdo = $this->getConnection();
-        $pdo->query(sprintf('DROP USER "%s"@"localhost"', self::TEST_USER));
+        $pdo->query(sprintf('DROP USER "%s"@"%s"', self::TEST_USER, '%'));
         $pdo->query(sprintf('DROP DATABASE `%s`', self::TEST_DB));
     }
 
     public function testCreateInstanceTikiConfig()
     {
         $instance = $this->getInstance();
-        $configData = $this->getTikiConfig('root', 'mysql', 'localhost', 'tiki_db');
+        $configData = $this->getTikiConfig($_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_HOST'], 'tiki_db');
         $configFile = '/tmp/testCreateInstanceTikiConfig.php';
         file_put_contents($configFile, $configData);
 
@@ -117,7 +122,7 @@ class DatabaseLocalTest extends TestCase
 
         try {
             $db->connect();
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $hasError = true;
             $this->assertInstanceOf(DatabaseErrorException::class, $e);
         }
@@ -133,7 +138,8 @@ class DatabaseLocalTest extends TestCase
         $db->createDatabase(self::TEST_DB);
 
         $expected = $pdo->query(sprintf(
-            'SHOW DATABASES LIKE "%s"', self::TEST_DB
+            'SHOW DATABASES LIKE "%s"',
+            self::TEST_DB
         ));
         $expected = $expected->fetchColumn();
         $this->assertEquals($expected, self::TEST_DB);
@@ -148,7 +154,8 @@ class DatabaseLocalTest extends TestCase
 
         $result = $pdo->query(sprintf(
             'SELECT * FROM mysql.user WHERE user="%s" AND password=PASSWORD("%s")',
-            self::TEST_USER, self::TEST_PASS
+            self::TEST_USER,
+            self::TEST_PASS
         ));
         $result = $result->rowCount();
         $this->assertEquals(1, $result);
@@ -163,9 +170,11 @@ class DatabaseLocalTest extends TestCase
         $db->createDatabase(self::TEST_DB);
         $db->grantRights(self::TEST_USER, self::TEST_DB);
 
+        $host = $db->host === 'localhost' ? $this->host : '%';
         $result = $pdo->query(sprintf(
             'SHOW GRANTS FOR "%s"@"%s"',
-            self::TEST_USER, $db->host
+            self::TEST_USER,
+            $host
         ));
         $this->assertNotEmpty($result);
         $result = array_map('end', $result->fetchAll());
@@ -173,7 +182,9 @@ class DatabaseLocalTest extends TestCase
 
         $expected = sprintf(
             "/GRANT ALL PRIVILEGES ON .%s.\.\* TO '%s'@'%s'/",
-            self::TEST_DB, self::TEST_USER, $db->host
+            self::TEST_DB,
+            self::TEST_USER,
+            $host
         );
 
         $this->assertRegExp($expected, $result);

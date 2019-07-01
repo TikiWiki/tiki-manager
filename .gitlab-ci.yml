@@ -1,24 +1,17 @@
-image: rjsmelo/ubuntu-php:7.1-qa
+image: xorti/tiki-manager-qa:7.1-qa
 
 cache:
   paths:
   - .composercache/files
-  - vendor
 
 variables:
+  MYSQL_ROOT_PASSWORD: secret
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
 
 stages:
-- build
 - quality
-
-#
-# build
-#
-composer:
-  stage: build
-  script:
-    - composer --ansi install --no-progress --prefer-dist -n
+- unit-tests
+- functional-tests
 
 
 #
@@ -47,9 +40,10 @@ php-53-scripts:
 phpcs:
   stage: quality
   script:
-  - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git log -m -1 --name-only && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
-  - git log -m -1 --name-only
-  - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
+    - composer --ansi install --no-progress --prefer-dist -n
+    - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git log -m -1 --name-only && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
+    - git log -m -1 --name-only
+    - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
   allow_failure: true
   only:
     - master
@@ -59,6 +53,7 @@ phpcs-branches:
   variables:
     SBRANCH: "master"
   script:
+    - composer --ansi install --no-progress --prefer-dist -n
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git diff --name-status origin/$SBRANCH && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
     - git diff --name-status origin/$SBRANCH
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
@@ -85,3 +80,60 @@ code_quality:
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
+
+#----------------------------------------------------------------------------------------------------------------------#
+# UNIT TESTS SECTION
+#----------------------------------------------------------------------------------------------------------------------#
+unit-tests:
+  stage: unit-tests
+  services:
+    - name: mysql:5.6
+      alias: mysql
+  script:
+    - echo 'APP_ENV=gitlab-ci' >> .env
+    - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
+    - composer --ansi install --no-progress --prefer-dist -n
+    - ./vendor/bin/phpunit --bootstrap src/env_setup.php tests/ --group unit
+  allow_failure: false
+
+
+#----------------------------------------------------------------------------------------------------------------------#
+# FUNCTIONAL TESTS SECTION
+#----------------------------------------------------------------------------------------------------------------------#
+
+.template-tiki-manager-commands: &template-tiki-manager-commands
+  stage: functional-tests
+  services:
+    - name: mysql:5.6
+      alias: mysql
+  script:
+    - echo 'APP_ENV=gitlab-ci' >> .env
+    - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
+    - composer --ansi install --no-progress --prefer-dist -n
+    - ./vendor/bin/phpunit --bootstrap src/env_setup.php tests/Command/$TEST_FILE
+  allow_failure: false
+
+create-instance:
+  <<: *template-tiki-manager-commands
+  variables:
+    TEST_FILE: CreateInstanceCommandTest.php
+
+backup-instance:
+  <<: *template-tiki-manager-commands
+  variables:
+    TEST_FILE: BackupInstanceCommandTest.php
+
+restore-instance:
+  <<: *template-tiki-manager-commands
+  variables:
+    TEST_FILE: RestoreInstanceCommandTest.php
+
+clone-instance:
+  <<: *template-tiki-manager-commands
+  variables:
+    TEST_FILE: CloneInstanceCommandTest.php
+
+clone-upgrade-instance:
+  <<: *template-tiki-manager-commands
+  variables:
+    TEST_FILE: CloneAndUpgradeCommandTest.php

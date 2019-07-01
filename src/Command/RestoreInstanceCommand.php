@@ -30,45 +30,47 @@ class RestoreInstanceCommand extends Command
         $restorableInstancesInfo = CommandHelper::getInstancesInfo($restorableInstances);
 
         if (isset($instancesInfo) && isset($restorableInstancesInfo)) {
-            $output->writeln('<comment>NOTE: It is only possible to restore a backup on a blank install.</comment>');
-            $output->writeln('<comment>WARNING: If you are restoring to the same server, this can lead to</comment>');
-            $output->writeln('<comment>data corruption as both the original and restored Tiki are using the</comment>');
-            $output->writeln('<comment>same folder for storage.</comment>');
+            $io->note('It is only possible to restore a backup on a blank install.');
+            $io->warning('If you are restoring to the same server, this can lead to ' .
+                         'data corruption as both the original and restored Tiki are using the ' .
+                         'same folder for storage.');
 
             $io->newLine();
-            $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $helper = $this->getHelper('question');
-            $question = CommandHelper::getQuestion('Which instance(s) do you want to restore to', null, '?');
-            $question->setValidator(function ($answer) use ($instances) {
-                return CommandHelper::validateInstanceSelection($answer, $instances);
-            });
+            $selectedInstances = $io->ask(
+                'Which instance(s) do you want to restore to?',
+                null,
+                function ($answer) use ($instances) {
+                    return CommandHelper::validateInstanceSelection($answer, $instances);
+                }
+            );
 
-            $selectedInstances = $helper->ask($input, $output, $question);
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Instance to restore to: ' . $instance->name . '</>');
 
                 $io->newLine();
-                $renderResult = CommandHelper::renderInstancesTable($output, $restorableInstancesInfo);
+                CommandHelper::renderInstancesTable($output, $restorableInstancesInfo);
 
-                $question = CommandHelper::getQuestion('Which instance do you want to restore from', null, '?');
-                $question->setValidator(function ($answer) use ($restorableInstances) {
-                    return CommandHelper::validateInstanceSelection($answer, $restorableInstances);
-                });
-                $selectedRestorableInstances = $helper->ask($input, $output, $question);
+                $selectedRestorableInstances = $io->ask(
+                    'Which instance do you want to restore from?',
+                    null,
+                    function ($answer) use ($restorableInstances) {
+                        return CommandHelper::validateInstanceSelection($answer, $restorableInstances);
+                    }
+                );
                 $restorableInstance = reset($selectedRestorableInstances);
 
                 $files = $restorableInstance->getArchives();
                 foreach ($files as $key => $path) {
-                    $output->writeln('[' . $key .'] ' . basename($path));
+                    $output->writeln('[' . $key . '] ' . basename($path));
                 }
 
-                $question = CommandHelper::getQuestion('Which backup do you want to restore', null, '?');
-                $selectedArchive = $helper->ask($input, $output, $question);
+                $selectedArchive = $io->ask('Which backup do you want to restore?');
                 $selection = getEntries($files, $selectedArchive);
 
-                if (! $file = reset($selection)) {
+                if (!$file = reset($selection)) {
                     $output->writeln('<comment>Skip: No archive file selected.</comment>');
                     continue;
                 }
@@ -86,5 +88,7 @@ class RestoreInstanceCommand extends Command
         } else {
             $output->writeln('<comment>No instances available to restore to/from.</comment>');
         }
+
+        return 0;
     }
 }

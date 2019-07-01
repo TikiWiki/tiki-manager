@@ -111,6 +111,7 @@ class Backup
         info('Creating database dump');
         $this->createDatabaseDump($this->app, $backupDir);
 
+        $result = '';
         if (!$skipArchive) {
             info('Creating archive');
             $result = $this->createArchive($this->archiveDir, $backupDir);

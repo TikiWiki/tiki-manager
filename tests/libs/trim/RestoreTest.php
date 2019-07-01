@@ -1,6 +1,11 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use TikiManager\Application\Restore;
 
+/**
+ * Class RestoreTest
+ * @group unit
+ */
 class RestoreTest extends TestCase
 {
     public function getBackupPath()
@@ -10,7 +15,7 @@ class RestoreTest extends TestCase
 
     public function testGetFolderNameFromArchive()
     {
-        $archivePath =  $this->getBackupPath();
+         $archivePath =  $this->getBackupPath();
         $result = Restore::getFolderNameFromArchive($archivePath);
         $this->assertEquals('1-tikiwiki', $result);
     }

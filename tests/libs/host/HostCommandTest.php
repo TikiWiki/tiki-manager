@@ -4,6 +4,10 @@ use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\Host\Exception\CommandException;
 
+/**
+ * Class HostCommandTest
+ * @group unit-ssh
+ */
 class HostCommandTest extends TestCase
 {
     public function testCreateCommand()
@@ -48,12 +52,12 @@ class HostCommandTest extends TestCase
     public function testPassStdoutAsString()
     {
         $command = new Command('head', array('-n1'), 'TikiWiki');
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-        );
+        $pipes = [];
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -76,12 +80,12 @@ class HostCommandTest extends TestCase
     public function testStdoutAsResource()
     {
         $command = new Command('head', array('-n1'), 'TikiWiki');
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-        );
+        $pipes = [];
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -197,12 +201,12 @@ class HostCommandTest extends TestCase
     public function testResourcesAreCleanedOnFinish()
     {
         $command = new Command('head', array('-n1'), 'TikiWiki');
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-        );
+        $pipes = [];
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -230,12 +234,12 @@ class HostCommandTest extends TestCase
     public function testResourcesAreCleanedOnDestruct()
     {
         $command = new Command('head', array('-n1'), 'TikiWiki');
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-        );
+        $pipes = [];
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);
@@ -264,12 +268,12 @@ class HostCommandTest extends TestCase
     public function testRunAlreadyProcessedCommandThrowsError()
     {
         $command = new Command('head', array('-n1'), 'TikiWiki');
-        $pipes = array();
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w"),
-        );
+        $pipes = [];
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
 
         $commandLine = $command->getFullCommand();
         $process = proc_open($commandLine, $descriptorspec, $pipes);

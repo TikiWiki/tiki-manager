@@ -4,18 +4,31 @@ use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\Host\SSH;
 
+/**
+ * Class SSH_HostCommonTest
+ * @group unit-ssh
+ */
 abstract class SSH_HostCommonTest extends TestCase
 {
-    const TARGET_HOST = '192.168.56.101';
-    const TARGET_USER = 'root';
-    const TARGET_PORT = 22;
+    protected static $sshHost;
+    protected static $sshUser;
+    protected static $sshPass;
+    protected static $sshPort;
+
+    public static function setUpBeforeClass()
+    {
+        self::$sshHost = $_ENV['TEST_SSH_HOST'];
+        self::$sshUser = $_ENV['TEST_SSH_USER'];
+        self::$sshPass = $_ENV['TEST_SSH_PASS'];
+        self::$sshPort = $_ENV['TEST_SSH_HOST'] ?? '22';
+    }
 
     public function getInstance()
     {
         return new SSH(
-            self::TARGET_HOST,
-            self::TARGET_USER,
-            self::TARGET_PORT
+            self::$sshHost,
+            self::$sshUser,
+            self::$sshPort
         );
     }
 
@@ -91,7 +104,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $return = $command->getReturn();
 
         $this->assertEmpty($stderr);
-        $this->assertEquals('Hello World ' . self::TARGET_USER, $stdout);
+        $this->assertEquals('Hello World ' . self::$sshUser, $stdout);
         $this->assertEquals(0, $return);
     }
 
@@ -108,7 +121,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $return = $command->getReturn();
 
         $this->assertEmpty($stderr);
-        $this->assertEquals('Hello World ' . self::TARGET_USER, $stdout);
+        $this->assertEquals('Hello World ' . self::$sshUser, $stdout);
         $this->assertEquals(0, $return);
     }
 
@@ -121,7 +134,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $command->run($host);
 
         $this->assertEquals(0, $command->getReturn(), 'Command should exit 0');
-        $this->assertEquals(self::TARGET_HOST, $command->getStdoutContent());
+        $this->assertEquals(self::$sshHost, $command->getStdoutContent());
         $this->assertEmpty($command->getStderrContent());
     }
 
@@ -178,7 +191,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $commands = ['echo "$TEST1 $TEST2 $USER";'];
         $output = $host->runCommands($commands, true);
 
-        $expected = 'Hello World ' . self::TARGET_USER;
+        $expected = 'Hello World ' . self::$sshUser;
         $this->assertEquals($expected, $output);
     }
 
@@ -191,7 +204,7 @@ abstract class SSH_HostCommonTest extends TestCase
         $commands = ['echo "$TEST1 $TEST2 $USER" | tr "[:upper:]" "[:lower:]"'];
         $output = $host->runCommands($commands, true);
 
-        $expected = 'hello world ' . strtolower(self::TARGET_USER);
+        $expected = 'hello world ' . strtolower(self::$sshUser);
         $this->assertEquals($expected, $output);
     }
 

@@ -56,7 +56,7 @@ class Tiki extends Application
             $localName = $access->downloadFile($remoteFile);
             $access->deleteFile($remoteFile);
 
-            `zcat $localName > '$target'`;
+            `cat $localName | gzip -d > '$target'`;
             unlink($localName);
         } else {
             $data = $access->runPHP(
@@ -231,7 +231,7 @@ class Tiki extends Application
 
         foreach (explode("\n", $out) as $line) {
             $line = trim($line);
-            if (empty($line)) {
+            if (empty($line) || $this->checkFileLocationOutput($line)) {
                 continue;
             }
 
@@ -243,6 +243,24 @@ class Tiki extends Application
         }
 
         return $folders;
+    }
+
+    /**
+     * Check output line for unwanted messages
+     * so they are not treated as locations
+     *
+     * @param $line
+     * @return bool
+     */
+    public function checkFileLocationOutput($line)
+    {
+        $result = false;
+
+        if (strpos($line, '[Warning]') !== false) {
+            $result = true;
+        }
+
+        return $result;
     }
 
     /**
@@ -387,7 +405,6 @@ class Tiki extends Application
 
     public function performActualUpdate(Version $version)
     {
-
         $access = $this->instance->getBestAccess('scripting');
         $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
         $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';

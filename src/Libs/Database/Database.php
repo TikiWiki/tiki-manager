@@ -107,16 +107,7 @@ class Database
             return null;
         }
 
-        $config = call_user_func(function ($localFile) {
-            include($localFile);
-            return array(
-                'type' => $db_tiki,
-                'host' => $host_tiki,
-                'user' => $user_tiki,
-                'pass' => $pass_tiki,
-                'dbname' => $dbs_tiki,
-            );
-        }, $db_local_path);
+        $config = self::getInstanceDataBaseConfig($db_local_path);
 
         $db = new self($instance);
         $db->host = $config['host'];
@@ -285,6 +276,22 @@ class Database
         );
         $result = $this->query($sql);
         return trim($result) === $user;
+    }
+
+    public static function getInstanceDataBaseConfig($db_local_path)
+    {
+        $getConfig = function ($db_local_path) {
+            include($db_local_path);
+            return array(
+                'type' => $db_tiki,
+                'host' => $host_tiki,
+                'user' => $user_tiki,
+                'pass' => $pass_tiki,
+                'dbname' => $dbs_tiki,
+            );
+        };
+
+        return $getConfig($db_local_path);
     }
 }
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
