@@ -163,15 +163,18 @@ class CreateInstanceCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $nonInteractive = $this->isNonInteractive($input, $output);
+        try {
+            $nonInteractive = $this->isNonInteractive($input, $output);
+        } catch (\Exception $e) {
+            $io->error($e->getMessage());
+            return 1;
+        }
 
         if (!empty($nonInteractive)) {
             $instance = $nonInteractive['instance'];
             $discovery = $nonInteractive['discovery'];
             $access = $nonInteractive['access'];
             self::$nonInteractive = true;
-        } elseif ($nonInteractive === false) {
-            return 0;
         }
 
         $errors = [];
@@ -397,6 +400,10 @@ class CreateInstanceCommand extends Command
         $listInstanceTypes = $this->getInstanceType();
         $listInstanceTypeKeys = array_keys($listInstanceTypes);
 
+        if ($input->getOption('blank')) {
+            $input->setOption('branch', 'blank');
+        }
+
         $type = $input->getOption('type');
         $weburl = $input->getOption('url');
         $name = $input->getOption('name');
@@ -420,31 +427,26 @@ class CreateInstanceCommand extends Command
             && !empty($backupPerm)
         ) {
             if (!in_array($type, $listInstanceTypes) || !in_array($type, $listInstanceTypeKeys)) {
-                $io->error('Instance type invalid.');
-                return false;
+                throw new \InvalidArgumentException('Instance type invalid.');
             }
 
             if (filter_var($weburl, FILTER_VALIDATE_URL) === false) {
-                $io->error('Instance web url invalid.');
-                return false;
+                throw new \InvalidArgumentException('Instance web url invalid.');
             }
 
             if (filter_var($contact, FILTER_VALIDATE_EMAIL) === false) {
-                $io->error('Please insert a valid email address.');
-                return false;
+                throw new \InvalidArgumentException('Please insert a valid email address.');
             }
 
             if ($fs->exists($webroot)) {
                 $isInstalled = $fs->exists($webroot . DIRECTORY_SEPARATOR . 'tiki-setup.php');
                 if ($isInstalled) {
-                    $io->error('Unable to install. An application was detected in this instance.');
-                    return false;
+                    throw new \InvalidArgumentException('Unable to install. An application was detected in this instance.');
                 }
             }
 
             if (!is_numeric($backupPerm)) {
-                $io->error('Backup file permissions is not numeric.');
-                return false;
+                throw new \InvalidArgumentException('Backup file permissions is not numeric.');
             }
 
             if ($type != 'local') {
@@ -454,8 +456,7 @@ class CreateInstanceCommand extends Command
                 $rpass = $input->getOption('pass');
 
                 if (empty($rhost) || !is_numeric($rport) || empty($ruser) || empty($rpass)) {
-                    $io->error('Remote server credentials are missing.');
-                    return false;
+                    throw new \InvalidArgumentException('Remote server credentials are missing.');
                 }
             }
 
@@ -498,8 +499,7 @@ class CreateInstanceCommand extends Command
                 $command->run();
 
                 if (empty($command->getStdoutContent())) {
-                    $io->error('Unable to create directory [' . $webroot . ']');
-                    return false;
+                    throw new \RuntimeException('Unable to create directory [' . $webroot . ']');
                 }
             }
 
@@ -524,8 +524,7 @@ class CreateInstanceCommand extends Command
             }
 
             if (empty($branch)) {
-                $io->error('Version value "' . $version . '" is invalid.');
-                return false;
+                throw new \InvalidArgumentException('Version value "' . $version . '" is invalid.');
             }
 
             $instance->selection = $branch;
@@ -541,13 +540,11 @@ class CreateInstanceCommand extends Command
                     || empty($dbPass)
                     || empty($dbprefix)
                 ) {
-                    $io->error('Database credentials are missing.');
-                    return false;
+                    throw new \InvalidArgumentException('Database credentials are missing.');
                 }
 
                 if (strlen($dbprefix) > 27) {
-                    $io->error('Prefix is a string with maximum of 27 chars');
-                    return false;
+                    throw new \InvalidArgumentException('Prefix is a string with maximum of 27 chars');
                 }
 
                 $credentials['host'] = $dbHost;
@@ -565,8 +562,7 @@ class CreateInstanceCommand extends Command
 
                 $valid = $dbRoot->testConnection();
                 if (!$valid) {
-                    $io->error('Can\'t connect to database server!');
-                    return false;
+                    throw new \RuntimeException('Can\'t connect to database server!');
                 }
 
                 if ($credentials['create'] && $dbUser = $dbRoot->createAccess($credentials['user'], $dbname)) {

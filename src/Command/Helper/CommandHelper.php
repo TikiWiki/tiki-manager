@@ -36,7 +36,7 @@ class CommandHelper
     {
         $instancesInfo = null;
 
-        if (! empty($instances)) {
+        if (!empty($instances)) {
             foreach ($instances as $key => $instance) {
                 $instancesInfo[] = [
                     $instance->id,
@@ -253,7 +253,7 @@ class CommandHelper
             );
         }
 
-        if (! preg_match('/\d{1,2}:\d{1,2}/', $answer)) {
+        if (!preg_match('/\d{1,2}:\d{1,2}/', $answer)) {
             throw new \RuntimeException(
                 'Invalid time format. Please provide a value in the format <hours>:<minutes>'
             );
@@ -261,13 +261,13 @@ class CommandHelper
 
         list($hour, $minutes) = explode(':', $answer);
 
-        if (! in_array($hour, range(0, 23))) {
+        if (!in_array($hour, range(0, 23))) {
             throw new \RuntimeException(
                 'Invalid hour.'
             );
         }
 
-        if (! in_array($minutes, range(0, 59))) {
+        if (!in_array($minutes, range(0, 59))) {
             throw new \RuntimeException(
                 'Invalid minutes.'
             );
@@ -387,8 +387,12 @@ class CommandHelper
      * @param boolean $nonInteractive
      * @return bool
      */
-    public static function performInstall(Instance $instance, InputInterface $input, OutputInterface $output, $nonInteractive = false)
-    {
+    public static function performInstall(
+        Instance $instance,
+        InputInterface $input,
+        OutputInterface $output,
+        $nonInteractive = false
+    ) {
 
         $io = new SymfonyStyle($input, $output);
 
@@ -403,7 +407,7 @@ class CommandHelper
         /** @var Application $app */
         $app = reset($selection);
 
-        if (! $nonInteractive) {
+        if (!$nonInteractive) {
             $io->writeln('Fetching compatible versions. Please wait...');
             $io->note([
                 "If some versions are not offered, it's likely because the host",
@@ -450,8 +454,12 @@ class CommandHelper
      * @param boolean $nonInteractive
      * @return Database|null
      */
-    public static function setupDatabaseConnection(Instance $instance, InputInterface $input, OutputInterface $output, $nonInteractive = false)
-    {
+    public static function setupDatabaseConnection(
+        Instance $instance,
+        InputInterface $input,
+        OutputInterface $output,
+        $nonInteractive = false
+    ) {
 
         $dbUser = null;
         $io = new SymfonyStyle($input, $output);
@@ -483,11 +491,20 @@ class CommandHelper
             $dbUser->type = reset($types);
         } else {
             $valid = false;
+
+            if ($instance->type == 'local') {
+                if (isset($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'])) {
+                    $dbRoot->host = $_ENV['DB_HOST'];
+                    $dbRoot->user = $_ENV['DB_USER'];
+                    $dbRoot->pass = $_ENV['DB_PASS'];
+                    $valid = $dbRoot->testConnection();
+                }
+            }
+
             while (!$valid) {
                 $dbRoot->host = $io->ask('Database host', $dbRoot->host ?: 'localhost');
                 $dbRoot->user = $io->ask('Database user', $dbRoot->user ?: 'root');
                 $dbRoot->pass = $io->askHidden('Database password');
-
                 $valid = $dbRoot->testConnection();
             }
 
@@ -571,7 +588,7 @@ class CommandHelper
     public static function getVersions($vcsType = '')
     {
         $instance = new Instance();
-        if (! empty($vcsType)) {
+        if (!empty($vcsType)) {
             $instance->vcs_type = $vcsType;
         }
         $instance->phpversion = 50500;
@@ -591,7 +608,7 @@ class CommandHelper
     {
         $versionsInfo = null;
 
-        if (! empty($versions)) {
+        if (!empty($versions)) {
             foreach ($versions as $version) {
                 $versionsInfo[] = [
                     $version->type,
@@ -638,6 +655,6 @@ class CommandHelper
         if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
             $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
         }
-        $io->writeln('<info>PHP Version: ' . $phpVersion  . '</info>');
+        $io->writeln('<info>PHP Version: ' . $phpVersion . '</info>');
     }
 }

@@ -288,6 +288,10 @@ SQL;
         return $noTikiInstances;
     }
 
+    /**
+     * @param $id
+     * @return Instance
+     */
     public static function getInstance($id)
     {
         $result = query(self::SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);

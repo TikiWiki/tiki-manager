@@ -10,3 +10,4 @@ tmp/
 # Ignore IDE/Editor files
 .idea/
 .vscode/
+.env

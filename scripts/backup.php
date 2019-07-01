@@ -9,7 +9,6 @@ use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Helpers\Archive;
 
 include_once dirname(__FILE__) . '/../src/env_setup.php';
-include_once dirname(__FILE__) . '/../src/clean.php';
 
 $instances = Instance::getInstances(true);
 

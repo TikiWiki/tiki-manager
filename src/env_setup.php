@@ -4,11 +4,16 @@
 // All Rights Reserved. See copyright.txt for details and a complete list of authors.
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 
+use Symfony\Component\Dotenv\Dotenv;
 use TikiManager\Libs\Helpers\PDOWrapper;
 use TikiManager\Libs\Requirements\Requirements;
 
-require_once dirname(__FILE__) . '/env_includes.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
+$dotenv = new Dotenv();
+$dotenv->loadEnv(__DIR__.'/../.env');
+
+require_once dirname(__FILE__) . '/env_includes.php';
 
 debug('Running Tiki Manager at ' . TRIM_ROOT);
 
