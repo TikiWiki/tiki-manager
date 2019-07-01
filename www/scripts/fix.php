@@ -15,7 +15,6 @@ $authFile = dirname(__FILE__) . "/../config.php";
 ob_start();
 require $authFile;
 require TRIMPATH . '/src/env_setup.php';
-require TRIMPATH . '/src/check.php';
 ob_end_clean();
 
 ob_implicit_flush(true);
