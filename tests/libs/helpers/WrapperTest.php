@@ -3,6 +3,10 @@ use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Helpers\Wrapper;
 use TikiManager\Libs\Host\Command;
 
+/**
+ * Class WrapperTest
+ * @group unit
+ */
 class WrapperTest extends TestCase
 {
     public function testWrapperPassProperties()

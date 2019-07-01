@@ -3,6 +3,10 @@ use PHPUnit\Framework\TestCase;
 use TikiManager\Access\Local;
 use TikiManager\Application\Instance;
 
+/**
+ * Class AccessLocalTest
+ * @group unit
+ */
 class AccessLocalTest extends TestCase
 {
     public function getAccessInstance()
