@@ -1,6 +1,6 @@
 /*
 ==========================================================================
-TRIM Variables
+Tiki Manager Variables
 ==========================================================================
 */
 /*
@@ -145,6 +145,7 @@ TRIM Main Styles
 .trim-instance-main-list ul li a, .trim-instance-list ul li a {
   font-size: 1.5em;
   text-decoration: none;
+  word-break: break-all;
 }
 .trim-instance-main-list ul li > a, .trim-instance-list ul li > a {
   display: inline-block;
@@ -420,8 +421,21 @@ TRIM Responsiveness
     margin: 10px;
   }
 
+  .trim-instance-main-list ul li {
+    padding: 10px 20px 40px;
+  }
+  .trim-instance-main-list ul li .contact {
+    bottom: 5px;
+  }
+  .trim-instance-main-list ul li .contact .right {
+    float: left;
+  }
+
   .trim-instance-list ul li .buttons {
     padding-top: 10px;
+  }
+  .trim-instance-list ul li .url {
+    width: 85%;
   }
 
   .trim-instance-view h2 {

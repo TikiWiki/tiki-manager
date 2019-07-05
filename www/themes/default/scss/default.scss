@@ -111,7 +111,7 @@ TRIM Main Styles
         li {
             position:relative; margin:15px 0; padding:20px;
             border:1px solid #ddd; text-align:left; cursor:pointer;
-            a { font-size:1.5em; text-decoration:none; }
+            a { font-size:1.5em; text-decoration:none; word-break:break-all; }
             > a { display:inline-block; width:100%; padding:20px; }
             span { font-size:0.75em; color:#888; }
             &:hover { background-color:#eee; }
@@ -292,9 +292,22 @@ TRIM Responsiveness
         }
         .new, .blank { margin:10px; }
     }
+
+    .trim-instance-main-list {
+        ul li {
+            padding:10px 20px 40px;
+            .contact {
+                bottom: 5px;
+                .right { float:left; }
+            }
+        }
+    }
+
     .trim-instance-list {
         ul li .buttons { padding-top:10px; }
+        ul li .url { width:85%; }
     }
+
     .trim-instance-view {
         h2 { display:block; margin-top:0; }
         .bottom-nav {
