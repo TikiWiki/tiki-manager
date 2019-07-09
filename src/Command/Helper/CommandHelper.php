@@ -657,4 +657,70 @@ class CommandHelper
         }
         $io->writeln('<info>PHP Version: ' . $phpVersion . '</info>');
     }
+
+    /**
+     * Send email notification
+     *
+     * @param $to
+     * @param string $from
+     * @param string $subject
+     * @param string $message
+     * @return mixed
+     */
+    public static function sendMailNotification($to, $subject, $message, $from = null)
+    {
+        $smtpHost = getenv('SMTP_HOST') ?? null;
+        $smtpPort = getenv('SMTP_PORT') ?? null;
+        $smtpUser = getenv('SMTP_USER') ?? null;
+        $smtpPass = getenv('SMTP_PASS') ?? null;
+
+        // Create the Transport
+        if (!empty($smtpHost) && $smtpPort) {
+            $transport = (new \Swift_SmtpTransport($smtpHost, $smtpPort))
+                ->setUsername($smtpUser)
+                ->setPassword($smtpPass)
+            ;
+        } else {
+            $transport = new \Swift_SendmailTransport();
+        }
+
+        // Create the Mailer using your created Transport
+        $mailer = new \Swift_Mailer($transport);
+
+        // Create a message
+        $message = (new \Swift_Message($subject))
+            ->setTo(is_array($to) ? $to : [$to])
+            ->setBody($message)
+        ;
+
+        if (empty($from)) {
+            $from = getenv('FROM_EMAIL_ADDRESS');
+        }
+
+        if ($from === false && $transport instanceof \Swift_SmtpTransport) {
+            throw new \RuntimeException('Unable to determine FROM_EMAIL_ADDRESS required to send emails using SMTP. Please check README.md file.');
+        }
+
+        if ($from) {
+            $message->setFrom($from);
+        }
+
+        // Send the message
+        $result = $mailer->send($message);
+
+        return $result;
+    }
+
+    public static function validateEmailInput($value)
+    {
+        if (!empty($value)) {
+            array_walk(explode(',', $value), function ($emailAddr) {
+                if (!filter_var($emailAddr, FILTER_VALIDATE_EMAIL)) {
+                    throw new \RuntimeException(sprintf("Email address '%s' is not valid!", $emailAddr));
+                }
+            });
+        }
+
+        return $value;
+    }
 }

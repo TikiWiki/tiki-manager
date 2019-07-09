@@ -43,10 +43,10 @@ class WatchInstanceCommand extends Command
 
         $helper = $this->getHelper('question');
         $email = $input->getOption('email');
-        if (empty($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $question = CommandHelper::getQuestion('Email address to contact');
             $question->setValidator(function ($value) {
-                if (! filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
                     throw new \RuntimeException('Please insert a valid email address.');
                 }
                 return $value;
@@ -64,7 +64,7 @@ class WatchInstanceCommand extends Command
 
             $answer = $io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
-                if (! empty($answer)) {
+                if (!empty($answer)) {
                     $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
                     $excludeInstance = implode(',', CommandHelper::getInstanceIds($selectedInstances));
                 }
@@ -81,17 +81,16 @@ class WatchInstanceCommand extends Command
 
         $email = $input->getOption('email');
 
-        if (empty($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidOptionException('Email cannot be empty');
         }
 
         $excludedInstances = $input->getOption('exclude');
-        $noInteraction = $input->getOption('no-interaction');
 
         $log = '';
         $instances = CommandHelper::getInstances('update');
 
-        if (! empty($excludedInstances)) {
+        if (!empty($excludedInstances)) {
             $instancesToExclude = explode(',', $excludedInstances);
 
             foreach ($instances as $key => $instance) {
@@ -104,7 +103,7 @@ class WatchInstanceCommand extends Command
         foreach ($instances as $instance) {
             $version = $instance->getLatestVersion();
 
-            if (! $version) {
+            if (!$version) {
                 continue;
             }
 
@@ -113,17 +112,17 @@ class WatchInstanceCommand extends Command
             $tikiRevision = $instance->getRevision();
 
             if (empty($versionRevision)) {
-                $log .= 'No revision detected for ' . $instance->name . '\n';
+                $log .= 'No revision detected for ' . $instance->name . PHP_EOL;
                 $versionError = true;
             } elseif ($versionRevision != $tikiRevision) {
-                $log .= 'Check ' . $instance->name . ' version conflict\n';
-                $log .= 'Expected revision ' . $versionRevision . ', found revision ' . $tikiRevision . ' on instance.\n';
+                $log .= 'Check ' . $instance->name . ' version conflict' . PHP_EOL;
+                $log .= 'Expected revision ' . $versionRevision . ', found revision ' . $tikiRevision . ' on instance.' . PHP_EOL;
                 $versionError = true;
             }
 
             if ($versionError) {
                 $log .= 'Fix this error with Tiki Manager by running "tiki-manager instance:check" and choose instance "' . $instance->id . '.';
-                $log .= '\n\n';
+                $log .= PHP_EOL . PHP_EOL;
 
                 continue;
             }
@@ -132,32 +131,39 @@ class WatchInstanceCommand extends Command
                 $result = $version->performCheck($instance);
 
                 if (count($result['new']) || count($result['mod']) || count($result['del'])) {
-                    $log .= $instance->name . ' (' . $instance->weburl . ')\n';
+                    $log .= $instance->name . ' (' . $instance->weburl . ')' . PHP_EOL;
 
                     foreach ($result['new'] as $file => $hash) {
-                        $log .= '+ ' . $file . '\n';
+                        $log .= '+ ' . $file . PHP_EOL;
                     }
                     foreach ($result['mod'] as $file => $hash) {
-                        $log .= 'o ' . $file . '\n';
+                        $log .= 'o ' . $file . PHP_EOL;
                     }
                     foreach ($result['del'] as $file => $hash) {
-                        $log .= '- ' . $file . '\n';
+                        $log .= '- ' . $file . PHP_EOL;
                     }
 
-                    $log .= '\n\n';
+                    $log .= PHP_EOL . PHP_EOL;
                 }
             }
         }
 
-        if (! empty($log)) {
-            $mailSent = mail($email, '[Tiki-Manager] Potential intrusions detected.', $log);
-            if (! $noInteraction) {
-                if ($mailSent) {
-                    $io->note('Email sent, please check your inbox.');
-                } else {
-                    $io->error('Something went wrong when sending email, please check email configurations.');
-                }
-            }
+        if (empty($log)) {
+            return 0;
         }
+
+        try {
+            if (!CommandHelper::sendMailNotification($email, '[Tiki-Manager] Potential intrusions detected', $log)) {
+                $io->error('Something went wrong when sending email, please check email configurations.');
+                return 1;
+            }
+        } catch (\RuntimeException $e) {
+            debug($e->getMessage());
+            $io->error($e->getMessage());
+            return 1;
+        }
+
+        $io->success('Email sent, please check your inbox.');
+        return 0;
     }
 }
