@@ -9,12 +9,12 @@ namespace TikiManager\Tests\Command;
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Process\Process;
 use TikiManager\Command\RestoreInstanceCommand;
 use TikiManager\Application\Instance;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Libs\Database\Database;
 use PHPUnit\Framework\TestCase;
-use DBDiff;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
 /**
@@ -114,16 +114,17 @@ class RestoreInstanceCommandTest extends TestCase
             $trunkConfig = Database::getInstanceDataBaseConfig(self::$dbLocalFileTrunk);
             $blankToTrunkConfig = Database::getInstanceDataBaseConfig(self::$dbLocalFileBlankToTrunk);
 
-            $host = $_ENV['DB_HOST']; // DB Host
-            $user = $_ENV['DB_USER']; // DB Root User
-            $pass = $_ENV['DB_PASS']; // DB Root Password
-            $port = $_ENV['DB_PORT'] ?? '3306';
+            $host = getenv('DB_HOST'); // DB Host
+            $user = getenv('DB_USER'); // DB Root User
+            $pass = getenv('DB_PASS'); // DB Root Password
+            $port = getenv('DB_PORT') ?? '3306';
 
             $db1 = $trunkConfig['dbname'];
             $db2 = $blankToTrunkConfig['dbname'];
 
-            $GLOBALS['argv'] = [
-                "",
+            // This command cannot be changed due to dbdiff require autoload path
+           $command = [
+               "vendor/dbdiff/dbdiff/dbdiff",
                 "--server1=$user:$pass@$host:$port",
                 "--type=data",
                 "--include=all", // no UP or DOWN will be used
@@ -131,12 +132,12 @@ class RestoreInstanceCommandTest extends TestCase
                 "server1.$db1:server1.$db2"
             ];
 
-            ob_start();
-            $dbdiff = new DBDiff\DBDiff;
-            $dbdiff->run();
-            $output = ob_get_contents();
-            ob_end_clean();
+            $process = new Process($command, TRIM_ROOT . '/vendor-bin/dbdiff');
+            $process->setTimeout(0);
+            $process->run();
 
+            $this->assertEquals(0, $process->getExitCode());
+            $output = $process->getOutput();
             $this->assertContains('Identical resources', $output);
             $this->assertContains('Completed', $output);
         }

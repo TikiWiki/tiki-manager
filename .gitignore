@@ -5,8 +5,15 @@ cache/
 data/
 logs/
 tmp/
+
+# Ignore packaging directories
+build/
+
 # Ignore vendor folders, they are managed by composer
 /vendor/
+/vendor-bin/**/vendor
+/vendor-bin/**/composer.lock
+
 # Ignore IDE/Editor files
 .idea/
 .vscode/

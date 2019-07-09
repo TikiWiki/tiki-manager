@@ -1,5 +1,23 @@
 <?php
-define('TRIM_ROOT', realpath(dirname(__DIR__)));
+$pharPath = Phar::running(false);
+define('TRIM_ROOT', realpath(dirname((isset($pharPath) && !empty($pharPath)) ? $pharPath : __DIR__)));
+define('IS_PHAR', (isset($pharPath) && !empty($pharPath)));
+define('EXECUTABLE_SCRIPT', [
+    'scripts/checkversion.php',
+    'scripts/package_tar.php',
+    'scripts/extract_tar.php',
+    'scripts/get_extensions.php',
+    'scripts/tiki/backup_database.php',
+    'scripts/tiki/get_directory_list.php',
+    'scripts/tiki/remote_install_profile.php',
+    'scripts/tiki/sqlupgrade.php',
+    'scripts/tiki/run_sql_file.php',
+    'scripts/tiki/tiki_dbinstall_ftp.php',
+    'scripts/tiki/remote_setup_channels.php',
+    'scripts/tiki/mysqldump.php',
+    'scripts/maintenance.htaccess'
+]);
+define('ROOT_PATH', __DIR__);
 define('TRIM_DEBUG', getenv('TRIM_DEBUG') === 'true');
 define('TRIM_LOGS', TRIM_ROOT . "/logs");
 define('TRIM_OUTPUT', TRIM_LOGS . "/trim.output");
@@ -8,6 +26,7 @@ define('CACHE_FOLDER', TRIM_ROOT . "/cache");
 define('TEMP_FOLDER', TRIM_ROOT . "/tmp");
 define('RSYNC_FOLDER', TRIM_ROOT . "/tmp/rsync");
 define('MOUNT_FOLDER', TRIM_ROOT . "/tmp/mount");
+define('SCRIPTS_FOLDER', TRIM_ROOT . "/scripts");
 define('BACKUP_FOLDER', TRIM_ROOT . "/backup");
 define('ARCHIVE_FOLDER', TRIM_ROOT . "/backup/archive");
 

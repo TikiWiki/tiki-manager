@@ -13,7 +13,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__.'/../.env');
 
-require_once dirname(__FILE__) . '/env_includes.php';
+require_once __DIR__ . '/env_includes.php';
 
 debug('Running Tiki Manager at ' . TRIM_ROOT);
 
@@ -21,6 +21,32 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     define('TRIM_TEMP', getenv('TEMP')."\\trim_temp");
 } else {
     define('TRIM_TEMP', '/tmp/trim_temp');
+}
+
+//CREATE FOLDERS
+if (! file_exists(CACHE_FOLDER)) {
+    mkdir(CACHE_FOLDER);
+}
+if (! file_exists(TEMP_FOLDER)) {
+    mkdir(TEMP_FOLDER);
+}
+if (! file_exists(RSYNC_FOLDER)) {
+    mkdir(RSYNC_FOLDER);
+}
+if (! file_exists(MOUNT_FOLDER)) {
+    mkdir(MOUNT_FOLDER);
+}
+if (! file_exists(BACKUP_FOLDER)) {
+    mkdir(BACKUP_FOLDER);
+}
+if (! file_exists(ARCHIVE_FOLDER)) {
+    mkdir(ARCHIVE_FOLDER);
+}
+if (! file_exists(TRIM_LOGS)) {
+    mkdir(TRIM_LOGS);
+}
+if (! file_exists(TRIM_DATA)) {
+    mkdir(TRIM_DATA);
 }
 
 if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
@@ -79,26 +105,21 @@ if (! file_exists(SSH_KEY) || ! file_exists(SSH_PUBLIC_KEY)) {
     `ssh-keygen -t rsa -f $key`;
 }
 
-if (! file_exists(CACHE_FOLDER)) {
-    mkdir(CACHE_FOLDER);
+
+if (IS_PHAR) {
+    setupPhar();
 }
-if (! file_exists(TEMP_FOLDER)) {
-    mkdir(TEMP_FOLDER);
-}
-if (! file_exists(RSYNC_FOLDER)) {
-    mkdir(RSYNC_FOLDER);
-}
-if (! file_exists(MOUNT_FOLDER)) {
-    mkdir(MOUNT_FOLDER);
-}
-if (! file_exists(BACKUP_FOLDER)) {
-    mkdir(BACKUP_FOLDER);
-}
-if (! file_exists(ARCHIVE_FOLDER)) {
-    mkdir(ARCHIVE_FOLDER);
-}
-if (! file_exists(TRIM_LOGS)) {
-    mkdir(TRIM_LOGS);
+
+function setupPhar()
+{
+    $pharPath = Phar::running(false);
+
+    $phar = new Phar($pharPath);
+    //extract scripts
+    if (!file_exists(SCRIPTS_FOLDER)) {
+        mkdir(SCRIPTS_FOLDER);
+    }
+    $result = $phar->extractTo(TRIM_ROOT, EXECUTABLE_SCRIPT, true);
 }
 
 function trim_output($output)
@@ -400,7 +421,7 @@ function promptUser($prompt, $default = false, $values = [])
             if (in_array($answer, $values)) {
                 return $answer;
             }
-        } elseif (! is_bool($default)) {
+        } elseif (!is_bool($default)) {
             return $answer;
         } elseif (strlen($answer)) {
             return $answer;
