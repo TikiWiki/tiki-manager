@@ -41,6 +41,6 @@ class Configuration
             return;
         }
 
-        $this->configuration = Yaml::parse(CONFIGURATION_FILE_PATH);
+        $this->configuration = Yaml::parseFile(CONFIGURATION_FILE_PATH);
     }
 }

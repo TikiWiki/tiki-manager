@@ -7,11 +7,13 @@ cache:
 variables:
   MYSQL_ROOT_PASSWORD: secret
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
+  COMPOSER_FLAGS: '--ansi --no-progress --prefer-dist -n'
 
 stages:
 - quality
 - unit-tests
 - functional-tests
+- package
 
 
 #
@@ -40,7 +42,7 @@ php-53-scripts:
 phpcs:
   stage: quality
   script:
-    - composer --ansi install --no-progress --prefer-dist -n
+    - composer install $COMPOSER_FLAGS
     - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git log -m -1 --name-only && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
     - git log -m -1 --name-only
     - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
@@ -53,7 +55,7 @@ phpcs-branches:
   variables:
     SBRANCH: "master"
   script:
-    - composer --ansi install --no-progress --prefer-dist -n
+    - composer install $COMPOSER_FLAGS
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git diff --name-status origin/$SBRANCH && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
     - git diff --name-status origin/$SBRANCH
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
@@ -69,10 +71,10 @@ code_quality:
     DOCKER_DRIVER: overlay2
   allow_failure: true
   services:
-  - docker:stable-dind
+    - docker:stable-dind
   script:
-  - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
-  - docker run
+    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+    - docker run
       --env SOURCE_CODE="$PWD"
       --volume "$PWD":/code
       --volume /var/run/docker.sock:/var/run/docker.sock
@@ -92,7 +94,7 @@ unit-tests:
   script:
     - echo 'APP_ENV=gitlab-ci' >> .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
-    - composer --ansi install --no-progress --prefer-dist -n
+    - composer install $COMPOSER_FLAGS
     - ./vendor/bin/phpunit --bootstrap src/env_setup.php tests/ --group unit
   allow_failure: false
 
@@ -109,7 +111,8 @@ unit-tests:
   script:
     - echo 'APP_ENV=gitlab-ci' >> .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
-    - composer --ansi install --no-progress --prefer-dist -n
+    - composer install $COMPOSER_FLAGS
+    - composer bin all install $COMPOSER_FLAGS
     - ./vendor/bin/phpunit --bootstrap src/env_setup.php tests/Command/$TEST_FILE
   allow_failure: false
 
@@ -137,3 +140,23 @@ clone-upgrade-instance:
   <<: *template-tiki-manager-commands
   variables:
     TEST_FILE: CloneAndUpgradeCommandTest.php
+
+#----------------------------------------------------------------------------------------------------------------------#
+# PACKAGE SECTION
+#----------------------------------------------------------------------------------------------------------------------#
+
+phar:
+  stage: package
+  script:
+    - composer install $COMPOSER_FLAGS
+    - composer build-phar
+  allow_failure: false
+  artifacts:
+    name: tiki-manager.phar
+    paths:
+      - build/tiki-manager.phar
+    when: on_success
+  only:
+    refs:
+      - master
+      - tags

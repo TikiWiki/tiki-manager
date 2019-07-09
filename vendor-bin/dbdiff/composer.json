@@ -1,0 +1,5 @@
+{
+    "require-dev": {
+        "dbdiff/dbdiff": "dev-master"
+    }
+}

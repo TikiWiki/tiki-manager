@@ -24,7 +24,7 @@ abstract class Application
     {
         $objects = [];
 
-        $dir = TRIM_ROOT . '/src/Application';
+        $dir = ROOT_PATH . '/Application';
         $files = scandir($dir);
 
         $apps = [];
