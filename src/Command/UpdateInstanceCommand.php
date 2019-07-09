@@ -22,7 +22,8 @@ class UpdateInstanceCommand extends Command
             ->setDescription('Update instance')
             ->setHelp('This command allows you update an instance')
             ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
-            ->addOption('instances',
+            ->addOption(
+                'instances',
                 null,
                 InputOption::VALUE_OPTIONAL,
                 'List of instance IDs to be updated, separated by comma (,)'
@@ -38,6 +39,12 @@ class UpdateInstanceCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Check files checksum after operation has been performed.'
+            )
+            ->addOption(
+                'email',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Email address to notify in case of failure. Use , (comma) to separate multiple email addresses.'
             );
     }
 
@@ -101,7 +108,11 @@ class UpdateInstanceCommand extends Command
 
             $checksumCheck = $input->getOption('check');
 
+            $logs = [];
             foreach ($selectedInstances as $instance) {
+                $log = [];
+                $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
+
                 $access = $instance->getBestAccess('scripting');
                 $discovery = new Discovery($instance, $access);
                 $php_version_output = $discovery->detectPHPVersion();
@@ -195,21 +206,54 @@ class UpdateInstanceCommand extends Command
                 } else {
                     $app_branch = $app->getBranch();
                     if ($app_branch == $branch_name) {
-                        $filesToResolve = $app->performUpdate($instance, null, $checksumCheck);
-                        $version = $instance->getLatestVersion();
+                        try {
+                            $filesToResolve = $app->performUpdate($instance, null, $checksumCheck);
+                            $version = $instance->getLatestVersion();
 
-                        if ($checksumCheck) {
-                            Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                            if ($checksumCheck) {
+                                Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                            }
+                        } catch (\Exception $e) {
+                            $log[] = $e->getMessage() . PHP_EOL;
+                            $log[] = $e->getTraceAsString() . PHP_EOL;
                         }
                     } else {
-                        $io->writeln('<error>Error: Tiki Application branch is different than the one stored in the Tiki Manager db.</error>');
-                        exit(-1);
+                        $message = 'Tiki Application branch is different than the one stored in the Tiki Manager db.';
+                        $log[] = $message;
+                        $io->error($message);
                     }
+                }
+
+                if (count($log) > 1) {
+                    $logs = array_merge($logs, $log);
                 }
 
                 if ($locked) {
                     $instance->unlock();
                 }
+            }
+
+            $emails = $input->getOption('email');
+            $emails = array_filter(explode(',', $emails), function ($email) {
+                return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
+            });
+
+            if (!empty($logs) && !empty($emails)) {
+                $logs = implode(PHP_EOL, $logs);
+                try {
+                    CommandHelper::sendMailNotification(
+                        $emails,
+                        '[Tiki-Manager] ' . $this->getName() . ' report failures',
+                        $logs
+                    );
+                } catch (\RuntimeException $e) {
+                    debug($e->getMessage());
+                    $io->error($e->getMessage());
+                }
+            }
+
+            if (!empty($logs)) {
+                return 1;
             }
         } else {
             $io->writeln('<comment>No instances available to update/upgrade.</comment>');

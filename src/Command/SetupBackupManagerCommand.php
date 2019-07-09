@@ -36,6 +36,12 @@ class SetupBackupManagerCommand extends Command
                 'ex',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs to be excluded, separated by comma (,)'
+            )
+            ->addOption(
+                'email',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Email address to report backup failures (multiple emails must be separated by comma (,)).'
             );
     }
 
@@ -74,12 +80,25 @@ class SetupBackupManagerCommand extends Command
 
             $input->setOption('exclude', $answer);
         }
+
+        $email = $input->getOption('email');
+
+        try {
+            CommandHelper::validateEmailInput($email);
+        } catch (\RuntimeException $e) {
+            $io->error($e->getMessage());
+            $email = null;
+        }
+
+        if (empty($email)) {
+            $email = $io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, CommandHelper::validateEmailInput($value));
+            $input->setOption('email', $email);
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $helper = $this->getHelper('question');
         $time = $input->getOption('time');
         list($hours, $minutes) = CommandHelper::validateTimeInput($time);
         $arguments = 'all --no-interaction';
@@ -87,6 +106,13 @@ class SetupBackupManagerCommand extends Command
 
         if (! empty($excludedInstances)) {
             $arguments .= ' --exclude=' . $excludedInstances;
+        }
+
+        $email = $input->getOption('email');
+        $email = CommandHelper::validateEmailInput($email);
+
+        if (!empty($email)) {
+            $arguments .= ' --email=' . $email;
         }
 
         $backupInstanceCommand = new BackupInstanceCommand();

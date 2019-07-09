@@ -16,6 +16,7 @@
     "symfony/dotenv": "^4.3",
     "symfony/filesystem": "^4.1",
     "symfony/yaml": "^2.8",
+    "swiftmailer/swiftmailer": "^6.2.1",
     "twitter/bootstrap": "^4.1.1"
   },
   "config": {

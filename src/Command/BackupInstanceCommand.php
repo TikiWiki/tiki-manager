@@ -29,6 +29,12 @@ class BackupInstanceCommand extends Command
                 'e',
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
                 'Exclude the backup of specific instance IDs'
+            )
+            ->addOption(
+                'email',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Email addresses to notify for backup failures.'
             );
     }
 
@@ -42,7 +48,7 @@ class BackupInstanceCommand extends Command
             $helper = $this->getHelper('question');
 
             $arguments = $input->getOption('instances');
-            if (! empty($arguments)) {
+            if (!empty($arguments)) {
                 if ($arguments[0] == 'all') {
                     $this->checkForExcludedInstances($instances);
                     $selectedInstances = $instances;
@@ -73,14 +79,47 @@ class BackupInstanceCommand extends Command
                 $selectedInstances = $helper->ask($input, $output, $question);
             }
 
+            $logs = [];
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Performing backup for ' . $instance->name . '</>');
-                $backupFile = $instance->backup();
-                if (! empty($backupFile)) {
-                    $io->success('Backup created with success.');
-                    $io->note('Backup file: ' . $backupFile);
+                $log = [];
+                $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
+                try {
+                    $backupFile = $instance->backup();
+                    if (!empty($backupFile)) {
+                        $io->success('Backup created with success.');
+                        $io->note('Backup file: ' . $backupFile);
+                    } else {
+                        $log[] = 'Failed to backup instance.';
+                    }
+                    Archive::performArchiveCleanup($instance->id, $instance->name);
+                } catch (\Exception $e) {
+                    $log[] = $e->getMessage() . PHP_EOL;
+                    $log[] = $e->getTraceAsString() . PHP_EOL;
                 }
-                Archive::performArchiveCleanup($instance->id, $instance->name);
+
+                if (count($log) > 1) {
+                    $logs = array_merge($logs, $log);
+                }
+            }
+
+            $emails = $input->getOption('email');
+            $emails = array_filter(explode(',', $emails), function ($email) {
+                return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
+            });
+
+            if (!empty($logs) && !empty($emails)) {
+                $logs = implode(PHP_EOL, $logs);
+                try {
+                    CommandHelper::sendMailNotification(
+                        $emails,
+                        '[Tiki-Manager] ' . $this->getName() . ' report failures',
+                        $logs
+                    );
+                } catch (\RuntimeException $e) {
+                    debug($e->getMessage());
+                    $io->error($e->getMessage());
+                }
             }
         } else {
             $output->writeln('<comment>No instances available to backup.</comment>');

@@ -36,6 +36,12 @@ class SetupUpdateCommand extends Command
                 null,
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs to be updated, separated by comma (,)'
+            )
+            ->addOption(
+                'email',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Email address to report update failures (multiple emails must be separated by comma (,)).'
             );
     }
 
@@ -67,6 +73,20 @@ class SetupUpdateCommand extends Command
 
             $input->setOption('instances', $answer);
         }
+
+        $email = $input->getOption('email');
+
+        try {
+            CommandHelper::validateEmailInput($email);
+        } catch (\RuntimeException $e) {
+            $io->error($e->getMessage());
+            $email = null;
+        }
+
+        if (empty($email)) {
+            $email = $io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, CommandHelper::validateEmailInput($value));
+            $input->setOption('email', $email);
+        }
     }
 
     /**
@@ -80,19 +100,24 @@ class SetupUpdateCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $time = $input->getOption('time');
-        $instancesOption = $input->getOption('instances');
-
         // Check if option (set in cli is also valid)
         list($hours, $minutes) = CommandHelper::validateTimeInput($time);
 
+        $instancesOption = $input->getOption('instances');
         // Check if option (set in cli is also valid)
         $instances = CommandHelper::getInstances('update');
         CommandHelper::validateInstanceSelection($instancesOption, $instances);
+
+        $email = $input->getOption('email');
+        $email = CommandHelper::validateEmailInput($email);
 
         $managerPath = realpath(dirname(__FILE__) . '/../..');
 
         $updateInstance = new UpdateInstanceCommand();
         $updateInstanceCommand = TIKI_MANAGER_EXECUTABLE . ' ' . $updateInstance->getName() . ' --no-interaction --instances=' . $instancesOption;
+        if (!empty($email)) {
+            $updateInstanceCommand .= ' --email=' . $email;
+        }
         $entry = sprintf(
             "%d %d * * * cd %s && %s %s\n",
             $minutes,
