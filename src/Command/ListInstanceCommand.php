@@ -20,6 +20,7 @@ class ListInstanceCommand extends Command
         $this
             ->setName('instance:list')
             ->setDescription('List instances')
+            ->addOption('json')
             ->setHelp('This command allows you to list all managed instances');
     }
 
@@ -28,9 +29,14 @@ class ListInstanceCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $instances = CommandHelper::getInstances();
-        $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        $instancesInfo = CommandHelper::getInstancesInfo($instances) ?? [];
 
-        if (isset($instancesInfo)) {
+        if ($input->getOption('json')) {
+            $output->write(json_encode($instancesInfo));
+            return;
+        }
+
+        if (!empty($instancesInfo)) {
             $io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
         } else {
