@@ -29,24 +29,22 @@ class CommandHelper
     /**
      * Get information from Instance Object
      *
-     * @param $instances array of Instance objects
+     * @param array $instances An array of Instance objects
      * @return array|null
      */
     public static function getInstancesInfo($instances)
     {
         $instancesInfo = null;
 
-        if (!empty($instances)) {
-            foreach ($instances as $key => $instance) {
-                $instancesInfo[] = [
-                    $instance->id,
-                    $instance->type,
-                    $instance->name,
-                    $instance->weburl,
-                    $instance->contact,
-                    $instance->branch
-                ];
-            }
+        foreach ($instances as $instance) {
+            $instancesInfo[] = [
+                'id' => $instance->id,
+                'type' => $instance->type,
+                'name' => $instance->name,
+                'url' => $instance->weburl,
+                'email' => $instance->contact,
+                'branch' => $instance->branch
+            ];
         }
 
         return $instancesInfo;
@@ -217,7 +215,7 @@ class CommandHelper
     {
         if (empty($answer)) {
             throw new \RuntimeException(
-                'You must select an #ID'
+                'You must select an instance #ID'
             );
         } else {
             $instancesId = array_filter(array_map('trim', explode(',', $answer)));
