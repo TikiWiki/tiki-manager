@@ -28,6 +28,14 @@ SMTP_USER=(optional if authentication is required)
 SMTP_PASS=(optional if authentication is required)
 ```
 
+### Web Manager settings
+If you want to setup a default folder to install your web manager or apache user:group are different than apache:apache you can add the following settings to your `.env` file.
+```
+WWW_PATH=<WEB_MANAGER_FOLDER>
+WWW_USER=<APACHE_USER>
+WWW_GROUP=<APACHE_GROUP>
+```
+
 ## Documentation
 
 Documentation is at [Tiki Documentation - Manager](https://doc.tiki.org/Manager).
