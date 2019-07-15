@@ -11,6 +11,7 @@ use TikiManager\Libs\Requirements\Requirements;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $dotenv = new Dotenv();
+$dotenv->load(__DIR__.'/../.env.dist');
 $dotenv->loadEnv(__DIR__.'/../.env');
 
 require_once __DIR__ . '/env_includes.php';

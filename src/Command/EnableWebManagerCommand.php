@@ -57,13 +57,16 @@ access to the administration panel to local users (safer).');
         $question = new ConfirmationQuestion('<comment>This will enable the Tiki Manager administration web panel.</comment>
 Continue with this action (y,n)? ', false);
 
-        if (! $helper->ask($input, $output, $question)) {
+        if (!$helper->ask($input, $output, $question)) {
             return;
         }
 
         $io->newLine();
 
-        $question = CommandHelper::getQuestion('WWW Tiki Manager directory (ex: /var/www/virtual/webtikimanager.example.com/html)');
+        $question = CommandHelper::getQuestion(
+            'WWW Tiki Manager directory (ex: /var/www/virtual/webtikimanager.example.com/html)',
+            getenv('WWW_PATH') ?: null
+        );
         $question->setValidator(function ($value) {
             if (empty(trim($value))) {
                 throw new \RuntimeException('Tiki Manager directory cannot be empty');
@@ -76,7 +79,7 @@ Continue with this action (y,n)? ', false);
 
         $owner = fileowner($webTrimDirectory . '/index.php');
 
-        if (! file_exists($webTrimDirectory . '/config.php')) {
+        if (!file_exists($webTrimDirectory . '/config.php')) {
             $question = CommandHelper::getQuestion('Desired username');
             $username = $helper->ask($input, $output, $question);
 
@@ -114,6 +117,9 @@ CONFIG
             );
         }
 
+        $user = getenv('WWW_USER');
+        $group = getenv('WWW_GROUP');
+
         $db = DB_FILE;
         $data = TRIM_DATA;
         $backup = BACKUP_FOLDER;
@@ -121,9 +127,9 @@ CONFIG
         $composer = COMPOSER_PATH;
         `chmod 0666 $db`;
         `chmod 0700 $data`;
-        `chown apache:apache $data`;
-        `chown apache:apache $backup`;
-        `chown apache:apache $archive`;
+        `chown $user:$group $data`;
+        `chown $user:$group $backup`;
+        `chown $user:$group $archive`;
         `(rm -rf $webTrimDirectory/vendor && $composer install -d $webTrimDirectory)`;
         `(chown -R $owner $webTrimDirectory/vendor)`;
 
