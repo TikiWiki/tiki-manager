@@ -23,10 +23,10 @@ class BlankInstanceCommand extends Command
 
         $arguments = [
             'command' => 'instance:create',
-            'blank'    => 'blank'
+            '--blank' => true
         ];
 
         $blankInstanceInput = new ArrayInput($arguments);
-        $returnCode = $command->run($blankInstanceInput, $output);
+        return $command->run($blankInstanceInput, $output);
     }
 }
