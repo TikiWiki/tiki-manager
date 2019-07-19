@@ -49,6 +49,10 @@ class Git extends VersionControlSystem
             }
 
             if (strpos($line, 'refs/heads/') !== false) {
+                // Only list master, versions (20.x, 19.x, 18.3) and experimental branches (example: experimental/acme)
+                if (!preg_match('/^refs\/heads\/(\d+\.(\d+|x)|master|experimental\/.+)$/', $line)) {
+                    continue;
+                }
                 $versions[] = str_replace('refs/heads/', '', $line); // Example: branch/master
             }
 

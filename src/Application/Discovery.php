@@ -6,6 +6,7 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Access\Access;
 use TikiManager\Application\Exception\ConfigException;
 
 class Discovery
@@ -335,17 +336,22 @@ class Discovery
     public function detectVcsType()
     {
         $instance = $this->instance;
+        $access = $this->getAccess();
         $webroot = rtrim($instance->webroot, DIRECTORY_SEPARATOR);
 
-        if (is_dir($webroot . DIRECTORY_SEPARATOR . ".svn")) {
+        if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . '.svn')) {
             return 'SVN';
         }
 
-        if (is_dir($webroot . DIRECTORY_SEPARATOR . ".git")) {
+        if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . '.git')) {
             return 'GIT';
         }
 
-        return 'TARBALL';
+        if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . 'tiki-index.php')) {
+            return 'TARBALL';
+        }
+
+        return null;
     }
 
     public function detectWebroot()
@@ -431,6 +437,9 @@ class Discovery
         }
     }
 
+    /**
+     * @return Access
+     */
     public function getAccess()
     {
         if ($this->access) {
@@ -450,7 +459,7 @@ class Discovery
         $this->access = $access;
     }
 
-    public function setInstance($instance)
+    public function setInstance(Instance $instance)
     {
         $this->instance = $instance;
     }
