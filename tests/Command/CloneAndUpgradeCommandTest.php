@@ -16,6 +16,7 @@ use TikiManager\Command\CloneAndUpgradeInstanceCommand;
 use TikiManager\Command\CloneInstanceCommand;
 use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
+use TikiManager\Tests\Helpers\VersionControl;
 
 /**
  * Class CloneInstanceCommandTester
@@ -57,12 +58,12 @@ class CloneAndUpgradeCommandTester extends TestCase
             [
                 '--webroot' => self::$instancePath18x1,
                 '--tempdir' => self::$tempPath,
-                '--branch' => 'branches/18.x',
+                '--branch' => VersionControl::formatBranch('branches/18.x'),
             ],
             [
                 '--webroot' => self::$instancePath18x2,
                 '--tempdir' => self::$tempPath,
-                '--branch' => 'branches/18.x',
+                '--branch' => VersionControl::formatBranch('branches/18.x'),
             ]
         ];
 
@@ -84,7 +85,7 @@ class CloneAndUpgradeCommandTester extends TestCase
             'command' => $command->getName(),
             '--source' => self::$instanceIds[1],
             '--target' => [self::$instanceIds[2]],
-            '--branch' => 'branches/19.x',
+            '--branch' => VersionControl::formatBranch('branches/19.x'),
         ]);
 
         $instance = new Instance;
@@ -95,7 +96,7 @@ class CloneAndUpgradeCommandTester extends TestCase
         $diffDbFile = Files::compareFiles(self::$dbLocalFile18x1, self::$dbLocalFile18x2);
 
         $this->assertEquals(0, $commandTester->getStatusCode());
-        $this->assertEquals('branches/19.x', $resultBranch);
+        $this->assertEquals(VersionControl::formatBranch('branches/19.x'), $resultBranch);
         $this->assertNotEquals([], $diffDbFile);
     }
 
@@ -120,7 +121,7 @@ class CloneAndUpgradeCommandTester extends TestCase
             'command' => $command->getName(),
             '--source' => self::$instanceIds[1],
             '--target' => [self::$instanceIds[2]],
-            '--branch' => 'branches/19.x',
+            '--branch' => VersionControl::formatBranch('branches/19.x'),
         ]);
 
         $output = $commandTester->getDisplay();

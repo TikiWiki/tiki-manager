@@ -14,6 +14,7 @@ use TikiManager\Application\Instance;
 use TikiManager\Command\CloneInstanceCommand;
 use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
+use TikiManager\Tests\Helpers\VersionControl;
 
 /**
  * Class CloneInstanceCommandTester
@@ -48,13 +49,13 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
                 InstanceHelper::WEBROOT_OPTION => self::$instancePath19x,
                 InstanceHelper::TEMPDIR_OPTION => self::$tempPath,
                 InstanceHelper::BACKUP_USER_OPTION => isset($scriptOwner) ? $scriptOwner : 'root', // Backup user
-                InstanceHelper::BRANCH_OPTION => 'branches/19.x', // svn : branches/19.x
+                InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch('branches/19.x'), // svn : branches/19.x
             ],
             [
                 InstanceHelper::WEBROOT_OPTION => self::$instancePathTrunk,
                 InstanceHelper::TEMPDIR_OPTION => self::$tempPath,
                 InstanceHelper::BACKUP_USER_OPTION => isset($scriptOwner) ? $scriptOwner : 'root', // Backup user
-                InstanceHelper::BRANCH_OPTION => 'trunk', // svn : branches/19.x
+                InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch('trunk'), // svn : branches/19.x
             ]
         ];
     }
@@ -97,7 +98,7 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
         $diffDbFile = Files::compareFiles(self::$dbLocalFile19x, self::$dbLocalFileTrunk);
 
         $this->assertEquals(0, $commandTester->getStatusCode());
-        $this->assertEquals('branches/19.x', $resultBranch);
+        $this->assertEquals(VersionControl::formatBranch('branches/19.x'), $resultBranch);
         $this->assertNotEquals([], $diffDbFile);
     }
 

@@ -109,35 +109,71 @@ unit-tests:
     - name: mysql:5.6
       alias: mysql
   script:
-    - echo 'APP_ENV=gitlab-ci' >> .env
+    - echo APP_ENV=gitlab-ci >> .env
+    - echo DEFAULT_VCS=$VCS >> .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
     - composer install $COMPOSER_FLAGS
     - composer bin all install $COMPOSER_FLAGS
     - ./vendor/bin/phpunit --bootstrap src/env_setup.php tests/Command/$TEST_FILE
   allow_failure: false
 
-create-instance:
+.template-tiki-manager-commands-git: &template-tiki-manager-commands-git
   <<: *template-tiki-manager-commands
+  variables:
+    VCS: git
+
+.template-tiki-manager-commands-svn: &template-tiki-manager-commands-svn
+  <<: *template-tiki-manager-commands
+  variables:
+    VCS: svn
+
+create-instance-git:
+  <<: *template-tiki-manager-commands-git
   variables:
     TEST_FILE: CreateInstanceCommandTest.php
 
-backup-instance:
-  <<: *template-tiki-manager-commands
+create-instance-svn:
+  <<: *template-tiki-manager-commands-svn
+  variables:
+    TEST_FILE: CreateInstanceCommandTest.php
+
+backup-instance-git:
+  <<: *template-tiki-manager-commands-git
   variables:
     TEST_FILE: BackupInstanceCommandTest.php
 
-restore-instance:
-  <<: *template-tiki-manager-commands
+backup-instance-svn:
+  <<: *template-tiki-manager-commands-svn
+  variables:
+    TEST_FILE: BackupInstanceCommandTest.php
+
+restore-instance-git:
+  <<: *template-tiki-manager-commands-git
   variables:
     TEST_FILE: RestoreInstanceCommandTest.php
 
-clone-instance:
-  <<: *template-tiki-manager-commands
+restore-instance-svn:
+  <<: *template-tiki-manager-commands-svn
+  variables:
+    TEST_FILE: RestoreInstanceCommandTest.php
+
+clone-instance-git:
+  <<: *template-tiki-manager-commands-git
   variables:
     TEST_FILE: CloneInstanceCommandTest.php
 
-clone-upgrade-instance:
-  <<: *template-tiki-manager-commands
+clone-instance-svn:
+  <<: *template-tiki-manager-commands-svn
+  variables:
+    TEST_FILE: CloneInstanceCommandTest.php
+
+clone-upgrade-instance-git:
+  <<: *template-tiki-manager-commands-git
+  variables:
+    TEST_FILE: CloneAndUpgradeCommandTest.php
+
+clone-upgrade-instance-svn:
+  <<: *template-tiki-manager-commands-svn
   variables:
     TEST_FILE: CloneAndUpgradeCommandTest.php
 

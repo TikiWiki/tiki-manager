@@ -15,7 +15,6 @@ abstract class VersionControlSystem
     protected $command;
     protected $access;
     protected $repositoryUrl;
-    protected $configuration;
     protected $runLocally = false;
 
     /**
@@ -24,10 +23,7 @@ abstract class VersionControlSystem
      */
     public function __construct($access)
     {
-        $configuration = new Configuration();
-
         $this->access = $access;
-        $this->configuration = $configuration->get();
     }
 
     /**
@@ -65,20 +61,15 @@ abstract class VersionControlSystem
     }
 
     /**
-     * Gets default VCS based on the config.yml file
+     * Gets default VCS
+     * @param Instance $instance
      * @return string
      */
     public static function getDefaultVersionControlSystem(Instance $instance)
     {
         $type = DEFAULT_VERSION_CONTROL_SYSTEM;
         $access = $instance->getBestAccess('scripting');
-        $configurationInstance = new Configuration();
-        $config = $configurationInstance->get();
         $vcsInstance = null;
-
-        if (! empty($config['instance']['default_version_control_system'])) {
-            $type = $config['instance']['default_version_control_system'];
-        }
 
         switch (strtoupper($type)) {
             case 'SVN':
