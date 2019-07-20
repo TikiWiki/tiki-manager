@@ -38,7 +38,7 @@ class Instance
             self::EMAIL_OPTION => 'dummy@example.com',
             self::WEBROOT_OPTION => '/tmp/tiki-manager-www', // This value should be overridden
             self::TEMPDIR_OPTION => '/tmp/tiki-manager-tmp', // This value should be overridden
-            self::BRANCH_OPTION => 'trunk',
+            self::BRANCH_OPTION => VersionControl::formatBranch('trunk'),
             self::BACKUP_USER_OPTION => 'root',
             self::BACKUP_GROUP_OPTION => 'root',
             self::BACKUP_PERMISSION_OPTION => '750',

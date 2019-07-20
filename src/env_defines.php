@@ -40,8 +40,7 @@ define('PDO_ATTR_TIMEOUT', 10);
 define('PDO_EXTENDED_DEBUG', false);
 define('PDO_DIE_ON_EXCEPTION_THROWN', true);
 
-define('CONFIGURATION_FILE_PATH', TRIM_ROOT . '/data/config.yml');
-define('DEFAULT_VERSION_CONTROL_SYSTEM', 'SVN');
+define('DEFAULT_VERSION_CONTROL_SYSTEM', getenv('DEFAULT_VCS') ?: 'GIT');
 
 define('TIKI_MANAGER_EXECUTABLE', 'tiki-manager');
 

@@ -92,6 +92,12 @@ if (! Requirements::getInstance()->check('ssh')) {
     exit;
 }
 
+$vcs = strtolower(DEFAULT_VERSION_CONTROL_SYSTEM);
+if (! Requirements::getInstance()->check($vcs)) {
+    error(Requirements::getInstance()->getRequirementMessage($vcs));
+    exit;
+}
+
 // Make sure SSH is set-up
 if (! file_exists(SSH_KEY) || ! file_exists(SSH_PUBLIC_KEY)) {
     if (! is_writable(dirname(SSH_KEY))) {
