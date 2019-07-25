@@ -13,6 +13,10 @@ use TikiManager\Libs\Host\Command;
 
 class Git extends VersionControlSystem
 {
+    private $globalOptions = [
+        '--quiet',
+    ];
+
     /**
      * GIT constructor.
      * @param $access
@@ -74,14 +78,16 @@ class Git extends VersionControlSystem
 
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
-        $command = sprintf('%s %s', $this->command, $toAppend);
+        $toAppend .= ' ' . implode(' ', $this->globalOptions);
+
+        if ($forcePathOnCommand && !empty($targetFolder)) {
+            $command = sprintf('%s -C %s %s', $this->command, $targetFolder, $toAppend);
+        } else {
+            $command = sprintf('%s %s', $this->command, $toAppend);
+        }
 
         if ($this->runLocally) {
             return `$command`;
-        }
-
-        if ($forcePathOnCommand) {
-            $this->access->chdir($targetFolder);
         }
 
         $commandInstance = new Command($command);
