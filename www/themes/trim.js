@@ -134,6 +134,10 @@ $(document).ready(function () {
         window.location.reload();
     });
 
+    $('#createModal').on('hidden.bs.modal', function (event) {
+        window.location = window.location.href;
+    });
+
     $('#trimModal').on('show.bs.modal', function (event) {
         var ansi = {
             '\\[36m': '<span class="cyan">',

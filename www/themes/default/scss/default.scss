@@ -230,7 +230,7 @@ TRIM Main Styles
     table { text-align:left; }
 }
 
-#trimModal {
+#trimModal, #createModal {
     pre {
         max-height:500px; margin:0; background:black; color:gray;
         white-space:pre-wrap; border-radius:4px; border:1px solid #ccc;
