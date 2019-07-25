@@ -427,11 +427,12 @@ class CommandHelper
         $version = Version::buildFake($details[0], $details[1]);
 
         $io->writeln('Installing application...');
-        $io->note([
-            'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
-            'you can use \'tiki-manager instance:access\' to complete the installation manually.'
-        ]);
-
+        if (!$nonInteractive) {
+            $io->note([
+                'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
+                'you can use \'tiki-manager instance:access\' to complete the installation manually.'
+            ]);
+        }
         $app->install($version);
 
         if ($app->requiresDatabase()) {
@@ -475,8 +476,10 @@ class CommandHelper
             }
         }
 
-        $io->section(sprintf('Setup database connection in %s', $instance->name));
-        $io->note('Creating databases and users requires root privileges on MySQL.');
+        if (!$nonInteractive) {
+            $io->section(sprintf('Setup database connection in %s', $instance->name));
+            $io->note('Creating databases and users requires root privileges on MySQL.');
+        }
 
         $dbRoot = new Database($instance);
 

@@ -611,6 +611,7 @@ class Tiki extends Application
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
 
+        info('Setting db config file...');
         if ($access instanceof ShellPrompt) {
             $script = sprintf("chmod('%s', 0664);", "{$this->instance->webroot}/db/local.php");
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
@@ -624,9 +625,8 @@ class Tiki extends Application
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
         }
 
+        info('Installing database...');
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
-            info("Updating svn, composer, perms & database...");
-
             $access = $this->instance->getBestAccess('scripting');
             $access->chdir($this->instance->webroot);
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php database:install");

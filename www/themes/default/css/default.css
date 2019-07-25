@@ -348,7 +348,7 @@ TRIM Main Styles
   text-align: left;
 }
 
-#trimModal pre {
+#trimModal pre, #createModal pre {
   max-height: 500px;
   margin: 0;
   background: black;
@@ -357,16 +357,16 @@ TRIM Main Styles
   border-radius: 4px;
   border: 1px solid #ccc;
 }
-#trimModal span {
+#trimModal span, #createModal span {
   display: block;
 }
-#trimModal .cyan {
+#trimModal .cyan, #createModal .cyan {
   color: cyan;
 }
-#trimModal .orange {
+#trimModal .orange, #createModal .orange {
   color: orange;
 }
-#trimModal .red {
+#trimModal .red, #createModal .red {
   color: red;
 }
 
@@ -451,4 +451,4 @@ TRIM Responsiveness
   }
 }
 
-/*# sourceMappingURL=../css/default.css.map */
+/*# sourceMappingURL=default.css.map */

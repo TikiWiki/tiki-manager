@@ -15,6 +15,10 @@ require dirname(__FILE__) . "/../config.php";
 require TRIMPATH . '/src/env_setup.php';
 ob_end_clean();
 
+if (defined('TIMEOUT')) {
+    set_time_limit(TIMEOUT);
+}
+
 ob_implicit_flush(true);
 ob_end_flush();
 
