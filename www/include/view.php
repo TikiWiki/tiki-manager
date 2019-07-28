@@ -1,6 +1,8 @@
 <?php
-    $version = $instance->getLatestVersion();
-    $all = TikiManager\Application\Instance::getInstances();
+
+$version = $instance->getLatestVersion();
+$all = TikiManager\Application\Instance::getInstances();
+$prev = null;
 while (key($all) != $instance->id) {
     $prev = current($all);
     next($all);

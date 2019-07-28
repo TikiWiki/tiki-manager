@@ -24,8 +24,8 @@ if (! isset($_SESSION['active'])) {
     exit;
 }
 
-$op = $_GET['op'];
-$id = (int) $_GET['id'];
+$op = isset($_GET['op']) ? $_GET['op'] : '' ;
+$id = isset($_GET['op']) ? (int) $_GET['id'] : 0;
 
 $loc = strrpos($_SERVER['REQUEST_URI'], $op);
 if (! $loc) {
