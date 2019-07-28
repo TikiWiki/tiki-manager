@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ea18acd151829a9730bfa88bcd46a3c9",
+    "content-hash": "da932bd82a1f8b1ec0f6daaaaf3cf6ba",
     "packages": [
         {
             "name": "components/jquery",
@@ -118,7 +118,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/egulias/email-validator/egulias-email-validator-128cc721d771ec2c46ce59698f4ca42b73f71b25-zip-ecc072.zip",
+                "url": "https://api.github.com/repos/egulias/EmailValidator/zipball/128cc721d771ec2c46ce59698f4ca42b73f71b25",
                 "reference": "128cc721d771ec2c46ce59698f4ca42b73f71b25",
                 "shasum": "9ae35bb74b09cd33d9f85478c28bbd3d40d09aac"
             },
@@ -2726,6 +2726,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
+        "ext-bz2": "*",
         "ext-json": "*",
         "ext-pdo": "*",
         "php": "^7.1"

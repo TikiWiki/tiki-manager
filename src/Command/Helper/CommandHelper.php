@@ -459,21 +459,11 @@ class CommandHelper
         OutputInterface $output,
         $nonInteractive = false
     ) {
-
         $dbUser = null;
         $io = new SymfonyStyle($input, $output);
 
-        $access = $instance->getBestAccess('scripting');
-        $remoteFile = "{$instance->webroot}/db/local.php";
-
-        if ($access->fileExists($remoteFile)) {
-            $localFile = $access->downloadFile($remoteFile);
-            $dbUser = Database::createFromConfig($instance, $localFile);
-            unlink($localFile);
-
-            if ($dbUser instanceof Database) {
-                return $dbUser;
-            }
+        if ($dbUser = $instance->getDatabaseConfig()) {
+            return $dbUser;
         }
 
         if (!$nonInteractive) {

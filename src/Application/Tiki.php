@@ -86,7 +86,7 @@ class Tiki extends Application
     }
 
     /**
-     * Get SVN revision information
+     * Get repository revision information
      *
      * @param string|null $folder If valid folder or null it will collect the svn revision from the folder|instance webroot.
      * @return int
@@ -146,9 +146,9 @@ class Tiki extends Application
         return ['mysqli', 'mysql'];
     }
 
-    public function getBranch()
+    public function getBranch($refresh = false)
     {
-        if ($this->branch) {
+        if ($this->branch && !$refresh) {
             return $this->branch;
         }
 
@@ -277,9 +277,9 @@ class Tiki extends Application
         return $out;
     }
 
-    public function getInstallType()
+    public function getInstallType($refresh = false)
     {
-        if (! is_null($this->installType)) {
+        if (! is_null($this->installType) && !$refresh) {
             return $this->installType;
         }
 
@@ -483,7 +483,7 @@ class Tiki extends Application
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if ($access instanceof ShellPrompt && ($can_svn || $can_git)) {
-            info('Upgrading svn...');
+            info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
             $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear");
 
             $this->vcs_instance->update($this->instance->webroot, $version->branch);

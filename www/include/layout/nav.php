@@ -27,6 +27,8 @@
                             <a class="dropdown-item" href="<?php echo html(url('upgrade')) ?>">Upgrade an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('fix')) ?>">Fix an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('watch')) ?>">Watch an instance</a>
+                            <a class="dropdown-item" href="<?php echo html(url('clone')) ?>">Clone an instance</a>
+                            <a class="dropdown-item" href="<?php echo html(url('cloneupgrade')) ?>">Clone and Upgrade an instance</a>
                         </div>
                     </li>
                     <li class="nav-item dropdown">
@@ -34,8 +36,6 @@
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="<?php echo html(url('backup')) ?>">Backup an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('restore')) ?>">Restore an instance</a>
-                            <a class="dropdown-item" href="<?php echo html(url('clone')) ?>">Clone an instance</a>
-<!--                            <a class="dropdown-item" href="#">Clone and upgrade</a>-->
                             <a class="dropdown-item" href="<?php echo html(url('manage')) ?>">Manage backups</a>
                         </div>
                     </li>
