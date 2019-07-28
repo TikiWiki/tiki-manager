@@ -628,6 +628,9 @@ SQL;
         return $hasConsole;
     }
 
+    /**
+     * @return Application | false
+     */
     public function getApplication()
     {
         if (empty($this->app)) {
@@ -639,6 +642,8 @@ SQL;
             $class = 'TikiManager\Application\\'.$class;
             return new $class($this);
         }
+
+        return false;
     }
 
     public function backup()
@@ -676,7 +681,8 @@ SQL;
             return;
         }
 
-        if (!$oldVersion) {
+        // Pick version created in findApplication
+        if (!$oldVersion || $clone) {
             $version = $this->getLatestVersion();
         }
 
@@ -818,6 +824,30 @@ SQL;
      */
     public function getDatabaseConfig()
     {
-        return $this->databaseConfig;
+        return $this->databaseConfig ?? $this->loadDatabaseConfig();
+    }
+
+    /**
+     * Load database config from file (db/local.php)
+     * @return Database|null
+     */
+    private function loadDatabaseConfig()
+    {
+        $access = $this->getBestAccess('scripting');
+        $remoteFile = "{$this->webroot}/db/local.php";
+
+        if (!$access->fileExists($remoteFile)) {
+            return null;
+        }
+
+        $localFile = $access->downloadFile($remoteFile);
+        $dbUser = Database::createFromConfig($this, $localFile);
+        unlink($localFile);
+
+        if ($dbUser instanceof Database) {
+            return $dbUser;
+        }
+
+        return null;
     }
 }

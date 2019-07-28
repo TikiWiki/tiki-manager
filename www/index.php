@@ -51,7 +51,7 @@ if (empty($op)) {
     $op = 'list';
 }
 
-if (! in_array($op, [ 'backup', 'blank', 'clone', 'create', 'delete', 'edit', 'fix', 'import', 'list', 'manage', 'restore', 'update', 'upgrade', 'view', 'watch', 'logout' ])) {
+if (! in_array($op, [ 'backup', 'blank', 'clone', 'cloneupgrade', 'create', 'delete', 'edit', 'fix', 'import', 'list', 'manage', 'restore', 'update', 'upgrade', 'view', 'watch', 'logout' ])) {
     die("Unknown operation.");
 }
 

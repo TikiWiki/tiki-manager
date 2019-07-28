@@ -6,6 +6,7 @@
   "minimum-stability": "stable",
   "require": {
     "components/jquery": "^3.3.1",
+    "ext-bz2": "*",
     "ext-json": "*",
     "ext-pdo": "*",
     "fortawesome/font-awesome": "^4.7.0",

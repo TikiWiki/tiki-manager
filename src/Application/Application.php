@@ -54,9 +54,9 @@ abstract class Application
 
     abstract public function install(Version $version);
 
-    abstract public function getInstallType();
+    abstract public function getInstallType($refresh = false);
 
-    abstract public function getBranch();
+    abstract public function getBranch($refresh = false);
 
     abstract public function getUpdateDate();
 
@@ -198,8 +198,8 @@ abstract class Application
         $this->instance->save();
 
         $update = $this->instance->createVersion();
-        $update->type = $this->getInstallType();
-        $update->branch = $this->getBranch();
+        $update->type = $this->getInstallType(true);
+        $update->branch = $this->getBranch(true);
         $update->date = $this->getUpdateDate();
         $update->revision = $this->getRevision($this->instance->webroot);
         $update->save();

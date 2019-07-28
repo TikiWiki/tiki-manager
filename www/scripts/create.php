@@ -9,6 +9,9 @@ use Symfony\Component\Process\Process;
 use TikiManager\Access\Local;
 use TikiManager\Application\Instance;
 
+ini_set('zlib.output_compression', 0);
+header('Content-Encoding: none'); //Disable apache compression
+
 ob_start();
 require dirname(__FILE__) . "/../config.php";
 require TRIMPATH . '/src/env_setup.php';
