@@ -24,8 +24,8 @@ if (! isset($_SESSION['active'])) {
     exit;
 }
 
-$op = $_GET['op'];
-$id = (int) $_GET['id'];
+$op = isset($_GET['op']) ? $_GET['op'] : '' ;
+$id = isset($_GET['op']) ? (int) $_GET['id'] : 0;
 
 $loc = strrpos($_SERVER['REQUEST_URI'], $op);
 if (! $loc) {
@@ -51,7 +51,7 @@ if (empty($op)) {
     $op = 'list';
 }
 
-if (! in_array($op, [ 'backup', 'blank', 'clone', 'create', 'delete', 'edit', 'fix', 'import', 'list', 'manage', 'restore', 'update', 'view', 'watch', 'logout' ])) {
+if (! in_array($op, [ 'backup', 'blank', 'clone', 'create', 'delete', 'edit', 'fix', 'import', 'list', 'manage', 'restore', 'update', 'upgrade', 'view', 'watch', 'logout' ])) {
     die("Unknown operation.");
 }
 
@@ -63,6 +63,7 @@ if (in_array($op, [ 'view', 'edit' ]) && $id == 0) {
 
 /**
  * Get current location base URL
+ *
  * @return string
  */
 function getBaseUrl()

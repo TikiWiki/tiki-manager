@@ -24,7 +24,7 @@
                         <div class="dropdown-menu">
 <!--                            <a class="dropdown-item" href="#">Check an instance</a>-->
                             <a class="dropdown-item" href="<?php echo html(url('update')) ?>">Update an instance</a>
-<!--                            <a class="dropdown-item" href="#">Upgrade an instance</a>-->
+                            <a class="dropdown-item" href="<?php echo html(url('upgrade')) ?>">Upgrade an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('fix')) ?>">Fix an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('watch')) ?>">Watch an instance</a>
                         </div>
