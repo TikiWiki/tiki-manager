@@ -101,7 +101,7 @@ class SetupBackupManagerCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $time = $input->getOption('time');
         list($hours, $minutes) = CommandHelper::validateTimeInput($time);
-        $arguments = 'all --no-interaction';
+        $arguments = '--instances=all --no-interaction';
         $excludedInstances = $input->getOption('exclude');
 
         if (! empty($excludedInstances)) {

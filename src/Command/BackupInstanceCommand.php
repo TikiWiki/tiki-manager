@@ -21,21 +21,78 @@ class BackupInstanceCommand extends Command
             ->addOption(
                 'instances',
                 'ins',
-                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
-                'Backup instances IDs (comma separated)'
+                InputOption::VALUE_REQUIRED,
+                'Use all or a specific list of instances IDs (comma separated)'
             )
             ->addOption(
                 'exclude',
                 'e',
-                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
-                'Exclude the backup of specific instance IDs'
+                InputOption::VALUE_REQUIRED,
+                'Used with --instances=all, a list of instance IDs to exclude from backup'
             )
             ->addOption(
                 'email',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Email addresses to notify for backup failures.'
+                'Email addresses to notify for backup failures  (comma separated)'
             );
+    }
+
+    protected function interact(InputInterface $input, OutputInterface $output)
+    {
+        $io = new SymfonyStyle($input, $output);
+        $io->note('Backups are only available on Local and SSH instances.');
+
+        $instances = CommandHelper::getInstances('all', true);
+        $instancesInfo = CommandHelper::getInstancesInfo($instances);
+
+        if (isset($instancesInfo) && empty($input->getOption('instances'))) {
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
+            $io->newLine();
+
+            $instances = $io->ask('Which instance(s) do you want to backup', 'all', function ($answer) use ($instances) {
+                if ($answer == 'all') {
+                    return $answer;
+                }
+                $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
+                return implode(',', CommandHelper::getInstanceIds($selectedInstances));
+            });
+
+            $input->setOption('instances', $instances);
+        }
+
+        if (isset($instancesInfo) && $input->getOption('instances') == 'all' && empty($input->getOption('exclude'))) {
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
+            $io->newLine();
+            $io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
+
+            $answer = $io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+                $excludeInstance = '';
+                if (!empty($answer)) {
+                    $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
+                    $excludeInstance = implode(',', CommandHelper::getInstanceIds($selectedInstances));
+                }
+                return $excludeInstance;
+            });
+
+            $input->setOption('exclude', $answer);
+        }
+
+        $email = $input->getOption('email');
+
+        if (!$email) {
+            $email = $io->ask('Email address to contact', null, function ($value) {
+                if (empty(trim($value))) {
+                    return null;
+                }
+                $emails = explode(',', $value);
+                array_filter($emails, function ($email) {
+                    return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
+                });
+                return implode(',', $emails);
+            });
+            $input->setOption('email', $email);
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -44,106 +101,81 @@ class BackupInstanceCommand extends Command
 
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
-        if (isset($instancesInfo)) {
-            $helper = $this->getHelper('question');
 
-            $arguments = $input->getOption('instances');
-            if (!empty($arguments)) {
-                if ($arguments[0] == 'all') {
-                    $this->checkForExcludedInstances($instances);
-                    $selectedInstances = $instances;
-                } else {
-                    $instancesIds = explode(',', $arguments[0]);
+        if (empty($instancesInfo)) {
+            $io->writeln('<comment>No instances available to backup.</comment>');
+            return 0;
+        }
 
-                    $selectedInstances = [];
-                    foreach ($instancesIds as $index) {
-                        if (array_key_exists($index, $instances)) {
-                            $selectedInstances[] = $instances[$index];
-                        }
+        if ($instancesOption = $input->getOption('instances')) {
+            if ($instancesOption == 'all') {
+                $exclude = explode(',', $input->getOption('exclude'));
+                foreach ($instances as $key => $instance) {
+                    if (in_array($instance->id, $exclude)) {
+                        unset($instances[$key]);
                     }
                 }
+
+                $selectedInstances = $instances;
             } else {
-                $io->newLine();
-                $output->writeln('<comment>NOTE: Backups are only available on Local and SSH instances.</comment>');
+                $instancesIds = explode(',', $instancesOption);
 
-                $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
-
-                $io->newLine();
-                $output->writeln('<comment>In case you want to backup more than one instance, please use a comma (,) between the values</comment>');
-
-                $question = CommandHelper::getQuestion('Which instance(s) do you want to backup', null, '?');
-                $question->setValidator(function ($answer) use ($instances) {
-                    return CommandHelper::validateInstanceSelection($answer, $instances);
-                });
-
-                $selectedInstances = $helper->ask($input, $output, $question);
-            }
-
-            $logs = [];
-            foreach ($selectedInstances as $instance) {
-                $output->writeln('<fg=cyan>Performing backup for ' . $instance->name . '</>');
-                $log = [];
-                $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
-                try {
-                    $backupFile = $instance->backup();
-                    if (!empty($backupFile)) {
-                        $io->success('Backup created with success.');
-                        $io->note('Backup file: ' . $backupFile);
-                    } else {
-                        $log[] = 'Failed to backup instance.';
+                $selectedInstances = [];
+                foreach ($instancesIds as $index) {
+                    if (array_key_exists($index, $instances)) {
+                        $selectedInstances[] = $instances[$index];
                     }
-                    Archive::performArchiveCleanup($instance->id, $instance->name);
-                } catch (\Exception $e) {
-                    $log[] = $e->getMessage() . PHP_EOL;
-                    $log[] = $e->getTraceAsString() . PHP_EOL;
-                }
-
-                if (count($log) > 1) {
-                    $logs = array_merge($logs, $log);
                 }
             }
+        }
 
-            $emails = $input->getOption('email');
-            $emails = array_filter(explode(',', $emails), function ($email) {
-                return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
-            });
+        if (empty($instancesOption) || empty($selectedInstances)) {
+            throw new \RuntimeException('No instances defined for backup');
+        }
 
-            if (!empty($logs) && !empty($emails)) {
-                $logs = implode(PHP_EOL, $logs);
-                try {
-                    CommandHelper::sendMailNotification(
-                        $emails,
-                        '[Tiki-Manager] ' . $this->getName() . ' report failures',
-                        $logs
-                    );
-                } catch (\RuntimeException $e) {
-                    debug($e->getMessage());
-                    $io->error($e->getMessage());
+        $logs = [];
+        foreach ($selectedInstances as $instance) {
+            $output->writeln('<fg=cyan>Performing backup for ' . $instance->name . '</>');
+            $log = [];
+            $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
+            try {
+                $backupFile = $instance->backup();
+                if (!empty($backupFile)) {
+                    $io->success('Backup created with success.');
+                    $io->note('Backup file: ' . $backupFile);
+                } else {
+                    $log[] = 'Failed to backup instance.';
                 }
+                Archive::performArchiveCleanup($instance->id, $instance->name);
+            } catch (\Exception $e) {
+                $log[] = $e->getMessage() . PHP_EOL;
+                $log[] = $e->getTraceAsString() . PHP_EOL;
             }
-        } else {
-            $output->writeln('<comment>No instances available to backup.</comment>');
+
+            if (count($log) > 1) {
+                $logs = array_merge($logs, $log);
+            }
+        }
+
+        $emails = $input->getOption('email');
+        $emails = array_filter(explode(',', $emails), function ($email) {
+            return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
+        });
+
+        if (!empty($logs) && !empty($emails)) {
+            $logs = implode(PHP_EOL, $logs);
+            try {
+                CommandHelper::sendMailNotification(
+                    $emails,
+                    '[Tiki-Manager] ' . $this->getName() . ' report failures',
+                    $logs
+                );
+            } catch (\RuntimeException $e) {
+                debug($e->getMessage());
+                $io->error($e->getMessage());
+            }
         }
 
         return 0;
-    }
-
-    /**
-     * Function used to check for instances to exclude via option "--exclude="
-     * @param $instances
-     */
-    private function checkForExcludedInstances(&$instances)
-    {
-        $excluded_option = CommandHelper::getCliOption('exclude');
-        if (empty($excluded_option)) {
-            return;
-        }
-
-        $instances_to_exclude = explode(',', CommandHelper::getCliOption('exclude'));
-        foreach ($instances as $key => $instance) {
-            if (in_array($instance->id, $instances_to_exclude)) {
-                unset($instances[$key]);
-            }
-        }
     }
 }
