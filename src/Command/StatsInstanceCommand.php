@@ -24,10 +24,12 @@ class StatsInstanceCommand extends Command
             ->setName('instance:stats')
             ->setDescription('Fetch data (ex: KPIs) from instances.')
             ->setHelp('This command allows you to fetch data (ex: KPIs) from instances and push to a Tracker.')
-            ->addArgument(
+            ->addOption(
                 'instances',
-                InputArgument::REQUIRED,
-                'Instances to fetch KPI, separated by comma (,)'
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Instances to fetch KPI, separated by comma (,). If empty, data will be fetch from all instances.',
+                'all'
             )
             ->addOption(
                 'file',
@@ -54,15 +56,15 @@ class StatsInstanceCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $currentCwd = getcwd();
-        $instancesArgs = $input->getArgument('instances');
+        $instancesOpt = $input->getOption('instances');
         $excludesOpt = $input->getOption('exclude');
         $fileOpt = $input->getOption('file');
         $pushToOpt = $input->getOption('push-to');
-        $header = ['instance_id', 'instance_name', 'name', 'value'];
+        $header = ['id', 'instance_id', 'instance_name'];
         $data = [];
         $tmpFile = TEMP_FOLDER . DIRECTORY_SEPARATOR . 'kpi.csv';
 
-        $sourceInstances = $this->getInstances($instancesArgs, $excludesOpt);
+        $sourceInstances = $this->getInstances($instancesOpt, $excludesOpt);
         $toInstance = null;
 
         if ($pushToOpt) {
@@ -93,9 +95,9 @@ class StatsInstanceCommand extends Command
             }
 
             $cmdOutput = $result->getStdoutContent();
-            $values = json_decode($cmdOutput);
+            $rows = json_decode($cmdOutput, true);
 
-            if (empty($values)) {
+            if (empty($rows)) {
                 $message = 'Unable to parse instance ' . $instance->name . ' response:' . PHP_EOL . $cmdOutput;
                 $io->error($message);
                 continue;
@@ -104,18 +106,26 @@ class StatsInstanceCommand extends Command
             if (!$fileOpt && !$pushToOpt) {
                 $io->section(sprintf('Instance %s stats:', $instance->name));
                 $table = new Table($output);
+                $headers = array_map(function ($headerValue) {
+                    return ucwords($headerValue);
+                }, array_keys($rows[0]));
                 $table
-                    ->setHeaders(['KPI', 'Value'])
-                    ->setRows($values);
+                    ->setHeaders($headers)
+                    ->setRows($rows);
                 $table->render();
                 continue;
             }
 
-            //fetch data
-            foreach ($values as &$fields) {
-                //Set instance id and name as first columns in row
-                array_unshift($fields, $instance->id, $instance->name);
-                $data[] = $fields;
+            $header = array_merge($header, array_keys($rows[0]));
+            foreach ($rows as $row) {
+                $exportRow = [
+                    md5($instance->id . '-' . $row['kpi']),
+                    $instance->id,
+                    $instance->name
+                ];
+                $exportRow = array_merge($exportRow, $row);
+
+                $data[] = $exportRow;
             }
         }
 
@@ -174,15 +184,15 @@ class StatsInstanceCommand extends Command
 
     /**
      * Get instance to query
-     * @param string $instancesArgs
+     * @param string $instancesOpt
      * @param string $excludesOpt
      * @return array instances
      */
-    private function getInstances($instancesArgs, $excludesOpt = '')
+    private function getInstances($instancesOpt, $excludesOpt = '')
     {
-        $instances = CommandHelper::getInstances();
-        if (strtolower($instancesArgs) != 'all') {
-            $instances = CommandHelper::validateInstanceSelection($instancesArgs, $instances);
+        $instances = CommandHelper::getInstances('all', true);
+        if (strtolower($instancesOpt) != 'all') {
+            $instances = CommandHelper::validateInstanceSelection($instancesOpt, $instances);
         }
 
         $toExclude = explode(',', $excludesOpt);
