@@ -9,6 +9,7 @@ namespace TikiManager\Tests\Command;
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Command\BackupInstanceCommand;
 use TikiManager\Application\Instance;
 use FilesystemIterator;
@@ -46,6 +47,12 @@ class BackupInstanceCommandTest extends TestCase
         ]);
     }
 
+    public static function tearDownAfterClass()
+    {
+        $fs = new Filesystem();
+        $fs->remove(self::$instanceBasePath);
+    }
+
     public function testBackupLocalInstance()
     {
         // Ensure that instance was created successfully
@@ -58,9 +65,8 @@ class BackupInstanceCommandTest extends TestCase
         $commandTester = new CommandTester($command);
         $commandTester->execute([
             'command'  => $command->getName(),
-            '--instances' => [self::$instanceId],
-            '--no-interaction' => null,
-        ]);
+            '--instances' => self::$instanceId,
+        ], ['interactive' => false]);
 
         $output = $commandTester->getDisplay();
         $this->assertContains('Backup created with success.', $output);
