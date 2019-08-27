@@ -132,7 +132,7 @@ class RestoreInstanceCommandTest extends TestCase
                 "server1.$db1:server1.$db2"
             ];
 
-            $process = new Process($command, TRIM_ROOT . '/vendor-bin/dbdiff');
+            $process = new Process($command, $_ENV['TRIM_ROOT'] . '/vendor-bin/dbdiff');
             $process->setTimeout(0);
             $process->run();
 

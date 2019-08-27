@@ -29,8 +29,6 @@ class Tiki extends Application
         if (! empty($instance->vcs_type)) {
             switch (strtoupper($instance->vcs_type)) {
                 case 'SVN':
-                    $this->vcs_instance = new Svn($access);
-                    break;
                 case 'TARBALL':
                     $this->vcs_instance = new Svn($access);
                     break;
@@ -270,7 +268,7 @@ class Tiki extends Application
     {
         $access = $this->instance->getBestAccess('scripting');
         $out = $access->runPHP(
-            TRIM_ROOT . '/scripts/tiki/get_system_config_ini_file.php',
+            $_ENV['TRIM_ROOT'] . '/scripts/tiki/get_system_config_ini_file.php',
             [$this->instance->webroot]
         );
 
@@ -310,11 +308,11 @@ class Tiki extends Application
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
 
-        $local = tempnam(TEMP_FOLDER, 'trim');
+        $local = tempnam($_ENV['TEMP_FOLDER'], 'trim');
         rename($local, $local . $ext);
         $local .= $ext;
 
-        $sourcefile = SVN_TIKIWIKI_URI . "/{$version->branch}/$filename";
+        $sourcefile = $_ENV['SVN_TIKIWIKI_URI'] . "/{$version->branch}/$filename";
         $sourcefile = str_replace('/./', '/', $sourcefile);
 
         $content = file_get_contents($sourcefile);
@@ -557,7 +555,7 @@ class Tiki extends Application
 
     public function restoreDatabase(Database $database, $remoteFile)
     {
-        $tmp = tempnam(TEMP_FOLDER, 'dblocal');
+        $tmp = tempnam($_ENV['TEMP_FOLDER'], 'dblocal');
 
         if (! empty($database->dbLocalContent)) {
             file_put_contents($tmp, $database->dbLocalContent);
@@ -598,7 +596,7 @@ class Tiki extends Application
 //----------------------------------------------------------------
     public function setupDatabase(Database $database)
     {
-        $tmp = tempnam(TEMP_FOLDER, 'dblocal');
+        $tmp = tempnam($_ENV['TEMP_FOLDER'], 'dblocal');
         file_put_contents($tmp, "<?php"          . "\n"
             ."\$db_tiki='{$database->type}';"    . "\n"
             ."\$host_tiki='{$database->host}';"  . "\n"

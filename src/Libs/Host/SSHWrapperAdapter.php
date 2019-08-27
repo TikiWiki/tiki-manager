@@ -25,8 +25,8 @@ class SSHWrapperAdapter
 
     private function getCommandPrefix($options = [])
     {
-        $options['-i'] = !empty($options['pubkey']) ? $options['pubkey'] : SSH_KEY;
-        $options['-F'] = !empty($options['config']) ? $options['config'] : SSH_CONFIG;
+        $options['-i'] = !empty($options['pubkey']) ? $options['pubkey'] : $_ENV['SSH_KEY'];
+        $options['-F'] = !empty($options['config']) ? $options['config'] : $_ENV['SSH_CONFIG'];
         $options['-p'] = !empty($options['port']) ? $options['port'] : $this->port;
 
         $options = array_filter($options, 'strlen');
@@ -86,7 +86,7 @@ class SSHWrapperAdapter
     {
         $localFile = escapeshellarg($localFile);
         $remoteFile = escapeshellarg($remoteFile);
-        $key = SSH_KEY;
+        $key = $_ENV['SSH_KEY'];
         $port = null;
         if ($this->port != 22) {
             $port = " -P {$this->port} ";
@@ -143,8 +143,8 @@ class SSHWrapperAdapter
 
     public function runCommands($commands, $output = false)
     {
-        $key = SSH_KEY;
-        $config = SSH_CONFIG;
+        $key = $_ENV['SSH_KEY'];
+        $config = $_ENV['SSH_CONFIG'];
 
         if ($this->location) {
             array_unshift($commands, 'cd ' . escapeshellarg($this->location));
@@ -177,7 +177,7 @@ class SSHWrapperAdapter
         $localFile = escapeshellarg($localFile);
         $remoteFile = escapeshellarg($remoteFile);
 
-        $key = SSH_KEY;
+        $key = $_ENV['SSH_KEY'];
         $port = null;
         if ($this->port != 22) {
             $port = " -P {$this->port} ";

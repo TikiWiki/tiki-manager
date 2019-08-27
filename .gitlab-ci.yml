@@ -95,7 +95,7 @@ unit-tests:
     - echo 'APP_ENV=gitlab-ci' >> .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
     - composer install $COMPOSER_FLAGS
-    - ./vendor/bin/phpunit --bootstrap src/env_setup.php tests/ --group unit
+    - ./vendor/bin/phpunit tests/ --group unit
   allow_failure: false
 
 

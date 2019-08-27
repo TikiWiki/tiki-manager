@@ -7,7 +7,6 @@
 
 namespace TikiManager\Libs\VersionControl;
 
-use TikiManager\Libs\Helpers\Configuration;
 use TikiManager\Application\Instance;
 
 abstract class VersionControlSystem
@@ -67,7 +66,7 @@ abstract class VersionControlSystem
      */
     public static function getDefaultVersionControlSystem(Instance $instance)
     {
-        $type = DEFAULT_VERSION_CONTROL_SYSTEM;
+        $type = $_ENV['DEFAULT_VCS'];
         $access = $instance->getBestAccess('scripting');
         $vcsInstance = null;
 

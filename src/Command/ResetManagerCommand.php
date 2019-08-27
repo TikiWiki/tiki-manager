@@ -35,13 +35,13 @@ class ResetManagerCommand extends Command
         }
 
         $dirs = [
-            TRIM_LOGS,
-            CACHE_FOLDER,
-            BACKUP_FOLDER,
-            ARCHIVE_FOLDER,
+            $_ENV['TRIM_LOGS'],
+            $_ENV['CACHE_FOLDER'],
+            $_ENV['BACKUP_FOLDER'],
+            $_ENV['ARCHIVE_FOLDER'],
         ];
 
-        $databaseFile = DB_FILE;
+        $databaseFile = $_ENV['DB_FILE'];
 
         $logger = new ConsoleLogger($output);
         $result = CommandHelper::clearFolderContents($dirs, $logger);

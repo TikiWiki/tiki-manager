@@ -25,7 +25,7 @@ class Git extends VersionControlSystem
     {
         parent::__construct($access);
         $this->command = 'git';
-        $this->repositoryUrl = GIT_TIKIWIKI_URI;
+        $this->repositoryUrl = $_ENV['GIT_TIKIWIKI_URI'];
     }
 
     /**

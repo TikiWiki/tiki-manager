@@ -32,7 +32,7 @@ class DeleteDatabaseCommand extends Command
             return 0;
         }
 
-        $databaseFile = DB_FILE;
+        $databaseFile = $_ENV['DB_FILE'];
 
         $logger = new ConsoleLogger($output);
         $result = CommandHelper::removeFiles($databaseFile, $logger);

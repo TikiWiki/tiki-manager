@@ -53,7 +53,7 @@ class SSH extends Access implements ShellPrompt
     public function firstConnect()
     {
         $host = $this->getHost();
-        $host->setupKey(SSH_PUBLIC_KEY);
+        $host->setupKey($_ENV['SSH_PUBLIC_KEY']);
 
         info("Testing connection...");
 
@@ -245,7 +245,7 @@ class SSH extends Access implements ShellPrompt
         $remoteName = md5($localFile);
         $remoteFile = $this->instance->getWorkPath($remoteName);
         $host->runCommands(
-            'mkdir -p ' . (escapeshellarg($this->instance->tempdir) ?: TRIM_TEMP)
+            'mkdir -p ' . (escapeshellarg($this->instance->tempdir) ?: $_ENV['TRIM_TEMP'])
         );
 
         $host->sendFile($localFile, $remoteFile);
@@ -267,7 +267,7 @@ class SSH extends Access implements ShellPrompt
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
 
-        $local = empty($dest) ? tempnam(TEMP_FOLDER, 'trim') : $dest;
+        $local = empty($dest) ? tempnam($_ENV['TEMP_FOLDER'], 'trim') : $dest;
 
         $host = $this->getHost();
         $host->receiveFile($filename, $local);

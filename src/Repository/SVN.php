@@ -180,7 +180,7 @@ class SVN
 
             if ('yes' == strtolower(promptUser(
                 'It seems there are some conflicts. Type "yes" to exit and solve manually or "no" to discard changes. Exit?',
-                INTERACTIVE ? 'yes' : 'no',
+                $_ENV['INTERACTIVE'] ? 'yes' : 'no',
                 ['yes', 'no']
             ))) {
                 exit;

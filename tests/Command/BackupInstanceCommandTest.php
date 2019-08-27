@@ -34,7 +34,7 @@ class BackupInstanceCommandTest extends TestCase
         $basePath = $_ENV['TESTS_BASE_FOLDER'];
         $scriptOwner = get_current_user();
 
-        self::$archiveDir = rtrim(ARCHIVE_FOLDER, '/');
+        self::$archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], '/');
 
         self::$instanceBasePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'backup']);
         self::$tempPath = implode(DIRECTORY_SEPARATOR, [$basePath, 'manager']);

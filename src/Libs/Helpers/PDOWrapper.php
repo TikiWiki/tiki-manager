@@ -20,12 +20,12 @@ class PDOWrapper extends \PDO
      */
     public function __construct($dsn, $user = '', $password = '', $options = [])
     {
-        $this->die_on_exception_thrown = PDO_DIE_ON_EXCEPTION_THROWN;
-        $this->has_extended_debug = PDO_EXTENDED_DEBUG;
+        $this->die_on_exception_thrown = $_ENV['PDO_DIE_ON_EXCEPTION_THROWN'];
+        $this->has_extended_debug = $_ENV['PDO_EXTENDED_DEBUG'];
 
         if (empty($options)) {
             $options = [
-                \PDO::ATTR_TIMEOUT   =>  PDO_ATTR_TIMEOUT,
+                \PDO::ATTR_TIMEOUT   =>  $_ENV['PDO_ATTR_TIMEOUT'],
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
             ];
         }

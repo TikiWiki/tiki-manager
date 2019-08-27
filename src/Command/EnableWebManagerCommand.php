@@ -193,14 +193,14 @@ CONFIG
             );
         }
 
+        $db = $_ENV['DB_FILE'];
+        $data = $_ENV['TRIM_DATA'];
+        $backup = $_ENV['BACKUP_FOLDER'];
+        $archive = $_ENV['ARCHIVE_FOLDER'];
+        $composer = $_ENV['COMPOSER_PATH'];
         $user = getenv('WWW_USER');
         $group = getenv('WWW_GROUP');
 
-        $db = DB_FILE;
-        $data = TRIM_DATA;
-        $backup = BACKUP_FOLDER;
-        $archive = ARCHIVE_FOLDER;
-        $composer = COMPOSER_PATH;
         `chmod 0666 $db`;
         `chmod 0700 $data`;
         `chown $user:$group $data`;

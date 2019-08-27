@@ -20,7 +20,7 @@ class ClearCacheCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $cachePath = CACHE_FOLDER;
+        $cachePath = $_ENV['CACHE_FOLDER'];
         $logger = new ConsoleLogger($output);
         $result = CommandHelper::clearFolderContents($cachePath, $logger);
 

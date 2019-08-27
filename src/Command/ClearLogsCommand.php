@@ -32,7 +32,7 @@ class ClearLogsCommand extends Command
             return 0;
         }
 
-        $logsPath = TRIM_LOGS;
+        $logsPath = $_ENV['TRIM_LOGS'];
         $logger = new ConsoleLogger($output);
         $result = CommandHelper::clearFolderContents($logsPath, $logger);
 

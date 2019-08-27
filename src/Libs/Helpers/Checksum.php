@@ -22,7 +22,7 @@ class Checksum
      */
     public static function handleCheckResult(Instance $instance, Version $version, $array, $io)
     {
-        if (!INTERACTIVE) {
+        if (! $_ENV['INTERACTIVE']) {
             return; // skip
         }
         // $new, $mod, $del
@@ -94,7 +94,7 @@ class Checksum
 
                     foreach ($files as $file) {
                         $localName = $access->downloadFile($file);
-                        passthru(EDITOR . " $localName");
+                        passthru($_ENV['EDITOR'] . " $localName");
                     }
                     break;
             }
@@ -137,7 +137,7 @@ class Checksum
 
                     foreach ($files as $file) {
                         $localName = $access->downloadFile($file);
-                        passthru(EDITOR . " $localName");
+                        passthru($_ENV['EDITOR'] . " $localName");
                     }
                     break;
 
@@ -147,7 +147,7 @@ class Checksum
 
                     foreach ($files as $file) {
                         $localName = $access->downloadFile($file);
-                        passthru(EDITOR . " $localName");
+                        passthru($_ENV['EDITOR'] . " $localName");
 
                         if ($io->confirm('Confirm file replacement?', false)) {
                             $io->writeln("== $file\n");
@@ -172,7 +172,7 @@ class Checksum
                         $realFile = $app->getSourceFile($version, $file);
                         $serverFile = $access->downloadFile($file);
 
-                        $diff = DIFF;
+                        $diff = $_ENV['DIFF'];
                         passthru("$diff $realFile $serverFile");
                     }
                     break;

@@ -27,7 +27,7 @@ class Svn extends VersionControlSystem
     {
         parent::__construct($access);
         $this->command = 'svn';
-        $this->repositoryUrl = SVN_TIKIWIKI_URI;
+        $this->repositoryUrl = $_ENV['SVN_TIKIWIKI_URI'];
     }
 
     /**
@@ -36,7 +36,7 @@ class Svn extends VersionControlSystem
      */
     protected function getRepositoryUrl()
     {
-        return SVN_TIKIWIKI_URI;
+        return $_ENV['SVN_TIKIWIKI_URI'];
     }
 
     public function getRepositoryBranch($targetFolder)
@@ -239,7 +239,7 @@ class Svn extends VersionControlSystem
 
         if (! $this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
             $path = $this->access->getInterpreterPath($this);
-            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
+            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder .  self::SVN_TEMP_FOLDER_PATH);
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }
 
@@ -263,7 +263,7 @@ class Svn extends VersionControlSystem
 
             if ('yes' == strtolower(promptUser(
                 'It seems there are some conflicts. Type "yes" to exit and solve manually or "no" to discard changes. Exit?',
-                INTERACTIVE ? 'yes' : 'no',
+                $_ENV['INTERACTIVE'] ? 'yes' : 'no',
                 array('yes', 'no')
             ))) {
                 exit;

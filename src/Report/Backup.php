@@ -79,7 +79,7 @@ OUT;
 
     private function getDiskUsage(&$used, &$total, &$available)
     {
-        $path = escapeshellarg(ARCHIVE_FOLDER);
+        $path = escapeshellarg($_ENV['ARCHIVE_FOLDER']);
         $out = `df $path | awk '/^\// {print $3,$2,$4}'`;
 
         list($used, $total, $available) = explode(' ', $out);
