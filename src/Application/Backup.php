@@ -33,8 +33,8 @@ class Backup
         $this->access = $this->getAccess($instance);
         $this->app = $instance->getApplication();
         $this->workpath = $instance->createWorkPath($this->access);
-        $this->archiveRoot = rtrim(ARCHIVE_FOLDER, DIRECTORY_SEPARATOR);
-        $this->backupRoot = rtrim(BACKUP_FOLDER, DIRECTORY_SEPARATOR);
+        $this->archiveRoot = rtrim($_ENV['ARCHIVE_FOLDER'], DIRECTORY_SEPARATOR);
+        $this->backupRoot = rtrim($_ENV['BACKUP_FOLDER'], DIRECTORY_SEPARATOR);
         $this->backupDirname = sprintf('%s-%s', $instance->id, $instance->name);
         $this->backupDir = $this->backupRoot . DIRECTORY_SEPARATOR . $this->backupDirname;
         $this->archiveDir = $this->archiveRoot . DIRECTORY_SEPARATOR . $this->backupDirname;

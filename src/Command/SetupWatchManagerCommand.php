@@ -119,11 +119,11 @@ class SetupWatchManagerCommand extends Command
             $hours,
             $managerPath,
             PHP_BINARY,
-            TIKI_MANAGER_EXECUTABLE,
+            $_ENV['TIKI_MANAGER_EXECUTABLE'],
             $arguments
         );
 
-        file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
+        file_put_contents($file = $_ENV['TEMP_FOLDER'] . '/crontab', `crontab -l` . $entry);
 
         $io->newLine();
         $io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');

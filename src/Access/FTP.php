@@ -124,7 +124,7 @@ class FTP extends Access implements Mountable
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
 
-        $local = tempnam(TEMP_FOLDER, 'trim');
+        $local = tempnam($_ENV['TEMP_FOLDER'], 'trim');
 
         $host = $this->getHost();
         $host->receiveFile($filename, $local);
@@ -280,7 +280,7 @@ class FTP extends Access implements Mountable
 
         $source = escapeshellarg($source);
         $target = escapeshellarg($mirror);
-        $tmp = escapeshellarg(RSYNC_FOLDER);
+        $tmp = escapeshellarg($_ENV['RSYNC_FOLDER']);
         $cmd = 'rsync -rDu --no-p --no-g --size-only ' .
             '--exclude .svn --exclude copyright.txt --exclude changelog.txt ' .
             "--temp-dir=$tmp $source $target";
@@ -298,7 +298,7 @@ class FTP extends Access implements Mountable
         $current = getcwd();
         chdir($localFolder);
 
-        $temp = TEMP_FOLDER;
+        $temp = $_ENV['TEMP_FOLDER'];
         $name = md5(time()) . '.tar';
         `chmod 777 db`;
         `tar --exclude=.svn -cf $temp/$name *`;

@@ -12,7 +12,7 @@ class VersionControl
 
     public static function formatBranch($branch)
     {
-        if (strtolower(DEFAULT_VERSION_CONTROL_SYSTEM) == 'svn') {
+        if (strtolower($_ENV['DEFAULT_VCS']) == 'svn') {
             return static::formatSvnBranch($branch);
         }
 

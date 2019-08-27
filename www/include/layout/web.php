@@ -15,8 +15,8 @@ function web_backup($instance)
     }
 
 //    $access = $backup->getAccess();
-    $backupDir = rtrim(BACKUP_FOLDER, '/') . "/{$instance->id}-{$instance->name}";
-    $archiveDir = rtrim(ARCHIVE_FOLDER, '/') . "/{$instance->id}-{$instance->name}";
+    $backupDir = rtrim($_ENV['BACKUP_FOLDER'], '/') . "/{$instance->id}-{$instance->name}";
+    $archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], '/') . "/{$instance->id}-{$instance->name}";
     $app->removeTemporaryFiles();
 
     // the extrabackups query returns an error on a mac

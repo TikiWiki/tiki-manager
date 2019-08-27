@@ -276,7 +276,7 @@ class Local extends Access implements ShellPrompt
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
 
-        $local = empty($dest) ? tempnam(TEMP_FOLDER, 'trim') : $dest;
+        $local = empty($dest) ? tempnam($_ENV['TEMP_FOLDER'], 'trim') : $dest;
 
         $host = $this->getHost();
         $host->receiveFile($filename, $local);

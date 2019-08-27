@@ -35,7 +35,7 @@ class DeleteBackupCommand extends Command
             return 0;
         }
 
-        $backupPath = BACKUP_FOLDER;
+        $backupPath = $_ENV['BACKUP_FOLDER'];
         $logger = new ConsoleLogger($output);
         $result = CommandHelper::clearFolderContents($backupPath, $logger);
 

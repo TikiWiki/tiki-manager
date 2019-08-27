@@ -62,7 +62,7 @@ class StatsInstanceCommand extends Command
         $pushToOpt = $input->getOption('push-to');
         $header = ['id', 'instance_id', 'instance_name'];
         $data = [];
-        $tmpFile = TEMP_FOLDER . DIRECTORY_SEPARATOR . 'kpi.csv';
+        $tmpFile = $_ENV['TEMP_FOLDER'] . DIRECTORY_SEPARATOR . 'kpi.csv';
 
         $sourceInstances = $this->getInstances($instancesOpt, $excludesOpt);
         $toInstance = null;

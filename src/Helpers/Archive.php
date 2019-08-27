@@ -24,7 +24,7 @@ class Archive
     {
         $backup_directory = "{$instanceId}-{$instanceName}";
 
-        $files = glob(ARCHIVE_FOLDER . "/$backup_directory" . '/*.tar.bz2');
+        $files = glob($_ENV['ARCHIVE_FOLDER'] . "/$backup_directory" . '/*.tar.bz2');
 
         foreach ($files as $file) {
             $name = basename($file);

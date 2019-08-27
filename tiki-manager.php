@@ -13,9 +13,11 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
 
 require __DIR__.'/vendor/autoload.php';
 
-include_once __DIR__.'/src/env_setup.php';
-
 use Symfony\Component\Console\Application;
+use TikiManager\Config\Environment;
+
+$environment = new Environment(__DIR__);
+$environment->load();
 
 $application = new Application();
 

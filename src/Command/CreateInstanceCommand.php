@@ -258,7 +258,7 @@ class CreateInstanceCommand extends Command
                 ],
                 'tempdir' => [
                     'question' => 'Working directory',
-                    'default' => TRIM_TEMP,
+                    'default' => $_ENV['TRIM_TEMP'],
                 ]
             ];
 

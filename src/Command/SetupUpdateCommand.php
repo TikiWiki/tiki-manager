@@ -114,7 +114,7 @@ class SetupUpdateCommand extends Command
         $managerPath = realpath(dirname(__FILE__) . '/../..');
 
         $updateInstance = new UpdateInstanceCommand();
-        $updateInstanceCommand = TIKI_MANAGER_EXECUTABLE . ' ' . $updateInstance->getName() . ' --no-interaction --instances=' . $instancesOption;
+        $updateInstanceCommand = $_ENV['TIKI_MANAGER_EXECUTABLE'] . ' ' . $updateInstance->getName() . ' --no-interaction --instances=' . $instancesOption;
         if (!empty($email)) {
             $updateInstanceCommand .= ' --email=' . $email;
         }
@@ -127,7 +127,7 @@ class SetupUpdateCommand extends Command
             $updateInstanceCommand
         );
 
-        file_put_contents($file = TEMP_FOLDER . '/crontab', `crontab -l` . $entry);
+        file_put_contents($file = $_ENV['TEMP_FOLDER'] . '/crontab', `crontab -l` . $entry);
         $io->writeln("\n<fg=cyan>If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.</>");
         $io->writeln("<fg=cyan>\t$entry</>");
         `crontab $file`;

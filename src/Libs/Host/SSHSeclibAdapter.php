@@ -61,8 +61,8 @@ class SSHSeclibAdapter
         };
 
         $password = new \phpseclib\Crypt\RSA();
-        $password->setPrivateKey(file_get_contents(SSH_KEY));
-        $password->setPublicKey(file_get_contents(SSH_PUBLIC_KEY));
+        $password->setPrivateKey(file_get_contents($_ENV['SSH_KEY']));
+        $password->setPublicKey(file_get_contents($_ENV['SSH_PUBLIC_KEY']));
 
         if (!$handle->login($user, $password)) {
             return self::$resources[$key] = false;

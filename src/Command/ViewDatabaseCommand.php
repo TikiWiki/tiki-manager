@@ -20,7 +20,7 @@ class ViewDatabaseCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $databaseFile = DB_FILE;
+        $databaseFile = $_ENV['DB_FILE'];
 
         $sqliteVersion = shell_exec(self::SQLITE.' --version');
         if ($sqliteVersion) {

@@ -102,7 +102,7 @@ class SSH
 
     public function openShell($workingDir = '')
     {
-        $key = SSH_KEY;
+        $key = $_ENV['SSH_KEY'];
         $port = null;
         if ($this->port != 22) {
             $port = " -p {$this->port} ";
@@ -124,7 +124,7 @@ class SSH
             return $return_val;
         }
 
-        $key = SSH_KEY;
+        $key = $_ENV['SSH_KEY'];
         $user = $this->user;
         $host = $this->host;
         $src = $args['src'];
@@ -176,7 +176,7 @@ class SSH
      */
     private function checkSshKey()
     {
-        $key = SSH_KEY;
+        $key = $_ENV['SSH_KEY'];
         $user = $this->user;
         $host = $this->host;
 
