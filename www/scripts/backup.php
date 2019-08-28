@@ -18,7 +18,9 @@ if (defined('TIMEOUT')) {
     set_time_limit(TIMEOUT);
 }
 
-require TRIMPATH . '/src/env_setup.php';
+require TRIMPATH . '/vendor/autoload.php';
+$environment = new TikiManager\Config\Environment(TRIMPATH);
+$environment->load();
 ob_end_clean();
 
 ob_implicit_flush(true);

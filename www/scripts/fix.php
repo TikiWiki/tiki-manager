@@ -14,7 +14,9 @@ $authFile = dirname(__FILE__) . "/../config.php";
 
 ob_start();
 require $authFile;
-require TRIMPATH . '/src/env_setup.php';
+require TRIMPATH . '/vendor/autoload.php';
+$environment = new TikiManager\Config\Environment(TRIMPATH);
+$environment->load();
 ob_end_clean();
 
 if (defined('TIMEOUT')) {
