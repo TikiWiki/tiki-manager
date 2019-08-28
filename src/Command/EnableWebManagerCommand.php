@@ -197,7 +197,7 @@ CONFIG
         $data = $_ENV['TRIM_DATA'];
         $backup = $_ENV['BACKUP_FOLDER'];
         $archive = $_ENV['ARCHIVE_FOLDER'];
-        $composer = $_ENV['COMPOSER_PATH'];
+        $composer = $_ENV['COMPOSER_PATH'] == 'composer' ? $_ENV['COMPOSER_PATH'] : 'php ' . $_ENV['COMPOSER_PATH'];
         $user = getenv('WWW_USER');
         $group = getenv('WWW_GROUP');
 
