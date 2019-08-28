@@ -14,7 +14,9 @@ header('Content-Encoding: none'); //Disable apache compression
 
 ob_start();
 require dirname(__FILE__) . "/../config.php";
-require TRIMPATH . '/src/env_setup.php';
+require TRIMPATH . '/vendor/autoload.php';
+$environment = new TikiManager\Config\Environment(TRIMPATH);
+$environment->load();
 ob_end_clean();
 
 if (defined('TIMEOUT')) {

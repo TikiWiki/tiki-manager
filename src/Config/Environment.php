@@ -90,9 +90,13 @@ class Environment
             $_ENV['DIFF'] = 'diff';
         }
 
-        $_ENV['COMPOSER_PATH'] = "composer";
-        if (file_exists($this->homeDirectory . "/composer.phar")) {
-            $_ENV['COMPOSER_PATH'] = "php " . $this->homeDirectory . "/composer.phar";
+        $localComposerPath = rtrim($this->homeDirectory, '/') . '/composer.phar';
+        if (file_exists($localComposerPath)) {
+            $_ENV['COMPOSER_PATH'] = $localComposerPath;
+        } elseif (Requirements::getInstance()->hasDependency('composer')){
+            $_ENV['COMPOSER_PATH'] = 'composer';
+        } else {
+            throw new ConfigurationErrorException('Unable to find composer or composer.phar');
         }
 
         $_ENV['EXECUTABLE_SCRIPT'] = implode(',', [

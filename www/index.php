@@ -5,6 +5,8 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
+use TikiManager\Config\Environment;
+
 $authFile = dirname(__FILE__) . "/config.php";
 
 if (! file_exists($authFile)) {
@@ -13,7 +15,9 @@ if (! file_exists($authFile)) {
 
 ob_start();
 require $authFile;
-require TRIMPATH . '/src/env_setup.php';
+require TRIMPATH . '/vendor/autoload.php';
+$environment = new Environment(TRIMPATH);
+$environment->load();
 ob_end_clean();
 
 if (RESTRICT && ( $_SERVER['HTTP_HOST'] != 'localhost' || $_SERVER['REMOTE_ADDR'] != '127.0.0.1' )) {
