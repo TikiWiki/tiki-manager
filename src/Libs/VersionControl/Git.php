@@ -81,7 +81,7 @@ class Git extends VersionControlSystem
         $toAppend .= ' ' . implode(' ', $this->globalOptions);
 
         if ($forcePathOnCommand && !empty($targetFolder)) {
-            $command = sprintf('%s -C %s %s', $this->command, $targetFolder, $toAppend);
+            $command = sprintf('cd %s && %s %s', $targetFolder, $this->command, $toAppend);
         } else {
             $command = sprintf('%s %s', $this->command, $toAppend);
         }
