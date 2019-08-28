@@ -58,8 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $instance->detectPHP();
         $instance->findApplication();
 
-        header("Location: " . url("list"));
-        exit;
+        ?>
+        <script type="text/javascript">
+            window.location.href = 'list';
+        </script>
+        <?php
     }
 }
 
