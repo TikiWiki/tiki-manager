@@ -415,7 +415,7 @@ class CreateInstanceCommand extends Command
         $backupPerm = $input->getOption('backup-permission');
         $version = $input->getOption('branch');
 
-        if (!empty($type)
+        if (is_numeric($type)
             && !empty($weburl)
             && !empty($name)
             && !empty($contact)
@@ -426,6 +426,7 @@ class CreateInstanceCommand extends Command
             && !empty($backupGroup)
             && !empty($backupPerm)
         ) {
+            $type = intval($type, 10);
             if (!in_array($type, $listInstanceTypes) || !in_array($type, $listInstanceTypeKeys)) {
                 throw new \InvalidArgumentException('Instance type invalid.');
             }
