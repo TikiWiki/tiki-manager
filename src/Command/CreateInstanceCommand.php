@@ -439,7 +439,7 @@ class CreateInstanceCommand extends Command
                 throw new \InvalidArgumentException('Please insert a valid email address.');
             }
 
-            if ($fs->exists($webroot)) {
+            if (!$input->getOption('blank') && $fs->exists($webroot)) {
                 $isInstalled = $fs->exists($webroot . DIRECTORY_SEPARATOR . 'tiki-setup.php');
                 if ($isInstalled) {
                     throw new \InvalidArgumentException('Unable to install. An application was detected in this instance.');
