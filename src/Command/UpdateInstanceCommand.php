@@ -115,13 +115,12 @@ class UpdateInstanceCommand extends Command
 
                 $access = $instance->getBestAccess('scripting');
                 $discovery = new Discovery($instance, $access);
-                $php_version_output = $discovery->detectPHPVersion();
-
-                if (preg_match('/(\d+)(\d{2})(\d{2})$/', $php_version_output, $matches)) {
-                    $php_version_output = "$matches[1].$matches[2].$matches[3]";
+                $phpVersion = $discovery->detectPHPVersion();
+                if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
+                    $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
                 }
 
-                $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $php_version_output found at " . $discovery->detectPHP() . '</>');
+                $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
                 $locked = $instance->lock();
                 $instance->detectPHP();
