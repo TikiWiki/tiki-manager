@@ -148,6 +148,12 @@ class CreateInstanceCommand extends Command
                 'dpx',
                 InputOption::VALUE_REQUIRED,
                 'Instance database prefix'
+            )
+            ->addOption(
+                'check',
+                null,
+                InputOption::VALUE_NONE,
+                'Check files checksum after operation has been performed.'
             );
 
         self::$nonInteractive = false;
@@ -176,6 +182,8 @@ class CreateInstanceCommand extends Command
             $access = $nonInteractive['access'];
             self::$nonInteractive = true;
         }
+
+        $checksumCheck = $input->getOption('check');
 
         $errors = [];
 
@@ -375,7 +383,7 @@ class CreateInstanceCommand extends Command
             return 0;
         }
 
-        $result = CommandHelper::performInstall($instance, $input, $output, self::$nonInteractive);
+        $result = CommandHelper::performInstall($instance, $input, $output, self::$nonInteractive, $checksumCheck);
 
         if ($result === false) {
             return 1;

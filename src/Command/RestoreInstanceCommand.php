@@ -5,6 +5,7 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
@@ -16,7 +17,13 @@ class RestoreInstanceCommand extends Command
         $this
             ->setName('instance:restore')
             ->setDescription('Restore a blank installation')
-            ->setHelp('This command allows you to restore a blank installation');
+            ->setHelp('This command allows you to restore a blank installation')
+            ->addOption(
+                'check',
+                null,
+                InputOption::VALUE_NONE,
+                'Check files checksum after operation has been performed.'
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -28,6 +35,8 @@ class RestoreInstanceCommand extends Command
 
         $restorableInstances = CommandHelper::getInstances('restore');
         $restorableInstancesInfo = CommandHelper::getInstancesInfo($restorableInstances);
+
+        $checksumCheck = $input->getOption('check');
 
         if (isset($instancesInfo) && isset($restorableInstancesInfo)) {
             $io->note('It is only possible to restore a backup on a blank install.');
@@ -79,7 +88,7 @@ class RestoreInstanceCommand extends Command
                 $databaseConfig = CommandHelper::setupDatabaseConnection($instance, $input, $output);
                 $instance->setDatabaseConfig($databaseConfig);
 
-                $instance->restore($restorableInstance->app, $file);
+                $instance->restore($restorableInstance->app, $file, false, $checksumCheck);
 
                 $output->writeln('<fg=cyan>It is now time to test your site: ' . $instance->name . '</>');
                 $output->writeln('<fg=cyan>If there are issues, connect with make access to troubleshoot directly on the server.</>');

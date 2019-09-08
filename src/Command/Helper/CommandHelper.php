@@ -383,13 +383,15 @@ class CommandHelper
      * @param InputInterface $input
      * @param OutputInterface $output
      * @param boolean $nonInteractive
+     * @param boolean $checksumCheck
      * @return bool
      */
     public static function performInstall(
         Instance $instance,
         InputInterface $input,
         OutputInterface $output,
-        $nonInteractive = false
+        $nonInteractive = false,
+        $checksumCheck = false
     ) {
 
         $io = new SymfonyStyle($input, $output);
@@ -433,7 +435,7 @@ class CommandHelper
                 'you can use \'tiki-manager instance:access\' to complete the installation manually.'
             ]);
         }
-        $app->install($version);
+        $app->install($version, $checksumCheck);
 
         if ($app->requiresDatabase()) {
             $dbConn = self::setupDatabaseConnection($instance, $input, $output, $nonInteractive);

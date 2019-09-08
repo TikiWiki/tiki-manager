@@ -334,7 +334,14 @@ class Tiki extends Application
         return $this->vcs_instance->getAvailableBranches();
     }
 
-    public function install(Version $version)
+    /**
+     * Install new instance.
+     *
+     * @param Version $version
+     * @param bool $checksumCheck
+     * @return null
+     */
+    public function install(Version $version, $checksumCheck = false)
     {
         $access = $this->instance->getBestAccess('scripting');
         $host = $access->getHost();
@@ -376,7 +383,9 @@ class Tiki extends Application
 
         $this->setDbLock();
 
-        $version->collectChecksumFromInstance($this->instance);
+        if ($checksumCheck) {
+            $version->collectChecksumFromInstance($this->instance);
+        }
     }
 
     public function installProfile($domain, $profile)
