@@ -657,7 +657,16 @@ SQL;
         return $backup->create();
     }
 
-    public function restore($src_app, $archive, $clone = false)
+    /**
+     * Restore instance
+     *
+     * @param $src_app
+     * @param $archive
+     * @param bool $clone
+     * @param bool $checksumCheck
+     * @return null
+     */
+    public function restore($src_app, $archive, $clone = false, $checksumCheck = false)
     {
         $access = $this->getBestAccess('scripting');
 
@@ -699,7 +708,9 @@ SQL;
             $this->getApplication()->fixPermissions();
         }
 
-        $version->collectChecksumFromInstance($this);
+        if ($checksumCheck) {
+            $version->collectChecksumFromInstance($this);
+        }
 
         $flags = '-Rf';
         if (ApplicationHelper::isWindows()) {
