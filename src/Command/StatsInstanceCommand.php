@@ -26,7 +26,7 @@ class StatsInstanceCommand extends Command
             ->setHelp('This command allows you to fetch data (ex: KPIs) from instances and push to a Tracker.')
             ->addOption(
                 'instances',
-                null,
+                'i',
                 InputOption::VALUE_REQUIRED,
                 'Instances to fetch KPI, separated by comma (,). If empty, data will be fetch from all instances.',
                 'all'
@@ -45,7 +45,7 @@ class StatsInstanceCommand extends Command
             )
             ->addOption(
                 'exclude',
-                'e',
+                'x',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs to be excluded, separated by comma (,)'
             );

@@ -24,7 +24,7 @@ class UpdateInstanceCommand extends Command
             ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
             ->addOption(
                 'instances',
-                null,
+                'i',
                 InputOption::VALUE_OPTIONAL,
                 'List of instance IDs to be updated, separated by comma (,)'
             )
@@ -42,7 +42,7 @@ class UpdateInstanceCommand extends Command
             )
             ->addOption(
                 'email',
-                null,
+                'e',
                 InputOption::VALUE_REQUIRED,
                 'Email address to notify in case of failure. Use , (comma) to separate multiple email addresses.'
             );
