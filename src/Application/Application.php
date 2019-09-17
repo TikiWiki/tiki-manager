@@ -52,7 +52,7 @@ abstract class Application
 
     abstract public function isInstalled();
 
-    abstract public function install(Version $version);
+    abstract public function install(Version $version, $checksumCheck = false);
 
     abstract public function getInstallType($refresh = false);
 

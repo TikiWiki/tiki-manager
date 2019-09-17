@@ -159,7 +159,13 @@ class UpgradeInstanceCommand extends Command
                 }
 
                 if (count($versionSel) > 0) {
-                    $filesToResolve = $app->performUpdate($instance, $target, $checksumCheck);
+                    try {
+                        $filesToResolve = $app->performUpdate($instance, $target, $checksumCheck);
+                    } catch (\Exception $e) {
+                        CommandHelper::setInstanceSetupError($instance->id, $input, $output);
+                        return false;
+                    }
+
                     $version = $instance->getLatestVersion();
 
                     if ($checksumCheck) {
