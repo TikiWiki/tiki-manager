@@ -33,13 +33,13 @@ class SetupUpdateCommand extends Command
             )
             ->addOption(
                 'instances',
-                null,
+                'i',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs to be updated, separated by comma (,)'
             )
             ->addOption(
                 'email',
-                null,
+                'e',
                 InputOption::VALUE_REQUIRED,
                 'Email address to report update failures (multiple emails must be separated by comma (,)).'
             );

@@ -20,19 +20,19 @@ class BackupInstanceCommand extends Command
             ->setHelp('This command allows you to backup instances')
             ->addOption(
                 'instances',
-                'ins',
+                'i',
                 InputOption::VALUE_REQUIRED,
                 'Use all or a specific list of instances IDs (comma separated)'
             )
             ->addOption(
                 'exclude',
-                'e',
+                'x',
                 InputOption::VALUE_REQUIRED,
                 'Used with --instances=all, a list of instance IDs to exclude from backup'
             )
             ->addOption(
                 'email',
-                null,
+                'e',
                 InputOption::VALUE_REQUIRED,
                 'Email addresses to notify for backup failures  (comma separated)'
             );

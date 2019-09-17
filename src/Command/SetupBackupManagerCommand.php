@@ -33,13 +33,13 @@ class SetupBackupManagerCommand extends Command
             )
             ->addOption(
                 'exclude',
-                'ex',
+                'x',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs to be excluded, separated by comma (,)'
             )
             ->addOption(
                 'email',
-                null,
+                'e',
                 InputOption::VALUE_REQUIRED,
                 'Email address to report backup failures (multiple emails must be separated by comma (,)).'
             );

@@ -20,8 +20,18 @@ class CheckInstanceCommand extends Command
             ->setName('instance:check')
             ->setDescription('Check instance')
             ->setHelp('This command allows you to check an instance')
-            ->addOption('instances', null, InputOption::VALUE_OPTIONAL, 'List of instance IDs to be checked, separated by comma (,)')
-            ->addOption('update-from', null, InputOption::VALUE_OPTIONAL, 'Action related to how checksums are performed. Accepted values - current or source');
+            ->addOption(
+                'instances',
+                'i',
+                InputOption::VALUE_OPTIONAL,
+                'List of instance IDs to be checked, separated by comma (,)'
+            )
+            ->addOption(
+                'update-from',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Action related to how checksums are performed. Accepted values - current or source'
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
