@@ -435,11 +435,21 @@ class CommandHelper
                 'you can use \'tiki-manager instance:access\' to complete the installation manually.'
             ]);
         }
-        $app->install($version, $checksumCheck);
+
+        try {
+            $app->install($version, $checksumCheck);
+        } catch (\Exception $e) {
+            $error = true;
+        }
 
         if ($app->requiresDatabase()) {
             $dbConn = self::setupDatabaseConnection($instance, $input, $output, $nonInteractive);
             $app->setupDatabase($dbConn);
+        }
+
+        if (isset($error)) {
+            CommandHelper::setInstanceSetupError($instance->id, $input, $output);
+            return false;
         }
 
         $io->success('Please test your site at ' . $instance->weburl);
@@ -715,5 +725,27 @@ class CommandHelper
         }
 
         return $value;
+    }
+
+    /**
+     * Build error message to fix instance if setup fails
+     *
+     * @param $instanceId
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     */
+    public static function setInstanceSetupError($instanceId, InputInterface $input, OutputInterface $output)
+    {
+        $errors = [];
+
+        if (! empty($instanceId) && is_numeric($instanceId)) {
+            $errors[] = 'Failed to install instance. Please follow these steps to continue the process manually.';
+            $errors[] = '- php tiki-manager.php instance:access --instances=' . $instanceId;
+            $errors[] = '- bash setup.sh -n fix';
+            $errors[] = '- php -q -d memory_limit=256M console.php database:install';
+
+            $io = new SymfonyStyle($input, $output);
+            $io->error($errors);
+        }
     }
 }

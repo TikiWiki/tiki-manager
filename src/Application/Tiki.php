@@ -8,6 +8,7 @@ namespace TikiManager\Application;
 
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Svn;
@@ -103,6 +104,11 @@ class Tiki extends Application
         return $revision;
     }
 
+    /**
+     * Fixing files read/write permissions and run composer install
+     *
+     * @return null
+     */
     public function fixPermissions()
     {
         $instance = $this->instance;
@@ -115,15 +121,20 @@ class Tiki extends Application
             if ($instance->hasConsole()) {
                 if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
                     // TODO INSTALL COMPOSER IF NOT FOUND
-                    $access->shellExec("cd $webroot && composer install -d vendor_bundled --no-interaction --prefer-source");
+                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']); // does composer as well
                 } else {
-                    $ret = $access->shellExec("cd $webroot && bash setup.sh -n fix");    // does composer as well
+                    $command = $access->createCommand('bash', ['setup.sh', '-n', 'fix']); // does composer as well
                 }
             } else {
                 warning('Old Tiki detected, running bundled Tiki Manager setup.sh script.');
                 $filename = $instance->getWorkPath('setup.sh');
                 $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
-                $ret = $access->shellExec("cd $webroot && bash " . escapeshellarg($filename));
+                $command = $access->createCommand('bash', ['$filename']); // does composer as well
+            }
+
+            $command->run();
+            if ($command->getReturn() !== 0) {
+                throw new \Exception('Command failed');
             }
         }
     }
@@ -444,7 +455,7 @@ class Tiki extends Application
                 $ret = $access->shellExec([
                     "sh {$escaped_root_path}/setup.sh composer",
                     "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
-                ]);
+                ], true);
             }
         } elseif ($access instanceof Mountable) {
             $folder = cache_folder($this, $version);
@@ -507,9 +518,14 @@ class Tiki extends Application
 
                 if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
                     // TODO INSTALL COMPOSER IF NOT FOUND
-                    $access->shellExec('composer install -d vendor_bundled --no-interaction --prefer-source');
+                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']); // does composer as well
                 } else {
-                    $access->shellExec("sh setup.sh composer");
+                    $command = $access->createCommand('bash', ['setup.sh', 'composer']); // does composer as well
+                }
+
+                $command->run();
+                if ($command->getReturn() !== 0) {
+                    throw new \Exception('Command failed');
                 }
 
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");

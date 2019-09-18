@@ -8,7 +8,7 @@ namespace TikiManager\Access;
 
 interface ShellPrompt
 {
-    public function shellExec($command);
+    public function shellExec($command, $output = false);
 
     public function openShell($workingDir = '');
 

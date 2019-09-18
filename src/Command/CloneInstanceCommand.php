@@ -174,7 +174,13 @@ class CloneInstanceCommand extends Command
                     if ($cloneUpgrade) {
                         $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
                         $app = $destinationInstance->getApplication();
-                        $app->performUpgrade($destinationInstance, $upgrade_version, $checksumCheck);
+
+                        try {
+                            $app->performUpgrade($destinationInstance, $upgrade_version, $checksumCheck);
+                        } catch (\Exception $e) {
+                            CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output);
+                            exit(-1);
+                        }
                     }
                     $destinationInstance->unlock();
                 }
