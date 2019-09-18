@@ -117,11 +117,19 @@ class SSH
         passthru($command);
     }
 
-    public function rsync($args = [])
+    public function rsync($args = [], $options = [])
     {
         $return_val = -1;
         if (empty($args['src']) || empty($args['dest'])) {
             return $return_val;
+        }
+
+        $exclude = [];
+        if (!empty($options['exclude'])) {
+            $exclude = is_array($options['exclude']) ? $options['exclude'] : [$options['exclude']];
+            $exclude = array_map(function($path) {
+                return '--exclude=' . $path;
+            }, $exclude);
         }
 
         $key = $_ENV['SSH_KEY'];
@@ -132,12 +140,15 @@ class SSH
         $port = $this->port ;
 
         $localHost = new Local();
-        $command = new Command('rsync', array(
-            '-a', '-L', '--delete',
-            '-e', "ssh -p {$port} -i $key",
-            $args['src'],
-            "{$user}@{$host}:{$args['dest']}"
-        ));
+
+        $rsyncParams = ['-a', '-L', '--delete'];
+        $rsyncParams = array_merge($rsyncParams, $exclude);
+        $rsyncParams[] = '-e';
+        $rsyncParams[] = "ssh -p {$port} -i $key";
+        $rsyncParams[] = $src;
+        $rsyncParams[] = "{$user}@{$host}:{$dest}";
+
+        $command = new Command('rsync', $rsyncParams);
         $localHost->runCommand($command);
         $return_var = $command->getReturn();
 
