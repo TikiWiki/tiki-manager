@@ -117,7 +117,7 @@ class SSH
         passthru($command);
     }
 
-    public function rsync($args = [], $options = [])
+    public function rsync($args = [])
     {
         $return_val = -1;
         if (empty($args['src']) || empty($args['dest'])) {
@@ -125,8 +125,8 @@ class SSH
         }
 
         $exclude = [];
-        if (!empty($options['exclude'])) {
-            $exclude = is_array($options['exclude']) ? $options['exclude'] : [$options['exclude']];
+        if (!empty($args['exclude'])) {
+            $exclude = is_array($args['exclude']) ? $args['exclude'] : [$args['exclude']];
             $exclude = array_map(function($path) {
                 return '--exclude=' . $path;
             }, $exclude);

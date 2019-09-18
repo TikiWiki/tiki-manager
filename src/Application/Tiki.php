@@ -231,12 +231,13 @@ class Tiki extends Application
     public function getFileLocations()
     {
         $access = $this->instance->getBestAccess('scripting');
+        $webroot = rtrim($this->instance->webroot, '/');
         $out = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/get_directory_list.php',
-            [$this->instance->webroot]
+            [$webroot]
         );
 
-        $folders['app'] = [$this->instance->webroot];
+        $folders['app'] = [$webroot];
 
         foreach (explode("\n", $out) as $line) {
             $line = trim($line);
@@ -371,8 +372,8 @@ class Tiki extends Application
             } else {
                 $host->rsync([
                     'src' => rtrim($folder, '/') . '/',
-                    'dest' => rtrim($this->instance->webroot, '/') . '/'
-                ], ['exclude' => ['.phpenv']
+                    'dest' => rtrim($this->instance->webroot, '/') . '/',
+                    'exclude' => ['.phpenv']
                 ]);
             }
         } else {

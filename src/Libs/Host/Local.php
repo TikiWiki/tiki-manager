@@ -207,7 +207,7 @@ class Local
         passthru($command);
     }
 
-    public function rsync($args = [], $options = [])
+    public function rsync($args = [])
     {
         $return_val = -1;
 
@@ -216,8 +216,8 @@ class Local
         }
 
         $exclude = '';
-        if (!empty($options['exclude'])) {
-            $exclude = is_array($options['exclude']) ? $options['exclude'] : [$options['exclude']];
+        if (!empty($args['exclude'])) {
+            $exclude = is_array($args['exclude']) ? $args['exclude'] : [$args['exclude']];
             $exclude = array_map(function($path) {
                 return '--exclude=' . $path;
             }, $exclude);
@@ -226,8 +226,9 @@ class Local
 
         $output = [];
         $command = sprintf(
-            'rsync -aL --delete --exclude=.svn/tmp %s %s %s 2>&1',
+            'rsync -aL --delete --exclude=.svn/tmp %s %s %s %s 2>&1',
             $exclude,
+            isset($args['link-dest']) ? '--link-dest=' . $args['link-dest'] : '',
             escapeshellarg($args['src']),
             escapeshellarg($args['dest'])
         );
