@@ -43,6 +43,18 @@ class UpgradeInstanceCommand extends Command
                 'b',
                 InputOption::VALUE_REQUIRED,
                 'Instance branch to update'
+            )
+            ->addOption(
+                'skip-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip rebuilding index step.'
+            )
+            ->addOption(
+                'skip-cache-warmup',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip generating cache step.'
             );
     }
 
@@ -60,6 +72,8 @@ class UpgradeInstanceCommand extends Command
         $instancesOption = $input->getOption('instances');
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        $skipReindex = $input->getOption('skip-reindex');
+        $skipCache = $input->getOption('skip-cache-warmup');
 
         if (empty($instancesOption)) {
             $io->newLine();
@@ -160,7 +174,11 @@ class UpgradeInstanceCommand extends Command
 
                 if (count($versionSel) > 0) {
                     try {
-                        $filesToResolve = $app->performUpdate($instance, $target, $checksumCheck);
+                        $filesToResolve = $app->performUpdate($instance, $target, [
+                            'checksum-check' => $checksumCheck,
+                            'skip-reindex' => $skipReindex,
+                            'skip-cache-warmup' => $skipCache
+                        ]);
                     } catch (\Exception $e) {
                         CommandHelper::setInstanceSetupError($instance->id, $input, $output);
                         return false;

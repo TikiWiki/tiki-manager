@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
+use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Database\Database;
@@ -43,11 +44,24 @@ class CloneInstanceCommand extends Command
                 't',
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
                 'Destination instance(s).'
-            )->addOption(
+            )
+            ->addOption(
                 'branch',
                 'b',
                 InputOption::VALUE_REQUIRED,
                 'Select Branch.'
+            )
+            ->addOption(
+                'skip-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip rebuilding index step.'
+            )
+            ->addOption(
+                'skip-cache-warmup',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip generating cache step.'
             );
     }
 
@@ -64,6 +78,8 @@ class CloneInstanceCommand extends Command
             $offset = 0;
 
             $checksumCheck = $input->getOption('check');
+            $skipReindex = $input->getOption('skip-reindex');
+            $skipCache = $input->getOption('skip-cache-warmup');
             $argument = $input->getArgument('mode');
             if (isset($argument) && !empty($argument)) {
                 if (is_array($argument)) {
@@ -156,6 +172,7 @@ class CloneInstanceCommand extends Command
                 $sourceAccess = $selectedSourceInstances[0]->getBestAccess('scripting');
                 $sourceDB = $selectedSourceInstances[0]->getDatabaseConfig();
 
+                /** @var Instance $destinationInstance */
                 foreach ($selectedDestinationInstances as $destinationInstance) {
                     $targetAccess = $destinationInstance->getBestAccess('scripting');
                     $targetDB = $destinationInstance->getDatabaseConfig();
@@ -176,7 +193,11 @@ class CloneInstanceCommand extends Command
                         $app = $destinationInstance->getApplication();
 
                         try {
-                            $app->performUpgrade($destinationInstance, $upgrade_version, $checksumCheck);
+                            $app->performUpgrade($destinationInstance, $upgrade_version, [
+                                'checksum-check' => $checksumCheck,
+                                'skip-reindex' => $skipReindex,
+                                'skip-cache-warmup' => $skipCache
+                            ]);
                         } catch (\Exception $e) {
                             CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output);
                             exit(-1);
