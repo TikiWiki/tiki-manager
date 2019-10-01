@@ -62,9 +62,9 @@ abstract class Application
 
     abstract public function getSourceFile(Version $version, $filename);
 
-    abstract public function performActualUpdate(Version $version);
+    abstract public function performActualUpdate(Version $version, $options = []);
 
-    abstract public function performActualUpgrade(Version $version, $abort_on_conflict);
+    abstract public function performActualUpgrade(Version $version, $options = []);
 
     abstract public function extractTo(Version $version, $folder);
 
@@ -90,10 +90,10 @@ abstract class Application
      * Perform an instance branch update/upgrade
      * @param Instance $instance
      * @param null $version
-     * @param bool $checksumCheck
+     * @param array $options
      * @return array
      */
-    public function performUpdate(Instance $instance, $version = null, $checksumCheck = false)
+    public function performUpdate(Instance $instance, $version = null, $options = [])
     {
         $current = $instance->getLatestVersion();
 
@@ -113,6 +113,9 @@ abstract class Application
             $new->save();
         }
 
+        $checksumCheck = isset($options['checksum-check']) && is_bool($options['checksum-check']) ?
+            $options['checksum-check'] : false;
+
         if ($checksumCheck) {
             info('Checking old instance checksums.');
             $oldPristine = $current->performCheck($instance);
@@ -122,7 +125,7 @@ abstract class Application
             $new->collectChecksumFromSource($instance);
         }
 
-        $this->performActualUpdate($new);
+        $this->performActualUpdate($new, $options);
 
         if (! $checksumCheck) {
             return [
@@ -168,12 +171,11 @@ abstract class Application
      * Perform instance upgrade to a higher branch version
      * @param Instance $instance
      * @param $version
-     * @param bool $abort_on_conflict
-     * @param bool $checksumCheck
+     * @param array $options
      */
-    public function performUpgrade(Instance $instance, $version, $abort_on_conflict = true, $checksumCheck = false)
+    public function performUpgrade(Instance $instance, $version, $options = [])
     {
-        $this->performActualUpgrade($version, $abort_on_conflict);
+        $this->performActualUpgrade($version, $options);
 
         // Create a new version if process did not abort
         $new = $instance->createVersion();
@@ -182,7 +184,7 @@ abstract class Application
         $new->date = $version->date;
         $new->save();
 
-        if ($checksumCheck) {
+        if (isset($options['checksum-check']) && $options['checksum-check']) {
             info('Obtaining new checksum from source.');
             $new->collectChecksumFromSource($instance);
         }
