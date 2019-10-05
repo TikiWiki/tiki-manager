@@ -1,3 +1,4 @@
+    <?php if (defined("TITLE")) : ?>
         <footer>
             <nav class="navbar navbar-dark bg-dark">
                 <div class="container">
@@ -7,6 +8,7 @@
                 </div>
             </nav>
         </footer>
+    <?php endif;?>
 
         <script src="vendor/components/jquery/jquery.min.js"></script>
         <script src="vendor/twitter/bootstrap/dist/js/bootstrap.min.js"></script>

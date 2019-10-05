@@ -10,7 +10,8 @@ use TikiManager\Config\Environment;
 $authFile = dirname(__FILE__) . "/config.php";
 
 if (! file_exists($authFile)) {
-    die("This interface is not enabled.");
+    require "include/enable.php";
+    exit;
 }
 
 ob_start();
@@ -21,7 +22,8 @@ $environment->load();
 ob_end_clean();
 
 if (RESTRICT && ( $_SERVER['HTTP_HOST'] != 'localhost' || $_SERVER['REMOTE_ADDR'] != '127.0.0.1' )) {
-    die("This interface is not enabled.");
+    require "include/enable.php";
+    exit;
 }
 
 set_time_limit(TIMEOUT);
