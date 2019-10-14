@@ -27,7 +27,7 @@ function web_backup($instance)
         }
     }
 
-    info('Downloading files locally...');
+    info('Copying files...');
     $copyResult = $backup->copyDirectories($targets, $backupDir);
 
     info('Creating manifest...');
