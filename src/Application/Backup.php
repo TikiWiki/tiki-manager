@@ -87,7 +87,7 @@ class Backup
         $this->app->removeTemporaryFiles();
         $targets = $this->getTargetDirectories();
 
-        info('Downloading files locally');
+        info('Copying files');
         $copyResult = $this->copyDirectories($targets, $backupDir);
 
         info('Checking system ini config file');
