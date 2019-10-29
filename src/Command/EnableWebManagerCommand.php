@@ -197,6 +197,8 @@ CONFIG
         $data = $_ENV['TRIM_DATA'];
         $backup = $_ENV['BACKUP_FOLDER'];
         $archive = $_ENV['ARCHIVE_FOLDER'];
+        $logs = $_ENV['TRIM_LOGS'];
+        $cache = $_ENV['CACHE_FOLDER'];
         $composer = $_ENV['COMPOSER_PATH'] == 'composer' ? $_ENV['COMPOSER_PATH'] : 'php ' . $_ENV['COMPOSER_PATH'];
         $user = getenv('WWW_USER');
         $group = getenv('WWW_GROUP');
@@ -206,6 +208,8 @@ CONFIG
         `chown $user:$group $data`;
         `chown $user:$group $backup`;
         `chown $user:$group $archive`;
+        `chown $user:$group $logs`;
+        `chown $user:$group $cache`;
         `(rm -rf $webPath/vendor && $composer install -d $webPath)`;
         `(chown -R $owner $webPath/vendor)`;
 
