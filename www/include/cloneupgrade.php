@@ -22,6 +22,7 @@ $versions = $tikiApplication->getVersions();
 ?>
 
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-list cloneupgrade center">
         <h1><?php echo TITLE; ?></h1>
         <h2><?php echo $page_title; ?></h2>

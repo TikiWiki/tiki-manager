@@ -11,10 +11,11 @@ $requirements = $osReq->getRequirements();
 ?>
 
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-list center">
         <h1><?php echo TITLE; ?></h1>
         <h2><?php echo $page_title; ?></h2>
-        <?php if (! empty($requirements)) : ?>
+        <?php if(! empty($requirements)) : ?>
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>

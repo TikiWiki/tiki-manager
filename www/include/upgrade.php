@@ -44,6 +44,7 @@ if ($instanceSelected && $instance = TikiManager\Application\Instance::getInstan
 }
 ?>
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-list upgrade center">
         <h1><?php echo TITLE; ?></h1>
         <h2><?php echo $page_title; ?></h2>

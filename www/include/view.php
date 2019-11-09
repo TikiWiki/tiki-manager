@@ -15,6 +15,7 @@ while (key($all) != $instance->id) {
 <?php require dirname(__FILE__) . "/layout/nav.php"; ?>
 
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-view center">
         <h1><?php echo TITLE; ?></h1>
         <div class="instance-nav">
