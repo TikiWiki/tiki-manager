@@ -28,8 +28,8 @@ class Environment
      */
     public function __construct($homeDirectory)
     {
-        $this->homeDirectory = $homeDirectory . '/';
-        require_once $this->homeDirectory . 'src/Libs/Helpers/functions.php';
+        $this->homeDirectory = $homeDirectory;
+        require_once $this->homeDirectory . '/src/Libs/Helpers/functions.php';
     }
 
     /**
@@ -39,15 +39,17 @@ class Environment
     public function load()
     {
         $dotenvLoader = new Dotenv();
+        $envDistFile = $this->homeDirectory . '/.env.dist';
+        $envFile = $this->homeDirectory . '/.env';
 
-        if (! file_exists($this->homeDirectory . '.env.dist')) {
-            throw new ConfigurationErrorException('.env.dist file not found at: "' . $this->homeDirectory . '.env.dist' . '"');
+        if (! file_exists($envDistFile)) {
+            throw new ConfigurationErrorException('.env.dist file not found at: "' . $envDistFile . '"');
         }
 
         $this->setRequiredEnvironmentVariables();
 
-        $dotenvLoader->load($this->homeDirectory . '.env.dist');
-        $dotenvLoader->loadEnv($this->homeDirectory . '.env');
+        $dotenvLoader->load($envDistFile);
+        $dotenvLoader->loadEnv($envFile);
 
         $this->loadEnvironmentVariablesContainingLogic();
         $this->initializeComposerEnvironment();
@@ -90,7 +92,7 @@ class Environment
             $_ENV['DIFF'] = 'diff';
         }
 
-        $localComposerPath = rtrim($this->homeDirectory, '/') . '/composer.phar';
+        $localComposerPath = $this->homeDirectory . '/composer.phar';
         if (file_exists($localComposerPath)) {
             $_ENV['COMPOSER_PATH'] = $localComposerPath;
         } elseif (Requirements::getInstance()->hasDependency('composer')){
