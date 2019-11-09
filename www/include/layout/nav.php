@@ -39,6 +39,12 @@
                             <a class="dropdown-item" href="<?php echo html(url('manage')) ?>">Manage backups</a>
                         </div>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Help</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="<?php echo html(url('requirements')) ?>">Check requirements</a>
+                        </div>
+                    </li>
 <!--
                     <li class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Misc</a>
