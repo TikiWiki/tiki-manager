@@ -648,17 +648,30 @@ class CommandHelper
     }
 
     /**
-     * Display PHP Version
-     *
-     * @param $phpVersion
+     * Display Info
+     * @param $discovery
      * @param $io
      */
-    public static function displayPhpVersion($phpVersion, $io)
+    public static function displayInfo($discovery, $io)
+    {
+        $io->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
+        $io->writeln('<info>PHP Version: ' . self::formatPhpVersion($discovery->detectPHPVersion()) . '</info>');
+        $io->writeln('<info>PHP exec: ' . $discovery->detectPHP() . '</info>');
+    }
+
+    /**
+     * Format PHP version to display
+     *
+     * @param $phpVersion
+     * @return string
+     */
+    public static function formatPhpVersion($phpVersion)
     {
         if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
             $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
         }
-        $io->writeln('<info>PHP Version: ' . $phpVersion . '</info>');
+
+        return $phpVersion;
     }
 
     /**

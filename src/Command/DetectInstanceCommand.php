@@ -89,7 +89,7 @@ class DetectInstanceCommand extends Command
             $access = new $access($instance);
             $discovery = new Discovery($instance, $access);
             $phpVersion = $discovery->detectPHPVersion();
-            CommandHelper::displayPhpVersion($phpVersion, $io);
+            $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             ob_start(); // Prevent output to be displayed
             $branch = $instance->getApplication()->getBranch();

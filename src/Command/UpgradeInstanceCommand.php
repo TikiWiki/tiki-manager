@@ -99,11 +99,7 @@ class UpgradeInstanceCommand extends Command
         foreach ($selectedInstances as $instance) {
             $access = $instance->getBestAccess('scripting');
             $discovery = new Discovery($instance, $access);
-            $phpVersion = $discovery->detectPHPVersion();
-
-            if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-                $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
-            }
+            $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
             $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
