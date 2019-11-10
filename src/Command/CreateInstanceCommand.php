@@ -249,15 +249,17 @@ class CreateInstanceCommand extends Command
             $instance->save();
             $access->save();
             $output->writeln('<info>Instance information saved.</info>');
+            $io->newLine();
 
-            $phpVersion = $discovery->detectPHPVersion();
-            if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-                $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
+            if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG || $_ENV['TRIM_DEBUG']) {
+                $io->title('Tiki Manager Info');
+                $mock_instance = new Instance();
+                $mock_access = Access::getClassFor('local');
+                $mock_access = new $mock_access($mock_instance);
+                $mock_discovery = new Discovery($mock_instance, $mock_access);
+
+                CommandHelper::displayInfo($mock_discovery, $io);
             }
-
-            $output->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
-            $output->writeln('<info>PHP Version: ' . $phpVersion . '</info>');
-            $output->writeln('<info>PHP exec: ' . $discovery->detectPHP() . '</info>');
 
             $folders = [
                 'webroot' => [
@@ -313,7 +315,7 @@ class CreateInstanceCommand extends Command
             }
 
             $phpVersion = $discovery->detectPHPVersion();
-            CommandHelper::displayPhpVersion($phpVersion, $io);
+            $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 
