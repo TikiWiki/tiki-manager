@@ -761,4 +761,16 @@ class CommandHelper
             $io->error($errors);
         }
     }
+
+    /**
+     * Get instance types
+     *
+     * @return array
+     */
+    public static function supportedInstanceTypes()
+    {
+        $instanceTypes = ApplicationHelper::isWindows() ? 'local' : Instance::TYPES;
+        $listInstanceTypes = explode(',', $instanceTypes);
+        return $listInstanceTypes;
+    }
 }
