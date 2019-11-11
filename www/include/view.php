@@ -97,6 +97,10 @@ while (key($all) != $instance->id) {
                             </ul>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row">Maintenance mode</th>
+                        <td><?php echo $instance->isLocked() ? html('On') : html('Off'); ?></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
