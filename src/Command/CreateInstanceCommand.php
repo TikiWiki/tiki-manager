@@ -197,7 +197,7 @@ class CreateInstanceCommand extends Command
             $instance = new Instance();
 
             $helper = $this->getHelper('question');
-            $question = new ChoiceQuestion('Connection type:', $this->getInstanceType());
+            $question = new ChoiceQuestion('Connection type:', CommandHelper::supportedInstanceTypes());
             $question->setErrorMessage('Connection type %s is invalid.');
             $instance->type = $type = $helper->ask($input, $output, $question);
 
