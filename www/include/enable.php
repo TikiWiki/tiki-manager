@@ -32,11 +32,10 @@
 
     <div class="container">
         <div class="card">
-            <p class="card-header" id="header"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"
-                                                    viewBox="0 2 24 24">
-                    <path d="M0 0h24v24H0z" fill="none" />
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                </svg><b>Error</b></p>
+            <p class="card-header" id="header">
+                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                <b>Error</b>
+            </p>
             <div class="card-body">
                 <h2 class="card-title">This interface is not enabled</h2>
                 <p id="suggestions">Suggestions:</p>
