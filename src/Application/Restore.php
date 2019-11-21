@@ -123,13 +123,22 @@ class Restore extends Backup
         }
 
         foreach ($manifest as $line) {
-            list($hash, $type, $destination) = explode('    ', $line, 3);
+            if ($this->direct) {
+                list($type, $destination) = explode('    ', $line, 2);
+            } else {
+                list($hash, $type, $destination) = explode('    ', $line, 3);
+            }
 
             if ($type == 'conf_local') {
                 continue;
             }
 
-            $source = ($type == 'conf_external') ? $archiveFolder . DIRECTORY_SEPARATOR . $hash : $archiveFolder . DIRECTORY_SEPARATOR . $hash . DIRECTORY_SEPARATOR . basename($destination);
+            if ($this->direct) {
+                $source = $archiveFolder;
+            } else {
+                $source = $archiveFolder . DIRECTORY_SEPARATOR . $hash;
+                $source .= $type != 'conf_external' ? DIRECTORY_SEPARATOR . basename($destination) : '';
+            }
 
             $windowsAbsolutePaths = (preg_match($windowsAbsolutePathsRegex, $destination, $matches)) ? true : false;
 
@@ -155,12 +164,18 @@ class Restore extends Backup
         return $folders;
     }
 
-    public function restoreFiles($srcContent = null)
+    public function restoreFiles($srcContent = null, $srcFiles = null)
     {
+        $this->direct = isset($srcFiles) ? true : false;
+
         if (is_dir($srcContent)) {
             $this->restoreFilesFromFolder($srcContent);
         } elseif (is_file($srcContent)) {
             $this->restoreFilesFromArchive($srcContent);
+        }
+
+        if ($this->direct) {
+            $this->restoreFolder($srcFiles, $this->instance->webroot);
         }
     }
 
@@ -426,7 +441,12 @@ class Restore extends Backup
 
         if (!empty($manifest)) {
             foreach ($manifest as $line) {
-                list($hash, $type, $path) = explode('    ', $line, 3);
+                if ($this->direct) {
+                    $hash = '';
+                    list($type, $path) = explode('    ', $line, 2);
+                } else {
+                    list($hash, $type, $path) = explode('    ', $line, 3);
+                }
 
                 if ($type == 'conf_local' || $type == 'conf_external') {
                     $this->instance->system_config_file = $path;

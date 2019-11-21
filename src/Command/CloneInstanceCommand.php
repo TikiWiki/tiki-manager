@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
+use TikiManager\Application\Backup;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
@@ -62,6 +63,12 @@ class CloneInstanceCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Skip generating cache step.'
+            )
+            ->addOption(
+                'direct',
+                'd',
+                InputOption::VALUE_NONE,
+                'Prevent using the backup step and rsync source to target.'
             );
     }
 
@@ -80,6 +87,7 @@ class CloneInstanceCommand extends Command
             $checksumCheck = $input->getOption('check');
             $skipReindex = $input->getOption('skip-reindex');
             $skipCache = $input->getOption('skip-cache-warmup');
+            $direct = $input->getOption('direct');
             $argument = $input->getArgument('mode');
             if (isset($argument) && !empty($argument)) {
                 if (is_array($argument)) {
@@ -160,10 +168,15 @@ class CloneInstanceCommand extends Command
                     $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
                     $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance, $input, $output);
                     $destinationInstance->setDatabaseConfig($databaseConfig);
+
+                    if ($direct && ($selectedSourceInstances[0]->type != 'local' || $destinationInstance->type != 'local')) {
+                        $output->writeln('<comment>Direct backup cannot be used, instance "' . $selectedSourceInstances[0]->name . '" and "' . $destinationInstance->name . '" are not in same location.</comment>');
+                        $direct = false;
+                    }
                 }
 
                 $output->writeln('<fg=cyan>Creating snapshot of: ' . $selectedSourceInstances[0]->name . '</>');
-                $archive = $selectedSourceInstances[0]->backup();
+                $archive = $selectedSourceInstances[0]->backup($direct);
                 if (empty($archive)) {
                     $output->writeln('<error>Error: Snapshot creation failed.</error>');
                     exit(-1);
@@ -186,7 +199,7 @@ class CloneInstanceCommand extends Command
                     $output->writeln('<fg=cyan>Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name . '</>');
 
                     $destinationInstance->lock();
-                    $destinationInstance->restore($selectedSourceInstances[0]->app, $archive, true);
+                    $destinationInstance->restore($selectedSourceInstances[0], $archive, true, false, $direct);
 
                     if ($cloneUpgrade) {
                         $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');

@@ -86,6 +86,7 @@ class CloneAndUpgradeCommandTester extends TestCase
             '--source' => self::$instanceIds[1],
             '--target' => [self::$instanceIds[2]],
             '--branch' => VersionControl::formatBranch('branches/19.x'),
+            '--direct' => null // also test direct (rsync source/target)
         ]);
 
         $instance = new Instance;
