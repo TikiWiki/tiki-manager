@@ -40,11 +40,18 @@ class CloneAndUpgradeInstanceCommand extends Command
                 't',
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
                 'Destination instance(s).'
-            )->addOption(
+            )
+            ->addOption(
                 'branch',
                 'b',
                 InputOption::VALUE_REQUIRED,
                 'Select Branch.'
+            )
+            ->addOption(
+                'direct',
+                'd',
+                InputOption::VALUE_NONE,
+                'Prevent using the backup step and rsync source to target.'
             );
     }
 
@@ -79,6 +86,10 @@ class CloneAndUpgradeInstanceCommand extends Command
 
         if ($branch = $input->getOption("branch")) {
             $arguments['--branch'] = $branch;
+        }
+
+        if ($direct = $input->getOption('direct')) {
+            $arguments['--direct'] = $direct;
         }
 
         $verifyInstanceInput = new ArrayInput($arguments);

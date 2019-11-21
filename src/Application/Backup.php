@@ -26,8 +26,9 @@ class Backup
     protected $fileUser;
     protected $instance;
     protected $workpath;
+    protected $direct;
 
-    public function __construct($instance)
+    public function __construct($instance, $direct = false)
     {
         $this->instance = $instance;
         $this->access = $this->getAccess($instance);
@@ -41,6 +42,7 @@ class Backup
         $this->filePerm = intval($instance->getProp('backup_perm')) ?: 0770;
         $this->fileUser = $instance->getProp('backup_user');
         $this->fileGroup = $instance->getProp('backup_group');
+        $this->direct = $direct;
         $this->errors = [];
 
         $this->createBackupDir();
@@ -54,20 +56,24 @@ class Backup
         $result = [];
 
         foreach ($targets as $target) {
-            list($type, $dir) = $target;
-            $hash = md5($dir);
-            $destDir = $backupDir . DIRECTORY_SEPARATOR . $hash;
-            $error_code = $access->localizeFolder($dir, $destDir);
+            if ($this->direct) {
+                return $access->localizeFolder($target, $backupDir);
+            } else {
+                list($type, $dir) = $target;
+                $hash = md5($dir);
+                $destDir = $backupDir . DIRECTORY_SEPARATOR . $hash;
+                $error_code = $access->localizeFolder($dir, $destDir);
 
-            if ($error_code) {
-                if (array_key_exists($this->errors, $error_code)) {
-                    $this->errors[$error_code][] = $dir;
-                } else {
-                    $this->errors[$error_code] = [$error_code => $dir];
+                if ($error_code) {
+                    if (array_key_exists($this->errors, $error_code)) {
+                        $this->errors[$error_code][] = $dir;
+                    } else {
+                        $this->errors[$error_code] = [$error_code => $dir];
+                    }
                 }
-            }
 
-            $result[] = [$hash, $type, $dir];
+                $result[] = [$hash, $type, $dir];
+            }
         }
 
         if (!empty($this->errors)) {
@@ -87,8 +93,12 @@ class Backup
         $this->app->removeTemporaryFiles();
         $targets = $this->getTargetDirectories();
 
-        info('Copying files');
-        $copyResult = $this->copyDirectories($targets, $backupDir);
+        if ($this->direct) {
+            $copyResult = $targets;
+        } else {
+            info('Copying files');
+            $copyResult = $this->copyDirectories($targets, $backupDir);
+        }
 
         info('Checking system ini config file');
         $targetSystemIniConfigFile = $this->getSystemIniConfigFile();
@@ -216,9 +226,10 @@ class Backup
         $backupDir = $backupDir ?: $this->backupDir;
         $manifestFile = $backupDir . DIRECTORY_SEPARATOR . 'manifest.txt';
         $file = fopen($manifestFile, 'w');
+        $lineTemplate = ! $this->direct ? '%s    %s    %s' : '%s    %s';
 
         foreach ($data as $location) {
-            $line = vsprintf("%s    %s    %s" . PHP_EOL, $location);
+            $line = vsprintf($lineTemplate . PHP_EOL, $location);
             fwrite($file, $line);
         }
 
