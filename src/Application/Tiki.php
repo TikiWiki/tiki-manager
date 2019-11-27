@@ -592,6 +592,16 @@ class Tiki extends Application
         return true;
     }
 
+    public function deleteAllTables()
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        $root = $this->instance->webroot;
+        $access->runPHP(
+            dirname(__FILE__) . '/../../scripts/tiki/run_delete_tables.php',
+            [$root]
+        );
+    }
+
     public function restoreDatabase(Database $database, $remoteFile)
     {
         $tmp = tempnam($_ENV['TEMP_FOLDER'], 'dblocal');

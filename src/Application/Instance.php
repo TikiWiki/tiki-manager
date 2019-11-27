@@ -690,6 +690,9 @@ SQL;
         $oldVersion = $this->getLatestVersion();
 
         $databaseConfig = $this->getDatabaseConfig();
+        if ($clone) { // remove old tables in case of clone
+            $this->getApplication()->deleteAllTables();
+        }
         $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
 
         if (!$this->findApplication()) { // a version is created in this call

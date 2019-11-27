@@ -27,10 +27,10 @@ class CloneAndUpgradeCommandTester extends TestCase
 {
     protected static $instancePath;
     protected static $tempPath;
-    protected static $instancePath18x1;
-    protected static $instancePath18x2;
-    protected static $dbLocalFile18x1;
-    protected static $dbLocalFile18x2;
+    protected static $instancePath1;
+    protected static $instancePath2;
+    protected static $dbLocalFile1;
+    protected static $dbLocalFile2;
     protected static $instanceIds = [];
 
     public static function setUpBeforeClass()
@@ -39,10 +39,10 @@ class CloneAndUpgradeCommandTester extends TestCase
 
         self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'cloneupgrade']);
         self::$tempPath = implode(DIRECTORY_SEPARATOR, [$basePath, 'manager']);
-        self::$instancePath18x1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance1']);
-        self::$instancePath18x2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance2']);
-        self::$dbLocalFile18x1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath18x1, 'db', 'local.php']);
-        self::$dbLocalFile18x2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath18x2, 'db', 'local.php']);
+        self::$instancePath1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance1']);
+        self::$instancePath2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance2']);
+        self::$dbLocalFile1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath1, 'db', 'local.php']);
+        self::$dbLocalFile2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath2, 'db', 'local.php']);
     }
 
     public static function tearDownAfterClass()
@@ -56,14 +56,14 @@ class CloneAndUpgradeCommandTester extends TestCase
         $count = 1;
         $ListCommandInput = [
             [
-                '--webroot' => self::$instancePath18x1,
+                '--webroot' => self::$instancePath1,
                 '--tempdir' => self::$tempPath,
-                '--branch' => VersionControl::formatBranch('branches/18.x'),
+                '--branch' => VersionControl::formatBranch('branches/20.x'),
             ],
             [
-                '--webroot' => self::$instancePath18x2,
+                '--webroot' => self::$instancePath2,
                 '--tempdir' => self::$tempPath,
-                '--branch' => VersionControl::formatBranch('branches/18.x'),
+                '--branch' => VersionControl::formatBranch('branches/20.x'),
             ]
         ];
 
@@ -85,7 +85,7 @@ class CloneAndUpgradeCommandTester extends TestCase
             'command' => $command->getName(),
             '--source' => self::$instanceIds[1],
             '--target' => [self::$instanceIds[2]],
-            '--branch' => VersionControl::formatBranch('branches/19.x'),
+            '--branch' => VersionControl::formatBranch('trunk'),
             '--direct' => null // also test direct (rsync source/target)
         ]);
 
@@ -94,10 +94,10 @@ class CloneAndUpgradeCommandTester extends TestCase
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
 
-        $diffDbFile = Files::compareFiles(self::$dbLocalFile18x1, self::$dbLocalFile18x2);
+        $diffDbFile = Files::compareFiles(self::$dbLocalFile1, self::$dbLocalFile2);
 
         $this->assertEquals(0, $commandTester->getStatusCode());
-        $this->assertEquals(VersionControl::formatBranch('branches/19.x'), $resultBranch);
+        $this->assertEquals(VersionControl::formatBranch('trunk'), $resultBranch);
         $this->assertNotEquals([], $diffDbFile);
     }
 
@@ -107,8 +107,8 @@ class CloneAndUpgradeCommandTester extends TestCase
     public function testCloneSameDatabase()
     {
         $fileSystem = new Filesystem();
-        if ($fileSystem->exists(self::$dbLocalFile18x1)) {
-            $fileSystem->copy(self::$dbLocalFile18x1, self::$dbLocalFile18x2, true);
+        if ($fileSystem->exists(self::$dbLocalFile1)) {
+            $fileSystem->copy(self::$dbLocalFile1, self::$dbLocalFile2, true);
         }
 
         // Clone command
@@ -122,7 +122,7 @@ class CloneAndUpgradeCommandTester extends TestCase
             'command' => $command->getName(),
             '--source' => self::$instanceIds[1],
             '--target' => [self::$instanceIds[2]],
-            '--branch' => VersionControl::formatBranch('branches/19.x'),
+            '--branch' => VersionControl::formatBranch('trunk'),
         ]);
 
         $output = $commandTester->getDisplay();
