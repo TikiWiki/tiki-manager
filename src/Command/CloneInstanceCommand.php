@@ -65,6 +65,12 @@ class CloneInstanceCommand extends Command
                 'Skip generating cache step.'
             )
             ->addOption(
+                'live-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Live reindex, set instance maintenance off and after perform index rebuild.'
+            )
+            ->addOption(
                 'direct',
                 'd',
                 InputOption::VALUE_NONE,
@@ -87,6 +93,7 @@ class CloneInstanceCommand extends Command
             $checksumCheck = $input->getOption('check');
             $skipReindex = $input->getOption('skip-reindex');
             $skipCache = $input->getOption('skip-cache-warmup');
+            $liveReindex = $input->getOption('live-reindex');
             $direct = $input->getOption('direct');
             $argument = $input->getArgument('mode');
             if (isset($argument) && !empty($argument)) {
@@ -209,14 +216,17 @@ class CloneInstanceCommand extends Command
                             $app->performUpgrade($destinationInstance, $upgrade_version, [
                                 'checksum-check' => $checksumCheck,
                                 'skip-reindex' => $skipReindex,
-                                'skip-cache-warmup' => $skipCache
+                                'skip-cache-warmup' => $skipCache,
+                                'live-reindex' => $liveReindex
                             ]);
                         } catch (\Exception $e) {
                             CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output);
                             exit(-1);
                         }
                     }
-                    $destinationInstance->unlock();
+                    if ($destinationInstance->isLocked()) {
+                        $destinationInstance->unlock();
+                    }
                 }
 
                 $output->writeln('<fg=cyan>Deleting archive...</>');

@@ -48,6 +48,12 @@ class CloneAndUpgradeInstanceCommand extends Command
                 'Select Branch.'
             )
             ->addOption(
+                'live-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Live reindex, set instance maintenance off and after perform index rebuild.'
+            )
+            ->addOption(
                 'direct',
                 'd',
                 InputOption::VALUE_NONE,
@@ -86,6 +92,10 @@ class CloneAndUpgradeInstanceCommand extends Command
 
         if ($branch = $input->getOption("branch")) {
             $arguments['--branch'] = $branch;
+        }
+
+        if ($liveReindex = $input->getOption('live-reindex')) {
+            $arguments['--live-reindex'] = $liveReindex;
         }
 
         if ($direct = $input->getOption('direct')) {
