@@ -774,12 +774,9 @@ class Tiki extends Application
 
         $this->setDbLock();
 
-        if ($this->instance->hasConsole()) {
-            if (empty($options['skip-reindex'])) {
-                info('Rebuilding Index...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
-            }
+        $hasConsole = $this->instance->hasConsole();
 
+        if ($hasConsole) {
             info('Cleaning Cache...');
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
 
@@ -787,10 +784,20 @@ class Tiki extends Application
                 info('Generating Caches...');
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
             }
+
+            if (!empty($options['live-reindex'])) {
+                $options['skip-reindex'] = false;
+                $this->instance->unlock();
+            }
         }
 
         info('Fixing permissions...');
         $this->fixPermissions();
+
+        if (empty($options['skip-reindex']) && $hasConsole) {
+            info('Rebuilding Index...');
+            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+        }
     }
 }
 
