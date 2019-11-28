@@ -451,4 +451,11 @@ TRIM Responsiveness
   }
 }
 
+.new-section-header h4 {
+  margin-top: 10px;
+}
+.new-section-header p {
+  margin: 0px;
+}
+
 /*# sourceMappingURL=default.css.map */

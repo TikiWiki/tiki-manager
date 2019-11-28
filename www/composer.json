@@ -5,9 +5,11 @@
   "homepage": "https://tiki.org",
   "minimum-stability": "stable",
   "require": {
-    "twitter/bootstrap": "^4.1.1",
     "fortawesome/font-awesome": "^4.7.0",
-    "components/jquery": "^3.3.1"
+    "components/jquery": "^3.3.1",
+    "harvesthq/chosen": "^1.8",
+    "haubek/bootstrap4c-chosen": "^1.1",
+    "twbs/bootstrap": "^4.1.1"
   },
   "config": {
     "process-timeout": 5000
