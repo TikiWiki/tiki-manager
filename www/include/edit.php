@@ -92,7 +92,7 @@ $inMaintenance = $instance->isLocked() ?: false;
                             <tr>
                                 <th scope="row"><label for="maintenance">Maintenance mode</label></th>
                                 <td>
-                                    <select name="maintenance" id="maintenance" class="form-control">
+                                    <select name="maintenance" id="maintenance" class="form-control chosen-select">
                                         <option <?php echo !$inMaintenance ? 'selected' : ''; ?> value="off">Off</option>
                                         <option <?php echo $inMaintenance ? 'selected' : ''; ?> value="on">On</option>
                                     </select>

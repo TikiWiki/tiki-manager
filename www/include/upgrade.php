@@ -72,7 +72,7 @@ if ($instanceSelected && $instance = TikiManager\Application\Instance::getInstan
                     Select the version to upgrade <i id="loading-icon-branch"
                                                      class="fa fa-circle-o-notch fa-spin fa-fw cyan hide"></i>
                 </h3>
-                <select class="form-control clearfix branch">
+                <select class="chosen-select form-control clearfix branch">
                     <option value="">--</option>
                     <?php
                     foreach ($versions as $version) {

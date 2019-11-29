@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <label for="type">Connection Type</label>
                                 </th>
                                 <td width="55%">
-                                    <select class="form-control" id="type" name="type" disabled>
+                                    <select class="form-control chosen-select" id="type" name="type" disabled>
                                         <option value="ftp">FTP</option>
                                         <option value="local" selected>Local</option>
                                         <option value="ssh">SSH</option>

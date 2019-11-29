@@ -51,18 +51,20 @@ $versions = $tikiApplication->getVersions();
             <h3>Select the version to upgrade <i id="loading-icon-branch"
                                                  class="fa fa-circle-o-notch fa-spin fa-fw cyan hide"></i>
             </h3>
-            <select  class="form-control clearfix branch">
-                <option value="">--</option>
-                <?php
-                foreach ($versions as $version) {
-                    if (!empty($version->type) && !empty($version->branch)) {
-                        ?>
-                        <option
-                        value="<?php echo $version->branch; ?>"><?php echo $version->type . ' : ' . $version->branch; ?></option><?php
+            <div>
+	            <select class="chosen-select form-control clearfix branch">
+		            <option value="">--</option>
+                    <?php
+                    foreach ($versions as $version) {
+                        if (!empty($version->type) && !empty($version->branch)) {
+                            ?>
+				            <option
+				            value="<?php echo $version->branch; ?>"><?php echo $version->type . ' : ' . $version->branch; ?></option><?php
+                        }
                     }
-                }
-                ?>
-            </select>
+                    ?>
+	            </select>
+            </div>
             <br>
         <?php else : ?>
             <h3>Instance list is empty.</h3>

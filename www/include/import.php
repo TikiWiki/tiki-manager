@@ -157,7 +157,7 @@ if ($import) {
                             <tr>
                                 <th scope="row"><label for="type">Connection Type</label></th>
                                 <td>
-                                    <select class="form-control" id="type" disabled>
+                                    <select class="form-control chosen-select" id="type" disabled>
                                         <option value="ftp">FTP</option>
                                         <option value="local" selected>Local</option>
                                         <option value="ssh">SSH</option>
