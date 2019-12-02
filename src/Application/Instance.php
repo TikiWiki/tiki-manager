@@ -646,9 +646,9 @@ SQL;
         return false;
     }
 
-    public function backup()
+    public function backup($direct = false)
     {
-        $backup = new Backup($this);
+        $backup = new Backup($this, $direct);
 
         if ($this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
@@ -666,16 +666,23 @@ SQL;
      * @param bool $checksumCheck
      * @return null
      */
-    public function restore($src_app, $archive, $clone = false, $checksumCheck = false)
+    public function restore($src_app, $archive, $clone = false, $checksumCheck = false, $direct = false)
     {
         $access = $this->getBestAccess('scripting');
 
-        info("Restoring files from '{$archive}' into {$this->name}");
+        $srcFiles = null;
+        if ($direct && $src_app instanceof Instance) {
+            $srcFiles = $src_app->webroot;
+            info("Restoring files from '{$srcFiles}' into {$this->name}");
+        } else {
+            info("Restoring files from '{$archive}' into {$this->name}");
+        }
+
         $restore = new Restore($this);
         $restore->setProcess($clone);
-        $restore->restoreFiles($archive);
+        $restore->restoreFiles($archive, $srcFiles);
 
-        $this->app = $src_app;
+        $this->app = isset($src_app->app) ? $src_app->app : $src_app;
         $this->save();
         $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
 
@@ -683,6 +690,9 @@ SQL;
         $oldVersion = $this->getLatestVersion();
 
         $databaseConfig = $this->getDatabaseConfig();
+        if ($clone) { // remove old tables in case of clone
+            $this->getApplication()->deleteAllTables();
+        }
         $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
 
         if (!$this->findApplication()) { // a version is created in this call

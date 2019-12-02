@@ -16,6 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $locations = array_map('trim', $locations);
     $instance->setExtraBackups($locations);
 
+    $isLocked = $instance->isLocked();
+    ob_start();
+    if ($_POST['maintenance'] == 'on' && !$isLocked) {
+        $instance->lock();
+    }
+    if ($_POST['maintenance'] == 'off' && $isLocked) {
+        $instance->unlock();
+    }
+    ob_end_clean();
+
     header("Location: " . html(url("view/{$instance->id}")));
     exit;
 }
@@ -25,8 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <?php $page_title = 'Edit instance : ' . html($instance->name); ?>
 <?php require dirname(__FILE__) . "/layout/head.php"; ?>
 <?php require dirname(__FILE__) . "/layout/nav.php"; ?>
+<?php
+$inMaintenance = $instance->isLocked() ?: false;
+?>
 
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-edit center">
         <h1><?php echo TITLE; ?></h1>
         <h2><?php echo $page_title; ?></h2>
@@ -74,6 +88,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <tr>
                                 <th scope="row" class="top"><label for="backups">Additional folders to backup<span>(One per line)</span></label></th>
                                 <td><textarea cols="50" rows="6" name="backups" id="backups" class="form-control"><?php echo html(implode("\n", $instance->getExtraBackups())) ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="maintenance">Maintenance mode</label></th>
+                                <td>
+                                    <select name="maintenance" id="maintenance" class="form-control chosen-select">
+                                        <option <?php echo !$inMaintenance ? 'selected' : ''; ?> value="off">Off</option>
+                                        <option <?php echo $inMaintenance ? 'selected' : ''; ?> value="on">On</option>
+                                    </select>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

@@ -62,6 +62,30 @@ class CloneInstanceCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Skip generating cache step.'
+            )
+            ->addOption(
+                'live-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Live reindex, set instance maintenance off and after perform index rebuild.'
+            )
+            ->addOption(
+                'direct',
+                'd',
+                InputOption::VALUE_NONE,
+                'Prevent using the backup step and rsync source to target.'
+            )
+            ->addOption(
+                'keep-backup',
+                null,
+                InputOption::VALUE_NONE,
+                'Source instance backup is not deleted before the process finished.'
+            )
+            ->addOption(
+                'use-last-backup',
+                null,
+                InputOption::VALUE_NONE,
+                'Use source instance last created backup.'
             );
     }
 
@@ -80,7 +104,17 @@ class CloneInstanceCommand extends Command
             $checksumCheck = $input->getOption('check');
             $skipReindex = $input->getOption('skip-reindex');
             $skipCache = $input->getOption('skip-cache-warmup');
+            $liveReindex = $input->getOption('live-reindex');
+            $direct = $input->getOption('direct');
+            $keepBackup = $input->getOption('keep-backup');
+            $useLastBackup = $input->getOption('use-last-backup');
             $argument = $input->getArgument('mode');
+
+            if ($direct && ($keepBackup || $useLastBackup)) {
+                $io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
+                exit(-1);
+            }
+
             if (isset($argument) && !empty($argument)) {
                 if (is_array($argument)) {
                     $clone = $input->getArgument('mode')[0] == 'clone' ? true : false;
@@ -160,10 +194,42 @@ class CloneInstanceCommand extends Command
                     $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
                     $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance, $input, $output);
                     $destinationInstance->setDatabaseConfig($databaseConfig);
+
+                    if ($direct && ($selectedSourceInstances[0]->type != 'local' || $destinationInstance->type != 'local')) {
+                        $output->writeln('<comment>Direct backup cannot be used, instance "' . $selectedSourceInstances[0]->name . '" and "' . $destinationInstance->name . '" are not in same location.</comment>');
+                        $direct = false;
+                    }
                 }
 
-                $output->writeln('<fg=cyan>Creating snapshot of: ' . $selectedSourceInstances[0]->name . '</>');
-                $archive = $selectedSourceInstances[0]->backup();
+                $archive = '';
+                $standardProcess = true;
+                if ($useLastBackup) {
+                    $standardProcess = false;
+                    $archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+                    $archiveDir .= sprintf('%s-%s', $selectedSourceInstances[0]->id, $selectedSourceInstances[0]->name);
+
+                    if (file_exists($archiveDir)) {
+                        $archiveFiles = array_diff(scandir($archiveDir, SCANDIR_SORT_DESCENDING), ['.', '..']);
+                        if (! empty($archiveFiles[0])) {
+                            $archive = $archiveDir . DIRECTORY_SEPARATOR . $archiveFiles[0];
+                            $output->writeln('<fg=cyan>Using last created backup of: ' . $selectedSourceInstances[0]->name . '</>');
+                            $keepBackup = true;
+                        } else {
+                            $standardProcess = $io->confirm('Backups not found for ' . $selectedSourceInstances[0]->name . ' instance. Continue with standard process?', true);
+
+                            if (!$standardProcess) {
+                                $io->error('Backups not found for instance ' . $selectedSourceInstances[0]->name);
+                                exit(-1);
+                            }
+                        }
+                    }
+                }
+
+                if ($standardProcess) {
+                    $output->writeln('<fg=cyan>Creating snapshot of: ' . $selectedSourceInstances[0]->name . '</>');
+                    $archive = $selectedSourceInstances[0]->backup();
+                }
+
                 if (empty($archive)) {
                     $output->writeln('<error>Error: Snapshot creation failed.</error>');
                     exit(-1);
@@ -186,7 +252,7 @@ class CloneInstanceCommand extends Command
                     $output->writeln('<fg=cyan>Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name . '</>');
 
                     $destinationInstance->lock();
-                    $destinationInstance->restore($selectedSourceInstances[0]->app, $archive, true);
+                    $destinationInstance->restore($selectedSourceInstances[0], $archive, true, false, $direct);
 
                     if ($cloneUpgrade) {
                         $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
@@ -196,19 +262,24 @@ class CloneInstanceCommand extends Command
                             $app->performUpgrade($destinationInstance, $upgrade_version, [
                                 'checksum-check' => $checksumCheck,
                                 'skip-reindex' => $skipReindex,
-                                'skip-cache-warmup' => $skipCache
+                                'skip-cache-warmup' => $skipCache,
+                                'live-reindex' => $liveReindex
                             ]);
                         } catch (\Exception $e) {
                             CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output);
                             exit(-1);
                         }
                     }
-                    $destinationInstance->unlock();
+                    if ($destinationInstance->isLocked()) {
+                        $destinationInstance->unlock();
+                    }
                 }
 
-                $output->writeln('<fg=cyan>Deleting archive...</>');
-                $access = $selectedSourceInstances[0]->getBestAccess('scripting');
-                $access->shellExec("rm -f " . $archive);
+                if (! $keepBackup) {
+                    $output->writeln('<fg=cyan>Deleting archive...</>');
+                    $access = $selectedSourceInstances[0]->getBestAccess('scripting');
+                    $access->shellExec("rm -f " . $archive);
+                }
             } else {
                 $output->writeln('<comment>No instances available as destination.</comment>');
             }

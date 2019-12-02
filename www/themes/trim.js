@@ -24,9 +24,25 @@ $(document).ready(function () {
         });
     });
 
-    $('.trim-instance-new select').change(function () {
-        $('.trim-instance-new input[name=type]').val($(this).find("option:selected").attr('value'));
-    });
+    if ($('.trim-instance-new').length) {
+        $('.trim-instance-new select').change(function () {
+            $('.trim-instance-new input[name=type]').val($(this).find("option:selected").attr('value'));
+        });
+
+        $('#db_prefix').on('input', function() {
+            let val = $(this).val();
+            let user = '';
+            let database_name = '';
+
+            if (val) {
+                user = val + '_user';
+                database_name = val + '_db';
+            }
+
+            $('#db_user_preview').val(user);
+            $('#db_name_preview').val(database_name);
+        })
+    }
 
     $('.trim-instance-main-list li').click(function (event) {
         if (event.target.localName === 'li') {
@@ -301,4 +317,6 @@ $(document).ready(function () {
         $('.cloneupgrade.btn').attr('data-branch', this.value);
         verifySubmitCloneUpgrade();
     });
+
+    $(".chosen-select").chosen();
 });

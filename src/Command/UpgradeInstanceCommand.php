@@ -55,6 +55,12 @@ class UpgradeInstanceCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Skip generating cache step.'
+            )
+            ->addOption(
+                'live-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Live reindex, set instance maintenance off and after perform index rebuild.'
             );
     }
 
@@ -74,6 +80,7 @@ class UpgradeInstanceCommand extends Command
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
+        $liveReindex = $input->getOption('live-reindex');
 
         if (empty($instancesOption)) {
             $io->newLine();
@@ -99,15 +106,11 @@ class UpgradeInstanceCommand extends Command
         foreach ($selectedInstances as $instance) {
             $access = $instance->getBestAccess('scripting');
             $discovery = new Discovery($instance, $access);
-            $phpVersion = $discovery->detectPHPVersion();
-
-            if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-                $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
-            }
+            $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
             $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
-            $locked = $instance->lock();
+            $instance->lock();
             $instance->detectPHP();
             $app = $instance->getApplication();
             $version = $instance->getLatestVersion();
@@ -154,7 +157,7 @@ class UpgradeInstanceCommand extends Command
                     $selectedVersion = $branch;
                     if (!array_key_exists($selectedVersion, $versions)) {
                         $output->writeln('Branch ' . $input->getOption('branch') . ' not found');
-                        if ($locked) {
+                        if ($instance->isLocked()) {
                             $instance->unlock();
                         }
                         return;
@@ -177,7 +180,8 @@ class UpgradeInstanceCommand extends Command
                         $filesToResolve = $app->performUpdate($instance, $target, [
                             'checksum-check' => $checksumCheck,
                             'skip-reindex' => $skipReindex,
-                            'skip-cache-warmup' => $skipCache
+                            'skip-cache-warmup' => $skipCache,
+                            'live-reindex' => $liveReindex
                         ]);
                     } catch (\Exception $e) {
                         CommandHelper::setInstanceSetupError($instance->id, $input, $output);
@@ -198,7 +202,7 @@ class UpgradeInstanceCommand extends Command
             }
 
 
-            if ($locked) {
+            if ($instance->isLocked()) {
                 $instance->unlock();
             }
         }

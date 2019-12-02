@@ -19,7 +19,7 @@ $name = ! empty($_POST['name']) ? $_POST['name'] : 'localhost';
 $contact = ! empty($_POST['contact']) ? $_POST['contact'] : '';
 $webroot = ! empty($_POST['webroot']) ? $_POST['webroot'] : '';
 $weburl = ! empty($_POST['weburl']) ? $_POST['weburl'] : "http://$name";
-$tempdir = ! empty($_POST['tempdir']) ? $_POST['tempdir'] : TRIM_TEMP;
+$tempdir = ! empty($_POST['tempdir']) ? $_POST['tempdir'] : $_ENV['TRIM_TEMP'];
 $backup_group = ! empty($_POST['backup_group']) ? $_POST['backup_group'] : '';
 $backup_perm = ! empty($_POST['backup_perm']) ? octdec($_POST['backup_perm']) : 0770;
 $branch  = ! empty($_POST['branch']) ? $_POST['branch'] : '';
@@ -43,6 +43,10 @@ $tikiApplication = new Tiki($instance);
 $versions = $tikiApplication->getCompatibleVersions();
 
 $createInstance = false;
+$emailError = false;
+$branchError = false;
+$prefixError = false;
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $errors = [];
 
@@ -167,6 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <?php endif; ?>
 
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-new center">
         <h1><?=TITLE?></h1>
         <h2><?=$page_title?></h2>
@@ -189,8 +194,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <th scope="row">
                                     <label for="type">Connection Type</label>
                                 </th>
-                                <td>
-                                    <select class="form-control" id="type" name="type" disabled>
+                                <td width="55%">
+                                    <select class="form-control chosen-select" id="type" name="type" disabled>
                                         <option value="ftp">FTP</option>
                                         <option value="local" selected>Local</option>
                                         <option value="ssh">SSH</option>
@@ -200,40 +205,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </tr>
                             <tr>
                                 <th scope="row"><label for="name">Instance name</label></th>
-                                <td><input type="text" name="name" id="name" class="form-control" value="<?=$name?>"/></td>
+                                <td width="55%"><input type="text" name="name" id="name" class="form-control" value="<?=$name?>"/></td>
                             </tr>
                             <tr class="<?php echo $emailError ? 'alert-danger': '' ?>">
                                 <th scope="row"><label for="contact">Contact email</label></th>
-                                <td><input type="text" name="contact" id="contact" class="form-control" value="<?=$contact?>"/></td>
+                                <td width="55%"><input type="text" name="contact" id="contact" class="form-control" value="<?=$contact?>"/></td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="webroot">Web root</label></th>
-                                <td><input type="text" name="webroot" id="webroot" class="form-control" value="<?=$webroot?>"/></td>
+                                <td width="55%"><input type="text" name="webroot" id="webroot" class="form-control" value="<?=$webroot?>"/></td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="weburl">Web URL</label></th>
-                                <td><input type="text" name="weburl" id="weburl" class="form-control" value="<?=$weburl?>"/></td>
+                                <td width="55%"><input type="text" name="weburl" id="weburl" class="form-control" value="<?=$weburl?>"/></td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="tempdir">Work directory</label></th>
-                                <td><input type="text" name="tempdir" id="tempdir" class="form-control" value="<?=$tempdir?>"/></td>
+                                <td width="55%"><input type="text" name="tempdir" id="tempdir" class="form-control" value="<?=$tempdir?>"/></td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="backup_user">Backup owner</label></th>
-                                <td><input type="text" name="backup_user" id="backup_user" class="form-control" value="<?=$backup_user?>"/></td>
+                                <td width="55%"><input type="text" name="backup_user" id="backup_user" class="form-control" value="<?=$backup_user?>"/></td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="backup_group">Backup group</label></th>
-                                <td><input type="text" name="backup_group" id="backup_group" class="form-control" value="<?=$backup_group?>"/></td>
+                                <td width="55%"><input type="text" name="backup_group" id="backup_group" class="form-control" value="<?=$backup_group?>"/></td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="backup_perm">Backup file permissions</label></th>
-                                <td><input type="text" name="backup_perm" id="backup_perm" class="form-control" value="<?=decoct($backup_perm)?>"/></td>
+                                <td width="55%"><input type="text" name="backup_perm" id="backup_perm" class="form-control" value="<?=decoct($backup_perm)?>"/></td>
                             </tr>
                             <tr class="<?php echo $branchError ? 'alert-danger' : ''; ?>">
                                 <th scope="row"><label for="branch">Instance version</label></th>
-                                <td>
-                                    <select class="form-control" id="branch" name="branch">
+                                <td width="55%">
+                                    <select class="form-control chosen-select" id="branch" name="branch">
                                         <option value="">--</option>
                                         <?php
                                         foreach ($versions as $version) {
@@ -246,26 +251,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     </select>
                                 </td>
                             </tr>
-                            <tr>
-                                <th scope="row"><label for="db_host">Database hostname</label></th>
-                                <td><input type="text" name="db_host" id="db_host" class="form-control" value="<?=$dbHost?>"/></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="db_user">Database User</label></th>
-                                <td><input type="text" name="db_user" id="db_user" class="form-control" value="<?=$dbUser?>"/></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="db_pass">Database Password</label></th>
-                                <td><input type="password" name="db_pass" id="db_pass" class="form-control" value="<?=$dbPass?>"/></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="db_prefix">Database Prefix</label></th>
-                                <td><input type="text" name="db_prefix" id="db_prefix" class="form-control" value="<?=$dbPrefix?>"/></td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
-
+            </fieldset>
+            <div class="new-section-header">
+                <h4>Database settings</h4>
+                <p>It is required a user with administrative privileges in order create users and databases.</p>
+            </div>
+            <fieldset>
+                <div class="form-group">
+                    <table class="table table-bordered">
+                        <tbody>
+                        <tr>
+                            <th scope="row"><label for="db_host">Database hostname</label></th>
+                            <td width="55%"><input type="text" name="db_host" id="db_host" class="form-control" value="<?=$dbHost?>"/></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="db_user">Database User <br><small>with administrative privileges</small></label></th>
+                            <td width="55%"><input type="text" name="db_user" id="db_user" class="form-control" value="<?=$dbUser?>"/></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="db_pass">Database Password</label></th>
+                            <td width="55%"><input type="password" name="db_pass" id="db_pass" class="form-control" value="<?=$dbPass?>"/></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="db_prefix">Database Prefix</label></th>
+                            <td width="55%"><input type="text" name="db_prefix" id="db_prefix" class="form-control" value="<?= $dbPrefix ?>"/></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="db_user_preview">Database user</label></th>
+                            <td width="55%"><input type="text" readonly="readonly" name="db_user_preview" id="db_user_preview" class="form-control" value="<?= !empty($dbPrefix) ? $dbPrefix . '_user' : '' ?>"/></td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="db_name_preview">Database name</label></th>
+                            <td width="55%"><input type="text" readonly="readonly" name="db_name_preview" id="db_name_preview" class="form-control" value="<?= !empty($dbPrefix) ? $dbPrefix . '_tiki' : '' ?>"/></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div class="form-group">
                     <p>
                         <a href="<?=html(url('')) ?>" class="cancel btn btn-secondary"><span class="fa fa-angle-double-left"></span> Cancel</a>

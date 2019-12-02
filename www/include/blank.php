@@ -84,6 +84,7 @@ switch ($discovery->detectDistro()) {
 ?>
 
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-new center">
         <h1><?php echo TITLE; ?></h1>
         <h2><?php echo $page_title; ?></h2>
@@ -96,7 +97,7 @@ switch ($discovery->detectDistro()) {
                             <tr>
                                 <th scope="row"><label for="type">Connection Type</label></th>
                                 <td>
-                                    <select class="form-control" id="type" disabled>
+                                    <select class="form-control chosen-select" id="type" disabled>
                                         <option value="ftp">FTP</option>
                                         <option value="local" selected>Local</option>
                                         <option value="ssh">SSH</option>

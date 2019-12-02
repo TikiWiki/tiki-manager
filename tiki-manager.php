@@ -44,9 +44,11 @@ $application->add(new \TikiManager\Command\ListInstanceCommand());
 $application->add(new \TikiManager\Command\MaintenanceInstanceCommand());
 $application->add(new \TikiManager\Command\ConsoleInstanceCommand());
 $application->add(new \TikiManager\Command\StatsInstanceCommand());
+$application->add(new \TikiManager\Command\ImportInstanceCommand());
 
 $application->add(new \TikiManager\Command\ApplyProfileCommand());
 
+$application->add(new \TikiManager\Command\ManagerInfoCommand());
 $application->add(new \TikiManager\Command\CheckRequirementsCommand());
 $application->add(new \TikiManager\Command\ResetManagerCommand());
 $application->add(new \TikiManager\Command\ReportManagerCommand());

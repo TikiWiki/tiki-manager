@@ -115,13 +115,13 @@ class Tiki extends Application
         $access = $instance->getBestAccess('scripting');
 
         if ($access instanceof ShellPrompt) {
-            $webroot = $instance->webroot;
             $access->chdir($instance->webroot);
 
             if ($instance->hasConsole()) {
                 if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
-                    // TODO INSTALL COMPOSER IF NOT FOUND
-                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']); // does composer as well
+                    // TODO Requires implementation
+                    // There is no console command nor php script to fix permissions
+                    return;
                 } else {
                     $command = $access->createCommand('bash', ['setup.sh', '-n', 'fix']); // does composer as well
                 }
@@ -478,25 +478,7 @@ class Tiki extends Application
             );
         }
 
-        info('Fixing permissions...');
-
-        $this->fixPermissions();
-        $this->setDbLock();
-
-        if ($this->instance->hasConsole()) {
-            if (empty($options['skip-reindex'])) {
-                info('Rebuilding Index...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
-            }
-
-            info('Cleaning Cache...');
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
-
-            if (empty($options['skip-cache-warmup'])) {
-                info('Generating Caches...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
-            }
-        }
+        $this->postInstall($options);
 
         return;
     }
@@ -552,25 +534,7 @@ class Tiki extends Application
                 );
             }
 
-            info('Fixing permissions...');
-
-            $this->fixPermissions();
-            $this->setDbLock();
-
-            if ($this->instance->hasConsole()) {
-                if (empty($options['skip-reindex'])) {
-                    info('Rebuilding Index...');
-                    $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
-                }
-
-                info('Cleaning Cache...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
-
-                if (empty($options['skip-cache-warmup'])) {
-                    info('Generating Caches...');
-                    $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
-                }
-            }
+            $this->postInstall($options);
 
             return;
         }
@@ -590,6 +554,16 @@ class Tiki extends Application
     public function requiresDatabase()
     {
         return true;
+    }
+
+    public function deleteAllTables()
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        $root = $this->instance->webroot;
+        $access->runPHP(
+            dirname(__FILE__) . '/../../scripts/tiki/run_delete_tables.php',
+            [$root]
+        );
     }
 
     public function restoreDatabase(Database $database, $remoteFile)
@@ -754,6 +728,76 @@ class Tiki extends Application
         }
 
         return $compatible;
+    }
+
+    /**
+     * Run composer install
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function runComposer()
+    {
+        $instance = $this->instance;
+        $access = $instance->getBestAccess('scripting');
+
+        if ($access instanceof ShellPrompt) {
+            $access->chdir($instance->webroot);
+
+            if ($instance->hasConsole()) {
+                if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
+                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']);
+                } else {
+                    $command = $access->createCommand('bash', ['setup.sh', 'composer']);
+                }
+
+                $command->run();
+                if ($command->getReturn() !== 0) {
+                    throw new \Exception('Composer install failed');
+                }
+            }
+        }
+    }
+
+    /**
+     * @param array $options
+     * @throws \Exception
+     */
+    public function postInstall($options = [])
+    {
+
+        $access = $this->instance->getBestAccess('scripting');
+        $access->getHost(); // trigger the config of the location change (to catch phpenv)
+
+        info('Running composer...');
+        $this->runComposer();
+
+        $this->setDbLock();
+
+        $hasConsole = $this->instance->hasConsole();
+
+        if ($hasConsole) {
+            info('Cleaning Cache...');
+            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
+
+            if (empty($options['skip-cache-warmup'])) {
+                info('Generating Caches...');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
+            }
+
+            if (!empty($options['live-reindex'])) {
+                $options['skip-reindex'] = false;
+                $this->instance->unlock();
+            }
+        }
+
+        info('Fixing permissions...');
+        $this->fixPermissions();
+
+        if (empty($options['skip-reindex']) && $hasConsole) {
+            info('Rebuilding Index...');
+            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+        }
     }
 }
 

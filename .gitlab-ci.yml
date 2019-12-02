@@ -8,6 +8,7 @@ variables:
   MYSQL_ROOT_PASSWORD: secret
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
   COMPOSER_FLAGS: '--ansi --no-progress --prefer-dist -n'
+  SVN_SCHEDULER_NAME: "test-tiki-manager-svn"
 
 stages:
 - quality
@@ -119,62 +120,78 @@ unit-tests:
     - ./vendor/bin/phpunit tests/Command/$TEST_FILE
   allow_failure: false
 
-create-instance-git:
+.template-tiki-manager-commands-git: &template-tiki-manager-commands-git
   <<: *template-tiki-manager-commands
+  except:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULER == $SVN_SCHEDULER_NAME
+
+.template-tiki-manager-commands-svn: &template-tiki-manager-commands-svn
+  <<: *template-tiki-manager-commands
+  only:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULER == $SVN_SCHEDULER_NAME
+
+create-instance-git:
+  <<: *template-tiki-manager-commands-git
   variables:
     VCS: git
     TEST_FILE: CreateInstanceCommandTest.php
 
 create-instance-svn:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-svn
   variables:
     VCS: svn
     TEST_FILE: CreateInstanceCommandTest.php
 
 backup-instance-git:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-git
   variables:
     VCS: git
     TEST_FILE: BackupInstanceCommandTest.php
 
 backup-instance-svn:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-svn
   variables:
     VCS: svn
     TEST_FILE: BackupInstanceCommandTest.php
 
 restore-instance-git:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-git
   variables:
     VCS: git
     TEST_FILE: RestoreInstanceCommandTest.php
 
 restore-instance-svn:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-svn
   variables:
     VCS: svn
     TEST_FILE: RestoreInstanceCommandTest.php
 
 clone-instance-git:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-git
   variables:
     VCS: git
     TEST_FILE: CloneInstanceCommandTest.php
 
 clone-instance-svn:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-svn
   variables:
     VCS: svn
     TEST_FILE: CloneInstanceCommandTest.php
 
 clone-upgrade-instance-git:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-git
   variables:
     VCS: git
     TEST_FILE: CloneAndUpgradeCommandTest.php
 
 clone-upgrade-instance-svn:
-  <<: *template-tiki-manager-commands
+  <<: *template-tiki-manager-commands-svn
   variables:
     VCS: svn
     TEST_FILE: CloneAndUpgradeCommandTest.php

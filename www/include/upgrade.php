@@ -44,6 +44,7 @@ if ($instanceSelected && $instance = TikiManager\Application\Instance::getInstan
 }
 ?>
 <div class="container">
+    <?php require dirname(__FILE__) . "/layout/notifications.php"; ?>
     <div class="trim-instance-list upgrade center">
         <h1><?php echo TITLE; ?></h1>
         <h2><?php echo $page_title; ?></h2>
@@ -71,7 +72,7 @@ if ($instanceSelected && $instance = TikiManager\Application\Instance::getInstan
                     Select the version to upgrade <i id="loading-icon-branch"
                                                      class="fa fa-circle-o-notch fa-spin fa-fw cyan hide"></i>
                 </h3>
-                <select class="form-control clearfix branch">
+                <select class="chosen-select form-control clearfix branch">
                     <option value="">--</option>
                     <?php
                     foreach ($versions as $version) {
