@@ -25,16 +25,15 @@ class Tiki extends Application
     public function __construct(Instance $instance)
     {
         parent::__construct($instance);
-        $access = $instance->getBestAccess('scripting');
 
         if (! empty($instance->vcs_type)) {
             switch (strtoupper($instance->vcs_type)) {
                 case 'SVN':
                 case 'TARBALL':
-                    $this->vcs_instance = new Svn($access);
+                    $this->vcs_instance = new Svn($instance);
                     break;
                 case 'GIT':
-                    $this->vcs_instance = new Git($access);
+                    $this->vcs_instance = new Git($instance);
                     break;
             }
         } else {

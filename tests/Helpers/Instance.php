@@ -10,6 +10,7 @@ namespace TikiManager\Tests\Helpers;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use TikiManager\Command\CreateInstanceCommand;
+use TikiManager\Libs\Helpers\VersionControl;
 
 class Instance
 {

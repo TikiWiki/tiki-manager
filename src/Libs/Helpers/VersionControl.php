@@ -5,7 +5,7 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
-namespace TikiManager\Tests\Helpers;
+namespace TikiManager\Libs\Helpers;
 
 class VersionControl
 {
@@ -16,7 +16,11 @@ class VersionControl
             return static::formatSvnBranch($branch);
         }
 
-        return static::formatGitBranch($branch);
+        if (strtolower($_ENV['DEFAULT_VCS']) == 'git') {
+            return static::formatGitBranch($branch);
+        }
+
+        return $branch;
     }
 
     protected static function formatGitBranch($branch)

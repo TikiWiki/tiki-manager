@@ -12,9 +12,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
 use TikiManager\Command\CloneInstanceCommand;
+use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
-use TikiManager\Tests\Helpers\VersionControl;
 
 /**
  * Class CloneInstanceCommandTester

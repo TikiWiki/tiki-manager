@@ -9,6 +9,7 @@ namespace TikiManager\Tests\Command;
 
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
+use TikiManager\Tests\Helpers\VersionControl;
 
 /**
  * Class CreateInstanceCommandTester
