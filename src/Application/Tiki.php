@@ -450,15 +450,9 @@ class Tiki extends Application
 
             if ($this->instance->hasConsole()) {
                 info('Updating composer');
-
-                $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
-                $access->setenv('COMPOSER_NO_INTERACTION', '1');
-
-                $ret = $access->shellExec([
-                    "sh {$escaped_root_path}/setup.sh composer",
-                    "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
-                ], true);
+                $this->runComposer();
             }
+            $this->clearCache(true);
         } elseif ($access instanceof Mountable) {
             $folder = cache_folder($this, $version);
             $this->extractTo($version, $folder);
@@ -466,17 +460,7 @@ class Tiki extends Application
         }
 
         info('Updating database schema...');
-
-        if ($this->instance->hasConsole()) {
-            $ret = $access->shellExec([
-                "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
-            ]);
-        } else {
-            $access->runPHP(
-                dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                [$this->instance->webroot]
-            );
-        }
+        $this->runDatabaseUpdate();
 
         $this->postInstall($options);
 
@@ -492,7 +476,7 @@ class Tiki extends Application
 
         if ($access instanceof ShellPrompt && ($can_svn || $can_git)) {
             info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
-            $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear");
+            $this->clearCache();
 
             $this->vcs_instance->update($this->instance->webroot, $version->branch);
             foreach (['temp', 'temp/cache'] as $path) {
@@ -502,37 +486,13 @@ class Tiki extends Application
 
             if ($this->instance->hasConsole()) {
                 info('Updating composer...');
-
-                $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
-                $access->setenv('COMPOSER_NO_INTERACTION', '1');
-
-                if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
-                    // TODO INSTALL COMPOSER IF NOT FOUND
-                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']); // does composer as well
-                } else {
-                    $command = $access->createCommand('bash', ['setup.sh', 'composer']); // does composer as well
+                $this->runComposer();
                 }
 
-                $command->run();
-                if ($command->getReturn() !== 0) {
-                    throw new \Exception('Command failed');
-                }
-
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
-            }
+            $this->clearCache(true);
 
             info('Updating database schema...');
-
-            if ($this->instance->hasConsole()) {
-                $access->shellExec([
-                    "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
-                ]);
-            } else {
-                $access->runPHP(
-                    dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                    [$this->instance->webroot]
-                );
-            }
+            $this->runDatabaseUpdate();
 
             $this->postInstall($options);
 
@@ -546,7 +506,7 @@ class Tiki extends Application
 
         // FIXME: Not FTP compatible
         if ($access instanceof ShellPrompt) {
-            $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear --all");
+            $this->clearCache(true);
             $this->vcs_instance->cleanup($this->instance->webroot);
         }
     }
@@ -741,6 +701,9 @@ class Tiki extends Application
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
 
+        $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
+        $access->setenv('COMPOSER_NO_INTERACTION', '1');
+
         if ($access instanceof ShellPrompt) {
             $access->chdir($instance->webroot);
 
@@ -778,7 +741,7 @@ class Tiki extends Application
 
         if ($hasConsole) {
             info('Cleaning Cache...');
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
+            $this->clearCache();
 
             if (empty($options['skip-cache-warmup'])) {
                 info('Generating Caches...');
@@ -797,6 +760,34 @@ class Tiki extends Application
         if (empty($options['skip-reindex']) && $hasConsole) {
             info('Rebuilding Index...');
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+        }
+    }
+
+    public function clearCache($all = false)
+    {
+        if ($this->instance->hasConsole()) {
+            $access = $this->instance->getBestAccess('scripting');
+            $flag = $all ? ' --all' : '';
+            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear" . $flag);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function runDatabaseUpdate()
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        if ($this->instance->hasConsole()) {
+            $access->shellExec([
+                "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
+            ]);
+        } else {
+            $access->runPHP(
+                dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
+                [$this->instance->webroot]
+            );
         }
     }
 }
