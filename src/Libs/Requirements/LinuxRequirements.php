@@ -70,9 +70,10 @@ class LinuxRequirements extends Requirements
             'commands' => [
                 'gzip',
                 'bzip2',
-                'tar'
+                'tar',
+                'unzip'
             ],
-            'tags' => 'gzip, bzip2, tar'
+            'tags' => 'gzip, bzip2, tar, unzip'
         ]
     ];
 

@@ -40,6 +40,7 @@ LEFT JOIN
     version v ON i.instance_id = v.instance_id
 WHERE
     i.instance_id = :id
+ORDER BY v.version_id DESC
 ;
 SQL;
 
@@ -61,7 +62,7 @@ INNER JOIN (
         instance_id
     ) t ON t.version = v.version_id
 WHERE
-    v.type = 'svn' OR v.type = 'tarball' OR v.type = 'git'
+    v.type in('svn', 'tarball', 'git', 'src')
 ;
 SQL;
 
@@ -664,6 +665,7 @@ SQL;
      * @param $archive
      * @param bool $clone
      * @param bool $checksumCheck
+     * @param bool $direct
      * @return null
      */
     public function restore($src_app, $archive, $clone = false, $checksumCheck = false, $direct = false)

@@ -76,6 +76,9 @@ abstract class VersionControlSystem
             case 'GIT':
                 $vcsInstance = new Git($instance);
                 break;
+            case 'SRC':
+                $vcsInstance = new Src($instance);
+                break;
         }
 
         return $vcsInstance;
