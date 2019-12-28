@@ -1,21 +1,54 @@
 image: xorti/tiki-manager-qa:7.1-qa
 
 cache:
+  key: ${CI_COMMIT_REF_SLUG}-composer
   paths:
-  - .composercache/files
+    - vendor/
+    - vendor_bin/
+    - .composercache/files
 
 variables:
   MYSQL_ROOT_PASSWORD: secret
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
   COMPOSER_FLAGS: '--ansi --no-progress --prefer-dist -n'
-  SVN_SCHEDULER_NAME: "test-tiki-manager-svn"
+  SVN_SCHEDULER_NAME: 'test-tiki-manager-svn'
+  SRC_SCHEDULER_NAME: 'test-tiki-manager-src'
 
 stages:
-- quality
-- unit-tests
-- functional-tests
-- package
+  - build
+  - quality
+  - unit-tests
+  - functional-tests
+  - package
 
+composer:
+  stage: build
+  script:
+    - composer install $COMPOSER_FLAGS
+    - composer bin all install $COMPOSER_FLAGS
+
+download-tiki-src-files:
+  stage: build
+  script:
+    - |
+      source .env.gitlab-ci &&\
+      SRC_PATH='data/tiki_src/' &&\
+      if [ ! -f "${SRC_PATH}tiki-${LATEST_SRC_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_LATEST_SRC_RELEASE}; fi; \
+      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MINOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MINOR_RELEASE}; fi; \
+      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MAJOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MAJOR_RELEASE}; fi;
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - data/tiki_src
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-tiki-src-files
+    paths:
+      - data/tiki_src
+  only:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULER == $SRC_SCHEDULER_NAME
 
 #
 # Lint
@@ -127,6 +160,7 @@ unit-tests:
       - schedules
     variables:
       - $SCHEDULER == $SVN_SCHEDULER_NAME
+      - $SCHEDULER == $SRC_SCHEDULER_NAME
 
 .template-tiki-manager-commands-svn: &template-tiki-manager-commands-svn
   <<: *template-tiki-manager-commands
@@ -135,6 +169,23 @@ unit-tests:
       - schedules
     variables:
       - $SCHEDULER == $SVN_SCHEDULER_NAME
+
+.template-tiki-manager-commands-src: &template-tiki-manager-commands-src
+  <<: *template-tiki-manager-commands
+  dependencies:
+    - download-tiki-src-files
+  before_script:
+    - |
+      source .env.gitlab-ci &&\
+      SRC_PATH='data/tiki_src/' &&\
+      if [ ! -f "${SRC_PATH}tiki-${LATEST_SRC_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_LATEST_SRC_RELEASE}; fi; \
+      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MINOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MINOR_RELEASE}; fi; \
+      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MAJOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MAJOR_RELEASE}; fi;
+  only:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULER == $SRC_SCHEDULER_NAME
 
 create-instance-git:
   <<: *template-tiki-manager-commands-git
@@ -148,6 +199,48 @@ create-instance-svn:
     VCS: svn
     TEST_FILE: CreateInstanceCommandTest.php
 
+create-instance-src:
+  <<: *template-tiki-manager-commands-src
+  variables:
+    VCS: src
+    TEST_FILE: CreateInstanceCommandTest.php
+
+update-instance-git:
+  <<: *template-tiki-manager-commands-git
+  variables:
+    VCS: git
+    TEST_FILE: UpdateInstanceCommandTest.php
+
+update-instance-svn:
+  <<: *template-tiki-manager-commands-svn
+  variables:
+    VCS: svn
+    TEST_FILE: UpdateInstanceCommandTest.php
+
+update-instance-src:
+  <<: *template-tiki-manager-commands-src
+  variables:
+    VCS: src
+    TEST_FILE: UpdateInstanceCommandTest.php
+
+upgrade-instance-git:
+  <<: *template-tiki-manager-commands-git
+  variables:
+    VCS: git
+    TEST_FILE: UpgradeInstanceCommandTest.php
+
+upgrade-instance-svn:
+  <<: *template-tiki-manager-commands-svn
+  variables:
+    VCS: svn
+    TEST_FILE: UpgradeInstanceCommandTest.php
+
+upgrade-instance-src:
+  <<: *template-tiki-manager-commands-src
+  variables:
+    VCS: src
+    TEST_FILE: UpgradeInstanceCommandTest.php
+
 backup-instance-git:
   <<: *template-tiki-manager-commands-git
   variables:
@@ -158,6 +251,12 @@ backup-instance-svn:
   <<: *template-tiki-manager-commands-svn
   variables:
     VCS: svn
+    TEST_FILE: BackupInstanceCommandTest.php
+
+backup-instance-src:
+  <<: *template-tiki-manager-commands-src
+  variables:
+    VCS: src
     TEST_FILE: BackupInstanceCommandTest.php
 
 restore-instance-git:
@@ -172,6 +271,12 @@ restore-instance-svn:
     VCS: svn
     TEST_FILE: RestoreInstanceCommandTest.php
 
+restore-instance-src:
+  <<: *template-tiki-manager-commands-src
+  variables:
+    VCS: src
+    TEST_FILE: RestoreInstanceCommandTest.php
+
 clone-instance-git:
   <<: *template-tiki-manager-commands-git
   variables:
@@ -184,6 +289,12 @@ clone-instance-svn:
     VCS: svn
     TEST_FILE: CloneInstanceCommandTest.php
 
+clone-instance-src:
+  <<: *template-tiki-manager-commands-src
+  variables:
+    VCS: src
+    TEST_FILE: CloneInstanceCommandTest.php
+
 clone-upgrade-instance-git:
   <<: *template-tiki-manager-commands-git
   variables:
@@ -194,6 +305,12 @@ clone-upgrade-instance-svn:
   <<: *template-tiki-manager-commands-svn
   variables:
     VCS: svn
+    TEST_FILE: CloneAndUpgradeCommandTest.php
+
+clone-upgrade-instance-src:
+  <<: *template-tiki-manager-commands-src
+  variables:
+    VCS: src
     TEST_FILE: CloneAndUpgradeCommandTest.php
 
 #----------------------------------------------------------------------------------------------------------------------#

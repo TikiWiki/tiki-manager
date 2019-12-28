@@ -242,11 +242,19 @@ class Local extends Access implements ShellPrompt
 
     public function fileGetContents($filename)
     {
+        if (!$this->isLocalPath($filename)) {
+            $filename = $this->instance->getWebPath($filename);
+        }
+
         return @file_get_contents($filename);
     }
 
     public function fileModificationDate($filename)
     {
+        if (!$this->isLocalPath($filename)) {
+            $filename = $this->instance->getWebPath($filename);
+        }
+
         return date("Y-m-d", filemtime($filename));
     }
 

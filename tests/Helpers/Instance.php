@@ -10,6 +10,9 @@ namespace TikiManager\Tests\Helpers;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use TikiManager\Command\CreateInstanceCommand;
+use TikiManager\Command\CloneAndUpgradeInstanceCommand;
+use TikiManager\Command\CloneInstanceCommand;
+use TikiManager\Libs\Helpers\VersionControl;
 
 class Instance
 {
@@ -31,14 +34,16 @@ class Instance
 
     public static function create($config = [], $blank = false)
     {
+        $branch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['MASTER_BRANCH'];
+
         $defaults = [
             self::TYPE_OPTION => 'local',
             self::URL_OPTION => 'http://managertest.tiki.org',
             self::NAME_OPTION => 'managertest.tiki.org',
             self::EMAIL_OPTION => 'dummy@example.com',
             self::WEBROOT_OPTION => '/tmp/tiki-manager-www', // This value should be overridden
-            self::TEMPDIR_OPTION => '/tmp/tiki-manager-tmp', // This value should be overridden
-            self::BRANCH_OPTION => VersionControl::formatBranch('trunk'),
+            self::TEMPDIR_OPTION => '/tmp/tiki-manager-tmp',
+            self::BRANCH_OPTION => VersionControl::formatBranch($branch),
             self::BACKUP_USER_OPTION => 'root',
             self::BACKUP_GROUP_OPTION => 'root',
             self::BACKUP_PERMISSION_OPTION => '750',
@@ -70,11 +75,34 @@ class Instance
             ], $settings)
         );
 
+        // So we have the execution output
+        echo $commandTester->getDisplay();
+
         if ($commandTester->getStatusCode() === 0) {
             return self::getLastInstanceId();
         }
 
         return false;
+    }
+
+    public static function clone($arguments, $upgrade = false) {
+
+        $application = new Application();
+        $application->add(new CloneInstanceCommand());
+        $application->add(new CloneAndUpgradeInstanceCommand());
+
+        $commandName = $upgrade ? 'instance:cloneandupgrade' : 'instance:clone';
+        $command = $application->find($commandName);
+        $commandTester = new CommandTester($command);
+
+        $arguments = array_merge(['command' => $command->getName()], $arguments);
+
+        $commandTester->execute($arguments);
+
+        // So we have the execution output
+        echo $commandTester->getDisplay();
+
+        return $commandTester->getStatusCode() === 0;
     }
 
     private static function getLastInstanceId()

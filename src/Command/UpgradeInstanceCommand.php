@@ -122,7 +122,7 @@ class UpgradeInstanceCommand extends Command
             $versions = [];
             $versions_raw = $app->getVersions();
             foreach ($versions_raw as $version) {
-                if ($version->type == 'svn' || $version->type == 'git') {
+                if ($version->type == 'svn' || $version->type == 'git' || $version->type = 'src') {
                     $versions[] = $version;
                 }
             }
@@ -170,14 +170,14 @@ class UpgradeInstanceCommand extends Command
                 }
 
                 if (empty($versionSel) && !empty($selectedVersion)) {
-                    $target = Version::buildFake('svn', $selectedVersion);
+                    $target = Version::buildFake($instance->vcs_type, $selectedVersion);
                 } else {
                     $target = reset($versionSel);
                 }
 
                 if (count($versionSel) > 0) {
                     try {
-                        $filesToResolve = $app->performUpdate($instance, $target, [
+                        $filesToResolve = $app->performUpgrade($instance, $target, [
                             'checksum-check' => $checksumCheck,
                             'skip-reindex' => $skipReindex,
                             'skip-cache-warmup' => $skipCache,

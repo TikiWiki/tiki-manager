@@ -11,6 +11,7 @@ use TikiManager\Access\ShellPrompt;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\VersionControl\Git;
+use TikiManager\Libs\VersionControl\Src;
 use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 use TikiManager\Libs\Helpers\ApplicationHelper;
@@ -20,21 +21,24 @@ class Tiki extends Application
     private $installType = null;
     private $branch = null;
     private $installed = null;
+    /** @var Svn|Git|Src  */
     private $vcs_instance = null;
 
     public function __construct(Instance $instance)
     {
         parent::__construct($instance);
-        $access = $instance->getBestAccess('scripting');
 
         if (! empty($instance->vcs_type)) {
             switch (strtoupper($instance->vcs_type)) {
                 case 'SVN':
+                    $this->vcs_instance = new Svn($instance);
+                    break;
                 case 'TARBALL':
-                    $this->vcs_instance = new Svn($access);
+                case 'SRC':
+                    $this->vcs_instance = new Src($instance);
                     break;
                 case 'GIT':
-                    $this->vcs_instance = new Git($access);
+                    $this->vcs_instance = new Git($instance);
                     break;
             }
         } else {
@@ -106,8 +110,7 @@ class Tiki extends Application
 
     /**
      * Fixing files read/write permissions and run composer install
-     *
-     * @return null
+     * @throws \Exception
      */
     public function fixPermissions()
     {
@@ -134,7 +137,14 @@ class Tiki extends Application
 
             $command->run();
             if ($command->getReturn() !== 0) {
-                throw new \Exception('Command failed');
+                // Because temp/composer.phar does not exist, the script will return 1.
+                // We do not throw error if instance type is src (composer install is not required)
+                $output = $command->getStdoutContent();
+
+                if ((!$this->vcs_instance instanceof Src) ||
+                    (strpos($output, 'We have failed to obtain the composer executable') === false)) {
+                    throw new \Exception('Command failed');
+                }
             }
         }
     }
@@ -307,7 +317,7 @@ class Tiki extends Application
                 return $this->installType;
             }
         }
-        return $this->installType = 'tarball';
+        return $this->installType = 'src';
     }
 
     public function getName()
@@ -426,13 +436,13 @@ class Tiki extends Application
     public function performActualUpdate(Version $version, $options = [])
     {
         $access = $this->instance->getBestAccess('scripting');
-        $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
-        $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
+        $vcsType = $this->vcs_instance->getIdentifier();
+        $can_svn = $access->hasExecutable('svn') && $vcsType == 'SVN';
+        $can_git = $access->hasExecutable('git') && $vcsType == 'GIT';
 
-        if ($access instanceof ShellPrompt && ($can_git || $can_svn)) {
+        if ($access instanceof ShellPrompt && ($can_git || $can_svn || $vcsType === 'SRC')) {
             info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
             $webroot = $this->instance->webroot;
-
             $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
             $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
             $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
@@ -442,23 +452,21 @@ class Tiki extends Application
             $this->vcs_instance->revert($webroot);
             $this->vcs_instance->cleanup($webroot);
 
+            if ($vcsType === 'SRC') {
+                $version->branch = $this->vcs_instance->getBranchToUpdate($version->branch);
+            }
+
             $this->vcs_instance->update($this->instance->webroot, $version->branch);
             foreach ([$escaped_temp_path, $escaped_cache_path] as $path) {
                 $script = sprintf('chmod(%s, 0777);', $path);
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
             }
 
-            if ($this->instance->hasConsole()) {
+            if ($this->vcs_instance->getIdentifier() != 'SRC') {
                 info('Updating composer');
-
-                $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
-                $access->setenv('COMPOSER_NO_INTERACTION', '1');
-
-                $ret = $access->shellExec([
-                    "sh {$escaped_root_path}/setup.sh composer",
-                    "{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all",
-                ], true);
+                $this->runComposer();
             }
+            $this->clearCache(true);
         } elseif ($access instanceof Mountable) {
             $folder = cache_folder($this, $version);
             $this->extractTo($version, $folder);
@@ -466,17 +474,7 @@ class Tiki extends Application
         }
 
         info('Updating database schema...');
-
-        if ($this->instance->hasConsole()) {
-            $ret = $access->shellExec([
-                "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
-            ]);
-        } else {
-            $access->runPHP(
-                dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                [$this->instance->webroot]
-            );
-        }
+        $this->runDatabaseUpdate();
 
         $this->postInstall($options);
 
@@ -488,11 +486,12 @@ class Tiki extends Application
         $access = $this->instance->getBestAccess('scripting');
         $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
         $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
+
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
-        if ($access instanceof ShellPrompt && ($can_svn || $can_git)) {
+        if ($access instanceof ShellPrompt && ($can_svn || $can_git || $this->vcs_instance->getIdentifier() == 'SRC')) {
             info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
-            $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear");
+            $this->clearCache();
 
             $this->vcs_instance->update($this->instance->webroot, $version->branch);
             foreach (['temp', 'temp/cache'] as $path) {
@@ -500,39 +499,15 @@ class Tiki extends Application
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
             }
 
-            if ($this->instance->hasConsole()) {
+            if ($this->vcs_instance->getIdentifier() != 'SRC') {
                 info('Updating composer...');
-
-                $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
-                $access->setenv('COMPOSER_NO_INTERACTION', '1');
-
-                if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
-                    // TODO INSTALL COMPOSER IF NOT FOUND
-                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']); // does composer as well
-                } else {
-                    $command = $access->createCommand('bash', ['setup.sh', 'composer']); // does composer as well
-                }
-
-                $command->run();
-                if ($command->getReturn() !== 0) {
-                    throw new \Exception('Command failed');
-                }
-
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
+                $this->runComposer();
             }
+
+            $this->clearCache(true);
 
             info('Updating database schema...');
-
-            if ($this->instance->hasConsole()) {
-                $access->shellExec([
-                    "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
-                ]);
-            } else {
-                $access->runPHP(
-                    dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
-                    [$this->instance->webroot]
-                );
-            }
+            $this->runDatabaseUpdate();
 
             $this->postInstall($options);
 
@@ -546,7 +521,7 @@ class Tiki extends Application
 
         // FIXME: Not FTP compatible
         if ($access instanceof ShellPrompt) {
-            $access->shellExec("{$this->instance->phpexec} {$this->instance->webroot}/console.php cache:clear --all");
+            $this->clearCache(true);
             $this->vcs_instance->cleanup($this->instance->webroot);
         }
     }
@@ -741,6 +716,9 @@ class Tiki extends Application
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
 
+        $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
+        $access->setenv('COMPOSER_NO_INTERACTION', '1');
+
         if ($access instanceof ShellPrompt) {
             $access->chdir($instance->webroot);
 
@@ -765,12 +743,13 @@ class Tiki extends Application
      */
     public function postInstall($options = [])
     {
-
         $access = $this->instance->getBestAccess('scripting');
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
-        info('Running composer...');
-        $this->runComposer();
+        if ($this->vcs_instance->getIdentifier() != 'SRC') {
+            info('Running composer...');
+            $this->runComposer();
+        }
 
         $this->setDbLock();
 
@@ -778,7 +757,7 @@ class Tiki extends Application
 
         if ($hasConsole) {
             info('Cleaning Cache...');
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
+            $this->clearCache();
 
             if (empty($options['skip-cache-warmup'])) {
                 info('Generating Caches...');
@@ -797,6 +776,34 @@ class Tiki extends Application
         if (empty($options['skip-reindex']) && $hasConsole) {
             info('Rebuilding Index...');
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+        }
+    }
+
+    public function clearCache($all = false)
+    {
+        if ($this->instance->hasConsole()) {
+            $access = $this->instance->getBestAccess('scripting');
+            $flag = $all ? ' --all' : '';
+            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear" . $flag);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function runDatabaseUpdate()
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        if ($this->instance->hasConsole()) {
+            $access->shellExec([
+                "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
+            ]);
+        } else {
+            $access->runPHP(
+                dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
+                [$this->instance->webroot]
+            );
         }
     }
 }

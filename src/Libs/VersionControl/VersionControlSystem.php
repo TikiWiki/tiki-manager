@@ -12,17 +12,19 @@ use TikiManager\Application\Instance;
 abstract class VersionControlSystem
 {
     protected $command;
+    protected $instance;
     protected $access;
     protected $repositoryUrl;
     protected $runLocally = false;
 
     /**
      * VersionControlSystem constructor.
-     * @param $access
+     * @param Instance $instance
      */
-    public function __construct($access)
+    public function __construct(Instance $instance)
     {
-        $this->access = $access;
+        $this->instance = $instance;
+        $this->access = $instance->getBestAccess('scripting');
     }
 
     /**
@@ -44,9 +46,7 @@ abstract class VersionControlSystem
     public function isUpgrade($current, $branch)
     {
         $branch = $this->getBranchUrl($branch);
-        $is_upgrade = $current !== $branch;
-
-        return $is_upgrade;
+        return $current !== $branch;
     }
 
     /**
@@ -67,15 +67,17 @@ abstract class VersionControlSystem
     public static function getDefaultVersionControlSystem(Instance $instance)
     {
         $type = $_ENV['DEFAULT_VCS'];
-        $access = $instance->getBestAccess('scripting');
         $vcsInstance = null;
 
         switch (strtoupper($type)) {
             case 'SVN':
-                $vcsInstance = new Svn($access);
+                $vcsInstance = new Svn($instance);
                 break;
             case 'GIT':
-                $vcsInstance = new Git($access);
+                $vcsInstance = new Git($instance);
+                break;
+            case 'SRC':
+                $vcsInstance = new Src($instance);
                 break;
         }
 

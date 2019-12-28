@@ -17,6 +17,7 @@ use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Helpers\VersionControl;
 
 class CloneInstanceCommand extends Command
 {
@@ -179,14 +180,15 @@ class CloneInstanceCommand extends Command
                     $selectedDestinationInstances = $helper->ask($input, $output, $question);
                 }
 
-                $upgrade_version = [];
                 if ($cloneUpgrade) {
                     if (!empty($arguments[2])) {
-                        $upgrade_version = Version::buildFake('svn', $arguments[2]);
-                    } elseif ($branch = $input->getOption("branch")) {
-                        $upgrade_version = Version::buildFake('svn', $branch);
+                        $input->setOption('branch', $arguments[2]);
                     } else {
-                        $upgrade_version = $this->getUpgradeVersion($selectedSourceInstances[0], $helper, $input, $output);
+                        $branch = $input->getOption('branch');
+                        if (empty($branch)) {
+                            $branch = $this->getUpgradeVersion($selectedSourceInstances[0], $input, $output);
+                            $input->setOption('branch', $branch);
+                        }
                     }
                 }
 
@@ -255,6 +257,9 @@ class CloneInstanceCommand extends Command
                     $destinationInstance->restore($selectedSourceInstances[0], $archive, true, false, $direct);
 
                     if ($cloneUpgrade) {
+                        $branch = $input->getOption('branch');
+                        $upgrade_version = Version::buildFake($destinationInstance->vcs_type, VersionControl::formatBranch($branch));
+
                         $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
                         $app = $destinationInstance->getApplication();
 
@@ -291,19 +296,19 @@ class CloneInstanceCommand extends Command
     /**
      * Get version to update instance to
      *
-     * @param $instance
-     * @param $helper
-     * @param $input
-     * @param $output
-     * @return mixed
+     * @param Instance $instance
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return string
      */
-    private function getUpgradeVersion($instance, $helper, $input, $output)
+    private function getUpgradeVersion($instance, $input, $output)
     {
         $found_incompatibilities = false;
         $instance->detectPHP();
 
         $app = $instance->getApplication();
         $versions = $app->getVersions();
+        $choices = [];
 
         foreach ($versions as $key => $version) {
             preg_match('/(\d+\.|trunk|master)/', $version->branch, $matches);
@@ -313,29 +318,21 @@ class CloneInstanceCommand extends Command
                     // Nothing to do, this match is incompatible...
                     $found_incompatibilities = true;
                 } else {
-                    $output->writeln('[' . $key . '] ' . $version->type . ' : ' . $version->branch);
+                    $choices[] = $version->type . ' : ' . $version->branch;
                 }
             }
         }
 
-        $output->writeln('[ -1] blank : none');
-
-        $matches = [];
-        preg_match('/(\d+)(\d{2})(\d{2})$/', $instance->phpversion, $matches);
-
-        if (count($matches) == 4) {
-            $output->writeln('<fg=cyan>We detected PHP release: ' . $matches[1] . '.' . $matches[2] . '.' . $matches[3] . '</>');
-        }
+        $output->writeln('<fg=cyan>We detected PHP release: ' . CommandHelper::formatPhpVersion($instance->phpversion) . '</>');
 
         if ($found_incompatibilities) {
             $output->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
             $output->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
         }
 
-        $question = CommandHelper::getQuestion('Which version do you want to update to', null, '?');
-        $selectedVersion = $helper->ask($input, $output, $question);
-        $versionEntries = getEntries($versions, $selectedVersion);
-
-        return reset($versionEntries);
+        $io = new SymfonyStyle($input, $output);
+        $choice = $io->choice('Which version do you want to update to', $choices);
+        $choice = explode(':', $choice);
+        return trim($choice[1]);
     }
 }

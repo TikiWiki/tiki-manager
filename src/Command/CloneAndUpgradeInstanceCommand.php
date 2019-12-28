@@ -48,6 +48,18 @@ class CloneAndUpgradeInstanceCommand extends Command
                 'Select Branch.'
             )
             ->addOption(
+                'skip-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip rebuilding index step.'
+            )
+            ->addOption(
+                'skip-cache-warmup',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip generating cache step.'
+            )
+            ->addOption(
                 'live-reindex',
                 null,
                 InputOption::VALUE_NONE,
@@ -106,6 +118,14 @@ class CloneAndUpgradeInstanceCommand extends Command
             $arguments['--branch'] = $branch;
         }
 
+        if ($skipReindex = $input->getOption('skip-reindex')) {
+            $arguments['--skip-reindex'] = $skipReindex;
+        }
+
+        if ($skipCacheWarmup = $input->getOption('skip-cache-warmup')) {
+            $arguments['--skip-cache-warmup'] = $skipCacheWarmup;
+        }
+
         if ($liveReindex = $input->getOption('live-reindex')) {
             $arguments['--live-reindex'] = $liveReindex;
         }
@@ -123,8 +143,6 @@ class CloneAndUpgradeInstanceCommand extends Command
         }
 
         $verifyInstanceInput = new ArrayInput($arguments);
-        $returnCode = $command->run($verifyInstanceInput, $output);
-
-        return $returnCode;
+        return $command->run($verifyInstanceInput, $output);
     }
 }

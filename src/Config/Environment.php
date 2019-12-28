@@ -95,7 +95,7 @@ class Environment
         $localComposerPath = $this->homeDirectory . '/composer.phar';
         if (file_exists($localComposerPath)) {
             $_ENV['COMPOSER_PATH'] = $localComposerPath;
-        } elseif (Requirements::getInstance()->hasDependency('composer')){
+        } elseif (Requirements::getInstance()->hasDependency('composer')) {
             $_ENV['COMPOSER_PATH'] = 'composer';
         } else {
             throw new ConfigurationErrorException('Unable to find composer or composer.phar');
@@ -179,6 +179,9 @@ class Environment
         if (! file_exists($_ENV['TRIM_DATA'])) {
             mkdir($_ENV['TRIM_DATA'], 0777, true);
         }
+        if (! file_exists($_ENV['TRIM_SRC_FOLDER'])) {
+            mkdir($_ENV['TRIM_SRC_FOLDER'], 0777, true);
+        }
 
         if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
             file_exists(getenv('HOME') . '/.ssh/id_dsa.pub') &&
@@ -220,6 +223,13 @@ class Environment
         if (! Requirements::getInstance()->check('ssh')) {
             error(Requirements::getInstance()->getRequirementMessage('ssh'));
             exit;
+        }
+
+        if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
+            if (! Requirements::getInstance()->check('fileCompression')) {
+                error(Requirements::getInstance()->getRequirementMessage('fileCompression'));
+                exit;
+            }
         }
 
         if (! file_exists($_ENV['SSH_KEY']) || ! file_exists($_ENV['SSH_PUBLIC_KEY'])) {

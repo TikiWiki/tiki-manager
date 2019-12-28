@@ -21,6 +21,17 @@ GIT_TIKIWIKI_URI=<CUSTOM_GIT_REPOSITORY_URL>
 SVN_TIKIWIKI_URI=<CUSTOM_SVN_REPOSITORY_URL>
 ```
 
+#### Behind Proxy or without internet connection
+
+Tiki Manager is able to use Tiki's distributed version packages as an alternative when there is no connection to external servers like gitlab or sourceforge.
+
+Setting the default VCS to `src`, Tiki Manager will use existing packages in the data/tiki_src folder (default). 
+```
+DEFAULT_VCS=src
+```
+
+Download the distributed Tiki packages, from https://sourceforge.net/projects/tikiwiki/files/, and save them into data/tiki_src folder.
+
 ### Email settings
 To configure Tiki-Manager email sender address add the following line to your `.env` file.
 ```

@@ -8,6 +8,7 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Host\Command;
 
@@ -19,11 +20,11 @@ class Git extends VersionControlSystem
 
     /**
      * GIT constructor.
-     * @param $access
+     * @inheritDoc
      */
-    public function __construct($access)
+    public function __construct(Instance $instance)
     {
-        parent::__construct($access);
+        parent::__construct($instance);
         $this->command = 'git';
         $this->repositoryUrl = $_ENV['GIT_TIKIWIKI_URI'];
     }

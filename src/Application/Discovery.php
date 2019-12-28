@@ -348,7 +348,7 @@ class Discovery
         }
 
         if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . 'tiki-index.php')) {
-            return 'TARBALL';
+            return 'SRC';
         }
 
         return null;

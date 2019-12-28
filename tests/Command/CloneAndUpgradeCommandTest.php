@@ -14,9 +14,9 @@ use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
 use TikiManager\Command\CloneAndUpgradeInstanceCommand;
 use TikiManager\Command\CloneInstanceCommand;
+use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
-use TikiManager\Tests\Helpers\VersionControl;
 
 /**
  * Class CloneInstanceCommandTester
@@ -26,7 +26,6 @@ use TikiManager\Tests\Helpers\VersionControl;
 class CloneAndUpgradeCommandTester extends TestCase
 {
     protected static $instancePath;
-    protected static $tempPath;
     protected static $instancePath1;
     protected static $instancePath2;
     protected static $dbLocalFile1;
@@ -38,7 +37,6 @@ class CloneAndUpgradeCommandTester extends TestCase
         $basePath = $_ENV['TESTS_BASE_FOLDER'];
 
         self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'cloneupgrade']);
-        self::$tempPath = implode(DIRECTORY_SEPARATOR, [$basePath, 'manager']);
         self::$instancePath1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance1']);
         self::$instancePath2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance2']);
         self::$dbLocalFile1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath1, 'db', 'local.php']);
@@ -53,17 +51,23 @@ class CloneAndUpgradeCommandTester extends TestCase
 
     public function testLocalCloneInstance()
     {
+        if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
+            $branch = $_ENV['PREV_SRC_MAJOR_RELEASE'];
+            $upgradeBranch = $_ENV['LATEST_SRC_RELEASE'];
+        } else {
+            $branch = $_ENV['PREV_VERSION_BRANCH'];
+            $upgradeBranch = $_ENV['MASTER_BRANCH'];
+        }
+
         $count = 1;
         $ListCommandInput = [
             [
                 '--webroot' => self::$instancePath1,
-                '--tempdir' => self::$tempPath,
-                '--branch' => VersionControl::formatBranch('branches/20.x'),
+                '--branch' => VersionControl::formatBranch($branch),
             ],
             [
                 '--webroot' => self::$instancePath2,
-                '--tempdir' => self::$tempPath,
-                '--branch' => VersionControl::formatBranch('branches/20.x'),
+                '--branch' => VersionControl::formatBranch($branch),
             ]
         ];
 
@@ -75,29 +79,24 @@ class CloneAndUpgradeCommandTester extends TestCase
         }
 
         // Clone command
-        $application = new Application();
-        $application->add(new CloneInstanceCommand());
-        $application->add(new CloneAndUpgradeInstanceCommand());
-        $command = $application->find('instance:cloneandupgrade');
-        $commandTester = new CommandTester($command);
-
-        $commandTester->execute([
-            'command' => $command->getName(),
+        $arguments = [
             '--source' => self::$instanceIds[1],
             '--target' => [self::$instanceIds[2]],
-            '--branch' => VersionControl::formatBranch('trunk'),
-            '--direct' => null // also test direct (rsync source/target)
-        ]);
+            '--branch' => VersionControl::formatBranch($upgradeBranch),
+            '--direct' => null, // also test direct (rsync source/target)
+            '--skip-cache-warmup' => true,
+        ];
 
-        $instance = new Instance;
-        $instance = $instance->getInstance(self::$instanceIds[2]);
+        $result = InstanceHelper::clone($arguments, true);
+        $this->assertTrue($result);
+
+        $instance = (new Instance())->getInstance(self::$instanceIds[2]);
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
 
         $diffDbFile = Files::compareFiles(self::$dbLocalFile1, self::$dbLocalFile2);
 
-        $this->assertEquals(0, $commandTester->getStatusCode());
-        $this->assertEquals(VersionControl::formatBranch('trunk'), $resultBranch);
+        $this->assertEquals(VersionControl::formatBranch($upgradeBranch), $resultBranch);
         $this->assertNotEquals([], $diffDbFile);
     }
 
@@ -106,6 +105,8 @@ class CloneAndUpgradeCommandTester extends TestCase
      */
     public function testCloneSameDatabase()
     {
+        $upgradeBranch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['MASTER_BRANCH'];
+
         $fileSystem = new Filesystem();
         if ($fileSystem->exists(self::$dbLocalFile1)) {
             $fileSystem->copy(self::$dbLocalFile1, self::$dbLocalFile2, true);
@@ -122,7 +123,7 @@ class CloneAndUpgradeCommandTester extends TestCase
             'command' => $command->getName(),
             '--source' => self::$instanceIds[1],
             '--target' => [self::$instanceIds[2]],
-            '--branch' => VersionControl::formatBranch('trunk'),
+            '--branch' => VersionControl::formatBranch($upgradeBranch),
         ]);
 
         $output = $commandTester->getDisplay();
