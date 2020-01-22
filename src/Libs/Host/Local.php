@@ -18,6 +18,7 @@ class Local
 
     public function __construct()
     {
+        $_ENV['HTTP_ACCEPT_ENCODING'] = '';
         $this->env = $_ENV ?: [];
     }
 
