@@ -20,7 +20,7 @@ class SSHSeclibAdapter
 
     public function __construct($host, $user, $port)
     {
-        $this->setEnv([]);
+        $this->setenv('HTTP_ACCEPT_ENCODING', '');
         $this->setHost($host);
         $this->setPort($port ?: 22);
         $this->setUser($user);

@@ -19,6 +19,7 @@ class SSHWrapperAdapter
         $this->host = $host;
         $this->user = $user;
         $this->port = $port ?: 22;
+        $_ENV['HTTP_ACCEPT_ENCODING'] = '';
         $this->env  = $_ENV ?: [];
         $this->location = '';
     }

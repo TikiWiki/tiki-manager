@@ -27,6 +27,7 @@ class SSH
         $this->port = $port ?: 22;
         $this->checkCopyId();
         $this->selectAdapter($adapter_class);
+        $this->setenv('HTTP_ACCEPT_ENCODING', '');
 
         $sshConnectionId = implode('_', [$this->user,$this->host, $this->port]);
         if (!isset(self::$sshKeyCheck[$sshConnectionId])) {

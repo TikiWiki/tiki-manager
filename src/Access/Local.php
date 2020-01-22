@@ -21,6 +21,7 @@ class Local extends Access implements ShellPrompt
     public function __construct(Instance $instance)
     {
         parent::__construct($instance, 'local');
+        $this->setenv('HTTP_ACCEPT_ENCODING', '');
     }
 
     private function isLocalPath($pathname)
