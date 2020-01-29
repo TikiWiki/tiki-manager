@@ -49,7 +49,7 @@ $versions = $tikiApplication->getVersions();
             </ul>
 
             <h3>Select the version to upgrade <i id="loading-icon-branch"
-                                                 class="fa fa-circle-o-notch fa-spin fa-fw cyan hide"></i>
+                                                 class="fas fa-circle-notch fa-spin fa-fw cyan hide"></i>
             </h3>
             <div>
 	            <select class="chosen-select form-control clearfix branch">
@@ -74,7 +74,7 @@ $versions = $tikiApplication->getVersions();
             <?php require dirname(__FILE__) . "/layout/back.php"; ?>
             <button class="cloneupgrade btn btn-success" data-toggle="modal" data-target="#trimModal" data-id="" data-name=""
                     data-sourceid="" data-sourcename="" data-type="cloneupgrade" data-backdrop="static" disabled>
-                <span class="fa fa-clone"></span> Clone and Upgrade
+                <span class="fas fa-clone"></span> Clone and Upgrade
             </button>
         </p>
 

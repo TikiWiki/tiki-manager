@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <li title="Delete this instance" data-toggle="modal" data-target="#deleteInstance" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>">
                     <?php require dirname(__FILE__) . "/layout/url.php"; ?>
                     <div class="buttons fa">
-                        <a href="javascript:void(0);" class="fa-times" title="Delete this instance"></a>
+                        <a href="javascript:void(0);" class="fas fa-times" title="Delete this instance"></a>
                     </div>
                 </li>
             <?php endforeach; ?>

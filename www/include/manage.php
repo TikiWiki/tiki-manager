@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <?php foreach ($instance->getArchives() as $filename) : ?>
                                 <li>
                                     <a href="javascript:void(0);" class="btn btn-danger" title="Delete this backup" data-toggle="modal" data-target="#deleteBackup" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$filename}") ?>">
-                                        <span class="fa fa-times"></span>
+                                        <span class="fas fa-times"></span>
                                         <span class="file"><?php echo html($filename) ?></span>
                                     </a>
                                 </li>
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <p class="clearfix">
             <a href="<?php echo html(url('')) ?>" class="back btn btn-secondary">
-                <span class="fa fa-angle-double-left"></span>
+                <span class="fas fa-angle-double-left"></span>
                 Back to list
             </a>
         </p>

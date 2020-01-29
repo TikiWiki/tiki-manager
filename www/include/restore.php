@@ -71,11 +71,11 @@ foreach ($instances as $instance) {
 
         <p class="clearfix">
             <a href="<?php echo html(url('')) ?>" class="back btn btn-secondary">
-                <span class="fa fa-angle-double-left"></span>
+                <span class="fas fa-angle-double-left"></span>
                 Back to list
             </a>
             <button class="restore btn btn-success" data-toggle="modal" data-target="#trimModal" data-id="" data-name="" data-sourceid="" data-backup="" data-type="restore" data-backdrop="static" disabled>
-                <span class="fa fa-undo"></span> Restore
+                <span class="fas fa-undo"></span> Restore
             </button>
         </p>
 

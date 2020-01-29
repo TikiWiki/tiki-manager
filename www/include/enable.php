@@ -33,7 +33,7 @@
     <div class="container">
         <div class="card">
             <p class="card-header" id="header">
-                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                 <b>Error</b>
             </p>
             <div class="card-body">

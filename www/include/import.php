@@ -137,7 +137,7 @@ if ($import) {
                     <?php if (!$import) : ?>
                         <p>
                             <a href="<?php echo html(url("")) ?>" class="cancel btn btn-danger"><span
-                                        class="fa fa-angle-double-left"></span> Cancel</a>
+                                        class="fas fa-angle-double-left"></span> Cancel</a>
                             <button type="submit" class="import btn btn-primary">Import</button>
                         </p>
                     <?php endif; ?>
@@ -209,7 +209,7 @@ if ($import) {
                     <div class="form-group">
                         <p>
                             <a href="<?php echo html(url("")) ?>" class="cancel btn btn-danger"><span
-                                        class="fa fa-angle-double-left"></span> Cancel</a>
+                                        class="fas fa-angle-double-left"></span> Cancel</a>
                             <button type="submit" class="save btn btn-primary">Save</button>
                         </p>
                     </div>

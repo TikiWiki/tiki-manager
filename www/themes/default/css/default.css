@@ -193,7 +193,7 @@ TRIM Main Styles
 }
 .trim-instance-main-list ul li .buttons a, .trim-instance-list ul li .buttons a {
   margin-left: 10px;
-  font-size: 2em;
+  font-size: 1.75em;
 }
 .trim-instance-main-list ul li .buttons .fa-times, .trim-instance-list ul li .buttons .fa-times {
   color: orangered;
@@ -450,7 +450,6 @@ TRIM Responsiveness
     margin: 0 10px 10px 0;
   }
 }
-
 .new-section-header h4 {
   margin-top: 10px;
 }
@@ -458,4 +457,4 @@ TRIM Responsiveness
   margin: 0px;
 }
 
-/*# sourceMappingURL=default.css.map */
+/*# sourceMappingURL=css/default.css.map */

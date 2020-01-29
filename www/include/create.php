@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             var modal = $('#createModal').modal({backdrop:'static'});
             modal.find('h4').text('Create instance');
             modal.find('.log').html('<span class="cyan">Creating new instance...</span>');
-            var loading = "<i id=\"loading-icon\" class=\"fa fa-circle-o-notch fa-spin fa-fw cyan\"></i>\n" +
+            var loading = "<i id=\"loading-icon\" class=\"fas fa-circle-notch fa-spin fa-fw cyan\"></i>\n" +
                 "<span class=\"sr-only\">Loading...</span>";
             modal.find('.log').append(loading);
             modal.find('.modal-footer button').hide();
@@ -292,7 +292,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 <div class="form-group">
                     <p>
-                        <a href="<?=html(url('')) ?>" class="cancel btn btn-secondary"><span class="fa fa-angle-double-left"></span> Cancel</a>
+                        <a href="<?=html(url('')) ?>" class="cancel btn btn-secondary"><span class="fas fa-angle-double-left"></span> Cancel</a>
                         <button type="submit" class="save btn btn-primary">Save</button>
                     </p>
                 </div>

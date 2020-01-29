@@ -9,7 +9,7 @@
     "ext-bz2": "*",
     "ext-json": "*",
     "ext-pdo": "*",
-    "fortawesome/font-awesome": "^4.7.0",
+    "fortawesome/font-awesome": "^5.0.6",
     "php": "^7.1",
     "phpseclib/phpseclib": "^2.0",
     "psr/log": "^1.1",
