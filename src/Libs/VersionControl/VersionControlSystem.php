@@ -60,13 +60,13 @@ abstract class VersionControlSystem
     }
 
     /**
-     * Gets default VCS
+     * Gets VCS for a given instance, if null returns default
      * @param Instance $instance
      * @return string
      */
-    public static function getDefaultVersionControlSystem(Instance $instance)
+    public static function getVersionControlSystem(Instance $instance)
     {
-        $type = $_ENV['DEFAULT_VCS'];
+        $type = $instance->vcs_type ?: $_ENV['DEFAULT_VCS'];
         $vcsInstance = null;
 
         switch (strtoupper($type)) {
