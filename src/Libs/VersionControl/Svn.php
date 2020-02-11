@@ -238,11 +238,7 @@ class Svn extends VersionControlSystem
             return false;
         }
 
-        if (! $this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
-            $path = $this->access->getInterpreterPath($this);
-            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder .  self::SVN_TEMP_FOLDER_PATH);
-            $this->access->createCommand($path, ["-r {$script}"])->run();
-        }
+        $this->ensureTempFolder($targetFolder);
 
         try {
             $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
@@ -282,5 +278,14 @@ class Svn extends VersionControlSystem
         }
 
         $this->cleanup($targetFolder);
+    }
+
+    public function ensureTempFolder($targetFolder)
+    {
+        if (!$this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
+            $path = $this->access->getInterpreterPath($this);
+            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
+            $this->access->createCommand($path, ["-r {$script}"])->run();
+        }
     }
 }
