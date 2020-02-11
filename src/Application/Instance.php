@@ -12,6 +12,8 @@ namespace TikiManager\Application;
 use TikiManager\Access\Access;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
+use TikiManager\Libs\VersionControl\Svn;
+use TikiManager\Libs\VersionControl\VersionControlSystem;
 
 class Instance
 {
@@ -711,6 +713,12 @@ SQL;
             $version->branch = is_object($oldVersion) ? $oldVersion->branch : null;
             $version->date = is_object($oldVersion) ? $oldVersion->date : null;
             $version->save();
+        }
+
+        if ($this->vcs_type == 'svn') {
+            /** @var Svn $svn */
+            $svn = VersionControlSystem::getVersionControlSystem($this);
+            $svn->ensureTempFolder($this->webroot);
         }
 
         if ($this->app == 'tiki') {
