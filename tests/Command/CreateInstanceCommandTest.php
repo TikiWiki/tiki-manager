@@ -23,6 +23,7 @@ class CreateInstanceCommandTester extends \PHPUnit\Framework\TestCase
     protected static $instancePathTrunk;
     protected static $dbLocalFileTrunk;
     protected static $instanceSettings = [];
+    protected static $dbLocalFile;
 
     public static function setUpBeforeClass()
     {
@@ -33,6 +34,7 @@ class CreateInstanceCommandTester extends \PHPUnit\Framework\TestCase
         self::$tempPath = implode(DIRECTORY_SEPARATOR, [$basePath, 'manager']);
         self::$instancePathTrunk = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance']);
         self::$dbLocalFileTrunk = implode(DIRECTORY_SEPARATOR, [self::$instancePathTrunk, 'db', 'local.php']);
+        self::$dbLocalFile = implode(DIRECTORY_SEPARATOR, [self::$instancePathTrunk, 'db', 'local.php']);
 
         self::$instanceSettings = [
             'local' => [
@@ -68,5 +70,26 @@ class CreateInstanceCommandTester extends \PHPUnit\Framework\TestCase
     {
         $instanceId = InstanceHelper::create(self::$instanceSettings['local']);
         $this->assertFalse($instanceId);
+    }
+
+
+    public function testLocalInstanceWithoutPrefix()
+    {
+        $fs = new Filesystem();
+        $fs->remove(self::$instancePath);
+
+        $options = array_merge(self::$instanceSettings['local'], ['--db-name' => 'test_db', '--db-prefix' => '']);
+        $instanceId = InstanceHelper::create($options);
+
+        $fs = new Filesystem();
+        $this->assertNotFalse($instanceId);
+        $this->assertNotEquals(0, $instanceId);
+        $this->assertTrue($fs->exists(self::$instancePathTrunk));
+        $this->assertTrue($fs->exists(self::$dbLocalFileTrunk));
+
+        $this->assertTrue(file_exists(self::$dbLocalFile));
+        include(self::$dbLocalFile);
+
+        $this->assertEquals($options['--db-name'], $dbs_tiki);
     }
 }
