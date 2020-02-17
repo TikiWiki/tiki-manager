@@ -33,23 +33,30 @@ if (isset($_POST['id'])) {
         $version = $instance->getLatestVersion();
 
         if ($version->hasChecksums()) {
-            $result = $version->performCheck($instance);
-            if (count($result['new']) || count($result['mod']) || count($result['del'])) {
-                $log .= "{$instance->name} ({$instance->weburl})\n";
-
-                foreach ($result['new'] as $file => $hash) {
-                    $log .= "+ $file\n";
-                }
-                foreach ($result['mod'] as $file => $hash) {
-                    $log .= "o $file\n";
-                }
-                foreach ($result['del'] as $file => $hash) {
-                    $log .= "- $file\n";
-                }
-
-                $log .= "\n\n";
+            try {
+                $result = $version->performCheck($instance);
+            } catch (\Exception $e) {
+                error($e->getMessage());
+                exit(-1);
             }
         }
+
+        if (count($result['new']) || count($result['mod']) || count($result['del'])) {
+            $log .= "{$instance->name} ({$instance->weburl})\n";
+
+            foreach ($result['new'] as $file => $hash) {
+                $log .= "+ $file\n";
+            }
+            foreach ($result['mod'] as $file => $hash) {
+                $log .= "o $file\n";
+            }
+            foreach ($result['del'] as $file => $hash) {
+                $log .= "- $file\n";
+            }
+
+            $log .= "\n\n";
+        }
+
         if (empty($log)) {
             info("Nothing found.");
         } else {

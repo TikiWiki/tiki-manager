@@ -28,7 +28,12 @@ ob_end_flush();
 
 if (isset($_POST['id'])) {
     if ($instance = TikiManager\Application\Instance::getInstance((int) $_POST['id'])) {
-        web_backup($instance);
+        try {
+            web_backup($instance);
+        } catch (\Exception $e) {
+            error($e->getMessage());
+            exit(-1);
+        }
 //        $instance->backup();
 //        TikiManager\Helpers\Archive::performArchiveCleanup($instance->id, $instance->name);
     } else {

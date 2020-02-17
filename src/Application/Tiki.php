@@ -101,6 +101,10 @@ class Tiki extends Application
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
 
+        if ($instance->type === 'local' && !getenv('COMPOSER_HOME') && PHP_SAPI !== 'cli') {
+            $access->setenv('COMPOSER_HOME', $_ENV['CACHE_FOLDER'] . DIRECTORY_SEPARATOR . '.composer');
+        }
+
         if ($access instanceof ShellPrompt) {
             $access->chdir($instance->webroot);
 
@@ -704,6 +708,10 @@ class Tiki extends Application
     {
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
+
+        if ($instance->type === 'local' && !getenv('COMPOSER_HOME') && PHP_SAPI !== 'cli') {
+            $access->setenv('COMPOSER_HOME', $_ENV['CACHE_FOLDER'] . DIRECTORY_SEPARATOR . '.composer');
+        }
 
         $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
         $access->setenv('COMPOSER_NO_INTERACTION', '1');

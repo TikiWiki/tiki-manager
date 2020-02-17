@@ -28,7 +28,12 @@ ob_end_flush();
 
 if (isset($_POST['id'])) {
     if ($instance = TikiManager\Application\Instance::getInstance((int) $_POST['id'])) {
-        $instance->getApplication()->fixPermissions();
+        try {
+            $instance->getApplication()->fixPermissions();
+        } catch (\Exception $e) {
+            error($e->getMessage());
+            exit(-1);
+        }
     } else {
         die("Unknown instance.");
     }

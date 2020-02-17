@@ -33,8 +33,13 @@ if (isset($_POST['id'])) {
 
 //        $access = $instance->getBestAccess('scripting');
 //        $access->uploadFile($archive, $remote);
+        try {
+            $instance->restore($source->app, $_POST['backup']);
+        } catch (\Exception $e) {
+            error($e->getMessage());
+            exit(-1);
+        }
 
-        $instance->restore($source->app, $_POST['backup']);
         echo "\nIt is now time to test your site: " . $instance->name . "\n";
         echo "\nIf there are issues, connect with 'tiki-manager instance:access' to troubleshoot directly on the server.\n";
         echo "\nYou'll need to login to this restored instance and update the file paths with the new values.\n";
