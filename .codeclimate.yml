@@ -1,0 +1,36 @@
+exclude_patterns:
+  - "backup/"
+  - "cache/"
+  - "logs/"
+  - "tmp/"
+  - "**/test/"
+  - "**/tests/"
+  - "**/vendor/"
+  - "**/vendor-bin/"
+  - "scripts/get_extensions.php"
+  - "scripts/extract_tar.php"
+
+plugins:
+  csslint:
+    enabled: true
+  eslint:
+    enabled: true
+  fixme:
+    enabled: true
+  phan:
+    enabled: true
+    config:
+      file_extensions: "php"
+      ignore-undeclared: true
+  phpcodesniffer:
+    enabled: true
+    config:
+      file_extensions: "php"
+      ignore_warnings: true
+      standard: "PSR1,PSR2"
+  phpmd:
+    enabled: true
+    config:
+      file_extensions:
+        - php
+
