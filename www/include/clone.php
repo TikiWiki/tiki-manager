@@ -36,7 +36,7 @@
         <p class="clearfix">
         <?php require dirname(__FILE__) . "/layout/back.php"; ?>
             <button class="clone btn btn-success" data-toggle="modal" data-target="#trimModal" data-id="" data-name="" data-sourceid="" data-sourcename="" data-type="clone" data-backdrop="static" disabled>
-                <span class="fa fa-clone"></span> Clone
+                <span class="fas fa-clone"></span> Clone
             </button>
         </p>
 

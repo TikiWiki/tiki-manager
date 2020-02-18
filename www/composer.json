@@ -5,7 +5,7 @@
   "homepage": "https://tiki.org",
   "minimum-stability": "stable",
   "require": {
-    "fortawesome/font-awesome": "^4.7.0",
+    "fortawesome/font-awesome": "^5.0.6",
     "components/jquery": "^3.3.1",
     "harvesthq/chosen": "^1.8",
     "haubek/bootstrap4c-chosen": "^1.1",

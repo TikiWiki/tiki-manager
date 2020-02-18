@@ -31,9 +31,9 @@
                         <?php if (! $blank) : ?>
                         <div class="lock">
                             <?php if ($lock) : ?>
-                            <a href="javascript:void(0);" title="This instance is locked. Click to unlock." data-id="<?php echo html("{$instance->id}") ?>"><span class="fa fa-lock"></span></a>
+                            <a href="javascript:void(0);" title="This instance is locked. Click to unlock." data-id="<?php echo html("{$instance->id}") ?>"><span class="fas fa-lock"></span></a>
                             <?php else : ?>
-                            <a href="javascript:void(0);" title="This instance is unlocked. Click to lock." data-id="<?php echo html("{$instance->id}") ?>"><span class="fa fa-unlock"></span></a>
+                            <a href="javascript:void(0);" title="This instance is unlocked. Click to lock." data-id="<?php echo html("{$instance->id}") ?>"><span class="fas fa-unlock"></span></a>
                             <?php endif; ?>
                         </div>
                         <?php endif; ?>
@@ -52,19 +52,19 @@
                         <span class="right">last update: <b><?= $blank ? '' : html("{$version->date}") ?></b></span>
                     </div>
 
-                    <div class="buttons fa">
+                    <div class="buttons">
 <!--
                             <a href="#" class="fa-check" title="Check this instance"></a>
                             <a href="#" class="fa-arrow-up" title="Upgrade this instance"></a>
 -->
                     <?php if ($instance->getApplication() instanceof TikiManager\Application\Tiki) : ?>
-                        <a href="" class="fa-eye" title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="watch" data-backdrop="static"</a>
-                        <a href="" class="fa-repeat" title="Update this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="update" data-backdrop="static"></a>
-                        <a href="" class="fa-floppy-o" title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="backup" data-backdrop="static"></a>
-                        <a href="" class="fa-wrench" title="Fix this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="fix" data-backdrop="static"></a>
+                        <a href="" class="far fa-eye" title="Watch this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="watch" data-backdrop="static"</a>
+                        <a href="" class="fas fa-file-import" title="Update this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="update" data-backdrop="static"></a>
+                        <a href="" class="fas fa-save" title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="backup" data-backdrop="static"></a>
+                        <a href="" class="fas fa-wrench" title="Fix this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="fix" data-backdrop="static"></a>
                     <?php endif; ?>
-                        <a href="<?php echo html(url("edit/{$instance->id}")) ?>" class="fa-pencil" title="Edit this instance"></a>
-                        <a href="" class="fa-times" title="Delete this instance" data-toggle="modal" data-target="#deleteInstance" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>"></a>
+                        <a href="<?php echo html(url("edit/{$instance->id}")) ?>" class="fas fa-pencil-alt" title="Edit this instance"></a>
+                        <a href="" class="fas fa-times" title="Delete this instance" data-toggle="modal" data-target="#deleteInstance" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>"></a>
                     </div>
                 </li>
             <?php endforeach; ?>

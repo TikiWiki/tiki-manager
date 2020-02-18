@@ -70,7 +70,7 @@ if ($instanceSelected && $instance = TikiManager\Application\Instance::getInstan
 
                 <h3>
                     Select the version to upgrade <i id="loading-icon-branch"
-                                                     class="fa fa-circle-o-notch fa-spin fa-fw cyan hide"></i>
+                                                     class="fas fa-circle-notch fa-spin fa-fw cyan hide"></i>
                 </h3>
                 <select class="chosen-select form-control clearfix branch">
                     <option value="">--</option>
@@ -95,7 +95,7 @@ if ($instanceSelected && $instance = TikiManager\Application\Instance::getInstan
                 <button class="upgrade btn btn-success" type="button" data-toggle="modal" data-target="#trimModal"
                         data-id="" data-name="" data-sourceid="" data-sourcename="" data-type="upgrade"
                         data-backdrop="static" disabled>
-                    <span class="fa fa-upgrade"></span> Upgrade
+                    <span class="fas fa-tools"></span> Upgrade
                 </button>
             </p>
         </form>

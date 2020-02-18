@@ -22,12 +22,12 @@ while (key($all) != $instance->id) {
             <h2><?php echo $page_title; ?></h2>
             <?php if ($prev) : ?>
             <a class="left btn btn-outline-secondary" href="<?php echo html(url("view/{$prev->id}")) ?>" title="Previous instance">
-                <span class="fa fa-arrow-left"></span>
+                <span class="fas fa-arrow-left"></span>
             </a>
             <?php endif; ?>
             <?php if ($next) : ?>
             <a class="right btn btn-outline-secondary" href="<?php echo html(url("view/{$next->id}")) ?>" title="Next instance">
-                <span class="fa fa-arrow-right"></span>
+                <span class="fas fa-arrow-right"></span>
             </a>
             <?php endif; ?>
         </div>
@@ -81,8 +81,8 @@ while (key($all) != $instance->id) {
                         <th scope="row">Last update</th>
                         <td>
                             <?php echo html($version->date) ?>
-                            <a href="#" class="fa update" title="Update now">
-                                <span class="fa-repeat"></span>
+                            <a href="#" class="update" title="Update now">
+                                <span class="fas fa-file-import"></span>
                             </a>
                         </td>
                     </tr>
@@ -107,21 +107,21 @@ while (key($all) != $instance->id) {
 
         <p class="bottom-nav clearfix">
             <a href="<?php echo html(url('')) ?>" class="left btn btn-secondary">
-                <span class="fa fa-angle-double-left"></span>
+                <span class="fas fa-angle-double-left"></span>
                 Back to list
             </a>
             <a href="<?php echo html(url("edit/{$instance->id}")) ?>" class="right edit btn btn-primary">
-                <span class="fa fa-pencil"></span> Edit
+                <span class="fas fa-pencil-alt"></span> Edit
             </a>
         <?php if ($instance->getApplication()) : ?>
             <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="fix" data-backdrop="static">
-                <span class="fa fa-wrench"></span> Fix
+                <span class="fas fa-wrench"></span> Fix
             </a>
             <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="backup" data-backdrop="static">
-                <span class="fa fa-floppy-o"></span> Backup
+                <span class="fas fa-save"></span> Backup
             </a>
             <a href="javascript:void(0);" class="right btn btn-primary" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="update" data-backdrop="static">
-                <span class="fa fa-repeat"></span> Update
+                <span class="fas fa-file-import"></span> Update
             </a>
         <?php endif; ?>
         </p>

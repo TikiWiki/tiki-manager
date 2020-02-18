@@ -16,8 +16,8 @@
             <?php foreach ($instances as $instance) : ?>
                 <li title="Backup this instance" data-toggle="modal" data-target="#trimModal" data-id="<?php echo html("{$instance->id}") ?>" data-name="<?php echo html("{$instance->name}") ?>" data-type="backup">
                     <?php require dirname(__FILE__) . "/layout/url.php"; ?>
-                    <div class="buttons fa">
-                        <a href="javascript:void(0);" class="fa-floppy-o" title="Backup this instance"></a>
+                    <div class="buttons">
+                        <a href="javascript:void(0);" class="fas fa-save" title="Backup this instance"></a>
                     </div>
                 </li>
             <?php endforeach; ?>

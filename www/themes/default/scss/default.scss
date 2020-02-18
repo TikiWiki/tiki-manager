@@ -1,5 +1,5 @@
-@import "../../../vendor/twitter/bootstrap/scss/_mixins.scss";
-@import "../../../vendor/twitter/bootstrap/scss/_functions.scss";
+@import "../../../vendor/twbs/bootstrap/scss/_mixins.scss";
+@import "../../../vendor/twbs/bootstrap/scss/_functions.scss";
 @import "_variables.scss";
 
 
@@ -134,7 +134,7 @@ TRIM Main Styles
             }
             .buttons {
                 float:right;
-                a { margin-left:10px; font-size:2em; }
+                a { margin-left:10px; font-size:1.75em; }
                 .fa-times {
                     color:orangered;
                     &:hover { color:darken(orangered, 15%); }

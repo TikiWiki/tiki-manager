@@ -104,7 +104,7 @@ $inMaintenance = $instance->isLocked() ?: false;
 
                 <div class="form-group">
                     <p>
-                        <a href="<?php echo html(url("view/{$instance->id}")) ?>" class="cancel btn btn-secondary"><span class="fa fa-angle-double-left"></span> Cancel</a>
+                        <a href="<?php echo html(url("view/{$instance->id}")) ?>" class="cancel btn btn-secondary"><span class="fas fa-angle-double-left"></span> Cancel</a>
                         <button type="submit" class="save btn btn-primary">Save</button>
                     </p>
                 </div>
