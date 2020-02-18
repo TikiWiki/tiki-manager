@@ -125,6 +125,9 @@ class Database
 
     public function createUser($username, $password)
     {
+        if ($username == $this->user) { //DB user is the root user
+            return $this;
+        }
         $host = $this->host === 'localhost'
             ? $this->host
             : '%';
@@ -176,6 +179,9 @@ class Database
 
     public function grantRights($username, $database)
     {
+        if ($username == $this->user) {
+            return $this;
+        }
         $host = $this->host === 'localhost'
             ? $this->host
             : '%';

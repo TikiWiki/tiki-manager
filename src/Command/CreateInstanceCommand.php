@@ -150,6 +150,12 @@ class CreateInstanceCommand extends Command
                 'Instance database prefix'
             )
             ->addOption(
+                'db-name',
+                'dn',
+                InputOption::VALUE_REQUIRED,
+                'Instance database name'
+            )
+            ->addOption(
                 'check',
                 null,
                 InputOption::VALUE_NONE,
@@ -543,12 +549,14 @@ class CreateInstanceCommand extends Command
                 $dbHost = $input->getOption('db-host');
                 $dbUser = $input->getOption('db-user');
                 $dbPass = $input->getOption('db-pass');
-                $dbprefix = !empty($input->getOption('db-prefix')) ? $input->getOption('db-prefix') : 'tiki';
+                $dbname = $input->getOption('db-name');
+                $dbprefix = !empty($input->getOption('db-prefix')) ? $input->getOption('db-prefix')
+                    : (!empty($dbname)?'':'tiki');
 
                 if (empty($dbHost)
                     || empty($dbUser)
                     || empty($dbPass)
-                    || empty($dbprefix)
+                    || (empty($dbprefix) && empty($dbname))
                 ) {
                     throw new \InvalidArgumentException('Database credentials are missing.');
                 }
@@ -558,9 +566,9 @@ class CreateInstanceCommand extends Command
                 }
 
                 $credentials['host'] = $dbHost;
-                $credentials['user'] = $dbprefix . '_user';
-                $credentials['password'] = Password::create(12, 'unpronounceable');
-                $dbname = $dbprefix . '_db';
+                $credentials['user'] = (!empty($dbprefix)) ? $dbprefix . '_user' : $dbUser;
+                $credentials['password'] = (!empty($dbprefix)) ? Password::create(12, 'unpronounceable') : $dbPass;
+                $dbname = (!empty($dbprefix)) ? $dbprefix . '_db' : $dbname;
                 $credentials['dbname'] = $dbname;
                 $credentials['create'] = true;
 
@@ -575,7 +583,7 @@ class CreateInstanceCommand extends Command
                     throw new \RuntimeException('Can\'t connect to database server!');
                 }
 
-                if ($credentials['create'] && $dbUser = $dbRoot->createAccess($credentials['user'], $dbname)) {
+                if ($credentials['create'] && $dbUser = $dbRoot->createAccess($credentials['user'], $dbname, $credentials['password'])) {
                     $instance->database = $dbUser;
                 } else {
                     $instance->database = $dbRoot;
