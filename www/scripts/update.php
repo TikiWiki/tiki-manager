@@ -27,15 +27,23 @@ ob_end_flush();
 if (isset($_POST['id'])) {
     if ($instance = TikiManager\Application\Instance::getInstance((int) $_POST['id'])) {
         $locked = (md5_file(TRIMPATH . '/scripts/maintenance.htaccess') == md5_file($instance->getWebPath('.htaccess')));
-        if (! $locked) {
-            $locked = $instance->lock();
-        }
-        $instance->detectPHP();
-        $app = $instance->getApplication();
-        $app->performUpdate($instance);
-        $version = $instance->getLatestVersion();
-        if ($locked) {
-            $instance->unlock();
+
+        try {
+            if (! $locked) {
+                $locked = $instance->lock();
+            }
+
+            $instance->detectPHP();
+            $app = $instance->getApplication();
+            $app->performUpdate($instance);
+            $version = $instance->getLatestVersion();
+
+            if ($locked) {
+                $instance->unlock();
+            }
+        } catch (\Exception $e) {
+            error($e->getMessage());
+            exit(-1);
         }
     } else {
         die("Unknown instance.");

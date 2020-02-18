@@ -27,23 +27,7 @@ class Tiki extends Application
     public function __construct(Instance $instance)
     {
         parent::__construct($instance);
-
-        if (! empty($instance->vcs_type)) {
-            switch (strtoupper($instance->vcs_type)) {
-                case 'SVN':
-                    $this->vcs_instance = new Svn($instance);
-                    break;
-                case 'TARBALL':
-                case 'SRC':
-                    $this->vcs_instance = new Src($instance);
-                    break;
-                case 'GIT':
-                    $this->vcs_instance = new Git($instance);
-                    break;
-            }
-        } else {
-            $this->vcs_instance = VersionControlSystem::getDefaultVersionControlSystem($this->instance);
-        }
+        $this->vcs_instance = VersionControlSystem::getVersionControlSystem($this->instance);
     }
 
     public function backupDatabase($target)
@@ -116,6 +100,10 @@ class Tiki extends Application
     {
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
+
+        if ($instance->type === 'local' && !getenv('COMPOSER_HOME') && PHP_SAPI !== 'cli') {
+            $access->setenv('COMPOSER_HOME', $_ENV['CACHE_FOLDER'] . DIRECTORY_SEPARATOR . '.composer');
+        }
 
         if ($access instanceof ShellPrompt) {
             $access->chdir($instance->webroot);
@@ -311,13 +299,18 @@ class Tiki extends Application
             $this->instance->getWebPath('.git/HEAD')    => 'git',
         ];
 
+        $installType = 'src';
         foreach ($checkpaths as $path => $type) {
             if ($access->fileExists($path)) {
-                $this->installType = $type;
-                return $this->installType;
+                $installType = $type;
+                break;
             }
         }
-        return $this->installType = 'src';
+
+        $this->instance->vcs_type = $installType;
+        $this->vcs_instance = VersionControlSystem::getVersionControlSystem($this->instance);
+
+        return $this->installType = $installType;
     }
 
     public function getName()
@@ -715,6 +708,10 @@ class Tiki extends Application
     {
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
+
+        if ($instance->type === 'local' && !getenv('COMPOSER_HOME') && PHP_SAPI !== 'cli') {
+            $access->setenv('COMPOSER_HOME', $_ENV['CACHE_FOLDER'] . DIRECTORY_SEPARATOR . '.composer');
+        }
 
         $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
         $access->setenv('COMPOSER_NO_INTERACTION', '1');

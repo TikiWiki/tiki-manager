@@ -26,23 +26,32 @@ if (! empty($_POST['source'])
     if ($instance = TikiManager\Application\Instance::getInstance((int) $_POST['source'])) {
         $tikiApplication = new Tiki($instance);
         $versions_raw = $tikiApplication->getVersions();
+
         foreach ($versions_raw as $version) {
             if ($version->branch == $_POST['branch']) {
                 $versionSel = $version;
                 break;
             }
         }
+
         if (empty($versionSel)) {
             warning("Unknown branch.");
             die();
         }
-        $locked = $instance->lock();
-        info('Instance locked');
-        $app = $instance->getApplication();
-        $filesToResolve = $app->performUpdate($instance, $versionSel);
-        if ($locked) {
-            $instance->unlock();
-            info('Instance unlocked');
+
+        try {
+            $locked = $instance->lock();
+            info('Instance locked');
+            $app = $instance->getApplication();
+            $filesToResolve = $app->performUpdate($instance, $versionSel);
+
+            if ($locked) {
+                $instance->unlock();
+                info('Instance unlocked');
+            }
+        } catch (\Exception $e) {
+            error($e->getMessage());
+            exit(-1);
         }
     } else {
         warning("Unknown instance");
