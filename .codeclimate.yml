@@ -7,8 +7,8 @@ exclude_patterns:
   - "**/tests/"
   - "**/vendor/"
   - "**/vendor-bin/"
-  - "scripts/get_extensions.php"
   - "scripts/extract_tar.php"
+  - "scripts/package_tar.php"
 
 plugins:
   csslint:
