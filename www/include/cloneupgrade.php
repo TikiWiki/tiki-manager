@@ -52,18 +52,18 @@ $versions = $tikiApplication->getVersions();
                                                  class="fas fa-circle-notch fa-spin fa-fw cyan hide"></i>
             </h3>
             <div>
-	            <select class="chosen-select form-control clearfix branch">
-		            <option value="">--</option>
+                <select class="chosen-select form-control clearfix branch">
+                    <option value="">--</option>
                     <?php
                     foreach ($versions as $version) {
                         if (!empty($version->type) && !empty($version->branch)) {
                             ?>
-				            <option
-				            value="<?php echo $version->branch; ?>"><?php echo $version->type . ' : ' . $version->branch; ?></option><?php
+                            <option
+                            value="<?php echo $version->branch; ?>"><?php echo $version->type . ' : ' . $version->branch; ?></option><?php
                         }
                     }
                     ?>
-	            </select>
+                </select>
             </div>
             <br>
         <?php else : ?>
