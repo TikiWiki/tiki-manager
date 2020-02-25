@@ -52,9 +52,15 @@ if ($numTables === '0') {
 
 $args[] = $dbs_tiki;
 
-$args = implode(' ', $args);
-$command = "mysqldump --quick --create-options --extended-insert $args | gzip -5 > " . escapeshellarg($outputFile);
+$tempFile = escapeshellarg(substr($outputFile, 0, -3));
+$command = "mysql $dbArgs $dbs_tiki -BN -e \"SELECT CONCAT('ALTER DATABASE DEFAULT CHARACTER SET ', default_character_set_name, ' COLLATE ', DEFAULT_COLLATION_NAME, ';') FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()\" > " . $tempFile;
+exec($command);
 
+$args = implode(' ', $args);
+$command = "mysqldump --quick --create-options --extended-insert $args >> " . $tempFile;
+exec($command);
+
+$command = "gzip -5 " . $tempFile;
 exec($command);
 chmod($outputFile, 0777);
 
