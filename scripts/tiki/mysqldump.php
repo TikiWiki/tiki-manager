@@ -191,6 +191,8 @@ function _mysqldump($mysql_database)
     $sql = 'show tables;';
     $result = query($sql);
     if ($result) {
+        _mysqldump_database_encoding();
+
         while ($row= fetch_row($result)) {
             _mysqldump_table_structure($row[0]);
 
@@ -201,6 +203,17 @@ function _mysqldump($mysql_database)
     }
 
     free($result);
+}
+
+function _mysqldump_database_encoding()
+{
+    $sql = "SELECT default_character_set_name as charset, DEFAULT_COLLATION_NAME as collation 
+FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()";
+
+    $result = query($sql);
+    $dbInfo = fetch_assoc($result);
+
+    echo "ALTER DATABASE DEFAULT CHARACTER SET " . $dbInfo['charset'] . " COLLATE " . $dbInfo['collation'] . ";\n\n";
 }
 
 function _mysqldump_table_structure($table)
