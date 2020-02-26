@@ -763,17 +763,21 @@ class Tiki extends Application
 
             if (!empty($options['live-reindex'])) {
                 $options['skip-reindex'] = false;
+
+                info('Fixing permissions...');
+                $this->fixPermissions();
+
                 $this->instance->unlock();
             }
         }
-
-        info('Fixing permissions...');
-        $this->fixPermissions();
 
         if (empty($options['skip-reindex']) && $hasConsole) {
             info('Rebuilding Index...');
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
         }
+
+        info('Fixing permissions...');
+        $this->fixPermissions();
     }
 
     public function clearCache($all = false)
