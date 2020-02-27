@@ -8,6 +8,8 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use TikiManager\Application\Exception\VcsConflictException;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Host\Command;
@@ -109,7 +111,7 @@ class Svn extends VersionControlSystem
         $result = $this->access->runCommand($commandInstance);
 
         if ($result->getReturn() !== 0) {
-            throw new Exception($result->getStderrContent());
+            throw new VcsException($result->getStderrContent());
         }
 
         return rtrim($result->getStdoutContent(), "\n");
@@ -256,15 +258,7 @@ class Svn extends VersionControlSystem
 
         if (strlen(trim($conflicts)) > 0 &&
             preg_match('/conflicts:/i', $conflicts)) {
-            echo "SVN MERGE: $conflicts\n";
-
-            if ('yes' == strtolower(promptUser(
-                'It seems there are some conflicts. Type "yes" to exit and solve manually or "no" to discard changes. Exit?',
-                $_ENV['INTERACTIVE'] ? 'yes' : 'no',
-                array('yes', 'no')
-            ))) {
-                exit;
-            }
+            throw new VcsConflictException("SVN MERGE: $conflicts");
         }
 
         if ($this->isUpgrade($url, $branchUrl)) {

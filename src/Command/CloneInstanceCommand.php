@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
@@ -271,8 +272,8 @@ class CloneInstanceCommand extends Command
                                 'live-reindex' => $liveReindex
                             ]);
                         } catch (\Exception $e) {
-                            CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output);
-                            exit(-1);
+                            CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output, $e);
+                            return false;
                         }
                     }
                     if ($destinationInstance->isLocked()) {

@@ -9,6 +9,8 @@ namespace TikiManager\Application;
 use TikiManager\Access\Access;
 use TikiManager\Application\Exception\BackupCopyException;
 use TikiManager\Libs\Helpers\ApplicationHelper;
+use TikiManager\Libs\VersionControl\Svn;
+use TikiManager\Libs\VersionControl\VersionControlSystem;
 
 class Backup
 {
@@ -69,6 +71,12 @@ class Backup
                         $this->errors[$error_code][] = $dir;
                     } else {
                         $this->errors[$error_code] = [$error_code => $dir];
+                    }
+                } else {
+                    if ($this->instance->vcs_type == 'svn') {
+                        /** @var Svn $svn */
+                        $svn = VersionControlSystem::getVersionControlSystem($this->instance);
+                        $svn->ensureTempFolder($destDir . DIRECTORY_SEPARATOR . basename($dir));
                     }
                 }
 

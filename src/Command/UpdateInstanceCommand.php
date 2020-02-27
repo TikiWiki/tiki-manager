@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Discovery;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Helpers\Checksum;
@@ -206,16 +207,21 @@ class UpdateInstanceCommand extends Command
                         }
 
                         if (count($versionSel) > 0) {
-                            $filesToResolve = $app->performUpdate($instance, $target, [
-                                'checksum-check' => $checksumCheck,
-                                'skip-reindex' => $skipReindex,
-                                'skip-cache-warmup' => $skipCache,
-                                'live-reindex' => $liveReindex
-                            ]);
-                            $version = $instance->getLatestVersion();
+                            try {
+                                $filesToResolve = $app->performUpdate($instance, $target, [
+                                    'checksum-check' => $checksumCheck,
+                                    'skip-reindex' => $skipReindex,
+                                    'skip-cache-warmup' => $skipCache,
+                                    'live-reindex' => $liveReindex
+                                ]);
+                                $version = $instance->getLatestVersion();
 
-                            if ($checksumCheck) {
-                                Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                                if ($checksumCheck) {
+                                    Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                                }
+                            } catch (\Exception $e) {
+                                CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                                return false;
                             }
                         } else {
                             $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
@@ -239,6 +245,9 @@ class UpdateInstanceCommand extends Command
                             if ($checksumCheck) {
                                 Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                             }
+                        } catch (VcsException $e) {
+                            CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                            return false;
                         } catch (\Exception $e) {
                             $log[] = $e->getMessage() . PHP_EOL;
                             $log[] = $e->getTraceAsString() . PHP_EOL;
