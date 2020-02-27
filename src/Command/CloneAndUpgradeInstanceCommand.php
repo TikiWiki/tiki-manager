@@ -62,8 +62,9 @@ class CloneAndUpgradeInstanceCommand extends Command
             ->addOption(
                 'live-reindex',
                 null,
-                InputOption::VALUE_NONE,
-                'Live reindex, set instance maintenance off and after perform index rebuild.'
+                InputOption::VALUE_OPTIONAL,
+                'Live reindex, set instance maintenance off and after perform index rebuild.',
+                true
             )
             ->addOption(
                 'direct',
@@ -126,7 +127,7 @@ class CloneAndUpgradeInstanceCommand extends Command
             $arguments['--skip-cache-warmup'] = $skipCacheWarmup;
         }
 
-        if ($liveReindex = $input->getOption('live-reindex')) {
+        if ($liveReindex = is_null($input->getOption('live-reindex')) ? true : filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN)) {
             $arguments['--live-reindex'] = $liveReindex;
         }
 
