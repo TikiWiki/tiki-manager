@@ -8,6 +8,7 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Host\Command;
@@ -95,7 +96,7 @@ class Git extends VersionControlSystem
         $result = $this->access->runCommand($commandInstance);
 
         if ($result->getReturn() !== 0) {
-            throw new Exception($result->getStderrContent());
+            throw new VcsException($result->getStderrContent());
         }
 
         return rtrim($result->getStdoutContent(), "\n");

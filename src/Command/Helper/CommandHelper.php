@@ -17,6 +17,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Application;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
@@ -746,20 +747,26 @@ class CommandHelper
      * @param $instanceId
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @param \Exception|null $e
      */
-    public static function setInstanceSetupError($instanceId, InputInterface $input, OutputInterface $output)
+    public static function setInstanceSetupError($instanceId, InputInterface $input, OutputInterface $output, \Exception $e = null)
     {
         $errors = [];
+        $io = new SymfonyStyle($input, $output);
 
-        if (! empty($instanceId) && is_numeric($instanceId)) {
+        if ($e instanceof VcsException) {
+            $errors[] = 'Tiki Manager detected a problem with your instance´s VCS.';
+            $errors[] = $e->getMessage();
+        } elseif (! empty($instanceId) && is_numeric($instanceId)) {
             $errors[] = 'Failed to install instance. Please follow these steps to continue the process manually.';
             $errors[] = '- php tiki-manager.php instance:access --instances=' . $instanceId;
             $errors[] = '- bash setup.sh -n fix';
             $errors[] = '- php -q -d memory_limit=256M console.php database:install';
-
-            $io = new SymfonyStyle($input, $output);
-            $io->error($errors);
+            if ($e && $_ENV['TRIM_DEBUG']) {
+                $errors[] = $e->getMessage();
+            }
         }
+        $io->error($errors);
     }
 
     /**

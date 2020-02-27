@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Discovery;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Helpers\Checksum;
@@ -184,7 +185,7 @@ class UpgradeInstanceCommand extends Command
                             'live-reindex' => $liveReindex
                         ]);
                     } catch (\Exception $e) {
-                        CommandHelper::setInstanceSetupError($instance->id, $input, $output);
+                        CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
                         return false;
                     }
 
