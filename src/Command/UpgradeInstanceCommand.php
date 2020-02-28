@@ -60,8 +60,9 @@ class UpgradeInstanceCommand extends Command
             ->addOption(
                 'live-reindex',
                 null,
-                InputOption::VALUE_NONE,
-                'Live reindex, set instance maintenance off and after perform index rebuild.'
+                InputOption::VALUE_OPTIONAL,
+                'Live reindex, set instance maintenance off and after perform index rebuild.',
+                true
             );
     }
 
@@ -81,7 +82,7 @@ class UpgradeInstanceCommand extends Command
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
-        $liveReindex = $input->getOption('live-reindex');
+        $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
 
         if (empty($instancesOption)) {
             $io->newLine();
