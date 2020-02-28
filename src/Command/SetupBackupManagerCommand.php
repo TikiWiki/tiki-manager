@@ -91,7 +91,11 @@ class SetupBackupManagerCommand extends Command
         }
 
         if (empty($email)) {
-            $email = $io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, CommandHelper::validateEmailInput($value));
+            $email = $io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, function ($answer) {
+                if (!empty($answer)) {
+                    return  CommandHelper::validateEmailInput($answer);
+                }
+            });
             $input->setOption('email', $email);
         }
     }

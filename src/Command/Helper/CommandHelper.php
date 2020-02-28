@@ -731,7 +731,8 @@ class CommandHelper
     public static function validateEmailInput($value)
     {
         if (!empty($value)) {
-            array_walk(explode(',', $value), function ($emailAddr) {
+            $emailList = explode(',', $value);
+            array_walk($emailList, function ($emailAddr) {
                 if (!filter_var($emailAddr, FILTER_VALIDATE_EMAIL)) {
                     throw new \RuntimeException(sprintf("Email address '%s' is not valid!", $emailAddr));
                 }
