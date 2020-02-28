@@ -143,11 +143,10 @@ class Restore extends Backup
             $windowsAbsolutePaths = (preg_match($windowsAbsolutePathsRegex, $destination, $matches)) ? true : false;
 
             if ($destination{0} === '/' || $windowsAbsolutePaths) {
-                warning("manifest.txt shouldn't have absolute paths like '{$destination}'");
                 if ($type === 'app') {
                     $destination = '';
                 } else {
-                    warning("Skipping '$destination', because I can't guess where to place it!");
+                    warning("{Skipping {$destination}. Path shouldn't have absolute paths, to avoid override data.");
                     continue;
                 }
             }
