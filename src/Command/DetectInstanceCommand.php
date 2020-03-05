@@ -12,7 +12,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use TikiManager\Application\Version;
+use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Access\Access;
 use TikiManager\Application\Discovery;
@@ -95,12 +95,7 @@ class DetectInstanceCommand extends Command
             ob_start(); // Prevent output to be displayed
             $branch = $instance->getApplication()->getBranch();
             if ($instance->branch != $branch) {
-                $oldVersion = $instance->getLatestVersion();
-                $newVersion = $instance->createVersion();
-                $newVersion->type = $oldVersion->type ?? $instance->vcs_type ?? $instance->detectVCSType();
-                $newVersion->branch = $branch;
-                $newVersion->date = date('Y-m-d');
-                $newVersion->save();
+                $instance->updateVersion();
             };
             ob_end_clean();
             $io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');

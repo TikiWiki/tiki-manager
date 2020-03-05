@@ -201,14 +201,7 @@ abstract class Application
         $this->instance->app = $this->getName();
         $this->instance->save();
 
-        $update = $this->instance->createVersion();
-        $update->type = $this->getInstallType(true);
-        $update->branch = $this->getBranch(true);
-        $update->date = $this->getUpdateDate();
-        $update->revision = $this->getRevision($this->instance->webroot);
-        $update->save();
-
-        return $update;
+        return $this->instance->updateVersion();
     }
 }
 

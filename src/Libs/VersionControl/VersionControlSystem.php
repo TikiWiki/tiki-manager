@@ -66,7 +66,7 @@ abstract class VersionControlSystem
      */
     public static function getVersionControlSystem(Instance $instance)
     {
-        $type = $instance->vcs_type ?? $instance->detectVCSType() ?? $_ENV['DEFAULT_VCS'];
+        $type = $instance->vcs_type ?? $instance->getApplication()->getInstallType(true) ?? $_ENV['DEFAULT_VCS'];
         $vcsInstance = null;
 
         switch (strtoupper($type)) {
