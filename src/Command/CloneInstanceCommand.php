@@ -260,7 +260,8 @@ class CloneInstanceCommand extends Command
 
                     if ($cloneUpgrade) {
                         $branch = $input->getOption('branch');
-                        $upgrade_version = Version::buildFake($destinationInstance->vcs_type, VersionControl::formatBranch($branch));
+                        $branch = VersionControl::formatBranch($branch, $destinationInstance->vcs_type);
+                        $upgrade_version = Version::buildFake($destinationInstance->vcs_type, $branch);
 
                         $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
                         $app = $destinationInstance->getApplication();
