@@ -625,6 +625,28 @@ SQL;
         return new Version($this->getId());
     }
 
+    /**
+     * @return Version
+     * @throws \Exception
+     */
+    public function updateVersion()
+    {
+        $version = $this->createVersion();
+        $app = $this->getApplication();
+        $version->type = $app->getInstallType(true);
+
+        if (empty($version->type)) {
+            throw new \Exception('Unable to update version. This is a blank instance');
+        }
+
+        $version->branch = $app->getBranch(true);
+        $version->date = $app->getUpdateDate();
+        $version->revision = $app->getRevision($this->webroot);
+        $version->save();
+
+        return $version;
+    }
+
     public function getLatestVersion()
     {
         $result = query(self::SQL_SELECT_LATEST_VERSION, [':id' => $this->id]);
@@ -642,12 +664,13 @@ SQL;
     public function hasConsole()
     {
         $current = $this->getLatestVersion();
-        $hasConsole = $current->branch === 'trunk' || $current->branch === 'master'
+        $branch = $current->branch ?? $this->getApplication()->getBranch();
+
+        return in_array($branch, ['trunk','master'])
             || (
-                preg_match('/(\d+)\.?/', $current->branch, $matches)
+                preg_match('/(\d+)\.?/', $branch, $matches)
                 && floatval($matches[1]) >= 11
             );
-        return $hasConsole;
     }
 
     /**
