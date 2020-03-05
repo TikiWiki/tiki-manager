@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
-use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
