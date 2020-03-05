@@ -573,25 +573,6 @@ SQL;
         return false;
     }
 
-    public function detectVCSType()
-    {
-        $access = $this->getBestAccess('scripting');
-
-        if ($access->fileExists('.git')) {
-            return 'git';
-        }
-
-        if ($access->fileExists('.svn')) {
-            return 'svn';
-        }
-
-        if ($access->fileExists('tiki-setup.php')) {
-            return 'src';
-        }
-
-        return null;
-    }
-
     public function detectDistribution()
     {
         $access = $this->getBestAccess('scripting');

@@ -10,13 +10,15 @@ namespace TikiManager\Libs\Helpers;
 class VersionControl
 {
 
-    public static function formatBranch($branch)
+    public static function formatBranch($branch, $vcs = null)
     {
-        if (strtolower($_ENV['DEFAULT_VCS']) == 'svn') {
+        $vcs = strtolower($vcs ?? $_ENV['DEFAULT_VCS']);
+
+        if ($vcs == 'svn') {
             return static::formatSvnBranch($branch);
         }
 
-        if (strtolower($_ENV['DEFAULT_VCS']) == 'git') {
+        if ($vcs == 'git') {
             return static::formatGitBranch($branch);
         }
 

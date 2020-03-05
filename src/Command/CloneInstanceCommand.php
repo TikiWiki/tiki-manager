@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
-use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
@@ -260,7 +259,8 @@ class CloneInstanceCommand extends Command
 
                     if ($cloneUpgrade) {
                         $branch = $input->getOption('branch');
-                        $upgrade_version = Version::buildFake($destinationInstance->vcs_type, VersionControl::formatBranch($branch));
+                        $branch = VersionControl::formatBranch($branch, $destinationInstance->vcs_type);
+                        $upgrade_version = Version::buildFake($destinationInstance->vcs_type, $branch);
 
                         $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
                         $app = $destinationInstance->getApplication();

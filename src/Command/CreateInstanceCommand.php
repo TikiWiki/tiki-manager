@@ -23,7 +23,6 @@ use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Ext\Password;
 use TikiManager\Libs\Database\Database;
-use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class CreateInstanceCommand extends Command
 {
