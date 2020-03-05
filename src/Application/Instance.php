@@ -625,11 +625,20 @@ SQL;
         return new Version($this->getId());
     }
 
+    /**
+     * @return Version
+     * @throws \Exception
+     */
     public function updateVersion()
     {
-        $app = $this->getApplication();
         $version = $this->createVersion();
+        $app = $this->getApplication();
         $version->type = $app->getInstallType(true);
+
+        if (empty($version->type)) {
+            throw new \Exception('Unable to update version. This is a blank instance');
+        }
+
         $version->branch = $app->getBranch(true);
         $version->date = $app->getUpdateDate();
         $version->revision = $app->getRevision($this->webroot);

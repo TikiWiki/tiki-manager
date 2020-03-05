@@ -19,6 +19,9 @@ use TikiManager\Application\Discovery;
 
 class DetectInstanceCommand extends Command
 {
+    protected $instances;
+    protected $instancesInfo;
+
     protected function configure()
     {
         $this
@@ -33,20 +36,29 @@ class DetectInstanceCommand extends Command
             );
     }
 
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        parent::initialize($input, $output);
+
+        $instances = CommandHelper::getInstances();
+        $instancesInfo = CommandHelper::getInstancesInfo($instances);
+
+        $this->instances = $instances;
+        $this->instancesInfo = $instancesInfo;
+    }
+
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if (empty($input->getOption('instances'))) {
             $io = new SymfonyStyle($input, $output);
-            $instances = CommandHelper::getInstances();
-            $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
-            if (empty($instancesInfo)) {
+            if (empty($this->instancesInfo)) {
                 return;
             }
 
-            CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $answer = $io->ask('Which instance(s) do you want to detect', null, function ($answer) use ($instances) {
-                $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
+            CommandHelper::renderInstancesTable($output, $this->instancesInfo);
+            $answer = $io->ask('Which instance(s) do you want to detect', null, function ($answer) {
+                $selectedInstances = CommandHelper::validateInstanceSelection($answer, $this->instances);
                 return implode(',', array_map(function ($elem) {
                     return $elem->getId();
                 }, $selectedInstances));
@@ -60,20 +72,18 @@ class DetectInstanceCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $instances = CommandHelper::getInstances('all', true);
-        $instancesInfo = CommandHelper::getInstancesInfo($instances);
-
-        if (empty($instancesInfo)) {
+        if (empty($this->instancesInfo)) {
             $output->writeln('<comment>No instances available to detect.</comment>');
             return;
         }
 
         $instancesOption = $input->getOption('instances');
 
-        CommandHelper::validateInstanceSelection($instancesOption, $instances);
+        CommandHelper::validateInstanceSelection($instancesOption, $this->instances);
         $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
+        $selectedInstances = array_intersect_key($this->instances, array_flip($instancesOption));
 
+        /** @var Instance $instance */
         foreach ($selectedInstances as $instance) {
             $io->section($instance->name);
             if (! $instance->detectPHP()) {
@@ -93,6 +103,13 @@ class DetectInstanceCommand extends Command
             $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             ob_start(); // Prevent output to be displayed
+            $app = $instance->getApplication();
+
+            if (!$app) {
+                $io->writeln('<info>Blanck instance detected. Skipping...</info>');
+                continue;
+            }
+
             $branch = $instance->getApplication()->getBranch();
             if ($instance->branch != $branch) {
                 $instance->updateVersion();

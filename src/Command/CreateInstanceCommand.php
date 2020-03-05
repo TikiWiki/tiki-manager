@@ -540,6 +540,7 @@ class CreateInstanceCommand extends Command
             }
 
             if (empty($branch)) {
+                $instance->delete();
                 throw new \InvalidArgumentException('Version value "' . $version . '" is invalid.');
             }
 

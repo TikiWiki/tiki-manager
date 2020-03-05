@@ -27,6 +27,11 @@ class Tiki extends Application
     public function __construct(Instance $instance)
     {
         parent::__construct($instance);
+
+        if (!$instance->vcs_type) {
+            $instance->vcs_type = $this->getInstallType(true);
+        }
+
         $this->vcs_instance = VersionControlSystem::getVersionControlSystem($this->instance);
     }
 
@@ -295,20 +300,18 @@ class Tiki extends Application
 
         $checkpaths = [
             $this->instance->getWebPath('.svn/entries') => 'svn',
-            $this->instance->getWebPath('.svn/wc.db')   => 'svn',
-            $this->instance->getWebPath('.git/HEAD')    => 'git',
+            $this->instance->getWebPath('.svn/wc.db') => 'svn',
+            $this->instance->getWebPath('.git/HEAD') => 'git',
+            $this->instance->getWebPath('tiki-setup.php') => 'src',
         ];
 
-        $installType = 'src';
+        $installType = null;
         foreach ($checkpaths as $path => $type) {
             if ($access->fileExists($path)) {
                 $installType = $type;
                 break;
             }
         }
-
-        $this->instance->vcs_type = $installType;
-        $this->vcs_instance = VersionControlSystem::getVersionControlSystem($this->instance);
 
         return $this->installType = $installType;
     }
