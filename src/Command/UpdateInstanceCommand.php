@@ -246,12 +246,11 @@ class UpdateInstanceCommand extends Command
                             if ($checksumCheck) {
                                 Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
                             }
-                        } catch (VcsException $e) {
-                            CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
-                            return false;
                         } catch (\Exception $e) {
+                            CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
                             $log[] = $e->getMessage() . PHP_EOL;
                             $log[] = $e->getTraceAsString() . PHP_EOL;
+                            return false;
                         }
                     } else {
                         $message = 'Tiki Application branch is different than the one stored in the Tiki Manager db.';
