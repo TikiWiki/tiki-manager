@@ -7,14 +7,12 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Discovery;
-use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Helpers\Checksum;
@@ -162,7 +160,7 @@ class UpgradeInstanceCommand extends Command
                         if ($instance->isLocked()) {
                             $instance->unlock();
                         }
-                        return;
+                        continue;
                     }
                     $versionSel = getEntries($versions, $selectedVersion);
                 } else {
@@ -185,15 +183,15 @@ class UpgradeInstanceCommand extends Command
                             'skip-cache-warmup' => $skipCache,
                             'live-reindex' => $liveReindex
                         ]);
+
+                        $version = $instance->getLatestVersion();
+
+                        if ($checksumCheck) {
+                            Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                        }
                     } catch (\Exception $e) {
                         CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
-                        return false;
-                    }
-
-                    $version = $instance->getLatestVersion();
-
-                    if ($checksumCheck) {
-                        Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                        continue;
                     }
                 } else {
                     $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
@@ -202,7 +200,6 @@ class UpgradeInstanceCommand extends Command
                 $io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
                 $io->writeln('<comment>the latest version permitted by the server.</comment>');
             }
-
 
             if ($instance->isLocked()) {
                 $instance->unlock();

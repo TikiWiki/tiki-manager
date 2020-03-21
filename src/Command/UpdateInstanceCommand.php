@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
+ *     See copyright.txt for details and a complete list of authors.
+ * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
+ */
 
 namespace TikiManager\Command;
 
@@ -9,7 +14,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Discovery;
-use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Helpers\Checksum;
@@ -192,7 +196,7 @@ class UpdateInstanceCommand extends Command
                                 if ($instance->isLocked()) {
                                     $instance->unlock();
                                 }
-                                return;
+                                continue;
                             }
                             $versionSel = getEntries($versions, $selectedVersion);
                         } else {
@@ -222,7 +226,6 @@ class UpdateInstanceCommand extends Command
                                 }
                             } catch (\Exception $e) {
                                 CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
-                                return false;
                             }
                         } else {
                             $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
@@ -250,7 +253,6 @@ class UpdateInstanceCommand extends Command
                             CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
                             $log[] = $e->getMessage() . PHP_EOL;
                             $log[] = $e->getTraceAsString() . PHP_EOL;
-                            return false;
                         }
                     } else {
                         $message = 'Tiki Application branch is different than the one stored in the Tiki Manager db.';

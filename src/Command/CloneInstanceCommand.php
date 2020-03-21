@@ -274,7 +274,7 @@ class CloneInstanceCommand extends Command
                             ]);
                         } catch (\Exception $e) {
                             CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output, $e);
-                            return false;
+                            continue;
                         }
                     }
                     if ($destinationInstance->isLocked()) {
