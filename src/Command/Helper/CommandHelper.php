@@ -768,6 +768,8 @@ class CommandHelper
             }
         }
         $io->error($errors);
+
+        static::logException($e, $instanceId);
     }
 
     /**
@@ -780,5 +782,23 @@ class CommandHelper
         $instanceTypes = ApplicationHelper::isWindows() ? 'local' : Instance::TYPES;
         $listInstanceTypes = explode(',', $instanceTypes);
         return $listInstanceTypes;
+    }
+
+    /**
+     * @param \Exception $e
+     * @param $instance
+     */
+    public static function logException($e, $instance)
+    {
+        if (!$instance instanceof Instance) {
+            $instance = Instance::getInstance($instance);
+        }
+
+        $log = [];
+        $log[] = sprintf('## Error in %s (id: %s)', $instance->name, $instance->id);
+        $log[] = $e->getMessage();
+        $log[] = $e->getTraceAsString();
+
+        trim_output(implode(PHP_EOL, $log));
     }
 }
