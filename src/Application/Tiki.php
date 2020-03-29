@@ -296,8 +296,6 @@ class Tiki extends Application
             return $this->installType;
         }
 
-        $access = $this->instance->getBestAccess('filetransfer');
-
         $checkpaths = [
             $this->instance->getWebPath('.svn/entries') => 'svn',
             $this->instance->getWebPath('.svn/wc.db') => 'svn',
@@ -307,7 +305,7 @@ class Tiki extends Application
 
         $installType = null;
         foreach ($checkpaths as $path => $type) {
-            if ($access->fileExists($path)) {
+            if (file_exists($path)) {
                 $installType = $type;
                 break;
             }
