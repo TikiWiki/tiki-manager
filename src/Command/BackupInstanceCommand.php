@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Helpers\Archive;
+use TikiManager\Libs\Helpers\Archive;
 
 class BackupInstanceCommand extends Command
 {
@@ -35,6 +35,12 @@ class BackupInstanceCommand extends Command
                 'e',
                 InputOption::VALUE_REQUIRED,
                 'Email addresses to notify for backup failures  (comma separated)'
+            )
+            ->addOption(
+                'max-backups',
+                'mb',
+                InputOption::VALUE_REQUIRED,
+                'Max number of backups to keep by instance'
             );
     }
 
@@ -99,6 +105,12 @@ class BackupInstanceCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
+        $maxBackups = $input->getOption('max-backups') ?: 0;
+        if (isset($maxBackups) && filter_var($maxBackups, FILTER_VALIDATE_INT) === false) {
+            $io->error('Max number of backups to keep by instance is not a number');
+            return 0;
+        }
+
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
@@ -146,7 +158,7 @@ class BackupInstanceCommand extends Command
                 } else {
                     $log[] = 'Failed to backup instance.';
                 }
-                Archive::performArchiveCleanup($instance->id, $instance->name);
+                $instance->reduceBackups($maxBackups);
             } catch (\Exception $e) {
                 $log[] = $e->getMessage() . PHP_EOL;
                 $log[] = $e->getTraceAsString() . PHP_EOL;

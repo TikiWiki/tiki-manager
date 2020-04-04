@@ -12,6 +12,7 @@ namespace TikiManager\Application;
 use TikiManager\Access\Access;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
+use TikiManager\Libs\Helpers\Archive;
 use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 
@@ -790,6 +791,11 @@ SQL;
     {
         $backup = new Backup($this);
         return $backup->getArchives();
+    }
+
+    public function reduceBackups($maxBackups = 0)
+    {
+        Archive::cleanup($this->id, $this->name, $maxBackups);
     }
 
     public function isLocked()
