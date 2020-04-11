@@ -22,13 +22,20 @@ class Environment
     private $homeDirectory;
     private $isLoaded = false;
 
-    /**
-     * Environment constructor.
-     * @param $homeDirectory
-     */
-    public function __construct($homeDirectory)
+    private static $instance;
+
+    public static function getInstance()
     {
-        $this->homeDirectory = $homeDirectory;
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
+    }
+
+    private function __construct()
+    {
+        $this->homeDirectory = dirname(dirname(__DIR__));
         require_once $this->homeDirectory . '/src/Libs/Helpers/functions.php';
     }
 
@@ -380,5 +387,22 @@ class Environment
                 ");
             // no break
         }
+    }
+
+    public static function get($key, $defaultValue = null) {
+
+        $variables = self::getInstance()->getEnvironmentVariables();
+
+        return isset($variables[$key]) ? $variables[$key] : $defaultValue;
+    }
+
+    /**
+     * Get a merge of environment variables $_ENV and $_SERVER.
+     *
+     * @return array
+     */
+    protected function getEnvironmentVariables()
+    {
+        return array_merge($_ENV, $_SERVER);
     }
 }

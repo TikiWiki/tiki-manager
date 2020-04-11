@@ -16,8 +16,7 @@ require __DIR__.'/vendor/autoload.php';
 use Symfony\Component\Console\Application;
 use TikiManager\Config\Environment;
 
-$environment = new Environment(__DIR__);
-$environment->load();
+Environment::getInstance()->load();
 
 $application = new Application();
 

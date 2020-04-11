@@ -8,7 +8,8 @@
  */
 
 use TikiManager\Application\Tiki;
-use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\Environment;
+
 
 ini_set('zlib.output_compression', 0);
 header('Content-Encoding: none'); //Disable apache compression
@@ -18,8 +19,8 @@ require dirname(__FILE__) . "/../config.php";
 require dirname(__FILE__) . "/../include/layout/web.php";
 
 require TRIMPATH . '/vendor/autoload.php';
-$environment = new TikiManager\Config\Environment(TRIMPATH);
-$environment->load();
+Environment::getInstance()->load();
+
 ob_end_clean();
 
 ob_implicit_flush(true);
