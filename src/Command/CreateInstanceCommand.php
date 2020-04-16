@@ -430,10 +430,71 @@ class CreateInstanceCommand extends Command
         $backupPerm = $input->getOption('backup-permission');
         $version = $input->getOption('branch');
 
+        $rhost = $input->getOption('host');
+        $rport = $input->getOption('port');
+        $ruser = $input->getOption('user');
+        $rpass = $input->getOption('pass');
+
+        if (empty($type)) {
+            if (empty($rhost)) {
+                $type = 'local';
+            } else {
+                if ($rport === '22') {
+                    $type = 'ssh';
+                } elseif ($rport === '21') {
+                    $type = 'ftp';
+                }
+            }
+        }
+
+        if (empty($name) && ! empty($weburl)) {
+            $parts = parse_url($weburl);
+            if (! empty($parts['host'])) {
+                $name = $parts['host'];
+            }
+            unset($parts);
+        }
+
+        if (empty($tempdir)) {
+            $tempdir = '/tmp/trim_temp';
+            if (! empty($_ENV['TRIM_TEMP'])) {
+                $tempdir = $_ENV['TRIM_TEMP'];
+            }
+        }
+
+        if (empty($backupUser)) {
+            if (! empty($_ENV['BACKUP_FOLDER']) && file_exists($_ENV['BACKUP_FOLDER'])) {
+                $backupUser = posix_getpwuid(fileowner($_ENV['BACKUP_FOLDER']));
+                if (empty($backupUser) || empty($backupUser['name'])) {
+                    $backupUser = null;
+                } else {
+                    $backupUser = $backupUser['name'];
+                }
+            }
+        }
+
+        if (empty($backupGroup)) {
+            if (! empty($_ENV['BACKUP_FOLDER']) && file_exists($_ENV['BACKUP_FOLDER'])) {
+                $backupGroup = posix_getgrgid(filegroup($_ENV['BACKUP_FOLDER']));
+                if (empty($backupGroup) || empty($backupGroup['name'])) {
+                    $backupGroup = null;
+                } else {
+                    $backupGroup = $backupGroup['name'];
+                }
+            }
+        }
+
+        if (empty($backupPerm)) {
+            if (! empty($_ENV['BACKUP_FOLDER']) && file_exists($_ENV['BACKUP_FOLDER'])) {
+                $backupPerm = sprintf('%o', fileperms($_ENV['BACKUP_FOLDER']) & 0777);
+            } else {
+                $backupPerm = sprintf('%o', umask() ^ 0777);
+            }
+        }
+
         if (!empty($type)
             && !empty($weburl)
             && !empty($name)
-            && !empty($contact)
             && !empty($webroot)
             && !empty($tempdir)
             && !empty($version)
@@ -449,7 +510,7 @@ class CreateInstanceCommand extends Command
                 throw new \InvalidArgumentException('Instance web url invalid.');
             }
 
-            if (filter_var($contact, FILTER_VALIDATE_EMAIL) === false) {
+            if (! empty($contact) && filter_var($contact, FILTER_VALIDATE_EMAIL) === false) {
                 throw new \InvalidArgumentException('Please insert a valid email address.');
             }
 
@@ -465,11 +526,6 @@ class CreateInstanceCommand extends Command
             }
 
             if ($type != 'local') {
-                $rhost = $input->getOption('host');
-                $rport = $input->getOption('port');
-                $ruser = $input->getOption('user');
-                $rpass = $input->getOption('pass');
-
                 if (empty($rhost) || !is_numeric($rport) || empty($ruser) || empty($rpass)) {
                     throw new \InvalidArgumentException('Remote server credentials are missing.');
                 }
