@@ -6,9 +6,8 @@
  * @copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
-use TikiManager\Application\Instance;
-use TikiManager\Libs\Database\Database;
-use TikiManager\Command\Helper\CommandHelper;
+
+use TikiManager\Config\Environment;
 
 ini_set('zlib.output_compression', 0);
 header('Content-Encoding: none'); //Disable apache compression
@@ -22,8 +21,8 @@ if (defined('TIMEOUT')) {
 }
 
 require TRIMPATH . '/vendor/autoload.php';
-$environment = new TikiManager\Config\Environment(TRIMPATH);
-$environment->load();
+Environment::getInstance()->load();
+
 ob_end_clean();
 
 ob_implicit_flush(true);

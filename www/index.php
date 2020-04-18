@@ -17,8 +17,8 @@ if (! file_exists($authFile)) {
 ob_start();
 require $authFile;
 require TRIMPATH . '/vendor/autoload.php';
-$environment = new Environment(TRIMPATH);
-$environment->load();
+Environment::getInstance()->load();
+
 ob_end_clean();
 
 if (RESTRICT && ( $_SERVER['HTTP_HOST'] != 'localhost' || $_SERVER['REMOTE_ADDR'] != '127.0.0.1' )) {
