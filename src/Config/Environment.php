@@ -386,6 +386,18 @@ class Environment
                     UPDATE info SET value = '6' WHERE name = 'version';
                 ");
             // no break
+            case 6:
+                $db->exec("
+                    UPDATE instance SET name=(name || '-' || instance_id)
+                        WHERE name IN (
+                            SELECT name FROM instance
+                                GROUP BY name
+                                HAVING COUNT(name) > 1
+                        );
+                    CREATE UNIQUE INDEX idx_unique_name ON instance(name);
+                    UPDATE info SET value = '7' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

@@ -219,8 +219,14 @@ class CommandHelper
                 'You must select an instance #ID'
             );
         } else {
+            $reindexedInstances = array();
+            foreach ($instances as $id => $instance) {
+                $reindexedInstances[ $id ] = $instance;
+                $reindexedInstances[ $instance->name ] = $instance;
+            }
+
             $instancesId = array_filter(array_map('trim', explode(',', $answer)));
-            $invalidInstancesId = array_diff($instancesId, array_keys($instances));
+            $invalidInstancesId = array_diff($instancesId, array_keys($reindexedInstances));
 
             if ($invalidInstancesId) {
                 throw new \RuntimeException(
@@ -230,8 +236,8 @@ class CommandHelper
 
             $selectedInstances = [];
             foreach ($instancesId as $index) {
-                if (array_key_exists($index, $instances)) {
-                    $selectedInstances[] = $instances[$index];
+                if (array_key_exists($index, $reindexedInstances)) {
+                    $selectedInstances[] = $reindexedInstances[$index];
                 }
             }
         }

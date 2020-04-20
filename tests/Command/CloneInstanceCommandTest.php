@@ -55,11 +55,13 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
                 InstanceHelper::WEBROOT_OPTION => self::$instancePath1,
                 InstanceHelper::BACKUP_USER_OPTION => isset($scriptOwner) ? $scriptOwner : 'root', // Backup user
                 InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($prevVersionBranch),
+                InstanceHelper::NAME_OPTION => 'source-test.tiki.org',
             ],
             [
                 InstanceHelper::WEBROOT_OPTION => self::$instancePath2,
                 InstanceHelper::BACKUP_USER_OPTION => isset($scriptOwner) ? $scriptOwner : 'root', // Backup user
                 InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($branch),
+                InstanceHelper::NAME_OPTION => 'target-test.tiki.org',
             ]
         ];
     }
