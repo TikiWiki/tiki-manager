@@ -7,6 +7,7 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
+use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 
 ini_set('zlib.output_compression', 0);
@@ -16,6 +17,7 @@ ob_start();
 require dirname(__FILE__) . "/../config.php";
 require TRIMPATH . '/vendor/autoload.php';
 Environment::getInstance()->load();
+$io = App::get('io');
 
 ob_end_clean();
 
@@ -44,10 +46,11 @@ if (isset($_POST['id'])) {
                 $instance->unlock();
             }
         } catch (\Exception $e) {
-            error($e->getMessage());
+            $io->error($e->getMessage());
             exit(-1);
         }
     } else {
-        die("Unknown instance.");
+        $io->error('Unknown instance');
+        exit(1);
     }
 }

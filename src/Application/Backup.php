@@ -6,11 +6,12 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Config\App;
 use TikiManager\Access\Access;
-use TikiManager\Application\Exception\BackupCopyException;
-use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\Svn;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
+use TikiManager\Application\Exception\BackupCopyException;
 
 class Backup
 {
@@ -32,6 +33,8 @@ class Backup
 
     public function __construct($instance, $direct = false)
     {
+        $this->io = App::get('io');
+
         $this->instance = $instance;
         $this->access = $this->getAccess($instance);
         $this->app = $instance->getApplication();
@@ -104,11 +107,11 @@ class Backup
         if ($this->direct) {
             $copyResult = $targets;
         } else {
-            info('Copying files');
+            $this->io->info('Copying files... This may take a while.');
             $copyResult = $this->copyDirectories($targets, $backupDir);
         }
 
-        info('Checking system ini config file');
+        $this->io->info('Checking system ini config file');
         $targetSystemIniConfigFile = $this->getSystemIniConfigFile();
         if (!empty($targetSystemIniConfigFile)) {
             $parts = explode('||', $targetSystemIniConfigFile);
@@ -116,22 +119,22 @@ class Backup
                 $targetSystemIniConfigFile = $parts[0];
 
                 if ($parts[1] == 'external') {
-                    info('Downloading system ini config file');
+                    $this->io->info('Downloading system ini config file');
                 }
 
                 $this->copySystemIniConfigFile($targetSystemIniConfigFile, $backupDir, $copyResult, $parts[1]);
             }
         }
 
-        info('Creating manifest');
+        $this->io->info('Creating manifest');
         $this->createManifest($copyResult, $backupDir);
 
-        info('Creating database dump');
+        $this->io->info('Creating database dump');
         $this->createDatabaseDump($this->app, $backupDir);
 
         $result = '';
         if (!$skipArchive) {
-            info('Creating archive');
+            $this->io->info('Creating archive');
             $result = $this->createArchive($this->archiveDir, $backupDir);
 
             if (!$result) {
@@ -170,7 +173,7 @@ class Backup
         exec($command, $output, $return_var);
 
         if ($return_var != 0) {
-            error("TAR exit code: $return_var");
+            $this->io->error("TAR exit code: $return_var");
         }
 
         if (!$bzipStep) {

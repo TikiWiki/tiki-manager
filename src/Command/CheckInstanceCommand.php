@@ -85,22 +85,22 @@ class CheckInstanceCommand extends Command
                 $fetchChecksum = false;
 
                 if (empty($versionRevision)) {
-                    warning('No revision detected for instance.');
+                    $io->warning('No revision detected for instance.');
                     $fetchChecksum = true;
                 }
 
                 if (!empty($versionRevision) && $versionRevision != $tikiRevision) {
-                    warning('Revision mismatch between Tiki Manager version and instance.');
+                    $io->warning('Revision mismatch between Tiki Manager version and instance.');
                     $fetchChecksum = true;
                 }
 
                 if (empty($trimInstanceRevision) || $trimInstanceRevision != $tikiRevision) {
-                    warning('It is recommended to fetch new checksum information.');
+                    $io->warning('It is recommended to fetch new checksum information.');
                     $fetchChecksum = true;
                 }
 
                 if (! $version->hasChecksums()) {
-                    warning('No checksums exist.');
+                    $io->warning('No checksums exist.');
                     $fetchChecksum = true;
                 }
 

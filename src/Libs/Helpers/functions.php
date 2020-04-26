@@ -191,8 +191,8 @@ function secure_trim_data($should_set = false)
         $chmod_success = $should_set && chmod($_ENV['TRIM_DATA'], $exp_mode);
 
         if (!$chmod_success) {
-            error("Your Tiki Manager data is unsafe! ");
-            error(sprintf(
+            $message = 'Your Tiki Manager data is unsafe!'.PHP_EOL;
+            $message .= sprintf(
                 '  Currently it is: d%s%s%s	%s:%s	%s',
                 $modes[ ($cur_mode >> 6) & 0b111 ],
                 $modes[ ($cur_mode >> 3) & 0b111 ],
@@ -200,13 +200,14 @@ function secure_trim_data($should_set = false)
                 $owner_name,
                 $group_name,
                 $_ENV['TRIM_DATA']
-            ));
-            error(sprintf(
+            ) . PHP_EOL;
+            $message .= sprintf(
                 '  Should be like:  drwx------	%s:%s	%s',
                 $owner_name,
                 $group_name,
                 $_ENV['TRIM_DATA']
-            ));
+            );
+            App::get('io')->warning($message);
         }
     }
 }
@@ -226,13 +227,13 @@ function run_composer_install()
     }
 
     if (!file_exists($composer)) {
-        info("Downloading composer into '{$composer}'");
+        App::get('io')->info("Downloading composer into '{$composer}'");
         copy('https://getcomposer.org/composer.phar', $composer);
         chmod($composer, 0755);
     }
 
     if (!file_exists($composer)) {
-        error("Failed to download composer");
+        $this->io->error("Failed to download composer");
         exit(1);
     }
 
@@ -261,7 +262,7 @@ function query($query, $params = null)
         } elseif (is_int($value)) {
             $query = str_replace($key, (int) $value, $query);
         } elseif (is_array($value)) {
-            error("Unsupported query parameter type: array\n");
+            $this->io->error("Unsupported query parameter type: array\n");
             printf("Query\n\"%s\"\nParamters:\n", $query);
             var_dump($params);
             printf("Backtrace:\n");
@@ -393,7 +394,7 @@ function promptUser($prompt, $default = false, $values = [])
             return $answer;
         }
 
-        error("Invalid response.\n");
+        $this->io->error("Invalid response.\n");
     } while (true);
 }
 

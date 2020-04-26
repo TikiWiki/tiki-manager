@@ -248,7 +248,7 @@ class CreateInstanceCommand extends Command
             $instance->contact = $helper->ask($input, $output, $question);
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $io->error('Failed to setup access');
             }
 
             $instance->save();
@@ -556,7 +556,7 @@ class CreateInstanceCommand extends Command
             }
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $io->error('Failed to setup access');
                 exit(1);
             }
 

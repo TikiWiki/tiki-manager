@@ -6,11 +6,12 @@
 
 namespace TikiManager\Libs\Database;
 
-use TikiManager\Libs\Host\Command;
-use TikiManager\Libs\Database\Exception\DatabaseErrorException;
+use TikiManager\Config\App;
 use TikiManager\Ext\Password;
+use TikiManager\Libs\Host\Command;
 use TikiManager\Application\Instance;
 use TikiManager\Libs\Helpers\ApplicationHelper;
+use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 
 class Database
 {
@@ -264,7 +265,7 @@ class Database
         try {
             return $this->connect();
         } catch (DatabaseErrorException $e) {
-            error($e->getMessage());
+            App::get('io')->error($e->getMessage());
         }
         return false;
     }

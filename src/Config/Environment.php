@@ -218,7 +218,7 @@ class Environment
             file_exists(getenv('HOME') . '/.ssh/id_dsa.pub') &&
             !isset($_ENV['SSH_KEY']) &&
             !isset($_ENV['SSH_PUBLIC_KEY'])) {
-            warning(
+            $this->io->warning(
                 sprintf(
                     'Ssh-dsa key (%s and %s) was found but Tiki Manager won\'t used it, ' .
                     'because DSA was deprecated in openssh-7.0. ' .
@@ -234,7 +234,7 @@ class Environment
             file_exists($_ENV['TRIM_ROOT'] . "/data/id_dsa.pub") &&
             !isset($_ENV['SSH_KEY']) &&
             !isset($_ENV['SSH_PUBLIC_KEY'])) {
-            warning(
+            $this->io->warning(
                 sprintf(
                     'Ssh-dsa key (%s and %s) was found but Tiki Manager won\'t used it, ' .
                     'because DSA was deprecated in openssh-7.0. ' .
@@ -247,30 +247,31 @@ class Environment
         }
 
         if (! Requirements::getInstance()->check('PHPSqlite')) {
-            error(Requirements::getInstance()->getRequirementMessage('PHPSqlite'));
+            $this->io->error(Requirements::getInstance()->getRequirementMessage('PHPSqlite'));
             exit;
         }
 
         if (! Requirements::getInstance()->check('ssh')) {
-            error(Requirements::getInstance()->getRequirementMessage('ssh'));
+            $this->io->error(Requirements::getInstance()->getRequirementMessage('ssh'));
             exit;
         }
 
         if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
             if (! Requirements::getInstance()->check('fileCompression')) {
-                error(Requirements::getInstance()->getRequirementMessage('fileCompression'));
+                $this->io->error(Requirements::getInstance()->getRequirementMessage('fileCompression'));
                 exit;
             }
         }
 
         if (! file_exists($_ENV['SSH_KEY']) || ! file_exists($_ENV['SSH_PUBLIC_KEY'])) {
             if (! is_writable(dirname($_ENV['SSH_KEY']))) {
-                die(error('Impossible to generate SSH key. Make sure data folder is writable.'));
+                $this->io->error('Impossible to generate SSH key. Make sure data folder is writable.');
+                die();
             }
 
-            echo 'If you enter a passphrase, you will need to enter it every time you run ' .
+            $this->io->writeln('If you enter a passphrase, you will need to enter it every time you run ' .
                 'Tiki Manager, and thus, automatic, unattended operations (like backups, file integrity ' .
-                "checks, etc.) will not be possible.\n";
+                "checks, etc.) will not be possible.");
 
             $key = $_ENV['SSH_KEY'];
             `ssh-keygen -t rsa -f $key`;
@@ -284,13 +285,15 @@ class Environment
 
         if (! file_exists($_ENV['DB_FILE'])) {
             if (! is_writable(dirname($_ENV['DB_FILE']))) {
-                die(error('Impossible to generate database. Make sure data folder is writable.'));
+                $this->io->error('Impossible to generate database. Make sure data folder is writable.');
+                die();
             }
 
             try {
                 $db = new PDOWrapper('sqlite:' . $_ENV['DB_FILE']);
             } catch (\PDOException $e) {
-                die(error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}"));
+                $this->io->error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}");
+                die();
             }
 
             $db->exec('CREATE TABLE info (name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name));');
@@ -303,7 +306,8 @@ class Environment
         try {
             $db = new PDOWrapper('sqlite:' . $_ENV['DB_FILE']);
         } catch (\PDOException $e) {
-            die(error("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}"));
+            $this->io->error("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}");
+            die();
         }
 
         $result = $db->query("SELECT value FROM info WHERE name = 'version'");
@@ -323,7 +327,7 @@ class Environment
                         phpexec VARCHAR(50),
                         app VARCHAR(10)
                     );
-            
+
                     CREATE TABLE version (
                         version_id INTEGER PRIMARY KEY,
                         instance_id INTEGER,
@@ -331,13 +335,13 @@ class Environment
                         branch VARCHAR(50),
                         date VARCHAR(25)
                     );
-            
+
                     CREATE TABLE file (
                         version_id INTEGER,
                         path VARCHAR(255),
                         hash CHAR(32)
                     );
-            
+
                     CREATE TABLE access (
                         instance_id INTEGER,
                         type VARCHAR(10),
@@ -345,7 +349,7 @@ class Environment
                         user VARCHAR(25),
                         pass VARCHAR(25)
                     );
-            
+
                     UPDATE info SET value = '1' WHERE name = 'version';
                 ");
             // no break
@@ -355,12 +359,12 @@ class Environment
                         instance_id INTEGER,
                         location VARCHAR(200)
                     );
-            
+
                     CREATE INDEX version_instance_ix ON version ( instance_id );
                     CREATE INDEX file_version_ix ON file ( version_id );
                     CREATE INDEX access_instance_ix ON access ( instance_id );
                     CREATE INDEX backup_instance_ix ON backup ( instance_id );
-            
+
                     UPDATE info SET value = '2' WHERE name = 'version';
                 ");
             // no break
@@ -371,15 +375,15 @@ class Environment
                         user VARCHAR(200),
                         pass VARCHAR(200)
                     );
-            
+
                     CREATE TABLE report_content (
                         receiver_id INTEGER,
                         instance_id INTEGER
                     );
-            
+
                     CREATE INDEX report_receiver_ix ON report_content ( receiver_id );
                     CREATE INDEX report_instance_ix ON report_content ( instance_id );
-            
+
                     UPDATE info SET value = '3' WHERE name = 'version';
                 ");
             // no break
@@ -388,7 +392,7 @@ class Environment
                     UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh';
                     UPDATE access SET host = (host || ':' || '22') WHERE type = 'ssh::nokey';
                     UPDATE access SET host = (host || ':' || '21') WHERE type = 'ftp';
-            
+
                     UPDATE info SET value = '4' WHERE name = 'version';
                 ");
             // no break
@@ -425,8 +429,8 @@ class Environment
         }
     }
 
-    public static function get($key, $defaultValue = null) {
-
+    public static function get($key, $defaultValue = null)
+    {
         $variables = self::getInstance()->getEnvironmentVariables();
 
         return isset($variables[$key]) ? $variables[$key] : $defaultValue;

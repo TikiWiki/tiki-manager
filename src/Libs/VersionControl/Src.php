@@ -212,7 +212,7 @@ class Src extends VersionControlSystem
                 mkdir($target);
                 $output = shell_exec($command);
                 if ($output) {
-                    error($output);
+                    $this->io->error($output);
                 } else {
                     return true;
                 }

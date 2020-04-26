@@ -172,7 +172,7 @@ class ImportInstanceCommand extends Command
             $instance->contact = $helper->ask($input, $output, $question);
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $this->io->error('Failed to setup access');
             }
 
             $instance->save();
@@ -355,7 +355,7 @@ class ImportInstanceCommand extends Command
             }
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $this->io->error('Failed to setup access');
                 exit(1);
             }
 

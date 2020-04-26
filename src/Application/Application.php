@@ -9,15 +9,20 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 
 abstract class Application
 {
     protected $instance;
 
+    /** @var TikiManager\Style\TikiManagerStyle $io */
+    protected $io;
+
     public function __construct(Instance $instance)
     {
         $this->instance = $instance;
+        $this->io = App::get('io');
     }
 
     public static function getApplications(Instance $instance)
@@ -119,11 +124,11 @@ abstract class Application
             $options['checksum-check'] : false;
 
         if ($checksumCheck) {
-            info('Checking old instance checksums.');
+            $this->io->info('Checking old instance checksums.');
             $oldPristine = $current->performCheck($instance);
             $oldPristine = $oldPristine['pri'] ?: [];
 
-            info('Obtaining checksum from source.');
+            $this->io->info('Obtaining checksum from source.');
             $new->collectChecksumFromSource($instance);
         }
 
@@ -137,7 +142,7 @@ abstract class Application
             ];
         }
 
-        info('Checking new instance checksums.');
+        $this->io->info('Checking new instance checksums.');
         $newDiff = $new->performCheck($instance);
 
         $toSave = [];
@@ -187,7 +192,7 @@ abstract class Application
         $new->save();
 
         if (isset($options['checksum-check']) && $options['checksum-check']) {
-            info('Obtaining new checksum from source.');
+            $this->io->info('Obtaining new checksum from source.');
             $new->collectChecksumFromSource($instance);
         }
     }

@@ -16,6 +16,7 @@ ob_start();
 require dirname(__FILE__) . "/../config.php";
 require TRIMPATH . '/vendor/autoload.php';
 Environment::getInstance()->load();
+$io = App::get('io');
 
 ob_end_clean();
 
@@ -38,14 +39,18 @@ if (isset($_POST['id'])) {
         try {
             $instance->restore($source->app, $_POST['backup']);
         } catch (\Exception $e) {
-            error($e->getMessage());
+            $io->error($e->getMessage());
             exit(-1);
         }
 
-        echo "\nIt is now time to test your site: " . $instance->name . "\n";
-        echo "\nIf there are issues, connect with 'tiki-manager instance:access' to troubleshoot directly on the server.\n";
-        echo "\nYou'll need to login to this restored instance and update the file paths with the new values.\n";
+        $io->newLine();
+        $io->writeln("It is now time to test your site: " . $instance->name);
+        $io->newLine();
+        $io->writeln("If there are issues, connect with 'tiki-manager instance:access' to troubleshoot directly on the server.");
+        $io->newLine();
+        $io->writeln("You'll need to login to this restored instance and update the file paths with the new values.");
     } else {
-        die("Unknown instance.");
+        $io->error("Unknown instance.");
+        die();
     }
 }
