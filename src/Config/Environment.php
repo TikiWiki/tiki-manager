@@ -8,9 +8,13 @@ namespace TikiManager\Config;
 
 use Phar;
 use Symfony\Component\Dotenv\Dotenv;
-use TikiManager\Config\Exception\ConfigurationErrorException;
 use TikiManager\Libs\Helpers\PDOWrapper;
+use Symfony\Component\Console\Input\ArgvInput;
 use TikiManager\Libs\Requirements\Requirements;
+use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use TikiManager\Style\Formatter\HtmlOutputFormatter;
+use TikiManager\Config\Exception\ConfigurationErrorException;
 
 /**
  * Class Environment
@@ -24,6 +28,8 @@ class Environment
 
     private static $instance;
 
+    protected $io;
+
     public static function getInstance()
     {
         if (self::$instance === null) {
@@ -36,7 +42,25 @@ class Environment
     private function __construct()
     {
         $this->homeDirectory = dirname(dirname(__DIR__));
+        $this->setupIO();
         require_once $this->homeDirectory . '/src/Libs/Helpers/functions.php';
+    }
+
+    private function setupIO()
+    {
+        $input = new ArgvInput();
+        if (PHP_SAPI != 'cli') {
+            $input->setInteractive(false);
+            $output = new StreamOutput(fopen('php://output', 'w'));
+        } else {
+            $output = new ConsoleOutput();
+        }
+
+        $container = App::getContainer();
+        $container->set('io.input', $input);
+        $container->set('io.output', $output);
+
+        $this->io = $container->get('io');
     }
 
     /**

@@ -13,8 +13,9 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
 
 require __DIR__.'/vendor/autoload.php';
 
-use Symfony\Component\Console\Application;
+use TikiManager\Config\App;
 use TikiManager\Config\Environment;
+use Symfony\Component\Console\Application;
 
 Environment::getInstance()->load();
 
@@ -64,4 +65,6 @@ $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
 
-$application->run();
+// Using the container input/output allows to customize the IO (verbosity / interactive) for example
+// @see Environment::setupIO
+$application->run(App::get('io.input'), App::get('io.output'));
