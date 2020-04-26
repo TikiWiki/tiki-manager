@@ -1,6 +1,11 @@
 <?php
 
+use TikiManager\Config\App;
+
 if (! function_exists('readline')) {
+    /**
+     * @deprecated
+     */
     function readline($prompt)
     {
         echo $prompt;
@@ -10,6 +15,9 @@ if (! function_exists('readline')) {
     }
 }
 
+/**
+ * @deprecated
+ */
 function color($string, $color)
 {
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -97,6 +105,9 @@ function stringfy($sub)
     return var_export($sub, true);
 }
 
+/**
+ * @deprecated
+ */
 function appendFlush()
 {
     // By default php-fpm uses 4096B buffers.
@@ -104,18 +115,27 @@ function appendFlush()
     return PHP_SAPI != 'cli' ? str_pad('', 4 * 1024) : '';
 }
 
+/**
+ * @deprecated
+ */
 function info($text, $prefix = null)
 {
     echo color("$text\n", 'cyan') . appendFlush();
     return $text;
 }
 
+/**
+ * @deprecated
+ */
 function warning($text, $prefix = null)
 {
     echo color("$text\n", 'yellow') . appendFlush();
     return $text;
 }
 
+/**
+ * @deprecated
+ */
 function error($text, $prefix = null)
 {
     echo color("$text\n", 'red') . appendFlush();
@@ -363,6 +383,8 @@ function printInstances(array $instances)
  * @param string $default Default value.
  * @param string $values Acceptable values.
  * @return string User-supplied value.
+ *
+ * @deprecated
  */
 
 function promptUser($prompt, $default = false, $values = [])
