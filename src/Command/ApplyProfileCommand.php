@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Helpers\Archive;
 
 class ApplyProfileCommand extends Command
@@ -46,7 +47,7 @@ class ApplyProfileCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
@@ -82,7 +83,7 @@ class ApplyProfileCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $instances = CommandHelper::getInstances('tiki');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);

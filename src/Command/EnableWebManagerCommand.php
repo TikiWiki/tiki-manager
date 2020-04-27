@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TikiManager\Config\App;
 
 class EnableWebManagerCommand extends Command
 {
@@ -62,7 +63,7 @@ class EnableWebManagerCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $output->writeln('Tiki Manager web administration files are located in the Tiki Manager directory. In order to
 make the interface available externally, the files will be copied to a web
@@ -132,7 +133,7 @@ access to the administration panel to local users (safer).');
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if (function_exists('posix_getuid')) {
             if (posix_getuid() != 0) {

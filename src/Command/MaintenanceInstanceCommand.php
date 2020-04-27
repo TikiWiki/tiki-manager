@@ -15,6 +15,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
 class MaintenanceInstanceCommand extends Command
 {
@@ -40,7 +41,7 @@ class MaintenanceInstanceCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $helper = $this->getHelper('question');
         $status = $input->getArgument('status');

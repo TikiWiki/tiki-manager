@@ -21,6 +21,7 @@ use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 use TikiManager\Libs\Helpers\ApplicationHelper;
@@ -401,7 +402,7 @@ class CommandHelper
         $checksumCheck = false
     ) {
 
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($instance->findApplication()) {
             $io->error('Unable to install. An application was detected in this instance.');
@@ -479,7 +480,7 @@ class CommandHelper
         $nonInteractive = false
     ) {
         $dbUser = null;
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($dbUser = $instance->getDatabaseConfig()) {
             return $dbUser;
@@ -759,7 +760,7 @@ class CommandHelper
     public static function setInstanceSetupError($instanceId, InputInterface $input, OutputInterface $output, \Exception $e = null)
     {
         $errors = [];
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($e instanceof VcsException) {
             $errors[] = 'Tiki Manager detected a problem with your instance´s VCS.';

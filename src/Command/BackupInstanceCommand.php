@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Archive;
 
 class BackupInstanceCommand extends Command
@@ -46,7 +47,7 @@ class BackupInstanceCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
         $io->note('Backups are only available on Local and SSH instances.');
 
         $instances = CommandHelper::getInstances('all', true);
@@ -103,7 +104,7 @@ class BackupInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $maxBackups = $input->getOption('max-backups') ?: 0;
         if (isset($maxBackups) && filter_var($maxBackups, FILTER_VALIDATE_INT) === false) {

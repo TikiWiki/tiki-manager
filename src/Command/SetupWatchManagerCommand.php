@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
 class SetupWatchManagerCommand extends Command
 {
@@ -45,7 +46,7 @@ class SetupWatchManagerCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $helper = $this->getHelper('question');
         $email = $input->getOption('email');
@@ -91,7 +92,7 @@ class SetupWatchManagerCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $helper = $this->getHelper('question');
         $email = $input->getOption('email');

@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
 class AccessInstanceCommand extends Command
 {
@@ -27,7 +28,7 @@ class AccessInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -35,7 +36,7 @@ class AccessInstanceCommand extends Command
             $instancesOption = $input->getOption('instances');
             if (empty($instancesOption)) {
                 $io->newLine();
-                $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+                CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                 $io->newLine();
                 $output->writeln('<comment>In case you want to access more than one instance, please use a comma (,) between the values</comment>');

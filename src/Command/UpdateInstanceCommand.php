@@ -16,6 +16,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
 class UpdateInstanceCommand extends Command
@@ -76,7 +77,7 @@ class UpdateInstanceCommand extends Command
     {
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if (isset($instancesInfo)) {
             $helper = $this->getHelper('question');

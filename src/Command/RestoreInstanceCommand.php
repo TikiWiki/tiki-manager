@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
 class RestoreInstanceCommand extends Command
 {
@@ -28,7 +29,7 @@ class RestoreInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $instances = CommandHelper::getInstances('no-tiki');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -90,9 +91,11 @@ class RestoreInstanceCommand extends Command
 
                 $instance->restore($restorableInstance->app, $file, false, $checksumCheck);
 
-                $output->writeln('<fg=cyan>It is now time to test your site: ' . $instance->name . '</>');
-                $output->writeln('<fg=cyan>If there are issues, connect with make access to troubleshoot directly on the server.</>');
-                $output->writeln('<fg=cyan>You\'ll need to login to this restored instance and update the file paths with the new values.</>');
+                $io->success('It is now time to test your site: ' . $instance->name);
+                $io->note([
+                    'If there are issues, connect with make access to troubleshoot directly on the server.',
+                    'You\'ll need to login to this restored instance and update the file paths with the new values.'
+                ]);
             }
         } else {
             $output->writeln('<comment>No instances available to restore to/from.</comment>');

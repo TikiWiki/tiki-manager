@@ -16,6 +16,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 
@@ -96,7 +97,7 @@ class CloneInstanceCommand extends Command
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io = new SymfonyStyle($input, $output);
+            $io = App::get('io');
             $helper = $this->getHelper('question');
 
             $clone = false;
@@ -140,7 +141,7 @@ class CloneInstanceCommand extends Command
                 $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
 
                 $io->newLine();
-                $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+                CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                 $question = CommandHelper::getQuestion('Select the source instance', null);
                 $question->setValidator(function ($answer) use ($instances) {
@@ -229,12 +230,12 @@ class CloneInstanceCommand extends Command
                 }
 
                 if ($standardProcess) {
-                    $output->writeln('<fg=cyan>Creating snapshot of: ' . $selectedSourceInstances[0]->name . '</>');
+                    App::get('io')->section('Creating snapshot of: ' . $selectedSourceInstances[0]->name);
                     $archive = $selectedSourceInstances[0]->backup();
                 }
 
                 if (empty($archive)) {
-                    $output->writeln('<error>Error: Snapshot creation failed.</error>');
+                    $io->error('Snapshot creation failed.');
                     exit(-1);
                 }
 
@@ -252,7 +253,7 @@ class CloneInstanceCommand extends Command
                         continue;
                     }
 
-                    $output->writeln('<fg=cyan>Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name . '</>');
+                    $io->section('Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name);
 
                     $destinationInstance->lock();
                     $destinationInstance->restore($selectedSourceInstances[0], $archive, true, false, $direct);
@@ -273,7 +274,7 @@ class CloneInstanceCommand extends Command
                                 'live-reindex' => $liveReindex
                             ]);
                         } catch (\Exception $e) {
-                            CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output, $e);
+                            CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
                             continue;
                         }
                     }
@@ -283,7 +284,7 @@ class CloneInstanceCommand extends Command
                 }
 
                 if (! $keepBackup) {
-                    $output->writeln('<fg=cyan>Deleting archive...</>');
+                    $output->writeln('Deleting archive...');
                     $access = $selectedSourceInstances[0]->getBestAccess('scripting');
                     $access->shellExec("rm -f " . $archive);
                 }
@@ -332,7 +333,7 @@ class CloneInstanceCommand extends Command
             $output->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
         }
 
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
         $choice = $io->choice('Which version do you want to update to', $choices);
         $choice = explode(':', $choice);
         return trim($choice[1]);

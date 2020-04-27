@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
 /**
  * Setup automatic instance updates using CRON
@@ -47,7 +48,7 @@ class SetupUpdateCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if (empty($input->getOption('time'))) {
             $helper = $this->getHelper('question');
@@ -97,7 +98,7 @@ class SetupUpdateCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         $time = $input->getOption('time');
         // Check if option (set in cli is also valid)

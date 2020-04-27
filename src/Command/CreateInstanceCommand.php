@@ -21,6 +21,7 @@ use TikiManager\Application\Application;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Ext\Password;
 use TikiManager\Libs\Database\Database;
 
@@ -172,7 +173,7 @@ class CreateInstanceCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         try {
             $nonInteractive = $this->isNonInteractive($input, $output);
@@ -409,7 +410,7 @@ class CreateInstanceCommand extends Command
      */
     protected function isNonInteractive(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
         $fs = new Filesystem();
 
         $listInstanceTypes = CommandHelper::supportedInstanceTypes();

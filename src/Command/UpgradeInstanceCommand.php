@@ -15,6 +15,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
 class UpgradeInstanceCommand extends Command
@@ -67,8 +68,7 @@ class UpgradeInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
         $helper = $this->getHelper('question');
 
         $checksumCheck = false;

@@ -16,6 +16,7 @@ use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Access\Access;
 use TikiManager\Application\Discovery;
+use TikiManager\Config\App;
 
 class DetectInstanceCommand extends Command
 {
@@ -50,7 +51,7 @@ class DetectInstanceCommand extends Command
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if (empty($input->getOption('instances'))) {
-            $io = new SymfonyStyle($input, $output);
+            $io = App::get('io');
 
             if (empty($this->instancesInfo)) {
                 return;
@@ -70,7 +71,7 @@ class DetectInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if (empty($this->instancesInfo)) {
             $output->writeln('<comment>No instances available to detect.</comment>');
