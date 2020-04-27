@@ -67,10 +67,11 @@ class Tiki extends Application
         $this->vcs_instance->setRunLocally(true);
 
         if (file_exists($folder)) {
+            $this->io->writeln('Cache - updating instance from server... (this may take a while)');
             $this->vcs_instance->revert($folder);
             $this->vcs_instance->pull($folder);
         } else {
-            $this->io->writeln('Cloning instance from server...');
+            $this->io->writeln('Cache - cloning instance from server... (this may take a while)');
             $this->vcs_instance->clone($version->branch, $folder);
         }
 
@@ -403,6 +404,7 @@ class Tiki extends Application
         $this->setDbLock();
 
         if ($checksumCheck) {
+            $this->io->info('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this->instance);
         }
     }
@@ -445,7 +447,7 @@ class Tiki extends Application
             $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
             $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
 
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
+            $this->clearCache(true);
 
             $this->vcs_instance->revert($webroot);
             $this->vcs_instance->cleanup($webroot);
@@ -461,7 +463,6 @@ class Tiki extends Application
             }
 
             if ($this->vcs_instance->getIdentifier() != 'SRC') {
-                $this->io->info('Updating composer. This may take a while.');
                 $this->runComposer();
             }
             $this->clearCache(true);
@@ -498,7 +499,6 @@ class Tiki extends Application
             }
 
             if ($this->vcs_instance->getIdentifier() != 'SRC') {
-                $this->io->info('Updating composer... this May take a while.');
                 $this->runComposer();
             }
 
@@ -694,6 +694,8 @@ TXT;
      */
     public function runComposer()
     {
+        $this->io->info('Installing composer dependencies... (this may take a while)');
+
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
 
@@ -732,7 +734,6 @@ TXT;
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
-            $this->io->info('Running composer... This may take a while.');
             $this->runComposer();
         }
 

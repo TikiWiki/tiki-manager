@@ -709,10 +709,12 @@ SQL;
         $srcFiles = null;
         if ($direct && $src_app instanceof Instance) {
             $srcFiles = $src_app->webroot;
-            $this->io->info("Restoring files from '{$srcFiles}' into {$this->name}. This may take a while.");
+            $message = "Restoring files from '{$srcFiles}' into {$this->name}...";
         } else {
-            $this->io->info("Restoring files from '{$archive}' into {$this->name}. This may take a while.");
+            $message = "Restoring files from '{$archive}' into {$this->name}...";
         }
+
+        $this->io->info($message . ' (this may take a while)');
 
         $restore = new Restore($this);
         $restore->setProcess($clone);
@@ -720,6 +722,8 @@ SQL;
 
         $this->app = isset($src_app->app) ? $src_app->app : $src_app;
         $this->save();
+
+        $this->io->info('Restoring database...');
         $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
 
         $version = null;
@@ -759,6 +763,7 @@ SQL;
         }
 
         if ($checksumCheck) {
+            $this->io->info('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this);
         }
 

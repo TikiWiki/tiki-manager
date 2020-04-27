@@ -435,7 +435,7 @@ class CommandHelper
 
         $version = Version::buildFake($details[0], $details[1]);
 
-        $io->writeln('Installing application...');
+        $io->writeln('Installing application... (this may take a while)');
         if (!$nonInteractive) {
             $io->note([
                 'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',

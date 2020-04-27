@@ -111,7 +111,7 @@ class Backup
             $copyResult = $this->copyDirectories($targets, $backupDir);
         }
 
-        $this->io->info('Checking system ini config file');
+        $this->io->info('Checking system ini config file...');
         $targetSystemIniConfigFile = $this->getSystemIniConfigFile();
         if (!empty($targetSystemIniConfigFile)) {
             $parts = explode('||', $targetSystemIniConfigFile);
@@ -119,22 +119,22 @@ class Backup
                 $targetSystemIniConfigFile = $parts[0];
 
                 if ($parts[1] == 'external') {
-                    $this->io->info('Downloading system ini config file');
+                    $this->io->info('Downloading system ini config file...');
                 }
 
                 $this->copySystemIniConfigFile($targetSystemIniConfigFile, $backupDir, $copyResult, $parts[1]);
             }
         }
 
-        $this->io->info('Creating manifest');
+        $this->io->info('Creating manifest...');
         $this->createManifest($copyResult, $backupDir);
 
-        $this->io->info('Creating database dump');
+        $this->io->info('Creating database dump...');
         $this->createDatabaseDump($this->app, $backupDir);
 
         $result = '';
         if (!$skipArchive) {
-            $this->io->info('Creating archive');
+            $this->io->info('Creating archive... (this may take a while)');
             $result = $this->createArchive($this->archiveDir, $backupDir);
 
             if (!$result) {
