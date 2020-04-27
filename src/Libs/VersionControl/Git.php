@@ -168,4 +168,12 @@ class Git extends VersionControlSystem
 
         $this->cleanup($targetFolder);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function isUpgrade($current, $branch)
+    {
+        return $current !== $branch;
+    }
 }
