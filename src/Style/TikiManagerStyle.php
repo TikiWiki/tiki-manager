@@ -8,6 +8,8 @@
 namespace TikiManager\Style;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class TikiManagerStyle extends SymfonyStyle
 {
@@ -26,12 +28,13 @@ class TikiManagerStyle extends SymfonyStyle
             $messages = [$messages];
         }
 
+        $index = 0;
+        $count = count($messages);
         foreach ($messages as $message) {
-            $message .= $this->appendFlush();
+            //If it's last message to send, append flush if needed
+            $message .= $count == ++$index ? $this->appendFlush() : '';
             parent::write($message, $newline, $type);
         }
-
-        parent::writeln($this->appendFlush(), $type);
     }
 
     /**
@@ -43,11 +46,13 @@ class TikiManagerStyle extends SymfonyStyle
             $messages = [$messages];
         }
 
+        $index = 0;
+        $count = count($messages);
         foreach ($messages as $message) {
+            //If it's last message to send, append flush if needed
+            $message .= $count == ++$index ? $this->appendFlush() : '';
             parent::writeln($message, $type);
         }
-
-        parent::writeln($this->appendFlush(), $type);
     }
 
     protected function appendFlush()
