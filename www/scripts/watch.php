@@ -62,7 +62,7 @@ if (isset($_POST['id'])) {
         }
 
         if (empty($log)) {
-            $io->info("Nothing found.");
+            $io->writeln("Nothing found.");
         } else {
             $io->warning("Potential intrusions detected.");
             $io->text($log);

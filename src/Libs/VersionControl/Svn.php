@@ -262,11 +262,11 @@ class Svn extends VersionControlSystem
         }
 
         if ($this->isUpgrade($url, $branchUrl)) {
-            $this->io->info("Upgrading to '{$branch}'");
+            $this->io->writeln("Upgrading to '{$branch}' branch");
             $this->revert($targetFolder);
             $this->upgrade($targetFolder, $branchUrl);
         } else {
-            $this->io->info("Updating '{$branch}'");
+            $this->io->writeln("Updating '{$branch}' branch");
             $this->revert($targetFolder);
             $this->exec($targetFolder, "update $targetFolder --accept theirs-full --force");
         }

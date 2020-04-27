@@ -44,13 +44,13 @@ if (! empty($_POST['source'])
 
         try {
             $locked = $instance->lock();
-            $io->info('Instance locked');
+            $io->writeln('Instance locked');
             $app = $instance->getApplication();
             $filesToResolve = $app->performUpdate($instance, $versionSel);
 
             if ($locked) {
                 $instance->unlock();
-                $io->info('Instance unlocked');
+                $io->writeln('Instance unlocked');
             }
         } catch (\Exception $e) {
             $io->error($e->getMessage());

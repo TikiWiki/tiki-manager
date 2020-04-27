@@ -45,7 +45,7 @@ if (!empty($sourceInstanceId) && !empty($targetInstance)) {
         $targetInstance->restore($sourceInstance->app, $archive, true);
         $targetInstance->unlock();
 
-        $io->info("Deleting archive...");
+        $io->writeln("Deleting archive...");
         $access = $sourceInstance->getBestAccess('scripting');
         $access->shellExec("rm -f " . $archive);
     } catch (Exception $ex) {

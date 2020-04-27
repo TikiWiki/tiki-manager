@@ -714,7 +714,7 @@ SQL;
             $message = "Restoring files from '{$archive}' into {$this->name}...";
         }
 
-        $this->io->info($message . ' (this may take a while)');
+        $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
 
         $restore = new Restore($this);
         $restore->setProcess($clone);
@@ -723,7 +723,7 @@ SQL;
         $this->app = isset($src_app->app) ? $src_app->app : $src_app;
         $this->save();
 
-        $this->io->info('Restoring database...');
+        $this->io->writeln('Restoring database...');
         $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
 
         $version = null;
@@ -758,12 +758,12 @@ SQL;
         }
 
         if ($this->app == 'tiki') {
-            $this->io->info("Fixing permissions for {$this->name}");
+            $this->io->writeln("Fixing permissions for {$this->name}");
             $this->getApplication()->fixPermissions();
         }
 
         if ($checksumCheck) {
-            $this->io->info('Collecting files checksum from instance...');
+            $this->io->writeln('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this);
         }
 
@@ -826,7 +826,7 @@ SQL;
         if ($this->isLocked()) {
             return true;
         }
-        $this->io->info('Locking website...');
+        $this->io->writeln('Locking website...');
 
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
@@ -848,7 +848,7 @@ SQL;
             return true;
         }
 
-        $this->io->info('Unlocking website...');
+        $this->io->writeln('Unlocking website...');
         $access = $this->getBestAccess('scripting');
         $access->deleteFile('.htaccess');
         $access->deleteFile('maintenance.php');

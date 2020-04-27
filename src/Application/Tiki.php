@@ -67,11 +67,11 @@ class Tiki extends Application
         $this->vcs_instance->setRunLocally(true);
 
         if (file_exists($folder)) {
-            $this->io->writeln('Cache - updating instance from server... (this may take a while)');
+            $this->io->writeln('Updating cache repository from server... <fg=yellow>[may take a while]</>');
             $this->vcs_instance->revert($folder);
             $this->vcs_instance->pull($folder);
         } else {
-            $this->io->writeln('Cache - cloning instance from server... (this may take a while)');
+            $this->io->writeln('Cloning cache repository from server... <fg=yellow>[may take a while]</>');
             $this->vcs_instance->clone($version->branch, $folder);
         }
 
@@ -169,7 +169,7 @@ class Tiki extends Application
             $branch = $this->vcs_instance->getRepositoryBranch($this->instance->webroot);
 
             if ($branch) {
-                $this->io->info("Detected ". $this->vcs_instance->getIdentifier(true) ." : $branch");
+                $this->io->writeln("Detected ". $this->vcs_instance->getIdentifier(true) ." : $branch");
                 return $this->branch = $branch;
             }
         }
@@ -368,7 +368,7 @@ class Tiki extends Application
         $this->extractTo($version, $folder);
 
         if ($access instanceof ShellPrompt) {
-            $this->io->writeln('Copying files to folder\'s instance...');
+            $this->io->writeln('Copying files to webroot folder...');
             if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
                 $host->windowsSync(
                     $folder,
@@ -404,7 +404,7 @@ class Tiki extends Application
         $this->setDbLock();
 
         if ($checksumCheck) {
-            $this->io->info('Collecting files checksum from instance...');
+            $this->io->writeln('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this->instance);
         }
     }
@@ -441,7 +441,6 @@ class Tiki extends Application
         $can_git = $access->hasExecutable('git') && $vcsType == 'GIT';
 
         if ($access instanceof ShellPrompt && ($can_git || $can_svn || $vcsType === 'SRC')) {
-            $this->io->info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
             $webroot = $this->instance->webroot;
             $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
             $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
@@ -489,7 +488,6 @@ class Tiki extends Application
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if ($access instanceof ShellPrompt && ($can_svn || $can_git || $this->vcs_instance->getIdentifier() == 'SRC')) {
-            $this->io->info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
             $this->clearCache();
 
             $this->vcs_instance->update($this->instance->webroot, $version->branch);
@@ -565,7 +563,7 @@ class Tiki extends Application
         $root = $this->instance->webroot;
 
         // FIXME: Not FTP compatible (arguments)
-        $this->io->info("Loading '$remoteFile' into '{$database->dbname}'");
+        $this->io->writeln("Loading '$remoteFile' into '{$database->dbname}'");
         $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
             [$root, $remoteFile]
@@ -582,7 +580,7 @@ class Tiki extends Application
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
 
-        $this->io->info('Setting db config file...');
+        $this->io->writeln('Setting db config file...');
         if ($access instanceof ShellPrompt) {
             $script = sprintf("chmod('%s', 0664);", "{$this->instance->webroot}/db/local.php");
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
@@ -596,7 +594,7 @@ class Tiki extends Application
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
         }
 
-        $this->io->info('Installing database...');
+        $this->io->writeln('Installing database... <fg=yellow>[may take a while]</>');
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
             $access = $this->instance->getBestAccess('scripting');
             $access->chdir($this->instance->webroot);
@@ -694,7 +692,7 @@ TXT;
      */
     public function runComposer()
     {
-        $this->io->info('Installing composer dependencies... (this may take a while)');
+        $this->io->writeln('Installing composer dependencies... <fg=yellow>[may take a while]</>');
 
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
@@ -742,18 +740,18 @@ TXT;
         $hasConsole = $this->instance->hasConsole();
 
         if ($hasConsole) {
-            $this->io->info('Cleaning Cache...');
+            $this->io->writeln('Cleaning cache...');
             $this->clearCache();
 
             if (empty($options['skip-cache-warmup'])) {
-                $this->io->info('Generating Caches...');
+                $this->io->writeln('Generating caches... <fg=yellow>[may take a while]</>');
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
             }
 
             if (!empty($options['live-reindex'])) {
                 $options['skip-reindex'] = false;
 
-                $this->io->info('Fixing permissions...');
+                $this->io->writeln('Fixing permissions...');
                 $this->fixPermissions();
 
                 $this->instance->unlock();
@@ -761,11 +759,11 @@ TXT;
         }
 
         if (empty($options['skip-reindex']) && $hasConsole) {
-            $this->io->info('Rebuilding Index...');
+            $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
         }
 
-        $this->io->info('Fixing permissions...');
+        $this->io->writeln('Fixing permissions...');
         $this->fixPermissions();
     }
 

@@ -247,7 +247,7 @@ function run_composer_install()
     }
 
     if (!file_exists($composer)) {
-        App::get('io')->info("Downloading composer into '{$composer}'");
+        App::get('io')->writeln("Downloading composer into '{$composer}'");
         copy('https://getcomposer.org/composer.phar', $composer);
         chmod($composer, 0755);
     }

@@ -55,7 +55,7 @@ class SSH extends Access implements ShellPrompt
         $host = $this->getHost();
         $host->setupKey($_ENV['SSH_PUBLIC_KEY']);
 
-        $this->io->info("Testing connection...");
+        $this->io->writeln("Testing connection...");
 
         $host->runCommands('exit');
 
