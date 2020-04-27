@@ -221,6 +221,9 @@ $(document).ready(function () {
                         last_response_len = response.length;
                     }
                     log = this_response.trim();
+                    // This replaces \n that in <pre> causes double lines
+                    log = log.replace(/(\r\n|\n\r|\r|\n)/g, '');
+
                     var parsed_log = '';
 
                     for (var i = 0; i < log.length; i++) {
