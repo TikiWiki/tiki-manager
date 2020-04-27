@@ -441,15 +441,9 @@ class Tiki extends Application
         $can_git = $access->hasExecutable('git') && $vcsType == 'GIT';
 
         if ($access instanceof ShellPrompt && ($can_git || $can_svn || $vcsType === 'SRC')) {
-            $webroot = $this->instance->webroot;
             $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
             $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
             $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
-
-            $this->clearCache(true);
-
-            $this->vcs_instance->revert($webroot);
-            $this->vcs_instance->cleanup($webroot);
 
             if ($vcsType === 'SRC') {
                 $version->branch = $this->vcs_instance->getBranchToUpdate($version->branch);
@@ -460,19 +454,11 @@ class Tiki extends Application
                 $script = sprintf('chmod(%s, 0777);', $path);
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
             }
-
-            if ($this->vcs_instance->getIdentifier() != 'SRC') {
-                $this->runComposer();
-            }
-            $this->clearCache(true);
         } elseif ($access instanceof Mountable) {
             $folder = cache_folder($this, $version);
             $this->extractTo($version, $folder);
             $access->copyLocalFolder($folder);
         }
-
-        $this->io->info('Updating database schema...');
-        $this->runDatabaseUpdate();
 
         $this->postInstall($options);
 
@@ -495,15 +481,6 @@ class Tiki extends Application
                 $script = sprintf('chmod(%s, 0777);', $path);
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
             }
-
-            if ($this->vcs_instance->getIdentifier() != 'SRC') {
-                $this->runComposer();
-            }
-
-            $this->clearCache(true);
-
-            $this->io->info('Updating database schema...');
-            $this->runDatabaseUpdate();
 
             $this->postInstall($options);
 
@@ -734,6 +711,9 @@ TXT;
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
             $this->runComposer();
         }
+
+        $this->io->writeln('Updating database schema...');
+        $this->runDatabaseUpdate();
 
         $this->setDbLock();
 
