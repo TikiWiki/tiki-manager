@@ -79,7 +79,7 @@ class CheckInstanceCommand extends Command
                 $tikiRevision = $instance->getRevision();
 
                 if (!empty($versionRevision) && $versionRevision == $tikiRevision && $version->hasChecksums()) {
-                    Checksum::handleCheckResult($instance, $version, $version->performCheck($instance), $io);
+                    Checksum::handleCheckResult($instance, $version, $version->performCheck($instance));
                     continue;
                 }
 
@@ -144,7 +144,7 @@ class CheckInstanceCommand extends Command
                     switch ($option) {
                         case 'source':
                             $version->collectChecksumFromSource($instance);
-                            Checksum::handleCheckResult($instance, $version, $version->performCheck($instance), $io);
+                            Checksum::handleCheckResult($instance, $version, $version->performCheck($instance));
                             break;
                         case 'current':
                             $version->collectChecksumFromInstance($instance);

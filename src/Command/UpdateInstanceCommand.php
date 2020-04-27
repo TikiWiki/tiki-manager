@@ -223,10 +223,10 @@ class UpdateInstanceCommand extends Command
                                 $version = $instance->getLatestVersion();
 
                                 if ($checksumCheck) {
-                                    Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                                    Checksum::handleCheckResult($instance, $version, $filesToResolve);
                                 }
                             } catch (\Exception $e) {
-                                CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                                CommandHelper::setInstanceSetupError($instance->id, $e);
                             }
                         } else {
                             $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
@@ -248,10 +248,10 @@ class UpdateInstanceCommand extends Command
                             $version = $instance->getLatestVersion();
 
                             if ($checksumCheck) {
-                                Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                                Checksum::handleCheckResult($instance, $version, $filesToResolve);
                             }
                         } catch (\Exception $e) {
-                            CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                            CommandHelper::setInstanceSetupError($instance->id, $e);
                             $log[] = $e->getMessage() . PHP_EOL;
                             $log[] = $e->getTraceAsString() . PHP_EOL;
                         }

@@ -388,16 +388,12 @@ class CommandHelper
      * Handle application install for a new instance.
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param boolean $nonInteractive
      * @param boolean $checksumCheck
      * @return bool
      */
     public static function performInstall(
         Instance $instance,
-        InputInterface $input,
-        OutputInterface $output,
         $nonInteractive = false,
         $checksumCheck = false
     ) {
@@ -451,12 +447,12 @@ class CommandHelper
         }
 
         if ($app->requiresDatabase()) {
-            $dbConn = self::setupDatabaseConnection($instance, $input, $output, $nonInteractive);
+            $dbConn = self::setupDatabaseConnection($instance, $nonInteractive);
             $app->setupDatabase($dbConn);
         }
 
         if (isset($error)) {
-            CommandHelper::setInstanceSetupError($instance->id, $input, $output);
+            CommandHelper::setInstanceSetupError($instance->id);
             return false;
         }
 
@@ -468,15 +464,11 @@ class CommandHelper
      * Check, configure and  test database connection for a given instance
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param boolean $nonInteractive
      * @return Database|null
      */
     public static function setupDatabaseConnection(
         Instance $instance,
-        InputInterface $input,
-        OutputInterface $output,
         $nonInteractive = false
     ) {
         $dbUser = null;
@@ -753,11 +745,9 @@ class CommandHelper
      * Build error message to fix instance if setup fails
      *
      * @param $instanceId
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param \Exception|null $e
      */
-    public static function setInstanceSetupError($instanceId, InputInterface $input, OutputInterface $output, \Exception $e = null)
+    public static function setInstanceSetupError($instanceId, \Exception $e = null)
     {
         $errors = [];
         $io = App::get('io');

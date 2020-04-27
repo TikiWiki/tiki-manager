@@ -187,10 +187,10 @@ class UpgradeInstanceCommand extends Command
                         $version = $instance->getLatestVersion();
 
                         if ($checksumCheck) {
-                            Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                            Checksum::handleCheckResult($instance, $version, $filesToResolve);
                         }
                     } catch (\Exception $e) {
-                        CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                        CommandHelper::setInstanceSetupError($instance->id, $e);
                         continue;
                     }
                 } else {

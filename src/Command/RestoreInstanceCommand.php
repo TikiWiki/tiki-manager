@@ -86,7 +86,7 @@ class RestoreInstanceCommand extends Command
                 }
 
                 $instance->app = $restorableInstance->app; // Required to setup database connection
-                $databaseConfig = CommandHelper::setupDatabaseConnection($instance, $input, $output);
+                $databaseConfig = CommandHelper::setupDatabaseConnection($instance);
                 $instance->setDatabaseConfig($databaseConfig);
 
                 $instance->restore($restorableInstance->app, $file, false, $checksumCheck);

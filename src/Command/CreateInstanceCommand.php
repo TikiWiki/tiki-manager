@@ -391,7 +391,7 @@ class CreateInstanceCommand extends Command
             return 0;
         }
 
-        $result = CommandHelper::performInstall($instance, $input, $output, self::$nonInteractive, $checksumCheck);
+        $result = CommandHelper::performInstall($instance, self::$nonInteractive, $checksumCheck);
 
         if ($result === false) {
             return 1;

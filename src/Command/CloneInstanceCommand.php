@@ -161,7 +161,7 @@ class CloneInstanceCommand extends Command
             }
             $instances = $instances_pruned;
 
-            $databaseConfig = CommandHelper::setupDatabaseConnection($selectedSourceInstances[0], $input, $output);
+            $databaseConfig = CommandHelper::setupDatabaseConnection($selectedSourceInstances[0]);
             $selectedSourceInstances[0]->setDatabaseConfig($databaseConfig);
 
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -196,7 +196,7 @@ class CloneInstanceCommand extends Command
 
                 foreach ($selectedDestinationInstances as $destinationInstance) {
                     $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
-                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance, $input, $output);
+                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance);
                     $destinationInstance->setDatabaseConfig($databaseConfig);
 
                     if ($direct && ($selectedSourceInstances[0]->type != 'local' || $destinationInstance->type != 'local')) {
