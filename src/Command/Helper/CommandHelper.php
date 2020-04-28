@@ -511,8 +511,7 @@ class CommandHelper
                 $valid = $dbRoot->testConnection();
             }
 
-            $logger = new ConsoleLogger($output);
-            $logger->debug('Connected to MySQL with administrative privileges');
+            $io->writeln('Connected to MySQL with administrative privileges');
 
             $create = $io->confirm('Should a new database and user be created now (both)?');
 

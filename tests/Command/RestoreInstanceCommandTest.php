@@ -96,7 +96,6 @@ class RestoreInstanceCommandTest extends TestCase
 
         $output = $commandTester->getDisplay();
         $this->assertContains('It is now time to test your site: blank.tiki.org', $output);
-        $this->assertContains('If there are issues, connect with make access to troubleshoot directly on the server.', $output);
         $this->assertEquals(0, $commandTester->getStatusCode());
         $this->assertFileExists(self::$dbLocalFileBlankToTrunk);
     }
