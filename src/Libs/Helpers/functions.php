@@ -253,7 +253,7 @@ function run_composer_install()
     }
 
     if (!file_exists($composer)) {
-        $this->io->error("Failed to download composer");
+        App::get('io')->error("Failed to download composer");
         exit(1);
     }
 
@@ -282,8 +282,8 @@ function query($query, $params = null)
         } elseif (is_int($value)) {
             $query = str_replace($key, (int) $value, $query);
         } elseif (is_array($value)) {
-            $this->io->error("Unsupported query parameter type: array\n");
-            printf("Query\n\"%s\"\nParamters:\n", $query);
+            error("Unsupported query parameter type: array\n");
+            printf("Query\n\"%s\"\nParameters:\n", $query);
             var_dump($params);
             printf("Backtrace:\n");
             debug_print_backtrace();
@@ -416,7 +416,7 @@ function promptUser($prompt, $default = false, $values = [])
             return $answer;
         }
 
-        $this->io->error("Invalid response.\n");
+        error("Invalid response.\n");
     } while (true);
 }
 
