@@ -159,13 +159,21 @@ class Git extends VersionControlSystem
         $branchInfo = $this->info($targetFolder);
 
         if ($this->isUpgrade($branchInfo, $branch)) {
-            info("Upgrading to '{$branch}'");
+            $this->io->writeln("Upgrading to '{$branch}' branch");
             $this->upgrade($targetFolder, $branch);
         }
 
-        info("Updating '{$branch}'");
+        $this->io->writeln("Updating '{$branch}' branch");
         $this->exec($targetFolder, "pull", true);
 
         $this->cleanup($targetFolder);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isUpgrade($current, $branch)
+    {
+        return $current !== $branch;
     }
 }

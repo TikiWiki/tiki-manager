@@ -7,13 +7,12 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
+use TikiManager\Config\App;
 use TikiManager\Libs\Requirements\Requirements;
 
-class CheckRequirementsCommand extends Command
+class CheckRequirementsCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -25,17 +24,15 @@ class CheckRequirementsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
-        $io->section('Requirements');
+        $this->io->section('Requirements');
 
         $osReq = Requirements::getInstance();
         $requirements = $osReq->getRequirements();
         foreach ($requirements as $requirementKey => $requirement) {
             if ($osReq->check($requirementKey)) {
-                $io->block($requirement['name'] . ' (' . $osReq->getTags($requirementKey) . ')', '<info>Ok</info>');
+                $this->io->block($requirement['name'] . ' (' . $osReq->getTags($requirementKey) . ')', '<info>Ok</info>');
             } else {
-                $io->block(ucfirst($osReq->getRequirementMessage($requirementKey)), '<error>missing</error>');
+                $this->io->block(ucfirst($osReq->getRequirementMessage($requirementKey)), '<error>missing</error>');
             }
         }
     }

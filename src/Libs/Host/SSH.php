@@ -6,6 +6,8 @@
 
 namespace TikiManager\Libs\Host;
 
+use TikiManager\Config\App;
+
 class SSH
 {
     private static $sshKeyCheck = [];
@@ -20,6 +22,8 @@ class SSH
 
     private $copy_id_port_in_host;
 
+    protected $io;
+
     public function __construct($host, $user, $port, $adapter_class = null)
     {
         $this->host = $host ?: '';
@@ -33,6 +37,8 @@ class SSH
         if (!isset(self::$sshKeyCheck[$sshConnectionId])) {
             self::$sshKeyCheck[$sshConnectionId] = $this->checkSshKey();
         }
+
+        $this->io = App::get('io');
     }
 
     public function chdir($location)
@@ -46,7 +52,7 @@ class SSH
         $this->copy_id_port_in_host = true;
         $ph = popen('ssh-copy-id -h 2>&1', 'r');
         if (! is_resource($ph)) {
-            error('Required command (ssh-copy_id) not found.');
+            $this->io->error('Required command (ssh-copy_id) not found.');
         } else {
             if (preg_match('/p port/', stream_get_contents($ph))) {
                 $this->copy_id_port_in_host = false;
@@ -128,7 +134,7 @@ class SSH
         $exclude = [];
         if (!empty($args['exclude'])) {
             $exclude = is_array($args['exclude']) ? $args['exclude'] : [$args['exclude']];
-            $exclude = array_map(function($path) {
+            $exclude = array_map(function ($path) {
                 return '--exclude=' . $path;
             }, $exclude);
         }
@@ -154,7 +160,7 @@ class SSH
         $return_var = $command->getReturn();
 
         if ($return_var != 0) {
-            info("RSYNC exit code: $return_var");
+            $this->io->error("RSYNC exit code: $return_var");
         }
 
         return $return_var;
@@ -208,8 +214,8 @@ class SSH
         $returnVar = $command->getReturn();
 
         if ($returnVar != 0) {
-            $message = "Your ssh keys are not properly set up. Please use 'tiki-manager instance:copysshkey' command.\n";
-            warning($message);
+            $message = "Your ssh keys are not properly set up. Please use 'tiki-manager instance:copysshkey' command.";
+            $this->io->error($message);
             return false;
         }
 

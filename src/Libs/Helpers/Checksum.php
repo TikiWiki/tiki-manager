@@ -10,6 +10,7 @@ namespace TikiManager\Libs\Helpers;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
+use TikiManager\Config\App;
 
 class Checksum
 {
@@ -18,9 +19,8 @@ class Checksum
      * @param Instance $instance
      * @param Version $version
      * @param array $array
-     * @param SymfonyStyle $io
      */
-    public static function handleCheckResult(Instance $instance, Version $version, $array, $io)
+    public static function handleCheckResult(Instance $instance, Version $version, $array)
     {
         if (! $_ENV['INTERACTIVE']) {
             return; // skip
@@ -32,6 +32,7 @@ class Checksum
         $input = 'p';
         $newFlat = array_keys($new);
 
+        $io = App::get('io');
 
         while ($input != 's' && count($new)) {
             $io->writeln("New files found on remote host:");

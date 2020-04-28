@@ -7,6 +7,7 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
+use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 
 ini_set('zlib.output_compression', 0);
@@ -22,6 +23,7 @@ if (defined('TIMEOUT')) {
 
 require TRIMPATH . '/vendor/autoload.php';
 Environment::getInstance()->load();
+$io = App::get('io');
 
 ob_end_clean();
 
@@ -35,20 +37,20 @@ $targetInstance = TikiManager\Application\Instance::getInstance($targetInstanceI
 
 if (!empty($sourceInstanceId) && !empty($targetInstance)) {
     try {
-        warning("Initiating backup of {$sourceInstance->name}");
+        $io->warning("Initiating backup of {$sourceInstance->name}");
         $archive = $sourceInstance->backup();
 
-        warning("Initiating clone of {$sourceInstance->name} to {$targetInstance->name}");
+        $io->warning("Initiating clone of {$sourceInstance->name} to {$targetInstance->name}");
         $targetInstance->lock();
         $targetInstance->restore($sourceInstance->app, $archive, true);
         $targetInstance->unlock();
 
-        info("Deleting archive...");
+        $io->writeln("Deleting archive...");
         $access = $sourceInstance->getBestAccess('scripting');
         $access->shellExec("rm -f " . $archive);
     } catch (Exception $ex) {
-        error($ex->getMessage());
+        $io->error($ex->getMessage());
     }
 } else {
-    error("Unknown instance.");
+    $io->error("Unknown instance.");
 }

@@ -6,6 +6,9 @@
 
 namespace TikiManager\Repository;
 
+/**
+ * @deprecated
+ */
 class SVN
 {
     private $access;

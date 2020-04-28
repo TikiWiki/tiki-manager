@@ -6,6 +6,7 @@
  */
 
 use TikiManager\Application\Tiki;
+use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 
 ini_set('zlib.output_compression', 0);
@@ -15,6 +16,7 @@ ob_start();
 require dirname(__FILE__) . "/../config.php";
 require TRIMPATH . '/vendor/autoload.php';
 Environment::getInstance()->load();
+$io = App::get('io');
 
 ob_end_clean();
 
@@ -36,27 +38,27 @@ if (! empty($_POST['source'])
         }
 
         if (empty($versionSel)) {
-            warning("Unknown branch.");
+            $io->warning("Unknown branch.");
             die();
         }
 
         try {
             $locked = $instance->lock();
-            info('Instance locked');
+            $io->writeln('Instance locked');
             $app = $instance->getApplication();
             $filesToResolve = $app->performUpdate($instance, $versionSel);
 
             if ($locked) {
                 $instance->unlock();
-                info('Instance unlocked');
+                $io->writeln('Instance unlocked');
             }
         } catch (\Exception $e) {
-            error($e->getMessage());
+            $io->error($e->getMessage());
             exit(-1);
         }
     } else {
-        warning("Unknown instance");
+        $io->warning("Unknown instance");
     }
 } else {
-    warning("ERROR!");
+    $io->warning("ERROR!");
 }

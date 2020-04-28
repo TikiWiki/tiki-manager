@@ -2,13 +2,12 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
 
-class ClearLogsCommand extends Command
+class ClearLogsCommand extends TikiManagerCommand
 {
     protected function configure()
     {

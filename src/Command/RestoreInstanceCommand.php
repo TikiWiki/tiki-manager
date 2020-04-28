@@ -2,15 +2,14 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class RestoreInstanceCommand extends Command
+class RestoreInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -28,8 +27,6 @@ class RestoreInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $instances = CommandHelper::getInstances('no-tiki');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
@@ -39,15 +36,15 @@ class RestoreInstanceCommand extends Command
         $checksumCheck = $input->getOption('check');
 
         if (isset($instancesInfo) && isset($restorableInstancesInfo)) {
-            $io->note('It is only possible to restore a backup on a blank install.');
-            $io->warning('If you are restoring to the same server, this can lead to ' .
+            $this->io->note('It is only possible to restore a backup on a blank install.');
+            $this->io->warning('If you are restoring to the same server, this can lead to ' .
                          'data corruption as both the original and restored Tiki are using the ' .
                          'same folder for storage.');
 
-            $io->newLine();
+            $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $selectedInstances = $io->ask(
+            $selectedInstances = $this->io->ask(
                 'Which instance(s) do you want to restore to?',
                 null,
                 function ($answer) use ($instances) {
@@ -59,10 +56,10 @@ class RestoreInstanceCommand extends Command
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Instance to restore to: ' . $instance->name . '</>');
 
-                $io->newLine();
+                $this->io->newLine();
                 CommandHelper::renderInstancesTable($output, $restorableInstancesInfo);
 
-                $selectedRestorableInstances = $io->ask(
+                $selectedRestorableInstances = $this->io->ask(
                     'Which instance do you want to restore from?',
                     null,
                     function ($answer) use ($restorableInstances) {
@@ -76,7 +73,7 @@ class RestoreInstanceCommand extends Command
                     $output->writeln('[' . $key . '] ' . basename($path));
                 }
 
-                $selectedArchive = $io->ask('Which backup do you want to restore?');
+                $selectedArchive = $this->io->ask('Which backup do you want to restore?');
                 $selection = getEntries($files, $selectedArchive);
 
                 if (!$file = reset($selection)) {
@@ -85,14 +82,16 @@ class RestoreInstanceCommand extends Command
                 }
 
                 $instance->app = $restorableInstance->app; // Required to setup database connection
-                $databaseConfig = CommandHelper::setupDatabaseConnection($instance, $input, $output);
+                $databaseConfig = CommandHelper::setupDatabaseConnection($instance);
                 $instance->setDatabaseConfig($databaseConfig);
 
                 $instance->restore($restorableInstance->app, $file, false, $checksumCheck);
 
-                $output->writeln('<fg=cyan>It is now time to test your site: ' . $instance->name . '</>');
-                $output->writeln('<fg=cyan>If there are issues, connect with make access to troubleshoot directly on the server.</>');
-                $output->writeln('<fg=cyan>You\'ll need to login to this restored instance and update the file paths with the new values.</>');
+                $this->io->success('It is now time to test your site: ' . $instance->name);
+                $this->io->note([
+                    'If there are issues, connect with make access to troubleshoot directly on the server.',
+                    'You\'ll need to login to this restored instance and update the file paths with the new values.'
+                ]);
             }
         } else {
             $output->writeln('<comment>No instances available to restore to/from.</comment>');

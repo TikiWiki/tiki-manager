@@ -7,15 +7,14 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class WatchInstanceCommand extends Command
+class WatchInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -39,8 +38,6 @@ class WatchInstanceCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $helper = $this->getHelper('question');
         $email = $input->getOption('email');
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -59,10 +56,10 @@ class WatchInstanceCommand extends Command
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo) && empty($input->getOption('exclude'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
-            $io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
                 if (!empty($answer)) {
                     $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
@@ -77,8 +74,6 @@ class WatchInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $email = $input->getOption('email');
 
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -154,16 +149,16 @@ class WatchInstanceCommand extends Command
 
         try {
             if (!CommandHelper::sendMailNotification($email, '[Tiki-Manager] Potential intrusions detected', $log)) {
-                $io->error('Something went wrong when sending email, please check email configurations.');
+                $this->io->error('Something went wrong when sending email, please check email configurations.');
                 return 1;
             }
         } catch (\RuntimeException $e) {
             debug($e->getMessage());
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             return 1;
         }
 
-        $io->success('Email sent, please check your inbox.');
+        $this->io->success('Email sent, please check your inbox.');
         return 0;
     }
 }

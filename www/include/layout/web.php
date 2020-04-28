@@ -1,10 +1,13 @@
 <?php
 
+use TikiManager\Config\App;
 use TikiManager\Application\Backup;
 
 function web_backup($instance)
 {
-    info('Checking permissions before backup...');
+    $io = App::get('io');
+
+    $io->writeln('Checking permissions before backup...');
     $app = $instance->getApplication();
     $app->fixPermissions();
 
@@ -27,19 +30,19 @@ function web_backup($instance)
         }
     }
 
-    info('Copying files...');
+    $io->writeln('Copying files...');
     $copyResult = $backup->copyDirectories($targets, $backupDir);
 
-    info('Creating manifest...');
+    $io->writeln('Creating manifest...');
     $backup->createManifest($copyResult, $backupDir);
 
-    info('Creating database dump...');
+    $io->writeln('Creating database dump...');
     $backup->createDatabaseDump($app, $backupDir);
 
-    info('Creating archive...');
+    $io->writeln('Creating archive...');
     $archive = $backup->createArchive($archiveDir, $backupDir);
     if ($archive === null) {
-        error("\nError: Snapshot creation failed.\n");
+        $io->error("\nError: Snapshot creation failed.\n");
         exit(1);
     }
 

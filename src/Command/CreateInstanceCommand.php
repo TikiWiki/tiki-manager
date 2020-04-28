@@ -7,13 +7,11 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\Access;
 use TikiManager\Access\ShellPrompt;
@@ -21,10 +19,11 @@ use TikiManager\Application\Application;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Ext\Password;
 use TikiManager\Libs\Database\Database;
 
-class CreateInstanceCommand extends Command
+class CreateInstanceCommand extends TikiManagerCommand
 {
     private static $nonInteractive;
 
@@ -172,12 +171,10 @@ class CreateInstanceCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         try {
             $nonInteractive = $this->isNonInteractive($input, $output);
         } catch (\Exception $e) {
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             return 1;
         }
 
@@ -193,7 +190,7 @@ class CreateInstanceCommand extends Command
         $errors = [];
 
         if (!self::$nonInteractive) {
-            $io->title('Create a new instance');
+            $this->io->title('Create a new instance');
 
             $blank = $input->getOption('blank') ? true : false;
 
@@ -248,16 +245,16 @@ class CreateInstanceCommand extends Command
             $instance->contact = $helper->ask($input, $output, $question);
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $this->io->error('Failed to setup access');
             }
 
             $instance->save();
             $access->save();
             $output->writeln('<info>Instance information saved.</info>');
-            $io->newLine();
+            $this->io->newLine();
 
             if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG || $_ENV['TRIM_DEBUG']) {
-                $io->title('Tiki Manager Info');
+                $this->io->title('Tiki Manager Info');
                 $mock_instance = new Instance();
                 $mock_access = Access::getClassFor('local');
                 $mock_access = new $mock_access($mock_instance);
@@ -320,7 +317,7 @@ class CreateInstanceCommand extends Command
             }
 
             $phpVersion = $discovery->detectPHPVersion();
-            $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
+            $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 
@@ -375,12 +372,12 @@ class CreateInstanceCommand extends Command
                 $resultInstance = $result->getInstance();
 
                 if ($instance->id === $resultInstance->id) {
-                    $io->success('Please test your site at ' . $instance->weburl);
+                    $this->io->success('Please test your site at ' . $instance->weburl);
                     return 0;
                 }
             } else {
                 $instance->delete();
-                $io->error('Unable to install. An application was detected in this instance.');
+                $this->io->error('Unable to install. An application was detected in this instance.');
                 return 1;
             }
         }
@@ -390,7 +387,7 @@ class CreateInstanceCommand extends Command
             return 0;
         }
 
-        $result = CommandHelper::performInstall($instance, $input, $output, self::$nonInteractive, $checksumCheck);
+        $result = CommandHelper::performInstall($instance, self::$nonInteractive, $checksumCheck);
 
         if ($result === false) {
             return 1;
@@ -409,7 +406,6 @@ class CreateInstanceCommand extends Command
      */
     protected function isNonInteractive(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
         $fs = new Filesystem();
 
         $listInstanceTypes = CommandHelper::supportedInstanceTypes();
@@ -556,7 +552,7 @@ class CreateInstanceCommand extends Command
             }
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $this->io->error('Failed to setup access');
                 exit(1);
             }
 

@@ -8,13 +8,12 @@
 namespace TikiManager\Command;
 
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 
-class CloneAndUpgradeInstanceCommand extends Command
+class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {

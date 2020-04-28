@@ -7,18 +7,17 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
-class UpdateInstanceCommand extends Command
+class UpdateInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -76,7 +75,6 @@ class UpdateInstanceCommand extends Command
     {
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
-        $io = new SymfonyStyle($input, $output);
 
         if (isset($instancesInfo)) {
             $helper = $this->getHelper('question');
@@ -111,11 +109,11 @@ class UpdateInstanceCommand extends Command
                 }
 
                 if (empty($instancesOption)) {
-                    $io->newLine();
+                    $this->io->newLine();
                     CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-                    $io->newLine();
-                    $io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
+                    $this->io->newLine();
+                    $this->io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
 
                     $question = CommandHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
                     $question->setValidator(function ($answer) use ($instances) {
@@ -143,7 +141,7 @@ class UpdateInstanceCommand extends Command
                 $discovery = new Discovery($instance, $access);
                 $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
-                $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
+                $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
                 $instance->lock();
                 $instance->detectPHP();
@@ -163,7 +161,7 @@ class UpdateInstanceCommand extends Command
                         }
                     }
 
-                    $io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
+                    $this->io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
 
                     $counter = 0;
                     $found_incompatibilities = false;
@@ -222,17 +220,17 @@ class UpdateInstanceCommand extends Command
                                 $version = $instance->getLatestVersion();
 
                                 if ($checksumCheck) {
-                                    Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                                    Checksum::handleCheckResult($instance, $version, $filesToResolve);
                                 }
                             } catch (\Exception $e) {
-                                CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                                CommandHelper::setInstanceSetupError($instance->id, $e);
                             }
                         } else {
-                            $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
+                            $this->io->writeln('<comment>No version selected. Nothing to perform.</comment>');
                         }
                     } else {
-                        $io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-                        $io->writeln('<comment>the latest version permitted by the server.</comment>');
+                        $this->io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
+                        $this->io->writeln('<comment>the latest version permitted by the server.</comment>');
                     }
                 } else {
                     $app_branch = $app->getBranch();
@@ -247,17 +245,17 @@ class UpdateInstanceCommand extends Command
                             $version = $instance->getLatestVersion();
 
                             if ($checksumCheck) {
-                                Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                                Checksum::handleCheckResult($instance, $version, $filesToResolve);
                             }
                         } catch (\Exception $e) {
-                            CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                            CommandHelper::setInstanceSetupError($instance->id, $e);
                             $log[] = $e->getMessage() . PHP_EOL;
                             $log[] = $e->getTraceAsString() . PHP_EOL;
                         }
                     } else {
                         $message = 'Tiki Application branch is different than the one stored in the Tiki Manager db.';
                         $log[] = $message;
-                        $io->error($message);
+                        $this->io->error($message);
                     }
                 }
 
@@ -285,7 +283,7 @@ class UpdateInstanceCommand extends Command
                     );
                 } catch (\RuntimeException $e) {
                     debug($e->getMessage());
-                    $io->error($e->getMessage());
+                    $this->io->error($e->getMessage());
                 }
             }
 
@@ -293,7 +291,7 @@ class UpdateInstanceCommand extends Command
                 return 1;
             }
         } else {
-            $io->writeln('<comment>No instances available to update/upgrade.</comment>');
+            $this->io->writeln('<comment>No instances available to update/upgrade.</comment>');
         }
     }
 }

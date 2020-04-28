@@ -8,7 +8,6 @@ namespace TikiManager\Application;
 
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
-use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Src;
@@ -68,9 +67,11 @@ class Tiki extends Application
         $this->vcs_instance->setRunLocally(true);
 
         if (file_exists($folder)) {
+            $this->io->writeln('Updating cache repository from server... <fg=yellow>[may take a while]</>');
             $this->vcs_instance->revert($folder);
             $this->vcs_instance->pull($folder);
         } else {
+            $this->io->writeln('Cloning cache repository from server... <fg=yellow>[may take a while]</>');
             $this->vcs_instance->clone($version->branch, $folder);
         }
 
@@ -122,7 +123,7 @@ class Tiki extends Application
                     $command = $access->createCommand('bash', ['setup.sh', '-n', 'fix']); // does composer as well
                 }
             } else {
-                warning('Old Tiki detected, running bundled Tiki Manager setup.sh script.');
+                $this->io->warning('Old Tiki detected, running bundled Tiki Manager setup.sh script.');
                 $filename = $instance->getWorkPath('setup.sh');
                 $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
                 $command = $access->createCommand('bash', ['$filename']); // does composer as well
@@ -168,7 +169,7 @@ class Tiki extends Application
             $branch = $this->vcs_instance->getRepositoryBranch($this->instance->webroot);
 
             if ($branch) {
-                info("Detected ". $this->vcs_instance->getIdentifier(true) ." : $branch");
+                $this->io->writeln("Detected ". $this->vcs_instance->getIdentifier(true) ." : $branch");
                 return $this->branch = $branch;
             }
         }
@@ -186,9 +187,9 @@ class Tiki extends Application
             $version = $matches[1];
             $branch = $this->formatBranch($version);
 
-            echo 'The branch provided may not be correct. ' .
-                "Until 1.10 is tagged, use branches/1.10.\n";
-            $entry = readline("If this is not correct, enter the one to use: [$branch]");
+            $this->io->writeln('The branch provided may not be correct. Until 1.10 is tagged, use branches/1.10.');
+            $entry = $this->io->ask('If this is not correct, enter the one to use:', $branch);
+
             if (! empty($entry)) {
                 return $this->branch = $entry;
             } else {
@@ -217,14 +218,15 @@ class Tiki extends Application
                 $branch = 'branches/2.0';
             }
 
-            $entry = readline("If this is not correct, enter the one to use: [$branch]");
+            $entry = $this->io->ask('If this is not correct, enter the one to use:', $branch);
+
             if (! empty($entry)) {
                 return $this->branch = $entry;
             }
         } else {
             $branch = '';
             while (empty($branch)) {
-                $branch = readline("No version found. Which tag should be used? (Ex.: (Subversion) branches/1.10) ");
+                $branch = $this->io->ask('No version found. Which tag should be used? (Ex.: (Subversion) branches/1.10) ');
             }
         }
 
@@ -366,6 +368,7 @@ class Tiki extends Application
         $this->extractTo($version, $folder);
 
         if ($access instanceof ShellPrompt) {
+            $this->io->writeln('Copying files to webroot folder...');
             if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
                 $host->windowsSync(
                     $folder,
@@ -401,6 +404,7 @@ class Tiki extends Application
         $this->setDbLock();
 
         if ($checksumCheck) {
+            $this->io->writeln('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this->instance);
         }
     }
@@ -409,10 +413,12 @@ class Tiki extends Application
     {
         $access = $this->instance->getBestAccess('scripting');
 
-        echo $access->runPHP(
+        $output = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php',
             [$this->instance->webroot, $domain, $profile]
         );
+
+        $this->io->writeln($output);
     }
 
     public function isInstalled()
@@ -435,16 +441,9 @@ class Tiki extends Application
         $can_git = $access->hasExecutable('git') && $vcsType == 'GIT';
 
         if ($access instanceof ShellPrompt && ($can_git || $can_svn || $vcsType === 'SRC')) {
-            info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
-            $webroot = $this->instance->webroot;
             $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
             $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
             $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
-
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear --all");
-
-            $this->vcs_instance->revert($webroot);
-            $this->vcs_instance->cleanup($webroot);
 
             if ($vcsType === 'SRC') {
                 $version->branch = $this->vcs_instance->getBranchToUpdate($version->branch);
@@ -455,20 +454,11 @@ class Tiki extends Application
                 $script = sprintf('chmod(%s, 0777);', $path);
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
             }
-
-            if ($this->vcs_instance->getIdentifier() != 'SRC') {
-                info('Updating composer');
-                $this->runComposer();
-            }
-            $this->clearCache(true);
         } elseif ($access instanceof Mountable) {
             $folder = cache_folder($this, $version);
             $this->extractTo($version, $folder);
             $access->copyLocalFolder($folder);
         }
-
-        info('Updating database schema...');
-        $this->runDatabaseUpdate();
 
         $this->postInstall($options);
 
@@ -484,7 +474,6 @@ class Tiki extends Application
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if ($access instanceof ShellPrompt && ($can_svn || $can_git || $this->vcs_instance->getIdentifier() == 'SRC')) {
-            info("Updating " . $this->vcs_instance->getIdentifier(true) . "...");
             $this->clearCache();
 
             $this->vcs_instance->update($this->instance->webroot, $version->branch);
@@ -492,16 +481,6 @@ class Tiki extends Application
                 $script = sprintf('chmod(%s, 0777);', $path);
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
             }
-
-            if ($this->vcs_instance->getIdentifier() != 'SRC') {
-                info('Updating composer...');
-                $this->runComposer();
-            }
-
-            $this->clearCache(true);
-
-            info('Updating database schema...');
-            $this->runDatabaseUpdate();
 
             $this->postInstall($options);
 
@@ -551,14 +530,7 @@ class Tiki extends Application
                 }
             }
 
-            file_put_contents($tmp, "<?php"          . "\n"
-                ."\$db_tiki='{$database->type}';"    . "\n"
-                ."\$host_tiki='{$database->host}';"  . "\n"
-                ."\$user_tiki='{$database->user}';"  . "\n"
-                ."\$pass_tiki='{$database->pass}';"  . "\n"
-                ."\$dbs_tiki='{$database->dbname}';" . "\n"
-                . $systemConfigFilePath
-                ."// generated by Tiki Manager " . date('Y-m-d H:i:s +Z'));
+            file_put_contents($tmp, $this->generateDbFileContent($database));
         }
 
         $access = $this->instance->getBestAccess('filetransfer');
@@ -568,7 +540,7 @@ class Tiki extends Application
         $root = $this->instance->webroot;
 
         // FIXME: Not FTP compatible (arguments)
-        info("Loading '$remoteFile' into '{$database->dbname}'");
+        $this->io->writeln("Loading '$remoteFile' into '{$database->dbname}'");
         $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
             [$root, $remoteFile]
@@ -579,19 +551,13 @@ class Tiki extends Application
     public function setupDatabase(Database $database)
     {
         $tmp = tempnam($_ENV['TEMP_FOLDER'], 'dblocal');
-        file_put_contents($tmp, "<?php"          . "\n"
-            ."\$db_tiki='{$database->type}';"    . "\n"
-            ."\$host_tiki='{$database->host}';"  . "\n"
-            ."\$user_tiki='{$database->user}';"  . "\n"
-            ."\$pass_tiki='{$database->pass}';"  . "\n"
-            ."\$dbs_tiki='{$database->dbname}';" . "\n"
-            ."\$client_charset = 'utf8';"        . "\n"
-            ."// generated by Tiki Manager " . date('Y-m-d H:i:s +Z'));
+        $dbFileContents = $this->generateDbFileContent($database);
+        file_put_contents($tmp, $dbFileContents);
 
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
 
-        info('Setting db config file...');
+        $this->io->writeln('Setting db config file...');
         if ($access instanceof ShellPrompt) {
             $script = sprintf("chmod('%s', 0664);", "{$this->instance->webroot}/db/local.php");
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
@@ -605,7 +571,7 @@ class Tiki extends Application
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
         }
 
-        info('Installing database...');
+        $this->io->writeln('Installing database... <fg=yellow>[may take a while]</>');
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
             $access = $this->instance->getBestAccess('scripting');
             $access->chdir($this->instance->webroot);
@@ -637,16 +603,12 @@ class Tiki extends Application
             );
         }
 
-        echo "Verify if you have db/local.php file, if you don't put the following content in it.\n";
-        echo "<?php"                             . "\n"
-            ."\$db_tiki='{$database->type}';"    . "\n"
-            ."\$host_tiki='{$database->host}';"  . "\n"
-            ."\$user_tiki='{$database->user}';"  . "\n"
-            ."\$pass_tiki='{$database->pass}';"  . "\n"
-            ."\$dbs_tiki='{$database->dbname}';" . "\n"
-            ."\$client_charset = 'utf8';"        . "\n"
-            ."// generated by Tiki Manager " . date('Y-m-d H:i:s +Z')
-            . "\n";
+        $message = <<<TXT
+Verify if you have db/local.php file, if you don't put the following content in it.
+{$dbFileContents}
+TXT;
+
+        $this->io->writeln($message);
     }
 
     /**
@@ -707,6 +669,8 @@ class Tiki extends Application
      */
     public function runComposer()
     {
+        $this->io->writeln('Installing composer dependencies... <fg=yellow>[may take a while]</>');
+
         $instance = $this->instance;
         $access = $instance->getBestAccess('scripting');
 
@@ -745,27 +709,29 @@ class Tiki extends Application
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
-            info('Running composer...');
             $this->runComposer();
         }
+
+        $this->io->writeln('Updating database schema...');
+        $this->runDatabaseUpdate();
 
         $this->setDbLock();
 
         $hasConsole = $this->instance->hasConsole();
 
         if ($hasConsole) {
-            info('Cleaning Cache...');
+            $this->io->writeln('Cleaning cache...');
             $this->clearCache();
 
             if (empty($options['skip-cache-warmup'])) {
-                info('Generating Caches...');
+                $this->io->writeln('Generating caches... <fg=yellow>[may take a while]</>');
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
             }
 
             if (!empty($options['live-reindex'])) {
                 $options['skip-reindex'] = false;
 
-                info('Fixing permissions...');
+                $this->io->writeln('Fixing permissions...');
                 $this->fixPermissions();
 
                 $this->instance->unlock();
@@ -773,11 +739,11 @@ class Tiki extends Application
         }
 
         if (empty($options['skip-reindex']) && $hasConsole) {
-            info('Rebuilding Index...');
+            $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
         }
 
-        info('Fixing permissions...');
+        $this->io->writeln('Fixing permissions...');
         $this->fixPermissions();
     }
 
@@ -807,6 +773,24 @@ class Tiki extends Application
                 [$this->instance->webroot]
             );
         }
+    }
+
+    protected function generateDbFileContent(Database $database)
+    {
+        $date = date('Y-m-d H:i:s +Z');
+
+        $content = <<<TXT
+<?php
+\$db_tiki='{$database->type}';
+\$host_tiki='{$database->host}';
+\$user_tiki='{$database->user}';
+\$pass_tiki='{$database->pass}';
+\$dbs_tiki='{$database->dbname}';
+\$client_charset = 'utf8';
+// generated by Tiki Manager {$date}
+TXT;
+
+        return $content;
     }
 }
 

@@ -236,7 +236,7 @@ class Svn extends VersionControlSystem
         $branchUrl = $root . "/" . $branch;
 
         if ($root != $this->repositoryUrl) {
-            error("Trying to upgrade '{$this->repositoryUrl}' to different repository: {$root}");
+            $this->io->error("Trying to upgrade '{$this->repositoryUrl}' to different repository: {$root}");
             return false;
         }
 
@@ -252,7 +252,7 @@ class Svn extends VersionControlSystem
             // temp/web.config
             // temp/index.php
 
-            error($e->getMessage()); // TODO change this to log error symfony way
+            $this->io->error($e->getMessage());
             $conflicts = '';
         }
 
@@ -262,11 +262,11 @@ class Svn extends VersionControlSystem
         }
 
         if ($this->isUpgrade($url, $branchUrl)) {
-            info("Upgrading to '{$branch}'");
+            $this->io->writeln("Upgrading to '{$branch}' branch");
             $this->revert($targetFolder);
             $this->upgrade($targetFolder, $branchUrl);
         } else {
-            info("Updating '{$branch}'");
+            $this->io->writeln("Updating '{$branch}' branch");
             $this->revert($targetFolder);
             $this->exec($targetFolder, "update $targetFolder --accept theirs-full --force");
         }

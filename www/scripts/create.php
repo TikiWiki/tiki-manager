@@ -5,10 +5,11 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
-use Symfony\Component\Process\Process;
+use TikiManager\Config\App;
 use TikiManager\Access\Local;
-use TikiManager\Application\Instance;
 use TikiManager\Config\Environment;
+use TikiManager\Application\Instance;
+use Symfony\Component\Process\Process;
 
 ini_set('zlib.output_compression', 0);
 header('Content-Encoding: none'); //Disable apache compression
@@ -17,6 +18,7 @@ ob_start();
 require dirname(__FILE__) . "/../config.php";
 require TRIMPATH . '/vendor/autoload.php';
 Environment::getInstance()->load();
+$io = App::get('io');
 
 ob_end_clean();
 
@@ -72,8 +74,8 @@ if (! empty($_POST['type'])
     $process = new Process($command, null, ['REQUEST_METHOD' => false]);
     $process->setTimeout(600);
     $process->run(function ($type, $buffer) {
-        echo $buffer . appendFlush();
+        $io->write($buffer);
     });
 } else {
-    warning("ERROR!");
+    $io->error('Unable to create instance: missing required properties');
 }

@@ -2,14 +2,13 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class ConsoleInstanceCommand extends Command
+class ConsoleInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -33,9 +32,6 @@ class ConsoleInstanceCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-        $helper = $this->getHelper('question');
-
         if (empty($input->getOption('instances'))) {
             $instances = CommandHelper::getInstances('tiki');
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -44,16 +40,16 @@ class ConsoleInstanceCommand extends Command
                 return;
             }
 
-            $io->writeln('<comment>Note: Only Tiki instances can run Console commands.</comment>');
+            $this->io->writeln('<comment>Note: Only Tiki instances can run Console commands.</comment>');
 
-            $io->newLine();
-            $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+            $this->io->newLine();
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $io->newLine();
-            $io->writeln('<comment>In case you want to run Console commands in more than one instance, please use a comma (,) between the values</comment>');
-            $io->writeln('<comment>Note: If you write \'help\' you can check the list of commands</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to run Console commands in more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->writeln('<comment>Note: If you write \'help\' you can check the list of commands</comment>');
 
-            $selectedInstances = $io->ask(
+            $selectedInstances = $this->io->ask(
                 'Which instance(s) do you want run Console commands?',
                 null,
                 function ($answer) use ($instances) {
@@ -69,7 +65,7 @@ class ConsoleInstanceCommand extends Command
         }
 
         if (empty($input->getOption('command'))) {
-            $command = $io->ask('Write command to execute');
+            $command = $this->io->ask('Write command to execute');
             $input->setOption('command', $command);
         }
     }

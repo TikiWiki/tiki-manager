@@ -55,15 +55,11 @@ class SSH extends Access implements ShellPrompt
         $host = $this->getHost();
         $host->setupKey($_ENV['SSH_PUBLIC_KEY']);
 
-        info("Testing connection...");
+        $this->io->writeln("Testing connection...");
 
         $host->runCommands('exit');
 
-        $answer = promptUser(
-            'After successfully entering your password, were you asked for a password again?',
-            false,
-            ['yes', 'no']
-        );
+        $answer = $this->io->confirm('After successfully entering your password, were you asked for a password again?', false);
 
         if ($answer == 'yes') {
             $this->changeType('ssh::nokey');
@@ -109,12 +105,12 @@ class SSH extends Access implements ShellPrompt
             }
 
             // List available options for user
-            echo "Multiple PHP interpreters available on host:\n";
+            $this->io->writeln("Multiple PHP interpreters available on host:");
             $counter = 0;
             krsort($valid);
             $versions = array_keys($valid);
             foreach ($valid as $version => $path) {
-                echo "[$counter] $path ($version)\n";
+                $this->io->writeln("[$counter] $path ($version)");
                 $counter++;
             }
 
@@ -122,7 +118,7 @@ class SSH extends Access implements ShellPrompt
             $counter--;
             $selection = -1;
             while (! array_key_exists($selection, $versions)) {
-                $selection = readline("Which version do you want to use? (0-$counter) : ");
+                $selection = $this->io->ask("Which version do you want to use? (0-$counter) : ");
             }
 
             $version = $versions[$selection];
@@ -166,12 +162,12 @@ class SSH extends Access implements ShellPrompt
             }
 
             // List available options for user
-            echo "Multiple SVN'es available on host :\n";
+            $this->io->writeln("Multiple SVN'es available on host :");
             $counter = 0;
             krsort($valid);
             $versions = array_keys($valid);
             foreach ($valid as $version => $path) {
-                echo "[$counter] $path ($version)\n";
+                $this->io->writeln("[$counter] $path ($version)");
                 $counter++;
             }
 
@@ -179,7 +175,7 @@ class SSH extends Access implements ShellPrompt
             $counter--;
             $selection = -1;
             while (! array_key_exists($selection, $versions)) {
-                $selection = readline("Which version do you want to use? (0-$counter) : ");
+                $selection = $this->io->ask("Which version do you want to use? (0-$counter) : ");
             }
 
             $version = $versions[$selection];

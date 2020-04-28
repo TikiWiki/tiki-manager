@@ -7,14 +7,13 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class DeleteInstanceCommand extends Command
+class DeleteInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -33,7 +32,6 @@ class DeleteInstanceCommand extends Command
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if (empty($input->getOption('instances'))) {
-            $io = new SymfonyStyle($input, $output);
             $instances = CommandHelper::getInstances();
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
@@ -42,9 +40,9 @@ class DeleteInstanceCommand extends Command
                 return;
             }
 
-            $io->note('This will NOT delete the software itself, just your instance connection to it');
+            $this->io->note('This will NOT delete the software itself, just your instance connection to it');
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $answer = $io->ask('Which instance(s) do you want to delete', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance(s) do you want to delete', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
                 return implode(',', array_map(function ($elem) {
                     return $elem->getId();
@@ -57,8 +55,6 @@ class DeleteInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
@@ -74,9 +70,9 @@ class DeleteInstanceCommand extends Command
         $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
 
         foreach ($selectedInstances as $instance) {
-            $io->writeln(sprintf('<fg=cyan>Deleting instance %s...</>', $instance->name));
+            $this->io->writeln(sprintf('<fg=cyan>Deleting instance %s...</>', $instance->name));
             $instance->delete();
-            $io->writeln(sprintf('<info>Deleted instance %s</info>', $instance->name));
+            $this->io->writeln(sprintf('<info>Deleted instance %s</info>', $instance->name));
         }
     }
 }

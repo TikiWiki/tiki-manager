@@ -7,16 +7,14 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class StatsInstanceCommand extends Command
+class StatsInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -53,8 +51,6 @@ class StatsInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $currentCwd = getcwd();
         $instancesOpt = $input->getOption('instances');
         $excludesOpt = $input->getOption('exclude');
@@ -77,7 +73,7 @@ class StatsInstanceCommand extends Command
         }
 
         foreach ($sourceInstances as $instance) {
-            $io->writeln('<comment>Calling command in ' . $instance->name . '</comment>');
+            $this->io->writeln('<comment>Calling command in ' . $instance->name . '</comment>');
             $access = $instance->getBestAccess('scripting');
 
             $script = sprintf(
@@ -90,7 +86,7 @@ class StatsInstanceCommand extends Command
             $result = $access->runCommand($command);
 
             if ($result->getReturn() != 0) {
-                $io->writeln(sprintf("<error>Couldn't get stats from instance: %s</error>", $instance->id));
+                $this->io->writeln(sprintf("<error>Couldn't get stats from instance: %s</error>", $instance->id));
                 continue;
             }
 
@@ -99,12 +95,12 @@ class StatsInstanceCommand extends Command
 
             if (empty($rows)) {
                 $message = 'Unable to parse instance ' . $instance->name . ' response:' . PHP_EOL . $cmdOutput;
-                $io->error($message);
+                $this->io->error($message);
                 continue;
             }
 
             if (!$fileOpt && !$pushToOpt) {
-                $io->section(sprintf('Instance %s stats:', $instance->name));
+                $this->io->section(sprintf('Instance %s stats:', $instance->name));
                 $table = new Table($output);
                 $headers = array_map(function ($headerValue) {
                     return ucwords($headerValue);
@@ -145,7 +141,7 @@ class StatsInstanceCommand extends Command
         $hasErrors = false;
 
         if (!file_exists($tmpFile)) {
-            $io->writeln(sprintf('<error>File %s could not be created.</error>', $fileOpt));
+            $this->io->writeln(sprintf('<error>File %s could not be created.</error>', $fileOpt));
             $hasErrors = true;
         }
 
@@ -154,14 +150,14 @@ class StatsInstanceCommand extends Command
 
             $toInstance->getBestAccess('scripting')->uploadFile($tmpFile, $targetFile);
             if (!$toInstance->getBestAccess('scripting')->fileExists($targetFile)) {
-                $io->writeln(sprintf(
+                $this->io->writeln(sprintf(
                     '<error>Failed to upload stats file %s into instance %</error>',
                     $targetFile,
                     $toInstance->id
                 ));
                 $hasErrors = true;
             } else {
-                $io->writeln(sprintf(
+                $this->io->writeln(sprintf(
                     '<info>Stats file %s uploaded to instance %s</info>',
                     $targetFile,
                     $toInstance->id
@@ -172,7 +168,7 @@ class StatsInstanceCommand extends Command
         // Output file locally
         if ($fileOpt && empty($pushToOpt)) {
             rename($tmpFile, $fileOpt);
-            $io->writeln('<info>Stats exported.</info>');
+            $this->io->writeln('<info>Stats exported.</info>');
         }
 
         if (file_exists($tmpFile)) {

@@ -109,7 +109,7 @@ class SSHSeclibAdapter
         $handle = self::getExtHandle();
         $success = $handle->get($remoteFile, $localFile);
         if (! $success) {
-            error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
+            $this->io->error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
             return false;
         }
 
@@ -198,7 +198,7 @@ class SSHSeclibAdapter
             \phpseclib\Net\SFTP::SOURCE_STRING
         );
         if (! $success) {
-            error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
+            $this->io->error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
         }
         return $success;
     }

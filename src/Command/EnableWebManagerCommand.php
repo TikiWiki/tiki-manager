@@ -2,13 +2,12 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
+use TikiManager\Config\App;
 
-class EnableWebManagerCommand extends Command
+class EnableWebManagerCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -62,8 +61,6 @@ class EnableWebManagerCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $output->writeln('Tiki Manager web administration files are located in the Tiki Manager directory. In order to
 make the interface available externally, the files will be copied to a web
 accessible location.
@@ -80,10 +77,10 @@ For example, if your web root is /var/www/virtual/webtikimanager.example.com
 Simple authentication will be used. However, it is possible to restrict
 access to the administration panel to local users (safer).');
 
-        $io->newLine();
+        $this->io->newLine();
 
         if (!$install = $input->getOption('install')) {
-            $install = $io->confirm('This will enable the Tiki Manager administration web panel. Continue with this action?', false);
+            $install = $this->io->confirm('This will enable the Tiki Manager administration web panel. Continue with this action?', false);
 
             if (!$install) {
                 exit(1);
@@ -92,7 +89,7 @@ access to the administration panel to local users (safer).');
             $input->setOption('install', $install);
         }
 
-        $path = $io->ask(
+        $path = $this->io->ask(
             'WWW Tiki Manager directory (ex: /var/www/virtual/webtikimanager.example.com/html)',
             getenv('WWW_PATH') ?: null,
             function ($value) {
@@ -110,12 +107,12 @@ access to the administration panel to local users (safer).');
         }
 
         if (!$input->getOption('username')) {
-            $username = $io->ask('Desired username');
+            $username = $this->io->ask('Desired username');
             $input->setOption('username', $username);
         }
 
         if (!$input->getOption('password')) {
-            $password = $io->askHidden('Desired password', function ($value) {
+            $password = $this->io->askHidden('Desired password', function ($value) {
                 if (empty(trim($value))) {
                     throw new \Exception('The password cannot be empty');
                 }
@@ -125,15 +122,13 @@ access to the administration panel to local users (safer).');
         }
 
         if (!$input->getOption('restrict')) {
-            $restrict = $io->confirm('Restrict use to localhost', false);
+            $restrict = $this->io->confirm('Restrict use to localhost', false);
             $input->setOption('restrict', $restrict);
         }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         if (function_exists('posix_getuid')) {
             if (posix_getuid() != 0) {
                 throw new \RuntimeException('You need to run this script as root to write to configuration files.');
@@ -213,6 +208,6 @@ CONFIG
         `(rm -rf $webPath/vendor && $composer install -d $webPath)`;
         `(chown -R $owner $webPath/vendor)`;
 
-        $io->success('WWW Tiki Manager is now enabled.');
+        $this->io->success('WWW Tiki Manager is now enabled.');
     }
 }

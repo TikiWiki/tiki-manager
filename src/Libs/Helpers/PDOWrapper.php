@@ -2,6 +2,8 @@
 
 namespace TikiManager\Libs\Helpers;
 
+use TikiManager\Config\App;
+
 /**
  * Class PDO_WRAPPER
  * Wrapper around PDO to ease some functionalities related and error catching
@@ -71,7 +73,7 @@ class PDOWrapper extends \PDO
             $message .= "$query\n";
         }
 
-        error($message);
+        App::get('io')->error($message);
 
         if ($this->die_on_exception_thrown) {
             die();

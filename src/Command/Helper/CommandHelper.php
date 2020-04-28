@@ -21,6 +21,7 @@ use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 use TikiManager\Libs\Helpers\ApplicationHelper;
@@ -387,21 +388,17 @@ class CommandHelper
      * Handle application install for a new instance.
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param boolean $nonInteractive
      * @param boolean $checksumCheck
      * @return bool
      */
     public static function performInstall(
         Instance $instance,
-        InputInterface $input,
-        OutputInterface $output,
         $nonInteractive = false,
         $checksumCheck = false
     ) {
 
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($instance->findApplication()) {
             $io->error('Unable to install. An application was detected in this instance.');
@@ -435,7 +432,7 @@ class CommandHelper
 
         $version = Version::buildFake($details[0], $details[1]);
 
-        $io->writeln('Installing application...');
+        $io->writeln('Installing application... (this may take a while)');
         if (!$nonInteractive) {
             $io->note([
                 'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
@@ -450,12 +447,12 @@ class CommandHelper
         }
 
         if ($app->requiresDatabase()) {
-            $dbConn = self::setupDatabaseConnection($instance, $input, $output, $nonInteractive);
+            $dbConn = self::setupDatabaseConnection($instance, $nonInteractive);
             $app->setupDatabase($dbConn);
         }
 
         if (isset($error)) {
-            CommandHelper::setInstanceSetupError($instance->id, $input, $output);
+            CommandHelper::setInstanceSetupError($instance->id);
             return false;
         }
 
@@ -467,19 +464,15 @@ class CommandHelper
      * Check, configure and  test database connection for a given instance
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param boolean $nonInteractive
      * @return Database|null
      */
     public static function setupDatabaseConnection(
         Instance $instance,
-        InputInterface $input,
-        OutputInterface $output,
         $nonInteractive = false
     ) {
         $dbUser = null;
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($dbUser = $instance->getDatabaseConfig()) {
             return $dbUser;
@@ -518,8 +511,7 @@ class CommandHelper
                 $valid = $dbRoot->testConnection();
             }
 
-            $logger = new ConsoleLogger($output);
-            $logger->debug('Connected to MySQL with administrative privileges');
+            $io->writeln('Connected to MySQL with administrative privileges');
 
             $create = $io->confirm('Should a new database and user be created now (both)?');
 
@@ -752,14 +744,12 @@ class CommandHelper
      * Build error message to fix instance if setup fails
      *
      * @param $instanceId
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param \Exception|null $e
      */
-    public static function setInstanceSetupError($instanceId, InputInterface $input, OutputInterface $output, \Exception $e = null)
+    public static function setInstanceSetupError($instanceId, \Exception $e = null)
     {
         $errors = [];
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($e instanceof VcsException) {
             $errors[] = 'Tiki Manager detected a problem with your instance´s VCS.';

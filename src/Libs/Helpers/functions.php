@@ -1,6 +1,11 @@
 <?php
 
+use TikiManager\Config\App;
+
 if (! function_exists('readline')) {
+    /**
+     * @deprecated
+     */
     function readline($prompt)
     {
         echo $prompt;
@@ -10,6 +15,9 @@ if (! function_exists('readline')) {
     }
 }
 
+/**
+ * @deprecated
+ */
 function color($string, $color)
 {
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -97,6 +105,9 @@ function stringfy($sub)
     return var_export($sub, true);
 }
 
+/**
+ * @deprecated
+ */
 function appendFlush()
 {
     // By default php-fpm uses 4096B buffers.
@@ -104,18 +115,27 @@ function appendFlush()
     return PHP_SAPI != 'cli' ? str_pad('', 4 * 1024) : '';
 }
 
+/**
+ * @deprecated
+ */
 function info($text, $prefix = null)
 {
     echo color("$text\n", 'cyan') . appendFlush();
     return $text;
 }
 
+/**
+ * @deprecated
+ */
 function warning($text, $prefix = null)
 {
     echo color("$text\n", 'yellow') . appendFlush();
     return $text;
 }
 
+/**
+ * @deprecated
+ */
 function error($text, $prefix = null)
 {
     echo color("$text\n", 'red') . appendFlush();
@@ -191,8 +211,8 @@ function secure_trim_data($should_set = false)
         $chmod_success = $should_set && chmod($_ENV['TRIM_DATA'], $exp_mode);
 
         if (!$chmod_success) {
-            error("Your Tiki Manager data is unsafe! ");
-            error(sprintf(
+            $message = 'Your Tiki Manager data is unsafe!'.PHP_EOL;
+            $message .= sprintf(
                 '  Currently it is: d%s%s%s	%s:%s	%s',
                 $modes[ ($cur_mode >> 6) & 0b111 ],
                 $modes[ ($cur_mode >> 3) & 0b111 ],
@@ -200,13 +220,14 @@ function secure_trim_data($should_set = false)
                 $owner_name,
                 $group_name,
                 $_ENV['TRIM_DATA']
-            ));
-            error(sprintf(
+            ) . PHP_EOL;
+            $message .= sprintf(
                 '  Should be like:  drwx------	%s:%s	%s',
                 $owner_name,
                 $group_name,
                 $_ENV['TRIM_DATA']
-            ));
+            );
+            App::get('io')->warning($message);
         }
     }
 }
@@ -226,13 +247,13 @@ function run_composer_install()
     }
 
     if (!file_exists($composer)) {
-        info("Downloading composer into '{$composer}'");
+        App::get('io')->writeln("Downloading composer into '{$composer}'");
         copy('https://getcomposer.org/composer.phar', $composer);
         chmod($composer, 0755);
     }
 
     if (!file_exists($composer)) {
-        error("Failed to download composer");
+        App::get('io')->error("Failed to download composer");
         exit(1);
     }
 
@@ -262,7 +283,7 @@ function query($query, $params = null)
             $query = str_replace($key, (int) $value, $query);
         } elseif (is_array($value)) {
             error("Unsupported query parameter type: array\n");
-            printf("Query\n\"%s\"\nParamters:\n", $query);
+            printf("Query\n\"%s\"\nParameters:\n", $query);
             var_dump($params);
             printf("Backtrace:\n");
             debug_print_backtrace();
@@ -362,6 +383,8 @@ function printInstances(array $instances)
  * @param string $default Default value.
  * @param string $values Acceptable values.
  * @return string User-supplied value.
+ *
+ * @deprecated
  */
 
 function promptUser($prompt, $default = false, $values = [])

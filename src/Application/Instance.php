@@ -9,11 +9,12 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Config\App;
 use TikiManager\Access\Access;
-use TikiManager\Libs\Database\Database;
-use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\Helpers\Archive;
+use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\VersionControl\Svn;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 
 class Instance
@@ -239,7 +240,14 @@ SQL;
 
     protected $databaseConfig;
 
+    protected $io;
+
     private $access = [];
+
+    public function __construct()
+    {
+        $this->io = App::get('io');
+    }
 
     public function getId()
     {
@@ -558,7 +566,7 @@ SQL;
             return $version;
         }
 
-        error("No suitable php interpreter was found on {$this->name} instance");
+        $this->io->error("No suitable php interpreter was found on {$this->name} instance");
         exit(1);
     }
 
@@ -701,10 +709,12 @@ SQL;
         $srcFiles = null;
         if ($direct && $src_app instanceof Instance) {
             $srcFiles = $src_app->webroot;
-            info("Restoring files from '{$srcFiles}' into {$this->name}");
+            $message = "Restoring files from '{$srcFiles}' into {$this->name}...";
         } else {
-            info("Restoring files from '{$archive}' into {$this->name}");
+            $message = "Restoring files from '{$archive}' into {$this->name}...";
         }
+
+        $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
 
         $restore = new Restore($this);
         $restore->setProcess($clone);
@@ -712,6 +722,8 @@ SQL;
 
         $this->app = isset($src_app->app) ? $src_app->app : $src_app;
         $this->save();
+
+        $this->io->writeln('Restoring database...');
         $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
 
         $version = null;
@@ -722,7 +734,7 @@ SQL;
         $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
 
         if (!$this->findApplication()) { // a version is created in this call
-            error('Something when wrong with restore. Unable to read application details.');
+            $this->io->error('Something when wrong with restore. Unable to read application details.');
             return;
         }
 
@@ -746,11 +758,12 @@ SQL;
         }
 
         if ($this->app == 'tiki') {
-            info("Fixing permissions for {$this->name}");
+            $this->io->writeln("Fixing permissions for {$this->name}");
             $this->getApplication()->fixPermissions();
         }
 
         if ($checksumCheck) {
+            $this->io->writeln('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this);
         }
 
@@ -759,7 +772,7 @@ SQL;
             $flags = "-r";
         }
 
-        echo $access->shellExec(
+        $access->shellExec(
             sprintf("rm %s %s", $flags, $this->tempdir . DIRECTORY_SEPARATOR . 'restore')
         );
     }
@@ -813,7 +826,7 @@ SQL;
         if ($this->isLocked()) {
             return true;
         }
-        info('Locking website...');
+        $this->io->writeln('Locking website...');
 
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
@@ -835,7 +848,7 @@ SQL;
             return true;
         }
 
-        info('Unlocking website...');
+        $this->io->writeln('Unlocking website...');
         $access = $this->getBestAccess('scripting');
         $access->deleteFile('.htaccess');
         $access->deleteFile('maintenance.php');
