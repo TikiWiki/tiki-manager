@@ -8,7 +8,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 
-abstract class TikiManagerCommand extends Command {
+abstract class TikiManagerCommand extends Command
+{
 
     protected $io;
 
@@ -22,5 +23,4 @@ abstract class TikiManagerCommand extends Command {
 
         return parent::run($input, $output);
     }
-
 }
