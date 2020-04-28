@@ -7,11 +7,9 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
@@ -20,7 +18,7 @@ use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 
-class CloneInstanceCommand extends Command
+class CloneInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {

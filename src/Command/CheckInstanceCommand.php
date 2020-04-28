@@ -3,17 +3,15 @@
 namespace TikiManager\Command;
 
 use Symfony\Component\Console\Exception\InvalidArgumentException;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
-class CheckInstanceCommand extends Command
+class CheckInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {

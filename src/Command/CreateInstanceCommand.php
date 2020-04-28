@@ -7,13 +7,11 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\Access;
 use TikiManager\Access\ShellPrompt;
@@ -25,7 +23,7 @@ use TikiManager\Config\App;
 use TikiManager\Ext\Password;
 use TikiManager\Libs\Database\Database;
 
-class CreateInstanceCommand extends Command
+class CreateInstanceCommand extends TikiManagerCommand
 {
     private static $nonInteractive;
 

@@ -2,11 +2,9 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\App;
 
@@ -15,7 +13,7 @@ use TikiManager\Config\App;
  * Class SetupUpdateCommand
  * @package TikiManager\Command
  */
-class SetupUpdateCommand extends Command
+class SetupUpdateCommand extends TikiManagerCommand
 {
     /**
      * Command configuration function
