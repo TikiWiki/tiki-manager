@@ -27,15 +27,13 @@ class ManagerInfoCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $instance = new Instance();
 
         $access = Access::getClassFor('local');
         $access = new $access($instance);
         $discovery = new Discovery($instance, $access);
 
-        $io->title('Tiki Manager Info');
+        $this->io->title('Tiki Manager Info');
         CommandHelper::displayInfo($discovery, $io);
     }
 }

@@ -24,17 +24,15 @@ class CheckRequirementsCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
-        $io->section('Requirements');
+        $this->io->section('Requirements');
 
         $osReq = Requirements::getInstance();
         $requirements = $osReq->getRequirements();
         foreach ($requirements as $requirementKey => $requirement) {
             if ($osReq->check($requirementKey)) {
-                $io->block($requirement['name'] . ' (' . $osReq->getTags($requirementKey) . ')', '<info>Ok</info>');
+                $this->io->block($requirement['name'] . ' (' . $osReq->getTags($requirementKey) . ')', '<info>Ok</info>');
             } else {
-                $io->block(ucfirst($osReq->getRequirementMessage($requirementKey)), '<error>missing</error>');
+                $this->io->block(ucfirst($osReq->getRequirementMessage($requirementKey)), '<error>missing</error>');
             }
         }
     }

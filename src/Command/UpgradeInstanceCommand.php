@@ -66,7 +66,6 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
         $helper = $this->getHelper('question');
 
         $checksumCheck = false;
@@ -81,11 +80,11 @@ class UpgradeInstanceCommand extends TikiManagerCommand
         $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
 
         if (empty($instancesOption)) {
-            $io->newLine();
+            $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $io->newLine();
-            $io->writeln('<comment>In case you want to upgrade more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to upgrade more than one instance, please use a comma (,) between the values</comment>');
 
             $question = CommandHelper::getQuestion('Which instance(s) do you want to upgrade', null, '?');
             $question->setValidator(function ($answer) use ($instances) {
@@ -106,7 +105,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             $discovery = new Discovery($instance, $access);
             $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
-            $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
+            $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
             $instance->lock();
             $instance->detectPHP();
@@ -125,7 +124,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 }
             }
 
-            $io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
+            $this->io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
 
             $counter = 0;
             $found_incompatibilities = false;
@@ -192,11 +191,11 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                         continue;
                     }
                 } else {
-                    $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
+                    $this->io->writeln('<comment>No version selected. Nothing to perform.</comment>');
                 }
             } else {
-                $io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-                $io->writeln('<comment>the latest version permitted by the server.</comment>');
+                $this->io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
+                $this->io->writeln('<comment>the latest version permitted by the server.</comment>');
             }
 
             if ($instance->isLocked()) {

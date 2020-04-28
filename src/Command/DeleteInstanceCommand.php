@@ -32,7 +32,6 @@ class DeleteInstanceCommand extends TikiManagerCommand
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if (empty($input->getOption('instances'))) {
-            $io = App::get('io');
             $instances = CommandHelper::getInstances();
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
@@ -41,9 +40,9 @@ class DeleteInstanceCommand extends TikiManagerCommand
                 return;
             }
 
-            $io->note('This will NOT delete the software itself, just your instance connection to it');
+            $this->io->note('This will NOT delete the software itself, just your instance connection to it');
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $answer = $io->ask('Which instance(s) do you want to delete', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance(s) do you want to delete', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
                 return implode(',', array_map(function ($elem) {
                     return $elem->getId();
@@ -56,8 +55,6 @@ class DeleteInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
@@ -73,9 +70,9 @@ class DeleteInstanceCommand extends TikiManagerCommand
         $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
 
         foreach ($selectedInstances as $instance) {
-            $io->writeln(sprintf('<fg=cyan>Deleting instance %s...</>', $instance->name));
+            $this->io->writeln(sprintf('<fg=cyan>Deleting instance %s...</>', $instance->name));
             $instance->delete();
-            $io->writeln(sprintf('<info>Deleted instance %s</info>', $instance->name));
+            $this->io->writeln(sprintf('<info>Deleted instance %s</info>', $instance->name));
         }
     }
 }

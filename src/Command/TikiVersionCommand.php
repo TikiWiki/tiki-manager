@@ -26,8 +26,6 @@ class TikiVersionCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $vcsOption = CommandHelper::getCliOption('vcs');
         $vcsOption = strtoupper($vcsOption);
         if (! in_array($vcsOption, ['SVN', 'GIT'])) {
@@ -41,7 +39,7 @@ class TikiVersionCommand extends TikiManagerCommand
 
         $versionsInfo = CommandHelper::getVersionsInfo($versions);
         if (isset($versionsInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             CommandHelper::renderVersionsTable($output, $versionsInfo);
         } else {
             $output->writeln('<comment>No versions available to list.</comment>');

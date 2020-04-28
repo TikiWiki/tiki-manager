@@ -46,11 +46,8 @@ class SetupUpdateCommand extends TikiManagerCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         if (empty($input->getOption('time'))) {
-            $helper = $this->getHelper('question');
-            $answer = $io->ask('What time should it run at?', '00:00', function ($answer) {
+            $answer = $this->io->ask('What time should it run at?', '00:00', function ($answer) {
                 return CommandHelper::validateTimeInput($answer);
             });
 
@@ -62,10 +59,10 @@ class SetupUpdateCommand extends TikiManagerCommand
 
         if (empty($input->getOption('instances'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
-            $io->writeln('<comment>In case you want to update more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to update more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $io->ask('Which instance(s) do you want to update?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance(s) do you want to update?', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
                 return implode(',', CommandHelper::getInstanceIds($selectedInstances));
             });
@@ -78,12 +75,12 @@ class SetupUpdateCommand extends TikiManagerCommand
         try {
             CommandHelper::validateEmailInput($email);
         } catch (\RuntimeException $e) {
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             $email = null;
         }
 
         if (empty($email)) {
-            $email = $io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, CommandHelper::validateEmailInput($value));
+            $email = $this->io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, CommandHelper::validateEmailInput($value));
             $input->setOption('email', $email);
         }
     }
@@ -96,8 +93,6 @@ class SetupUpdateCommand extends TikiManagerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $time = $input->getOption('time');
         // Check if option (set in cli is also valid)
         list($hours, $minutes) = CommandHelper::validateTimeInput($time);
@@ -127,8 +122,8 @@ class SetupUpdateCommand extends TikiManagerCommand
         );
 
         file_put_contents($file = $_ENV['TEMP_FOLDER'] . '/crontab', `crontab -l` . $entry);
-        $io->writeln("\n<fg=cyan>If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.</>");
-        $io->writeln("<fg=cyan>\t$entry</>");
+        $this->io->writeln("\n<fg=cyan>If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.</>");
+        $this->io->writeln("<fg=cyan>\t$entry</>");
         `crontab $file`;
     }
 }

@@ -35,7 +35,6 @@ class CheckInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
         $helper = $this->getHelper('question');
 
         $instances = CommandHelper::getInstances('all', true);
@@ -45,11 +44,11 @@ class CheckInstanceCommand extends TikiManagerCommand
             $instancesOption = $input->getOption('instances');
 
             if (empty($instancesOption)) {
-                $io->newLine();
+                $this->io->newLine();
                 CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-                $io->newLine();
-                $io->writeln('<comment>In case you want to check more than one instance, please use a comma (,) between the values</comment>');
+                $this->io->newLine();
+                $this->io->writeln('<comment>In case you want to check more than one instance, please use a comma (,) between the values</comment>');
 
                 $question = CommandHelper::getQuestion('Which instance(s) do you want to check', null, '?');
                 $question->setValidator(function ($answer) use ($instances) {
@@ -67,11 +66,11 @@ class CheckInstanceCommand extends TikiManagerCommand
                 $version = $instance->getLatestVersion();
 
                 if (! $version) {
-                    $io->writeln('<comment>Instance [' . $instance->id . '] (' . $instance->name . ') does not have a registered version. Skip.</comment>');
+                    $this->io->writeln('<comment>Instance [' . $instance->id . '] (' . $instance->name . ') does not have a registered version. Skip.</comment>');
                     continue;
                 }
 
-                $io->writeln('<fg=cyan>Checking instance: ' . $instance->name . '...</>');
+                $this->io->writeln('<fg=cyan>Checking instance: ' . $instance->name . '...</>');
 
                 $versionRevision = $version->revision;
                 $tikiRevision = $instance->getRevision();
@@ -84,22 +83,22 @@ class CheckInstanceCommand extends TikiManagerCommand
                 $fetchChecksum = false;
 
                 if (empty($versionRevision)) {
-                    $io->warning('No revision detected for instance.');
+                    $this->io->warning('No revision detected for instance.');
                     $fetchChecksum = true;
                 }
 
                 if (!empty($versionRevision) && $versionRevision != $tikiRevision) {
-                    $io->warning('Revision mismatch between Tiki Manager version and instance.');
+                    $this->io->warning('Revision mismatch between Tiki Manager version and instance.');
                     $fetchChecksum = true;
                 }
 
                 if (empty($trimInstanceRevision) || $trimInstanceRevision != $tikiRevision) {
-                    $io->warning('It is recommended to fetch new checksum information.');
+                    $this->io->warning('It is recommended to fetch new checksum information.');
                     $fetchChecksum = true;
                 }
 
                 if (! $version->hasChecksums()) {
-                    $io->warning('No checksums exist.');
+                    $this->io->warning('No checksums exist.');
                     $fetchChecksum = true;
                 }
 
@@ -115,10 +114,10 @@ class CheckInstanceCommand extends TikiManagerCommand
 
                     $updateFromOption = $input->getOption('update-from');
                     if (empty($updateFromOption)) {
-                        $io->writeln('<comment>No checksums exist.</comment>');
-                        $io->newLine();
+                        $this->io->writeln('<comment>No checksums exist.</comment>');
+                        $this->io->newLine();
                         CommandHelper::renderCheckOptionsAndActions($output);
-                        $io->newLine();
+                        $this->io->newLine();
 
                         $question = new ChoiceQuestion(
                             'Please select an option to apply:',
@@ -151,7 +150,7 @@ class CheckInstanceCommand extends TikiManagerCommand
                 }
             }
         } else {
-            $io->writeln('<comment>No instances available to check.</comment>');
+            $this->io->writeln('<comment>No instances available to check.</comment>');
         }
     }
 }

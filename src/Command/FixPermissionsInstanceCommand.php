@@ -19,17 +19,15 @@ class FixPermissionsInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $instances = CommandHelper::getInstances('tiki');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
             $output->writeln('<comment>Note: Only Tiki instances can have permissions fixed.</comment>');
 
-            $io->newLine();
+            $this->io->newLine();
             $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $io->newLine();
+            $this->io->newLine();
             $output->writeln('<comment>In case you want to fix permissions to more than one instance, please use a comma (,) between the values</comment>');
 
             $helper = $this->getHelper('question');

@@ -26,17 +26,15 @@ class AccessInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
             $instancesOption = $input->getOption('instances');
             if (empty($instancesOption)) {
-                $io->newLine();
+                $this->io->newLine();
                 CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-                $io->newLine();
+                $this->io->newLine();
                 $output->writeln('<comment>In case you want to access more than one instance, please use a comma (,) between the values</comment>');
 
                 $helper = $this->getHelper('question');

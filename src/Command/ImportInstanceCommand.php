@@ -100,12 +100,10 @@ class ImportInstanceCommand extends TikiManagerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         try {
             $nonInteractive = $this->isNonInteractive($input, $output);
         } catch (\Exception $e) {
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             return 1;
         }
 
@@ -117,7 +115,7 @@ class ImportInstanceCommand extends TikiManagerCommand
         }
 
         if (!self::$nonInteractive) {
-            $io->title('Import an instance');
+            $this->io->title('Import an instance');
 
             $output->writeln('<comment>Answer the following to import a new Tiki Manager instance.</comment>');
 
@@ -176,10 +174,10 @@ class ImportInstanceCommand extends TikiManagerCommand
             $instance->save();
             $access->save();
             $output->writeln('<info>Instance information saved.</info>');
-            $io->newLine();
+            $this->io->newLine();
 
             if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG || $_ENV['TRIM_DEBUG']) {
-                $io->title('Tiki Manager Info');
+                $this->io->title('Tiki Manager Info');
                 $mock_instance = new Instance();
                 $mock_access = Access::getClassFor('local');
                 $mock_access = new $mock_access($mock_instance);
@@ -206,7 +204,7 @@ class ImportInstanceCommand extends TikiManagerCommand
             }
 
             $phpVersion = $discovery->detectPHPVersion();
-            $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
+            $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 
@@ -239,17 +237,17 @@ class ImportInstanceCommand extends TikiManagerCommand
                 $resultInstance = $result->getInstance();
 
                 if ($instance->id === $resultInstance->id) {
-                    $io->success('Import completed, please test your site at ' . $instance->weburl);
+                    $this->io->success('Import completed, please test your site at ' . $instance->weburl);
                     return 0;
                 }
             } else {
                 $instance->delete();
-                $io->error('Unable to import. An application was detected in this instance.');
+                $this->io->error('Unable to import. An application was detected in this instance.');
                 return 1;
             }
         } else {
             $instance->delete();
-            $io->error('Unable to import. An application was not detected in this instance.');
+            $this->io->error('Unable to import. An application was not detected in this instance.');
             return 1;
         }
     }

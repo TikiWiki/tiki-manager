@@ -44,12 +44,8 @@ class SetupBackupManagerCommand extends TikiManagerCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-        $helper = $this->getHelper('question');
-
         if (empty($input->getOption('time'))) {
-            $helper = $this->getHelper('question');
-            $answer = $io->ask('What time should it run at?', '00:00', function ($answer) {
+            $answer = $this->io->ask('What time should it run at?', '00:00', function ($answer) {
                 return CommandHelper::validateTimeInput($answer);
             });
 
@@ -61,10 +57,10 @@ class SetupBackupManagerCommand extends TikiManagerCommand
 
         if (isset($instancesInfo) && empty($input->getOption('exclude'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
-            $io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
 
                 if (! empty($answer)) {
@@ -83,12 +79,12 @@ class SetupBackupManagerCommand extends TikiManagerCommand
         try {
             CommandHelper::validateEmailInput($email);
         } catch (\RuntimeException $e) {
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             $email = null;
         }
 
         if (empty($email)) {
-            $email = $io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, function ($answer) {
+            $email = $this->io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, function ($answer) {
                 if (!empty($answer)) {
                     return  CommandHelper::validateEmailInput($answer);
                 }
@@ -99,7 +95,6 @@ class SetupBackupManagerCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
         $time = $input->getOption('time');
         list($hours, $minutes) = CommandHelper::validateTimeInput($time);
         $arguments = '--instances=all --no-interaction';
@@ -130,9 +125,9 @@ class SetupBackupManagerCommand extends TikiManagerCommand
 
         file_put_contents($file = $_ENV['TEMP_FOLDER'] . '/crontab', `crontab -l` . $entry);
 
-        $io->newLine();
-        $io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');
-        $io->text($entry);
+        $this->io->newLine();
+        $this->io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');
+        $this->io->text($entry);
 
         `crontab $file`;
     }

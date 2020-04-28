@@ -171,12 +171,10 @@ class CreateInstanceCommand extends TikiManagerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         try {
             $nonInteractive = $this->isNonInteractive($input, $output);
         } catch (\Exception $e) {
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             return 1;
         }
 
@@ -192,7 +190,7 @@ class CreateInstanceCommand extends TikiManagerCommand
         $errors = [];
 
         if (!self::$nonInteractive) {
-            $io->title('Create a new instance');
+            $this->io->title('Create a new instance');
 
             $blank = $input->getOption('blank') ? true : false;
 
@@ -247,16 +245,16 @@ class CreateInstanceCommand extends TikiManagerCommand
             $instance->contact = $helper->ask($input, $output, $question);
 
             if (!$access->firstConnect()) {
-                $io->error('Failed to setup access');
+                $this->io->error('Failed to setup access');
             }
 
             $instance->save();
             $access->save();
             $output->writeln('<info>Instance information saved.</info>');
-            $io->newLine();
+            $this->io->newLine();
 
             if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG || $_ENV['TRIM_DEBUG']) {
-                $io->title('Tiki Manager Info');
+                $this->io->title('Tiki Manager Info');
                 $mock_instance = new Instance();
                 $mock_access = Access::getClassFor('local');
                 $mock_access = new $mock_access($mock_instance);
@@ -319,7 +317,7 @@ class CreateInstanceCommand extends TikiManagerCommand
             }
 
             $phpVersion = $discovery->detectPHPVersion();
-            $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
+            $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 
@@ -374,12 +372,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 $resultInstance = $result->getInstance();
 
                 if ($instance->id === $resultInstance->id) {
-                    $io->success('Please test your site at ' . $instance->weburl);
+                    $this->io->success('Please test your site at ' . $instance->weburl);
                     return 0;
                 }
             } else {
                 $instance->delete();
-                $io->error('Unable to install. An application was detected in this instance.');
+                $this->io->error('Unable to install. An application was detected in this instance.');
                 return 1;
             }
         }
@@ -408,7 +406,6 @@ class CreateInstanceCommand extends TikiManagerCommand
      */
     protected function isNonInteractive(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
         $fs = new Filesystem();
 
         $listInstanceTypes = CommandHelper::supportedInstanceTypes();
@@ -555,7 +552,7 @@ class CreateInstanceCommand extends TikiManagerCommand
             }
 
             if (!$access->firstConnect()) {
-                $io->error('Failed to setup access');
+                $this->io->error('Failed to setup access');
                 exit(1);
             }
 

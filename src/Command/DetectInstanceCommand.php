@@ -49,14 +49,12 @@ class DetectInstanceCommand extends TikiManagerCommand
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if (empty($input->getOption('instances'))) {
-            $io = App::get('io');
-
             if (empty($this->instancesInfo)) {
                 return;
             }
 
             CommandHelper::renderInstancesTable($output, $this->instancesInfo);
-            $answer = $io->ask('Which instance(s) do you want to detect', null, function ($answer) {
+            $answer = $this->io->ask('Which instance(s) do you want to detect', null, function ($answer) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $this->instances);
                 return implode(',', array_map(function ($elem) {
                     return $elem->getId();
@@ -69,8 +67,6 @@ class DetectInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         if (empty($this->instancesInfo)) {
             $output->writeln('<comment>No instances available to detect.</comment>');
             return;
@@ -84,13 +80,13 @@ class DetectInstanceCommand extends TikiManagerCommand
 
         /** @var Instance $instance */
         foreach ($selectedInstances as $instance) {
-            $io->section($instance->name);
+            $this->io->section($instance->name);
             if (! $instance->detectPHP()) {
                 if ($instance->phpversion < 50300) {
-                    $io->error('PHP Interpreter version is less than 5.3.');
+                    $this->io->error('PHP Interpreter version is less than 5.3.');
                     continue;
                 } else {
-                    $io->error('PHP Interpreter could not be found on remote host.');
+                    $this->io->error('PHP Interpreter could not be found on remote host.');
                     continue;
                 }
             }
@@ -99,13 +95,13 @@ class DetectInstanceCommand extends TikiManagerCommand
             $access = new $access($instance);
             $discovery = new Discovery($instance, $access);
             $phpVersion = $discovery->detectPHPVersion();
-            $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
+            $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             ob_start(); // Prevent output to be displayed
             $app = $instance->getApplication();
 
             if (!$app) {
-                $io->writeln('<info>Blanck instance detected. Skipping...</info>');
+                $this->io->writeln('<info>Blanck instance detected. Skipping...</info>');
                 continue;
             }
 
@@ -114,7 +110,7 @@ class DetectInstanceCommand extends TikiManagerCommand
                 $instance->updateVersion();
             };
             ob_end_clean();
-            $io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');
+            $this->io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');
         }
     }
 }

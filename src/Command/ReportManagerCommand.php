@@ -21,13 +21,11 @@ class ReportManagerCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $output->writeln('<comment>Note: Only Tiki instances can enable reports.</comment>');
 
-        $io->newLine();
+        $this->io->newLine();
         CommandHelper::renderReportOptions($output);
-        $io->newLine();
+        $this->io->newLine();
 
         $helper = $this->getHelper('question');
         $question = new ChoiceQuestion(
@@ -72,7 +70,7 @@ class ReportManagerCommand extends TikiManagerCommand
         $allInstancesInfo = CommandHelper::getInstancesInfo($allInstances);
 
         if (isset($instancesInfo) && isset($allInstancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
             $question = CommandHelper::getQuestion('Which instances do you want to report on', null, '?');
@@ -82,7 +80,7 @@ class ReportManagerCommand extends TikiManagerCommand
 
             $selectedInstances = $helper->ask($input, $output, $question);
             foreach ($selectedInstances as $instance) {
-                $io->newLine();
+                $this->io->newLine();
                 $renderResult = CommandHelper::renderInstancesTable($output, $allInstancesInfo);
 
                 $question = CommandHelper::getQuestion('Which instances do you want to include in the report', null, '?');
@@ -114,7 +112,7 @@ class ReportManagerCommand extends TikiManagerCommand
         $instances = $report->getReportInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
             $question = CommandHelper::getQuestion('Which reports do you want to modify', null, '?');
@@ -127,7 +125,7 @@ class ReportManagerCommand extends TikiManagerCommand
                 $allReportCandidates = $report->getReportCandidates($instance);
                 $allReportCandidatesInfo = CommandHelper::getInstancesInfo($allReportCandidates);
                 if (isset($allReportCandidatesInfo)) {
-                    $io->newLine();
+                    $this->io->newLine();
                     $renderResult = CommandHelper::renderInstancesTable($output, $allReportCandidatesInfo);
 
                     $question = CommandHelper::getQuestion('Which instances do you want to include in the report', null, '?');
@@ -160,7 +158,7 @@ class ReportManagerCommand extends TikiManagerCommand
         $instances = $report->getReportInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
             $question = CommandHelper::getQuestion('Which reports do you want to modify', null, '?');
@@ -173,7 +171,7 @@ class ReportManagerCommand extends TikiManagerCommand
                 $allReportCandidates = $report->getReportCandidates($instance);
                 $allReportCandidatesInfo = CommandHelper::getInstancesInfo($allReportCandidates);
                 if (isset($allReportCandidatesInfo)) {
-                    $io->newLine();
+                    $this->io->newLine();
                     $renderResult = CommandHelper::renderInstancesTable($output, $allReportCandidatesInfo);
 
                     $question = CommandHelper::getQuestion('Which instances do you want to remove from the report', null, '?');

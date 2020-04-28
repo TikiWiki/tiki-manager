@@ -39,15 +39,13 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $helper = $this->getHelper('question');
         $status = $input->getArgument('status');
         $instancesOption = $input->getOption('instances');
         $instancesOption = ! empty($instancesOption) ? explode(',', $instancesOption) : [];
 
         if (! in_array($status, ['on', 'off'])) {
-            $io->error('Please insert a valid status [on, off].');
+            $this->io->error('Please insert a valid status [on, off].');
             return false;
         }
 
@@ -60,7 +58,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
 
         $validInstancesOptions = count(array_intersect($instancesOption, $validInstances)) == count($instancesOption);
         if (! $validInstancesOptions) {
-            $io->error('Please insert a valid instance id.');
+            $this->io->error('Please insert a valid instance id.');
             return false;
         }
 
@@ -80,11 +78,11 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
                 $instance->getApplication()->fixPermissions();
             }
             if (! empty($messages)) {
-                $io->success('Instances [' . implode(',', $messages) . '] maintenance "' . $status . '"');
+                $this->io->success('Instances [' . implode(',', $messages) . '] maintenance "' . $status . '"');
                 $result = 0;
             }
             if (! empty($errors)) {
-                $io->error('Instances [' . implode(',', $errors) . '] change maintenance "' . $status . '" failed');
+                $this->io->error('Instances [' . implode(',', $errors) . '] change maintenance "' . $status . '" failed');
                 $result = 1;
             }
         } else {
@@ -104,10 +102,10 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
                 $instance->getApplication()->fixPermissions();
 
                 if ($success) {
-                    $io->success('Instance ' . $instance->name . ' maintenance ' . $status);
+                    $this->io->success('Instance ' . $instance->name . ' maintenance ' . $status);
                     $result = 0;
                 } else {
-                    $io->error('Instance ' . $instance->name . ' maintenance ' . $status);
+                    $this->io->error('Instance ' . $instance->name . ' maintenance ' . $status);
                 }
             }
         }

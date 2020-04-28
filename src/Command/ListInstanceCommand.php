@@ -25,8 +25,6 @@ class ListInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances) ?? [];
 
@@ -36,7 +34,7 @@ class ListInstanceCommand extends TikiManagerCommand
         }
 
         if (!empty($instancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
         } else {
             $output->writeln('<comment>No instances available to list.</comment>');

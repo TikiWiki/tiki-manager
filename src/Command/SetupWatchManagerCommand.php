@@ -44,8 +44,6 @@ class SetupWatchManagerCommand extends TikiManagerCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $helper = $this->getHelper('question');
         $email = $input->getOption('email');
         if (empty($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -62,7 +60,7 @@ class SetupWatchManagerCommand extends TikiManagerCommand
 
         if (empty($input->getOption('time'))) {
             $helper = $this->getHelper('question');
-            $answer = $io->ask('What time should it run at?', '00:00', function ($answer) {
+            $answer = $this->io->ask('What time should it run at?', '00:00', function ($answer) {
                 return CommandHelper::validateTimeInput($answer);
             });
             $input->setOption('time', implode(':', $answer));
@@ -72,10 +70,10 @@ class SetupWatchManagerCommand extends TikiManagerCommand
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo) && empty($input->getOption('exclude'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
-            $io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
                 if (! empty($answer)) {
                     $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
@@ -90,9 +88,6 @@ class SetupWatchManagerCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
-        $helper = $this->getHelper('question');
         $email = $input->getOption('email');
 
         if (empty($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -124,9 +119,9 @@ class SetupWatchManagerCommand extends TikiManagerCommand
 
         file_put_contents($file = $_ENV['TEMP_FOLDER'] . '/crontab', `crontab -l` . $entry);
 
-        $io->newLine();
-        $io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');
-        $io->text($entry);
+        $this->io->newLine();
+        $this->io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');
+        $this->io->text($entry);
 
         `crontab $file`;
     }

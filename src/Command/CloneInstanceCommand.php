@@ -95,7 +95,6 @@ class CloneInstanceCommand extends TikiManagerCommand
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io = App::get('io');
             $helper = $this->getHelper('question');
 
             $clone = false;
@@ -112,7 +111,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $argument = $input->getArgument('mode');
 
             if ($direct && ($keepBackup || $useLastBackup)) {
-                $io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
+                $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
                 exit(-1);
             }
 
@@ -135,10 +134,10 @@ class CloneInstanceCommand extends TikiManagerCommand
             } elseif ($sourceOption = $input->getOption("source")) {
                 $selectedSourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
             } else {
-                $io->newLine();
+                $this->io->newLine();
                 $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
 
-                $io->newLine();
+                $this->io->newLine();
                 CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                 $question = CommandHelper::getQuestion('Select the source instance', null);
@@ -169,7 +168,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 } elseif ($targetOption = implode(',', $input->getOption("target"))) {
                     $selectedDestinationInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
                 } else {
-                    $io->newLine();
+                    $this->io->newLine();
                     $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                     $question = CommandHelper::getQuestion('Select the destination instance(s)', null);
@@ -186,7 +185,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                     } else {
                         $branch = $input->getOption('branch');
                         if (empty($branch)) {
-                            $branch = $this->getUpgradeVersion($selectedSourceInstances[0], $input, $output);
+                            $branch = $this->getUpgradeVersion($selectedSourceInstances[0]);
                             $input->setOption('branch', $branch);
                         }
                     }
@@ -217,10 +216,10 @@ class CloneInstanceCommand extends TikiManagerCommand
                             $output->writeln('<fg=cyan>Using last created backup of: ' . $selectedSourceInstances[0]->name . '</>');
                             $keepBackup = true;
                         } else {
-                            $standardProcess = $io->confirm('Backups not found for ' . $selectedSourceInstances[0]->name . ' instance. Continue with standard process?', true);
+                            $standardProcess = $this->io->confirm('Backups not found for ' . $selectedSourceInstances[0]->name . ' instance. Continue with standard process?', true);
 
                             if (!$standardProcess) {
-                                $io->error('Backups not found for instance ' . $selectedSourceInstances[0]->name);
+                                $this->io->error('Backups not found for instance ' . $selectedSourceInstances[0]->name);
                                 exit(-1);
                             }
                         }
@@ -233,7 +232,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 }
 
                 if (empty($archive)) {
-                    $io->error('Snapshot creation failed.');
+                    $this->io->error('Snapshot creation failed.');
                     exit(-1);
                 }
 
@@ -251,7 +250,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                         continue;
                     }
 
-                    $io->section('Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name);
+                    $this->io->section('Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name);
 
                     $destinationInstance->lock();
                     $destinationInstance->restore($selectedSourceInstances[0], $archive, true, false, $direct);
@@ -298,11 +297,9 @@ class CloneInstanceCommand extends TikiManagerCommand
      * Get version to update instance to
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @return string
      */
-    private function getUpgradeVersion($instance, $input, $output)
+    private function getUpgradeVersion($instance)
     {
         $found_incompatibilities = false;
         $instance->detectPHP();
@@ -324,15 +321,14 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
         }
 
-        $output->writeln('<fg=cyan>We detected PHP release: ' . CommandHelper::formatPhpVersion($instance->phpversion) . '</>');
+        $this->io->writeln('<fg=cyan>We detected PHP release: ' . CommandHelper::formatPhpVersion($instance->phpversion) . '</>');
 
         if ($found_incompatibilities) {
-            $output->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
-            $output->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
+            $this->io->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
+            $this->io->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
         }
 
-        $io = App::get('io');
-        $choice = $io->choice('Which version do you want to update to', $choices);
+        $choice = $this->io->choice('Which version do you want to update to', $choices);
         $choice = explode(':', $choice);
         return trim($choice[1]);
     }

@@ -45,17 +45,16 @@ class ApplyProfileCommand extends TikiManagerCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
         if (empty($input->getOption('instances'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
+            $this->io->newLine();
             $output->writeln('<comment>Note: Only Tiki instances can have profiles applied</comment>');
-            $io->newLine();
+            $this->io->newLine();
             $output->writeln('<comment>In case you want to apply the profile to more than one instance, please use a comma (,) between the values</comment>');
-            $answer = $io->ask('Which instance(s) do you want to apply the profile on', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance(s) do you want to apply the profile on', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
                 return implode(',', array_map(function ($elem) {
                     return $elem->getId();
@@ -66,7 +65,7 @@ class ApplyProfileCommand extends TikiManagerCommand
         }
 
         if (empty($input->getOption('profile'))) {
-            $profile = $io->ask('What is the name of the profile to be applied?', null, function ($answer) {
+            $profile = $this->io->ask('What is the name of the profile to be applied?', null, function ($answer) {
                 if (empty($answer)) {
                     throw new \RuntimeException('Profile name cannot be empty');
                 }
@@ -74,15 +73,13 @@ class ApplyProfileCommand extends TikiManagerCommand
             });
             $input->setOption('profile', $profile);
 
-            $repository = $io->ask('Which repository do what do use?', 'profiles.tiki.org');
+            $repository = $this->io->ask('Which repository do what do use?', 'profiles.tiki.org');
             $input->setOption('repository', $repository);
         }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $instances = CommandHelper::getInstances('tiki');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         $repository = $input->getOption('repository');
@@ -99,10 +96,10 @@ class ApplyProfileCommand extends TikiManagerCommand
         $selectedInstances = CommandHelper::validateInstanceSelection($input->getOption('instances'), $instances);
 
         foreach ($selectedInstances as $instance) {
-            $io->writeln(sprintf('<fg=cyan>Applying profile to %s ...</>', $instance->name));
+            $this->io->writeln(sprintf('<fg=cyan>Applying profile to %s ...</>', $instance->name));
             $instance->getApplication()->installProfile($repository, $profile);
             Archive::performArchiveCleanup($instance->id, $instance->name);
-            $io->writeln('<info>Profile applied.</info>');
+            $this->io->writeln('<info>Profile applied.</info>');
         }
 
         return 0;

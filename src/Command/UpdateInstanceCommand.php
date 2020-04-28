@@ -75,7 +75,6 @@ class UpdateInstanceCommand extends TikiManagerCommand
     {
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
-        $io = App::get('io');
 
         if (isset($instancesInfo)) {
             $helper = $this->getHelper('question');
@@ -110,11 +109,11 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 }
 
                 if (empty($instancesOption)) {
-                    $io->newLine();
+                    $this->io->newLine();
                     CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-                    $io->newLine();
-                    $io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
+                    $this->io->newLine();
+                    $this->io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
 
                     $question = CommandHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
                     $question->setValidator(function ($answer) use ($instances) {
@@ -142,7 +141,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $discovery = new Discovery($instance, $access);
                 $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
-                $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
+                $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
                 $instance->lock();
                 $instance->detectPHP();
@@ -162,7 +161,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                         }
                     }
 
-                    $io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
+                    $this->io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
 
                     $counter = 0;
                     $found_incompatibilities = false;
@@ -227,11 +226,11 @@ class UpdateInstanceCommand extends TikiManagerCommand
                                 CommandHelper::setInstanceSetupError($instance->id, $e);
                             }
                         } else {
-                            $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
+                            $this->io->writeln('<comment>No version selected. Nothing to perform.</comment>');
                         }
                     } else {
-                        $io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-                        $io->writeln('<comment>the latest version permitted by the server.</comment>');
+                        $this->io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
+                        $this->io->writeln('<comment>the latest version permitted by the server.</comment>');
                     }
                 } else {
                     $app_branch = $app->getBranch();
@@ -256,7 +255,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                     } else {
                         $message = 'Tiki Application branch is different than the one stored in the Tiki Manager db.';
                         $log[] = $message;
-                        $io->error($message);
+                        $this->io->error($message);
                     }
                 }
 
@@ -284,7 +283,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                     );
                 } catch (\RuntimeException $e) {
                     debug($e->getMessage());
-                    $io->error($e->getMessage());
+                    $this->io->error($e->getMessage());
                 }
             }
 
@@ -292,7 +291,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 return 1;
             }
         } else {
-            $io->writeln('<comment>No instances available to update/upgrade.</comment>');
+            $this->io->writeln('<comment>No instances available to update/upgrade.</comment>');
         }
     }
 }

@@ -20,15 +20,13 @@ class EditInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = App::get('io');
-
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io->newLine();
-            $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+            $this->io->newLine();
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $io->newLine();
+            $this->io->newLine();
             $output->writeln('<comment>In case you want to edit more than one instance, please use a comma (,) between the values</comment>');
 
             $helper = $this->getHelper('question');
