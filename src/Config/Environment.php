@@ -7,14 +7,16 @@
 namespace TikiManager\Config;
 
 use Phar;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Dotenv\Dotenv;
 use TikiManager\Libs\Helpers\PDOWrapper;
 use Symfony\Component\Console\Input\ArgvInput;
 use TikiManager\Libs\Requirements\Requirements;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use TikiManager\Style\Formatter\HtmlOutputFormatter;
 use TikiManager\Config\Exception\ConfigurationErrorException;
+use TikiManager\Style\TikiManagerStyle;
 
 /**
  * Class Environment
@@ -42,23 +44,25 @@ class Environment
     private function __construct()
     {
         $this->homeDirectory = dirname(dirname(__DIR__));
-        $this->setupIO();
+        $this->setIO();
         require_once $this->homeDirectory . '/src/Libs/Helpers/functions.php';
     }
 
-    private function setupIO()
+    public function setIO(InputInterface $input = null, OutputInterface $output = null)
     {
-        $input = new ArgvInput();
-        if (PHP_SAPI != 'cli') {
-            $input->setInteractive(false);
-            $output = new StreamOutput(fopen('php://output', 'w'));
-        } else {
-            $output = new ConsoleOutput();
+        if (!$input) {
+            $input = new ArgvInput();
+            if (PHP_SAPI != 'cli') {
+                $input->setInteractive(false);
+            }
+        }
+
+        if (!$output) {
+            $output = PHP_SAPI != 'cli' ? new StreamOutput(fopen('php://output', 'w')) : new ConsoleOutput();
         }
 
         $container = App::getContainer();
-        $container->set('io.input', $input);
-        $container->set('io.output', $output);
+        $container->set('io', new TikiManagerStyle($input, $output));
 
         $this->io = $container->get('io');
     }

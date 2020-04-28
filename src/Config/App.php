@@ -7,8 +7,6 @@
 
 namespace TikiManager\Config;
 
-use TikiManager\Style\TikiManagerStyle;
-use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class App
@@ -25,10 +23,10 @@ class App
 
         $container = new ContainerBuilder();
 
-        $container
-            ->register('io', TikiManagerStyle::class)
-            ->addArgument(new Reference('io.input'))
-            ->addArgument(new Reference('io.output'));
+//        // This service is registered in Environment::setIo()
+//        $container->register('io', TikiManagerStyle::class)
+//            ->addArgument(new Reference('io.input'))
+//            ->addArgument(new Reference('io.output'));
 
         return $container;
     }
