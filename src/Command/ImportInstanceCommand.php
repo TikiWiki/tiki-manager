@@ -183,7 +183,7 @@ class ImportInstanceCommand extends TikiManagerCommand
                 $mock_access = new $mock_access($mock_instance);
                 $mock_discovery = new Discovery($mock_instance, $mock_access);
 
-                CommandHelper::displayInfo($mock_discovery, $io);
+                CommandHelper::displayInfo($mock_discovery);
             }
 
             $folders = [

@@ -34,6 +34,6 @@ class ManagerInfoCommand extends TikiManagerCommand
         $discovery = new Discovery($instance, $access);
 
         $this->io->title('Tiki Manager Info');
-        CommandHelper::displayInfo($discovery, $io);
+        CommandHelper::displayInfo($discovery);
     }
 }
