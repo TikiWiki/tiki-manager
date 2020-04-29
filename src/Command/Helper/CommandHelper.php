@@ -649,10 +649,10 @@ class CommandHelper
     /**
      * Display Info
      * @param $discovery
-     * @param $io
      */
-    public static function displayInfo($discovery, $io)
+    public static function displayInfo($discovery)
     {
+        $io = App::get('io');
         $io->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
         $io->writeln('<info>PHP Version: ' . self::formatPhpVersion($discovery->detectPHPVersion()) . '</info>');
         $io->writeln('<info>PHP exec: ' . $discovery->detectPHP() . '</info>');
