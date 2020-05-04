@@ -16,79 +16,110 @@ class File
      * @param $file
      * @param $target
      * @return bool
+     *
+     * @uses extractTarBz2
+     * @uses extractTarGz
+     * @uses extractZip
+     * @uses extract7z
      */
     public static function unarchive($file, $target)
     {
-        $io = App::get('io');
+        preg_match('/(tar\.bz2|zip|7z|tar\.gz)$/', basename($file), $matches);
 
-        if (preg_match('/(.*)\.(tar\.bz2|zip|7z|tar\.gz)/', basename($file), $matches)) {
-            $name = $matches[1];
-            $ext = $matches[2];
-            switch ($ext) {
-                case 'tar.bz2':
-                    $command = sprintf('tar -xvjf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
-                    break;
-                case 'tar.gz':
-                    $command = sprintf('tar -xzf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
-                    $output = shell_exec($command);
-                    if ($output) {
-                        $io->error($output);
-                    } else {
-                        return true;
-                    }
-                    break;
-                case 'zip':
-                    if (!file_exists($target)) {
-                        mkdir($target);
-                    }
-                    shell_exec(sprintf('unzip -d "%s" "%s" 1> /dev/null ', $target, $file));
-                    $list = scandir($target);
-                    $extractedFolders = array_values(array_map(function ($d) use ($target) {
-                        return $target . DIRECTORY_SEPARATOR . $d;
-                    }, array_filter($list, function ($d) use ($target) {
-                        return $d !== '.' && $d !== '..' && is_dir($target . DIRECTORY_SEPARATOR . $d);
-                    })));
-                    if (empty($extractedFolders)) {
-                        return false;
-                    }
-                    $command = sprintf(
-                        'rsync -a "%s/" "%s-tmp" && rm -rf "%s" && rsync -a "%s-tmp/" "%s"  && rm -rf "%s-tmp"',
-                        $extractedFolders[0],
-                        $target,
-                        $target,
-                        $target,
-                        $target,
-                        $target
-                    );
-                    break;
-                case '7z':
-                    $command = sprintf(
-                        '7za x "%s" -o"%s" 1> /dev/null && mv "%s/%s"/* "%s" 1> /dev/null',
-                        $file,
-                        $target,
-                        $target,
-                        $name,
-                        $target
-                    );
-                    break;
-                default:
-                    return false;
-            }
-            if ($command) {
-                if (!file_exists($target)) {
-                    mkdir($target);
-                }
-                $output = shell_exec($command);
-                if ($output) {
-                    $io->error($output);
-                } else {
-                    return true;
-                }
-
-                return true;
-            }
+        if (empty($matches[1])) {
+            return false;
         }
-        return false;
+
+        $method = 'extract' . str_replace(' ', '', ucwords(str_replace('.', ' ', $matches[1])));
+
+        if (!method_exists(__CLASS__, $method)) {
+            return false;
+        }
+
+        return call_user_func([__CLASS__, $method], $file, $target);
+    }
+
+    protected static function extractTarBz2($file, $target)
+    {
+        $command = sprintf('tar -xvjf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
+
+        if (!file_exists($target)) {
+            mkdir($target);
+        }
+
+        $output = shell_exec($command);
+        if ($output) {
+            App::get('io')->error($output);
+        }
+
+        return true;
+    }
+
+    protected static function extractTarGz($file, $target)
+    {
+        $command = sprintf('tar -xzf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
+
+        if (!file_exists($target)) {
+            mkdir($target);
+        }
+
+        $output = shell_exec($command);
+        if ($output) {
+            App::get('io')->error('output');
+        }
+
+        return true;
+    }
+
+    protected static function extractZip($file, $target)
+    {
+        if (!file_exists($target)) {
+            mkdir($target);
+        }
+
+        shell_exec(sprintf('unzip -d "%s" "%s" 1> /dev/null ', $target, $file));
+
+        $extractedFolders = array_filter(glob($target. '/*'), 'is_dir');
+
+        if (empty($extractedFolders)) {
+            return false;
+        }
+
+        $command = sprintf(
+            'rsync -a "%s/" "%s-tmp" && rm -rf "%s" && rsync -a "%s-tmp/" "%s"  && rm -rf "%s-tmp"',
+            $extractedFolders[0],
+            $target,
+            $target,
+            $target,
+            $target,
+            $target
+        );
+
+        $output = shell_exec($command);
+        if ($output) {
+            App::get('io')->error('output');
+        }
+
+        return true;
+    }
+
+    protected static function extract7z($file, $target)
+    {
+        $name = substr($file, -3);
+        $command = sprintf(
+            '7za x "%s" -o"%s" 1> /dev/null && mv "%s/%s"/* "%s" 1> /dev/null',
+            $file,
+            $target,
+            $target,
+            $name,
+            $target
+        );
+
+        if (!file_exists($target)) {
+            mkdir($target);
+        }
+
+        return shell_exec($command);
     }
 
     /**
