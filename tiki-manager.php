@@ -11,10 +11,14 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
     exit(-1);
 }
 
-require __DIR__.'/vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
-use TikiManager\Config\Environment;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use TikiManager\Config\Environment;
+use TikiManager\Manager\UpdateManager;
 
 Environment::getInstance()->load();
 
@@ -64,5 +68,18 @@ $application->add(new \TikiManager\Command\ClearCacheCommand());
 $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
+
+// TODO move this to a custom src/Console/Application (like composer)
+$dispatcher = new EventDispatcher();
+$dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
+    //Check if there are an update available (offline)
+    $command = $event->getCommand();
+    $updater = UpdateManager::getUpdater();
+    if ($command->getName() != 'manager:update' && $updater->hasUpdateAvailable()) {
+        $io = \TikiManager\Config\App::get('io');
+        $io->warning('A new version is available: ' . $updater->getRemoteVersion());
+    }
+});
+$application->setDispatcher($dispatcher);
 
 $application->run();
