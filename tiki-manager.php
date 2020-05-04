@@ -48,6 +48,7 @@ $application->add(new \TikiManager\Command\ImportInstanceCommand());
 $application->add(new \TikiManager\Command\ApplyProfileCommand());
 
 $application->add(new \TikiManager\Command\ManagerInfoCommand());
+$application->add(new \TikiManager\Command\ManagerUpdateCommand());
 $application->add(new \TikiManager\Command\CheckRequirementsCommand());
 $application->add(new \TikiManager\Command\ResetManagerCommand());
 $application->add(new \TikiManager\Command\ReportManagerCommand());
