@@ -1,6 +1,7 @@
 <?php
 
 use TikiManager\Config\App;
+use TikiManager\Manager\UpdateManager;
 
 if (! function_exists('readline')) {
     /**
@@ -32,7 +33,7 @@ function color($string, $color)
         'pink' => '1;35',
     ];
 
-    if (! isset($avail[$color])) {
+    if (!isset($avail[$color])) {
         return $string;
     }
 
@@ -214,9 +215,9 @@ function secure_trim_data($should_set = false)
             $message = 'Your Tiki Manager data is unsafe!'.PHP_EOL;
             $message .= sprintf(
                 '  Currently it is: d%s%s%s	%s:%s	%s',
-                $modes[ ($cur_mode >> 6) & 0b111 ],
-                $modes[ ($cur_mode >> 3) & 0b111 ],
-                $modes[ $cur_mode        & 0b111 ],
+                $modes[($cur_mode >> 6) & 0b111],
+                $modes[($cur_mode >> 3) & 0b111],
+                $modes[$cur_mode & 0b111],
                 $owner_name,
                 $group_name,
                 $_ENV['TRIM_DATA']
@@ -280,7 +281,7 @@ function query($query, $params = null)
         if (is_null($value)) {
             $query = str_replace($key, 'NULL', $query);
         } elseif (is_int($value)) {
-            $query = str_replace($key, (int) $value, $query);
+            $query = str_replace($key, (int)$value, $query);
         } elseif (is_array($value)) {
             error("Unsupported query parameter type: array\n");
             printf("Query\n\"%s\"\nParameters:\n", $query);
@@ -326,7 +327,7 @@ function findDigits($selection)
 
 function getEntries($list, $selection)
 {
-    if (! is_array($selection)) {
+    if (!is_array($selection)) {
         $selection = findDigits($selection);
     }
 
@@ -370,7 +371,7 @@ function printInstances(array $instances)
     foreach ($instances as $key => $i) {
         $name = substr($i->name, 0, 18);
         $weburl = substr($i->weburl, 0, 38);
-        $branch = isset($i->branch)? $i->branch : '';
+        $branch = isset($i->branch) ? $i->branch : '';
 
         echo "[$i->id] " . str_pad($name, 20) . str_pad($weburl, 40) . str_pad($i->contact, 30) . str_pad($branch, 20) . "\n";
     }
@@ -389,7 +390,7 @@ function printInstances(array $instances)
 
 function promptUser($prompt, $default = false, $values = [])
 {
-    if (! $_ENV['INTERACTIVE']) {
+    if (!$_ENV['INTERACTIVE']) {
         return $default;
     }
 
@@ -402,7 +403,7 @@ function promptUser($prompt, $default = false, $values = [])
 
     do {
         $answer = trim(readline($prompt . ' : '));
-        if (! strlen($answer)) {
+        if (!strlen($answer)) {
             $answer = $default;
         }
 
@@ -433,11 +434,11 @@ function php()
     // Check different versions
     $valid = [];
     foreach ($phps as $interpreter) {
-        if (! in_array(basename($interpreter), ['php', 'php5'])) {
+        if (!in_array(basename($interpreter), ['php', 'php5'])) {
             continue;
         }
 
-        if (! @is_executable($interpreter)) {
+        if (!@is_executable($interpreter)) {
             continue;
         }
 
