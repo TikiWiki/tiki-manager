@@ -9,6 +9,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Manager\Update\Phar;
 use TikiManager\Manager\UpdateManager;
 use TikiManager\Tests\Helpers\Tests;
+use ZipArchive;
 use function TikiManager\Tests\Helpers\Tests;
 
 /**
@@ -184,6 +185,19 @@ class PharTest extends TestCase
         $fs = new Filesystem();
         $currentPhar = static::$testPath . '/tiki-manager.phar';
         $fs->appendToFile($currentPhar, random_bytes(10));
+
+        $zipPath = Environment::get('TEMP_FOLDER') . '/test.phar.zip';
+        $_ENV['UPDATE_PHAR_URL'] = $zipPath;
+
+        // The artifact contains a folder build.
+        $zip = new ZipArchive;
+        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE)
+        {
+            $zip->addFile($currentPhar, 'build/tiki-manager.phar');
+            $zip->close();
+        }
+
+        $this->assertTrue(file_exists($zipPath));
 
         $updated = new Phar($currentPhar);
         $path = $updated->downloadPhar();

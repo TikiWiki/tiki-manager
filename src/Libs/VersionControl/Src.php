@@ -4,10 +4,12 @@ namespace TikiManager\Libs\VersionControl;
 
 use TikiManager\Application\Restore;
 use TikiManager\Application\Version;
-use TikiManager\Libs\Helpers\File;
+use TikiManager\Config\Environment;
+use TikiManager\Traits\FileArchive;
 
 class Src extends VersionControlSystem
 {
+    use FileArchive;
 
     public static $pattern = '/tiki-(.*)\.(tar\.bz2|zip|7z|tar\.gz)/';
 
@@ -58,7 +60,7 @@ class Src extends VersionControlSystem
      * Clones a specific branch within a repository
      * @param string $branchName
      * @param string $targetFolder
-     * @return mixed
+     * @return void|false
      */
     public function clone($branchName, $targetFolder)
     {
@@ -67,7 +69,7 @@ class Src extends VersionControlSystem
             return false;
         }
         //extract file
-        File::unarchive($_ENV['TRIM_SRC_FOLDER'] . DIRECTORY_SEPARATOR . $files[0], $targetFolder);
+        $this->extract(Environment::get('TRIM_SRC_FOLDER') . DIRECTORY_SEPARATOR . $files[0], $targetFolder);
     }
 
     /**

@@ -167,18 +167,16 @@ class SrcTest extends TestCase
         $this->assertContains('Version: ' . $version['version'], $info);
         $this->assertContains('Date: ' . date(\DateTime::COOKIE, strtotime($version['date'])), $info);
     }
-
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Error extracting files
-     */
+    
     public function testExtractInvalidZip()
     {
         $fs = new Filesystem();
         $file = static::$testPath . DIRECTORY_SEPARATOR . 'test.zip';
         $fs->appendToFile($file, random_bytes(10));
 
-        Tests::invokeMethod($this->srcUpdate, 'extractZip', [$file]);
+        $result = $this->srcUpdate->extract($file, static::$testPath);
+
+        $this->assertFalse($result);
     }
 
     /**

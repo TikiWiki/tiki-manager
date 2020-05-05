@@ -5,11 +5,11 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
-namespace TikiManager\Libs\Helpers;
+namespace TikiManager\Traits;
 
 use TikiManager\Config\App;
 
-class File
+trait FileArchive
 {
 
     /**
@@ -22,12 +22,16 @@ class File
      * @uses extractZip
      * @uses extract7z
      */
-    public static function unarchive($file, $target)
+    public function extract($file, $target)
     {
         preg_match('/(tar\.bz2|zip|7z|tar\.gz)$/', basename($file), $matches);
 
         if (empty($matches[1])) {
             return false;
+        }
+
+        if (!file_exists($target)) {
+            mkdir($target);
         }
 
         $method = 'extract' . str_replace(' ', '', ucwords(str_replace('.', ' ', $matches[1])));
@@ -39,13 +43,9 @@ class File
         return call_user_func([__CLASS__, $method], $file, $target);
     }
 
-    protected static function extractTarBz2($file, $target)
+    protected function extractTarBz2($file, $target)
     {
         $command = sprintf('tar -xvjf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
-
-        if (!file_exists($target)) {
-            mkdir($target);
-        }
 
         $output = shell_exec($command);
         if ($output) {
@@ -55,13 +55,9 @@ class File
         return true;
     }
 
-    protected static function extractTarGz($file, $target)
+    protected function extractTarGz($file, $target)
     {
         $command = sprintf('tar -xzf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
-
-        if (!file_exists($target)) {
-            mkdir($target);
-        }
 
         $output = shell_exec($command);
         if ($output) {
@@ -71,15 +67,11 @@ class File
         return true;
     }
 
-    protected static function extractZip($file, $target)
+    protected function extractZip($file, $target)
     {
-        if (!file_exists($target)) {
-            mkdir($target);
-        }
-
         shell_exec(sprintf('unzip -d "%s" "%s" 1> /dev/null ', $target, $file));
 
-        $extractedFolders = array_filter(glob($target. '/*'), 'is_dir');
+        $extractedFolders = array_filter(glob($target . '/*'), 'is_dir');
 
         if (empty($extractedFolders)) {
             return false;
@@ -103,7 +95,7 @@ class File
         return true;
     }
 
-    protected static function extract7z($file, $target)
+    protected function extract7z($file, $target)
     {
         $name = substr($file, -3);
         $command = sprintf(
@@ -115,34 +107,6 @@ class File
             $target
         );
 
-        if (!file_exists($target)) {
-            mkdir($target);
-        }
-
         return shell_exec($command);
-    }
-
-    /**
-     * @param $url
-     * @param $target
-     * @return string|false The $targetPath if successful, false otherwise
-     * @throws \Exception
-     */
-    public static function download($url, $target)
-    {
-        $previousException = null;
-
-        try {
-            $downloadedFileContents = file_get_contents($url);
-        } catch (\Exception $e) {
-            $downloadedFileContents = false;
-            $previousException = $e;
-        }
-
-        if ($downloadedFileContents === false) {
-            throw new \Exception('Failed to download file at: ' . $url, 0, $previousException);
-        }
-
-        return file_put_contents($target, $downloadedFileContents) ? $target : false;
     }
 }
