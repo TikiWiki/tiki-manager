@@ -20,14 +20,12 @@ class Git extends UpdateManager
 
     public function __construct($targetFolder)
     {
-        if ($targetFolder instanceof Repository) {
-            $this->repository = $targetFolder;
-            $targetFolder = $targetFolder->getWorkingDir();
-        } else {
-            $this->repository = new Repository($targetFolder);
+        if (!$targetFolder instanceof Repository) {
+            $targetFolder = new Repository($targetFolder);
         }
 
-        parent::__construct($targetFolder);
+        $this->repository = $targetFolder;
+        parent::__construct($targetFolder->getWorkingDir());
     }
 
     /**
@@ -72,7 +70,9 @@ class Git extends UpdateManager
     public function info()
     {
         $info = parent::info();
-        return sprintf("%s\nBranch: %s", $info, $this->getBranchName());
+        $info .= sprintf("\nBranch: %s", $this->getBranchName() ?? '');
+
+        return $info;
     }
 
     public function getType()
@@ -86,13 +86,13 @@ class Git extends UpdateManager
         $this->fetch();
         $branch = $branch ?? $this->getBranchName();
 
-        $remotes = $this->repository->run('remote');
-
-        if (empty($remotes)) {
+        if (empty($branch)) {
             return false;
         }
 
-        $remotes = explode("\n", $remotes);
+        $remotes = $this->repository->run('remote');
+        $remotes = trim($remotes) ? explode("\n", trim($remotes)): [];
+
         foreach ($remotes as $remote) {
             $name = $remote . '/' . $branch;
             try {

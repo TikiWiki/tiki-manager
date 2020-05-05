@@ -39,18 +39,15 @@ abstract class UpdateManager
      */
     public static function getUpdater($targetFolder = null)
     {
-        if (PhpPhar::running(false) || substr($targetFolder, -4) == 'phar') {
+        if (PhpPhar::running(false) ||
+            (is_string($targetFolder) && substr($targetFolder, -4) == 'phar')) {
             return new Phar();
         }
 
-        $basePath = $targetFolder ?? Environment::get('TRIM_ROOT');
+        $basePath = $targetFolder ?? Environment::get('TRIM_ROOT', dirname(__FILE__, 3));
         $gitPath = $basePath . DIRECTORY_SEPARATOR . '.git';
 
-        if (file_exists($gitPath) && is_dir($gitPath)) {
-            return new Git($basePath);
-        }
-
-        return new Src($basePath);
+        return is_dir($gitPath) ? new Git($basePath) : new Src($basePath);
     }
 
     protected function getApiBaseUrl()
@@ -72,9 +69,6 @@ abstract class UpdateManager
 
         if (!$remote) {
             $updateVersion = $this->getCacheVersionInfo();
-            if (empty($updateVersion)) {
-                return false;
-            }
         } else {
             $updateVersion = $this->getRemoteVersion();
             $this->setCacheVersionInfo($updateVersion);
@@ -91,15 +85,14 @@ abstract class UpdateManager
     }
 
     /**
-     * Update tiki manager remote
-     * @return mixed
+     * Update tiki manager
      */
     abstract public function update();
 
 
     /**
      * return the local hash version
-     * @return array versionStatus
+     * @return array|false versionStatus
      */
     abstract public function getCurrentVersion();
 

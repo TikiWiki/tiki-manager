@@ -50,18 +50,18 @@ class Phar extends UpdateManager
         }
 
         $fileZip = $file . '.zip';
-        $fs = new Filesystem();
-        $fs->rename($file, $fileZip, true);
+        $filesystem = new Filesystem();
+        $filesystem->rename($file, $fileZip, true);
 
         $extractedFolder = $this->extractZip($fileZip);
         $file = $extractedFolder . '/tiki-manager.phar';
 
-        if ($fs->exists($file)) {
-            $fs->rename($file, $targetFile);
+        if ($filesystem->exists($file)) {
+            $filesystem->rename($file, $targetFile);
         }
 
-        $fs->remove($fileZip);
-        $fs->remove($extractedFolder);
+        $filesystem->remove($fileZip);
+        $filesystem->remove($extractedFolder);
 
         return file_exists($targetFile) ? $targetFile : false;
     }
@@ -115,8 +115,7 @@ class Phar extends UpdateManager
     }
 
     /**
-     * return the local hash version
-     * @return string versionStatus
+     * @inheritDoc
      */
     public function getCurrentVersion()
     {

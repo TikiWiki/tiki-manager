@@ -50,17 +50,17 @@ class Src extends UpdateManager
      */
     public function update()
     {
-        $fs = new Filesystem();
+        $filesystem = new Filesystem();
 
         if (!$zip = $this->downloadSrc()) {
             throw new \Exception('Failed to retrieve archive file from ' . $this->downloadUrl);
         }
 
         $extractedPath = $this->extractZip($zip);
-        $fs->remove($zip);
+        $filesystem->remove($zip);
 
-        $fs->mirror($extractedPath, $this->targetFolder);
-        $fs->remove($extractedPath);
+        $filesystem->mirror($extractedPath, $this->targetFolder);
+        $filesystem->remove($extractedPath);
 
         $this->setCurrentVersion($this->getRemoteVersion());
         $this->runComposerInstall();

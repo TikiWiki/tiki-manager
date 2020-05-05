@@ -1,12 +1,10 @@
 <?php
 
-
 namespace TikiManager\Libs\VersionControl;
 
 use TikiManager\Application\Restore;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Helpers\File;
-use TikiManager\Libs\Host\Command;
 
 class Src extends VersionControlSystem
 {
@@ -14,7 +12,6 @@ class Src extends VersionControlSystem
     public static $pattern = '/tiki-(.*)\.(tar\.bz2|zip|7z|tar\.gz)/';
 
     protected $command = 'src';
-
 
     /**
      * Get available branches within the repository

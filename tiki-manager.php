@@ -69,7 +69,7 @@ $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
 
-// TODO move this to a custom src/Console/Application (like composer)
+// this should be moved to a custom src/Console/Application (like composer)
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
     //Check if there are an update available (offline)
@@ -77,7 +77,7 @@ $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $
     $updater = UpdateManager::getUpdater();
     if ($command->getName() != 'manager:update' && $updater->hasUpdateAvailable()) {
         $io = \TikiManager\Config\App::get('io');
-        $io->warning('A new version is available: ' . $updater->getRemoteVersion());
+        $io->warning('A new version is available. Run `manager:update` to update.');
     }
 });
 $application->setDispatcher($dispatcher);

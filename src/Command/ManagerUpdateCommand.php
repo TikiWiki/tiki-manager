@@ -36,43 +36,36 @@ class ManagerUpdateCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $checkOption = $input->getOption('check');
         $updater = UpdateManager::getUpdater();
+
+        $update = $input->getOption('yes');
+        $check = $input->getOption('check');
 
         if (!$updater->hasVersion()) {
             $this->io->error('Tiki Manager is not versioned. Please update it manually.');
             return 1;
         }
 
-        $this->io->title($updater->info());
+        $this->io->info($updater->info());
 
-        if (!$updater->hasUpdateAvailable(true)) {
-            $this->io->success('Tiki Manager is running the latest version.');
-            return 0;
+        if ($updater->hasUpdateAvailable(true)) {
+            $this->io->info('New version available.');
+
+            $update = !$check ? false : ($update ?: $this->io->confirm('Do you want to update?', true));
         }
 
-        $this->io->block(
-            'New version available, run manager:update to update.',
-            'INFO',
-            'fg=black;bg=yellow',
-            ' ',
-            true
-        );
-
-        if ($checkOption ||
-            !($input->getOption('yes'))
-            && $input->isInteractive()
-            && !$this->io->confirm('Do you want to update?', true)) {
-            return 0;
+        if ($update) {
+            try {
+                $updater->update();
+                $this->io->info('Tiki Manager updated.');
+                $this->io->info($updater->info());
+            } catch (\Exception $e) {
+                $this->io->error($e->getMessage());
+                return 1;
+            }
         }
 
-        try {
-            $updater->update();
-            $this->io->success('Tiki Manager updated');
-        } catch (\Exception $e) {
-            $this->io->error($e->getMessage());
-            return 1;
-        }
+        $this->io->success('Tiki Manager is running the latest version.');
 
         return 0;
     }
