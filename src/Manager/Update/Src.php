@@ -10,11 +10,15 @@ namespace TikiManager\Manager\Update;
 use Exception;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Config\Environment;
-use TikiManager\Libs\Helpers\File;
 use TikiManager\Manager\UpdateManager;
+use TikiManager\Traits\FileArchive;
+use TikiManager\Traits\FileDownload;
 
 class Src extends UpdateManager
 {
+    use FileArchive;
+    use FileDownload;
+
     protected $downloadUrl;
 
     public function __construct($targetFolder)
@@ -27,21 +31,14 @@ class Src extends UpdateManager
         );
     }
 
+    /**
+     * @return bool|false|string
+     * @throws Exception
+     */
     public function downloadSrc()
     {
         $zipFile = Environment::get('TEMP_FOLDER') . '/tiki-manager-master.zip';
-        return  File::download($this->downloadUrl, $zipFile);
-    }
-
-    protected function extractZip($file)
-    {
-        $unZippedFolder = Environment::get('TEMP_FOLDER') . '/tiki-manager-master';
-
-        if (!File::unarchive($file, $unZippedFolder) || !file_exists($unZippedFolder . '/tiki-manager')) {
-            throw new \Exception('Error extracting files.');
-        }
-
-        return $unZippedFolder;
+        return  $this->download($this->downloadUrl, $zipFile);
     }
 
     /**
@@ -50,17 +47,20 @@ class Src extends UpdateManager
      */
     public function update()
     {
-        $filesystem = new Filesystem();
-
         if (!$zip = $this->downloadSrc()) {
             throw new \Exception('Failed to retrieve archive file from ' . $this->downloadUrl);
         }
 
-        $extractedPath = $this->extractZip($zip);
-        $filesystem->remove($zip);
+        $unZippedFolder = Environment::get('TEMP_FOLDER') . '/tiki-manager-master';
 
-        $filesystem->mirror($extractedPath, $this->targetFolder);
-        $filesystem->remove($extractedPath);
+        if (!$this->extract($zip, $unZippedFolder) || !file_exists($unZippedFolder . '/tiki-manager')) {
+            throw new \Exception('Error extracting files.');
+        }
+
+        $filesystem = new Filesystem();
+        $filesystem->remove($zip);
+        $filesystem->mirror($unZippedFolder, $this->targetFolder);
+        $filesystem->remove($unZippedFolder);
 
         $this->setCurrentVersion($this->getRemoteVersion());
         $this->runComposerInstall();

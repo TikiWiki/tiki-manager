@@ -9,12 +9,16 @@ namespace TikiManager\Manager\Update;
 
 use Phar as PhpPhar;
 use TikiManager\Config\Environment;
-use TikiManager\Libs\Helpers\File;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Manager\UpdateManager;
+use TikiManager\Traits\FileArchive;
+use TikiManager\Traits\FileDownload;
 
 class Phar extends UpdateManager
 {
+    use FileArchive;
+    use FileDownload;
+
     protected $phar;
     protected $pharPath;
 
@@ -42,7 +46,7 @@ class Phar extends UpdateManager
     public function downloadPhar()
     {
         $targetFile = Environment::get('TEMP_FOLDER') . '/tiki-manager.phar';
-        $file = File::download($this->updateUrl, $targetFile);
+        $file = $this->download($this->updateUrl, $targetFile);
 
         if (mime_content_type($file) == 'application/octet-stream' &&
             $this->isValidPhar($file)) {
@@ -53,7 +57,12 @@ class Phar extends UpdateManager
         $filesystem = new Filesystem();
         $filesystem->rename($file, $fileZip, true);
 
-        $extractedFolder = $this->extractZip($fileZip);
+        $extractedFolder = Environment::get('TEMP_FOLDER') . '/build';
+
+        if (!$this->extract($fileZip, $extractedFolder)) {
+            throw new \Exception('Error extracting files.');
+        };
+
         $file = $extractedFolder . '/tiki-manager.phar';
 
         if ($filesystem->exists($file)) {
@@ -64,17 +73,6 @@ class Phar extends UpdateManager
         $filesystem->remove($extractedFolder);
 
         return file_exists($targetFile) ? $targetFile : false;
-    }
-
-    protected function extractZip($file)
-    {
-        $unZippedFolder = Environment::get('TEMP_FOLDER') . '/build';
-
-        if (!File::unarchive($file, $unZippedFolder)) {
-            throw new \Exception('Error extracting files.');
-        }
-
-        return $unZippedFolder;
     }
 
     /**
