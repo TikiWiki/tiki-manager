@@ -7,10 +7,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
+use TikiManager\Style\TikiManagerStyle;
 
 abstract class TikiManagerCommand extends Command
 {
 
+    /** @var TikiManagerStyle */
     protected $io;
 
     /**

@@ -21,7 +21,7 @@ class ArchiveTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Libs\Helpers\Archive::performArchiveCleanup
+     * @covers \TikiManager\Libs\Helpers\Archive::cleanup
      */
     public function testArchiveCleanUp()
     {

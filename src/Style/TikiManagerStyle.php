@@ -8,8 +8,6 @@
 namespace TikiManager\Style;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class TikiManagerStyle extends SymfonyStyle
 {
