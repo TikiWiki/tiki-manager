@@ -92,7 +92,7 @@ class Phar extends UpdateManager
      * @inheritDoc
      * @throws \Exception
      */
-    public function update($force = false)
+    public function update()
     {
         $filesystem = new Filesystem();
 

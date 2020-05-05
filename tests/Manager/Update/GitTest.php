@@ -141,7 +141,7 @@ class GitTest extends TestCase
         // This will load with fresh references
         $updater = new Git(static::$testRepoDir);
 
-        $this->assertTrue($updater->hasUpdateAvailable());
+        $this->assertTrue($updater->hasUpdateAvailable(true));
     }
 
     public function testUpdate()

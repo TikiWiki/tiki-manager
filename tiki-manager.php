@@ -75,7 +75,7 @@ $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $
     //Check if there are an update available (offline)
     $command = $event->getCommand();
     $updater = UpdateManager::getUpdater();
-    if ($command->getName() != 'manager:update' && $updater->hasUpdateAvailable()) {
+    if ($command->getName() != 'manager:update' && $updater->hasUpdateAvailable(false)) {
         $io = \TikiManager\Config\App::get('io');
         $io->warning('A new version is available. Run `manager:update` to update.');
     }

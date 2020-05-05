@@ -63,11 +63,11 @@ abstract class UpdateManager
         return boolval($this->getCurrentVersion());
     }
 
-    public function hasUpdateAvailable($remote = false)
+    public function hasUpdateAvailable($checkRemote)
     {
         $currentVersion = $this->getCurrentVersion();
 
-        if (!$remote) {
+        if (!$checkRemote) {
             $updateVersion = $this->getCacheVersionInfo();
         } else {
             $updateVersion = $this->getRemoteVersion();
