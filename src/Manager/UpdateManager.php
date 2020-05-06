@@ -35,7 +35,7 @@ abstract class UpdateManager
     /**
      * Gets Tiki Manager updater
      * @param null $targetFolder
-     * @return UpdateManager
+     * @return Git|Phar|Src
      */
     public static function getUpdater($targetFolder = null)
     {
@@ -142,20 +142,25 @@ abstract class UpdateManager
 
     protected function runComposerInstall()
     {
-        $composerPath = Environment::get('COMPOSER_PATH');
-        $composer = $composerPath == 'composer' ? $composerPath : 'php ' . $composerPath;
-
-        $process = new Process([$composer,
+        $composer = Environment::get('COMPOSER_PATH');
+        $command = [$composer,
             'install',
             '-d',
             $this->targetFolder,
             '--no-interaction',
             '--prefer-source'
-        ]);
+        ];
+
+        if ($composer != 'composer') {
+            array_unshift($command, PHP_BINARY);
+        }
+
+        $process = new Process($command);
         $process->setTimeout(300);
         $process->run();
 
         if (!$process->isSuccessful()) {
+            debug($process->getErrorOutput());
             throw new Exception('Unable to install composer dependencies. Please run composer install manually');
         }
     }

@@ -48,24 +48,24 @@ class ManagerUpdateCommand extends TikiManagerCommand
 
         $this->io->info($updater->info());
 
-        if ($updater->hasUpdateAvailable(true)) {
-            $this->io->info('New version available.');
-
-            $update = !$check ? false : ($update ?: $this->io->confirm('Do you want to update?', true));
+        if (!$updater->hasUpdateAvailable(true)) {
+            $this->io->success('Tiki Manager is running the latest version.');
+            return 0;
         }
+
+        $this->io->warning('New version available.');
+        $update = $check ? false : ($update ?: $this->io->confirm('Do you want to update?', true));
 
         if ($update) {
             try {
                 $updater->update();
-                $this->io->info('Tiki Manager updated.');
+                $this->io->success('Tiki Manager updated.');
                 $this->io->info($updater->info());
             } catch (\Exception $e) {
                 $this->io->error($e->getMessage());
                 return 1;
             }
         }
-
-        $this->io->success('Tiki Manager is running the latest version.');
 
         return 0;
     }
