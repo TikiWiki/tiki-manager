@@ -857,7 +857,33 @@ SQL;
             $access->moveFile('.htaccess.bak', '.htaccess');
         }
 
+        if (!$access->fileExists('.htaccess')) {
+            $this->configureHtaccess();
+        }
+
         return !$this->isLocked();
+    }
+
+
+    public function configureHtaccess()
+    {
+        $access = $this->getBestAccess('scripting');
+
+        if (!$access->fileExists('_htaccess')) {
+            return false;
+        }
+
+        // Try symlink
+        if (!$access->fileExists('.htaccess') && method_exists($access, 'shellExec')) {
+            $access->shellExec('ln -s _htaccess .htaccess');
+        }
+
+        // Copy
+        if (!$access->fileExists('.htaccess')) {
+            $access->copy('_htaccess', '.htaccess');
+        }
+
+        return $access->fileExists('.htaccess');
     }
 
     public function __get($name)
