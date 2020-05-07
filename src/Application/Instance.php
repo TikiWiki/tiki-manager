@@ -23,7 +23,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -35,7 +35,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -50,7 +50,7 @@ SQL;
 
     const SQL_SELECT_UPDATABLE_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -84,7 +84,7 @@ SQL;
 
     const SQL_SELECT_LATEST_VERSION = <<<SQL
 SELECT
-    version_id id, instance_id, type, branch, date, revision
+    version_id id, instance_id, type, branch, date, revision, action
 FROM
     version
 WHERE
@@ -237,6 +237,9 @@ SQL;
     public $backup_group;
     public $backup_perm;
     public $selection;
+    public $last_action;
+    public $last_action_date;
+    public $revision;
 
     protected $databaseConfig;
 
@@ -748,8 +751,11 @@ SQL;
             $version->type = is_object($oldVersion) ? $oldVersion->type : null;
             $version->branch = is_object($oldVersion) ? $oldVersion->branch : null;
             $version->date = is_object($oldVersion) ? $oldVersion->date : null;
-            $version->save();
         }
+
+        // Update version with the correct action
+        $version->action = $clone ? 'clone' : 'restore';
+        $version->save();
 
         if ($this->vcs_type == 'svn') {
             /** @var Svn $svn */

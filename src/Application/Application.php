@@ -110,15 +110,14 @@ abstract class Application
             $new->type = $current->type;
             $new->branch = $current->branch;
             $new->date = date('Y-m-d');
-            $new->save();
         } else {
             // Provided version, copy properties
             $new = $instance->createVersion();
             $new->type = $version->type;
             $new->branch = $version->branch;
             $new->date = $version->date;
-            $new->save();
         }
+        $new->action = 'update';
 
         $checksumCheck = isset($options['checksum-check']) && is_bool($options['checksum-check']) ?
             $options['checksum-check'] : false;
@@ -133,6 +132,10 @@ abstract class Application
         }
 
         $this->performActualUpdate($new, $options);
+
+        //Update new version with revision
+        $new->revision = $this->getRevision();
+        $new->save();
 
         if (! $checksumCheck) {
             return [
@@ -189,6 +192,8 @@ abstract class Application
         $new->type = $version->type;
         $new->branch = $version->branch;
         $new->date = $version->date;
+        $new->revision = $instance->getRevision();
+        $new->action = 'upgrade';
         $new->save();
 
         if (isset($options['checksum-check']) && $options['checksum-check']) {

@@ -78,12 +78,9 @@ while (key($all) != $instance->id) {
                         <td><?php echo html(decoct($instance->getProp('backup_perm'))) ?></td>
                     </tr>
                     <tr>
-                        <th scope="row">Last update</th>
+                        <th scope="row">Last action</th>
                         <td>
-                            <?php echo html($version->date) ?>
-                            <a href="#" class="update" title="Update now">
-                                <span class="fas fa-file-import"></span>
-                            </a>
+                            <?php echo html(preg_replace('/^( on )/', '', "{$version->action} on {$version->date}")) ?>
                         </td>
                     </tr>
                     <tr>
