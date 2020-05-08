@@ -13,9 +13,9 @@ class Version
     const SQL_INSERT_VERSION = <<<SQL
         INSERT OR REPLACE INTO
             version
-            (version_id, instance_id, type, branch, revision, date)
+            (version_id, instance_id, type, branch, revision, date, action)
         VALUES
-            (:id, :instance, :type, :branch, :revision, :date)
+            (:id, :instance, :type, :branch, :revision, :date, :action)
         ;
 SQL;
 
@@ -25,7 +25,7 @@ SQL;
     public $branch;
     public $revision;
     public $date;
-    public $audit;
+    public $action;
 
     public function __construct($instance = null)
     {
@@ -51,6 +51,7 @@ SQL;
             ':branch' => $this->branch,
             ':revision' => $this->revision,
             ':date' => $this->date,
+            ':action' => $this->action ?: 'create',
         ];
 
         query(self::SQL_INSERT_VERSION, $params);

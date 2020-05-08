@@ -430,6 +430,12 @@ class Environment
                     UPDATE info SET value = '7' WHERE name = 'version';
                 ");
             // no break
+            case 7:
+                $db->exec("
+                    ALTER TABLE version ADD COLUMN action VARCHAR(25);
+                    UPDATE info SET value = '8' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

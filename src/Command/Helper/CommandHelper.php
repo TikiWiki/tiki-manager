@@ -45,7 +45,10 @@ class CommandHelper
                 'name' => $instance->name,
                 'url' => $instance->weburl,
                 'email' => $instance->contact,
-                'branch' => $instance->branch
+                'branch' => $instance->branch,
+                'revision' => $instance->revision,
+                'last_action' => $instance->last_action,
+                'last_action_date' => $instance->last_action_date
             ];
         }
 
@@ -71,7 +74,10 @@ class CommandHelper
             'Name',
             'Web URL',
             'Contact',
-            'Branch'
+            'Branch',
+            'Revision',
+            'Last Action',
+            'Action Date'
         ];
 
         $table = new Table($output);
