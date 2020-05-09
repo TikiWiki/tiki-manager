@@ -6,8 +6,10 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Access\FTP;
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Src;
@@ -763,10 +765,15 @@ TXT;
     public function runDatabaseUpdate()
     {
         $access = $this->instance->getBestAccess('scripting');
-        if ($this->instance->hasConsole()) {
-            $access->shellExec([
-                "{$this->instance->phpexec} -q -d memory_limit=256M console.php database:update"
-            ]);
+        if (!$access instanceof FTP && $this->instance->hasConsole()) {
+            $command = $access->createCommand($this->instance->phpexec,
+                ['-q', '-d', 'memory_limit=256M', 'console.php', 'database:update']);
+            $command->run();
+            if ($command->getReturn() !== 0) {
+                $message = 'Failed to update database. For more information check the logs or access instance and run `php console.php database:update`.';
+                App::get('io')->writeln('<error>' . $message . '</error>');
+                debug($command->getStdoutContent(), $this->instance->name);
+            }
         } else {
             $access->runPHP(
                 dirname(__FILE__) . '/../../scripts/tiki/sqlupgrade.php',
