@@ -33,12 +33,12 @@ class SSH
         $this->selectAdapter($adapter_class);
         $this->setenv('HTTP_ACCEPT_ENCODING', '');
 
+        $this->io = App::get('io');
+
         $sshConnectionId = implode('_', [$this->user,$this->host, $this->port]);
         if (!isset(self::$sshKeyCheck[$sshConnectionId])) {
             self::$sshKeyCheck[$sshConnectionId] = $this->checkSshKey();
         }
-
-        $this->io = App::get('io');
     }
 
     public function chdir($location)
