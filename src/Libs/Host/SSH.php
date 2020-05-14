@@ -194,21 +194,23 @@ class SSH
      */
     private function checkSshKey()
     {
-        $key = $_ENV['SSH_KEY'];
-        $user = $this->user;
-        $host = $this->host;
-
-        $localHost = new Local();
-        $command = new Command('ssh', array(
+        $params = [
             '-i',
-            $key,
+            $_ENV['SSH_KEY'],
             '-o',
             "IdentitiesOnly yes",
             '-o',
             "PreferredAuthentications publickey",
-            "{$user}@{$host}",
+            "{$this->user}@{$this->host}",
             "exit"
-        ));
+        ];
+
+        if ($this->port !== '22') {
+            array_unshift($params, '-p', $this->port);
+        }
+
+        $localHost = new Local();
+        $command = new Command('ssh', $params);
 
         $localHost->runCommand($command);
         $returnVar = $command->getReturn();
