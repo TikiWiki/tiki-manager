@@ -6,7 +6,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 
 class BackupInstanceCommand extends TikiManagerCommand
 {
@@ -100,7 +100,7 @@ class BackupInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $maxBackups = $input->getOption('max-backups') ?: 0;
+        $maxBackups = $input->getOption('max-backups') ?: Environment::get('DEFAULT_MAX_BACKUPS', 0);
         if (isset($maxBackups) && filter_var($maxBackups, FILTER_VALIDATE_INT) === false) {
             $this->io->error('Max number of backups to keep by instance is not a number');
             return 0;
