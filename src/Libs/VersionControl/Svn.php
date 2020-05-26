@@ -217,9 +217,21 @@ class Svn extends VersionControlSystem
         return 0;
     }
 
+    /**
+     * @param $targetFolder
+     * @param $branch
+     * @return mixed|string
+     * @throws VcsConflictException
+     * @throws VcsException
+     */
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "switch $branch $targetFolder");
+        $output = $this->exec($targetFolder, "switch $branch $targetFolder");
+        if (preg_match('/Summary of conflicts:/i', $output)) {
+            throw new VcsConflictException('SVN CONFLICTS FOUND: ' . $output);
+        }
+
+        return $output;
     }
 
     public function upgrade($targetFolder, $branch)
