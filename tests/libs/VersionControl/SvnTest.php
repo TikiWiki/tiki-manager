@@ -10,6 +10,9 @@ use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Svn;
 
+/**
+ * @group unit
+ */
 class SvnTest extends TestCase
 {
 
@@ -41,7 +44,8 @@ TXT;
         $info = [
             'repository' => [
                 'root' => 'https://svn.code.sf.net/p/tikiwiki/code'
-            ]
+            ],
+            'url' => 'https://svn.code.sf.net/p/tikiwiki/code/trunk'
         ];
 
         $stub->expects($this->once())->method('info')
