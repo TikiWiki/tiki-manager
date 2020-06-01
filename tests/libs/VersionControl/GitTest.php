@@ -9,6 +9,9 @@ use TikiManager\Application\Instance;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\VersionControl\Git;
 
+/**
+ * @group unit
+ */
 class GitTest extends TestCase
 {
 
