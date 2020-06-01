@@ -100,6 +100,12 @@ class Svn extends VersionControlSystem
 
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
+        static $tmpFolderChecked;
+        if (empty($tmpFolderChecked) || !in_array($targetFolder, $tmpFolderChecked)) {
+            $this->ensureTempFolder($targetFolder);
+            $tmpFolderChecked[] = $targetFolder;
+        }
+
         $globalOptions = implode(' ', $this->globalOptions);
         $command = implode(' ', [$this->command, $globalOptions, $toAppend]);
 
@@ -252,8 +258,6 @@ class Svn extends VersionControlSystem
             return false;
         }
 
-        $this->ensureTempFolder($targetFolder);
-
         try {
             $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
         } catch (Exception $e) {
@@ -289,7 +293,7 @@ class Svn extends VersionControlSystem
     public function ensureTempFolder($targetFolder)
     {
         if (!$this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
-            $path = $this->access->getInterpreterPath($this);
+            $path = $this->access->getInterpreterPath();
             $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }

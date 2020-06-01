@@ -86,8 +86,12 @@ Summary of conflicts:
 TXT;
 
         $command->method('getStdoutContent')->willReturn($conflictError);
-
         $access->method('runCommand')->willReturn($command);
+
+        $command2 = $this->createMock(Command::class);
+        $command2->method('run')->willReturn(0);
+        $access->method('createCommand')->willReturn($command2);
+
         $instance->expects($this->atLeastOnce())
             ->method('getBestAccess')
             ->willReturn($access);
