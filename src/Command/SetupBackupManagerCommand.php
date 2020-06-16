@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 
 class SetupBackupManagerCommand extends TikiManagerCommand
 {
@@ -39,6 +40,12 @@ class SetupBackupManagerCommand extends TikiManagerCommand
                 'e',
                 InputOption::VALUE_REQUIRED,
                 'Email address to report backup failures (multiple emails must be separated by comma (,)).'
+            )
+            ->addOption(
+                'max-backups',
+                'mb',
+                InputOption::VALUE_REQUIRED,
+                'Max number of backups to keep by instance'
             );
     }
 
@@ -109,6 +116,15 @@ class SetupBackupManagerCommand extends TikiManagerCommand
 
         if (!empty($email)) {
             $arguments .= ' --email=' . $email;
+        }
+
+        $maxBackups = $input->getOption('max-backups') ?: Environment::get('DEFAULT_MAX_BACKUPS', 0);
+        if (isset($maxBackups) && filter_var($maxBackups, FILTER_VALIDATE_INT) === false) {
+            $this->io->error('Max number of backups to keep by instance is not a number');
+            return 1;
+        }
+        if ($maxBackups > 0) {
+            $arguments .= ' --max-backups=' . $maxBackups;
         }
 
         $backupInstanceCommand = new BackupInstanceCommand();
