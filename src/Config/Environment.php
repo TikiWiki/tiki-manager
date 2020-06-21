@@ -436,6 +436,12 @@ class Environment
                     UPDATE info SET value = '8' WHERE name = 'version';
                 ");
             // no break
+            case 8:
+                $db->exec("
+                    INSERT INTO info (name, value) VALUES ('login_attempts', 0);
+                    UPDATE info SET value = '9' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

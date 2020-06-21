@@ -8,6 +8,8 @@
 namespace TikiManager\Config;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use TikiManager\Application\Info;
+use TikiManager\Style\TikiManagerStyle;
 
 class App
 {
@@ -28,9 +30,16 @@ class App
 //            ->addArgument(new Reference('io.input'))
 //            ->addArgument(new Reference('io.output'));
 
+        $container->register('info', Info::class);
+
         return $container;
     }
 
+    /**
+     * @param $name
+     * @return Info|TikiManagerStyle
+     * @throws \Exception
+     */
     public static function get($name)
     {
         return static::getContainer()->get($name);

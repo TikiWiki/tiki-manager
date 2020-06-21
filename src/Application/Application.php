@@ -11,12 +11,13 @@ namespace TikiManager\Application;
 
 use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Style\TikiManagerStyle;
 
 abstract class Application
 {
     protected $instance;
 
-    /** @var TikiManager\Style\TikiManagerStyle $io */
+    /** @var TikiManagerStyle $io */
     protected $io;
 
     public function __construct(Instance $instance)
