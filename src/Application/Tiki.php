@@ -6,16 +6,17 @@
 
 namespace TikiManager\Application;
 
+use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Access\FTP;
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
 use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Src;
 use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
-use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Tiki extends Application
 {
@@ -171,7 +172,6 @@ class Tiki extends Application
             $branch = $this->vcs_instance->getRepositoryBranch($this->instance->webroot);
 
             if ($branch) {
-                $this->io->writeln("Detected ". $this->vcs_instance->getIdentifier(true) ." : $branch");
                 return $this->branch = $branch;
             }
         }
@@ -368,6 +368,8 @@ class Tiki extends Application
 
         $folder = cache_folder($this, $version);
         $this->extractTo($version, $folder);
+
+        $this->io->writeln('<info>Installing Tiki ' . $version->branch . ' using ' . $version->type . '</info>');
 
         if ($access instanceof ShellPrompt) {
             $this->io->writeln('Copying files to webroot folder...');

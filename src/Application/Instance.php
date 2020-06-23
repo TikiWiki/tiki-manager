@@ -757,6 +757,8 @@ SQL;
         $version->action = $clone ? 'clone' : 'restore';
         $version->save();
 
+        $this->io->writeln('<info>Detected Tiki ' . $version->branch . ' using ' . $version->type . '</info>');
+
         if ($this->vcs_type == 'svn') {
             /** @var Svn $svn */
             $svn = VersionControlSystem::getVersionControlSystem($this);

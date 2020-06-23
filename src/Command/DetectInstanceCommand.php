@@ -97,11 +97,10 @@ class DetectInstanceCommand extends TikiManagerCommand
             $phpVersion = $discovery->detectPHPVersion();
             $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
-            ob_start(); // Prevent output to be displayed
             $app = $instance->getApplication();
 
             if (!$app) {
-                $this->io->writeln('<info>Blanck instance detected. Skipping...</info>');
+                $this->io->writeln('<info>Blank instance detected. Skipping...</info>');
                 continue;
             }
 
@@ -109,7 +108,7 @@ class DetectInstanceCommand extends TikiManagerCommand
             if ($instance->branch != $branch) {
                 $instance->updateVersion();
             };
-            ob_end_clean();
+
             $this->io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');
         }
     }
