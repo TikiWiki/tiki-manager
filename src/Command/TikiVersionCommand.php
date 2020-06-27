@@ -7,14 +7,13 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class TikiVersionCommand extends Command
+class TikiVersionCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -27,8 +26,6 @@ class TikiVersionCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $vcsOption = CommandHelper::getCliOption('vcs');
         $vcsOption = strtoupper($vcsOption);
         if (! in_array($vcsOption, ['SVN', 'GIT'])) {
@@ -42,7 +39,7 @@ class TikiVersionCommand extends Command
 
         $versionsInfo = CommandHelper::getVersionsInfo($versions);
         if (isset($versionsInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             CommandHelper::renderVersionsTable($output, $versionsInfo);
         } else {
             $output->writeln('<comment>No versions available to list.</comment>');

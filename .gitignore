@@ -6,6 +6,9 @@ data/
 logs/
 tmp/
 
+# Version is a generated file
+.version
+
 # Ignore packaging directories
 build/
 

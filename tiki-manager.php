@@ -11,13 +11,16 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
     exit(-1);
 }
 
-require __DIR__.'/vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use TikiManager\Config\Environment;
+use TikiManager\Manager\UpdateManager;
 
-$environment = new Environment(__DIR__);
-$environment->load();
+Environment::getInstance()->load();
 
 $application = new Application();
 
@@ -25,6 +28,7 @@ $application->add(new \TikiManager\Command\CreateInstanceCommand());
 $application->add(new \TikiManager\Command\AccessInstanceCommand());
 $application->add(new \TikiManager\Command\DeleteInstanceCommand());
 $application->add(new \TikiManager\Command\EnableWebManagerCommand());
+$application->add(new \TikiManager\Command\BlockWebManagerCommand());
 $application->add(new \TikiManager\Command\CopySshKeyCommand());
 $application->add(new \TikiManager\Command\WatchInstanceCommand());
 $application->add(new \TikiManager\Command\DetectInstanceCommand());
@@ -49,6 +53,7 @@ $application->add(new \TikiManager\Command\ImportInstanceCommand());
 $application->add(new \TikiManager\Command\ApplyProfileCommand());
 
 $application->add(new \TikiManager\Command\ManagerInfoCommand());
+$application->add(new \TikiManager\Command\ManagerUpdateCommand());
 $application->add(new \TikiManager\Command\CheckRequirementsCommand());
 $application->add(new \TikiManager\Command\ResetManagerCommand());
 $application->add(new \TikiManager\Command\ReportManagerCommand());
@@ -65,5 +70,18 @@ $application->add(new \TikiManager\Command\ClearCacheCommand());
 $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
+
+// this should be moved to a custom src/Console/Application (like composer)
+$dispatcher = new EventDispatcher();
+$dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
+    //Check if there are an update available (offline)
+    $command = $event->getCommand();
+    $updater = UpdateManager::getUpdater();
+    if ($command->getName() != 'manager:update' && $updater->hasUpdateAvailable(false)) {
+        $io = \TikiManager\Config\App::get('io');
+        $io->warning('A new version is available. Run `manager:update` to update.');
+    }
+});
+$application->setDispatcher($dispatcher);
 
 $application->run();

@@ -146,7 +146,7 @@ class Restore extends Backup
                 if ($type === 'app') {
                     $destination = '';
                 } else {
-                    warning("{Skipping {$destination}. Path shouldn't have absolute paths, to avoid override data.");
+                    $this->io->warning("{Skipping {$destination}. Path shouldn't have absolute paths, to avoid override data.");
                     continue;
                 }
             }

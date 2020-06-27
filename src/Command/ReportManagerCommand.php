@@ -2,15 +2,14 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use TikiManager\Config\App;
 use TikiManager\Report\Manager as ReportManager;
 use TikiManager\Command\Helper\CommandHelper;
 
-class ReportManagerCommand extends Command
+class ReportManagerCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -22,13 +21,11 @@ class ReportManagerCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $output->writeln('<comment>Note: Only Tiki instances can enable reports.</comment>');
 
-        $io->newLine();
+        $this->io->newLine();
         CommandHelper::renderReportOptions($output);
-        $io->newLine();
+        $this->io->newLine();
 
         $helper = $this->getHelper('question');
         $question = new ChoiceQuestion(
@@ -73,7 +70,7 @@ class ReportManagerCommand extends Command
         $allInstancesInfo = CommandHelper::getInstancesInfo($allInstances);
 
         if (isset($instancesInfo) && isset($allInstancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
             $question = CommandHelper::getQuestion('Which instances do you want to report on', null, '?');
@@ -83,7 +80,7 @@ class ReportManagerCommand extends Command
 
             $selectedInstances = $helper->ask($input, $output, $question);
             foreach ($selectedInstances as $instance) {
-                $io->newLine();
+                $this->io->newLine();
                 $renderResult = CommandHelper::renderInstancesTable($output, $allInstancesInfo);
 
                 $question = CommandHelper::getQuestion('Which instances do you want to include in the report', null, '?');
@@ -115,7 +112,7 @@ class ReportManagerCommand extends Command
         $instances = $report->getReportInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
             $question = CommandHelper::getQuestion('Which reports do you want to modify', null, '?');
@@ -128,7 +125,7 @@ class ReportManagerCommand extends Command
                 $allReportCandidates = $report->getReportCandidates($instance);
                 $allReportCandidatesInfo = CommandHelper::getInstancesInfo($allReportCandidates);
                 if (isset($allReportCandidatesInfo)) {
-                    $io->newLine();
+                    $this->io->newLine();
                     $renderResult = CommandHelper::renderInstancesTable($output, $allReportCandidatesInfo);
 
                     $question = CommandHelper::getQuestion('Which instances do you want to include in the report', null, '?');
@@ -161,7 +158,7 @@ class ReportManagerCommand extends Command
         $instances = $report->getReportInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
             $question = CommandHelper::getQuestion('Which reports do you want to modify', null, '?');
@@ -174,7 +171,7 @@ class ReportManagerCommand extends Command
                 $allReportCandidates = $report->getReportCandidates($instance);
                 $allReportCandidatesInfo = CommandHelper::getInstancesInfo($allReportCandidates);
                 if (isset($allReportCandidatesInfo)) {
-                    $io->newLine();
+                    $this->io->newLine();
                     $renderResult = CommandHelper::renderInstancesTable($output, $allReportCandidatesInfo);
 
                     $question = CommandHelper::getQuestion('Which instances do you want to remove from the report', null, '?');

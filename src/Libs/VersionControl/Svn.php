@@ -100,6 +100,12 @@ class Svn extends VersionControlSystem
 
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
+        static $tmpFolderChecked;
+        if (empty($tmpFolderChecked) || !in_array($targetFolder, $tmpFolderChecked)) {
+            $this->ensureTempFolder($targetFolder);
+            $tmpFolderChecked[] = $targetFolder;
+        }
+
         $globalOptions = implode(' ', $this->globalOptions);
         $command = implode(' ', [$this->command, $globalOptions, $toAppend]);
 
@@ -217,9 +223,21 @@ class Svn extends VersionControlSystem
         return 0;
     }
 
+    /**
+     * @param $targetFolder
+     * @param $branch
+     * @return mixed|string
+     * @throws VcsConflictException
+     * @throws VcsException
+     */
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "switch $branch $targetFolder");
+        $output = $this->exec($targetFolder, "switch $branch $targetFolder");
+        if (preg_match('/Summary of conflicts:/i', $output)) {
+            throw new VcsConflictException('SVN CONFLICTS FOUND: ' . $output);
+        }
+
+        return $output;
     }
 
     public function upgrade($targetFolder, $branch)
@@ -236,11 +254,9 @@ class Svn extends VersionControlSystem
         $branchUrl = $root . "/" . $branch;
 
         if ($root != $this->repositoryUrl) {
-            error("Trying to upgrade '{$this->repositoryUrl}' to different repository: {$root}");
+            $this->io->error("Trying to upgrade '{$this->repositoryUrl}' to different repository: {$root}");
             return false;
         }
-
-        $this->ensureTempFolder($targetFolder);
 
         try {
             $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
@@ -252,7 +268,7 @@ class Svn extends VersionControlSystem
             // temp/web.config
             // temp/index.php
 
-            error($e->getMessage()); // TODO change this to log error symfony way
+            $this->io->error($e->getMessage());
             $conflicts = '';
         }
 
@@ -262,11 +278,11 @@ class Svn extends VersionControlSystem
         }
 
         if ($this->isUpgrade($url, $branchUrl)) {
-            info("Upgrading to '{$branch}'");
+            $this->io->writeln("Upgrading to '{$branch}' branch");
             $this->revert($targetFolder);
             $this->upgrade($targetFolder, $branchUrl);
         } else {
-            info("Updating '{$branch}'");
+            $this->io->writeln("Updating '{$branch}' branch");
             $this->revert($targetFolder);
             $this->exec($targetFolder, "update $targetFolder --accept theirs-full --force");
         }
@@ -277,7 +293,7 @@ class Svn extends VersionControlSystem
     public function ensureTempFolder($targetFolder)
     {
         if (!$this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
-            $path = $this->access->getInterpreterPath($this);
+            $path = $this->access->getInterpreterPath();
             $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }

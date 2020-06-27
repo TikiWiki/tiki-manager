@@ -7,20 +7,18 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Access\Access;
 use TikiManager\Application\Application;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Libs\Helpers\ApplicationHelper;
+use TikiManager\Config\App;
 
-class ImportInstanceCommand extends Command
+class ImportInstanceCommand extends TikiManagerCommand
 {
     private static $nonInteractive;
 
@@ -102,12 +100,10 @@ class ImportInstanceCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         try {
             $nonInteractive = $this->isNonInteractive($input, $output);
         } catch (\Exception $e) {
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             return 1;
         }
 
@@ -119,7 +115,7 @@ class ImportInstanceCommand extends Command
         }
 
         if (!self::$nonInteractive) {
-            $io->title('Import an instance');
+            $this->io->title('Import an instance');
 
             $output->writeln('<comment>Answer the following to import a new Tiki Manager instance.</comment>');
 
@@ -172,22 +168,22 @@ class ImportInstanceCommand extends Command
             $instance->contact = $helper->ask($input, $output, $question);
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $this->io->error('Failed to setup access');
             }
 
             $instance->save();
             $access->save();
             $output->writeln('<info>Instance information saved.</info>');
-            $io->newLine();
+            $this->io->newLine();
 
             if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG || $_ENV['TRIM_DEBUG']) {
-                $io->title('Tiki Manager Info');
+                $this->io->title('Tiki Manager Info');
                 $mock_instance = new Instance();
                 $mock_access = Access::getClassFor('local');
                 $mock_access = new $mock_access($mock_instance);
                 $mock_discovery = new Discovery($mock_instance, $mock_access);
 
-                CommandHelper::displayInfo($mock_discovery, $io);
+                CommandHelper::displayInfo($mock_discovery);
             }
 
             $folders = [
@@ -208,7 +204,7 @@ class ImportInstanceCommand extends Command
             }
 
             $phpVersion = $discovery->detectPHPVersion();
-            $io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
+            $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 
             list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
 
@@ -241,17 +237,17 @@ class ImportInstanceCommand extends Command
                 $resultInstance = $result->getInstance();
 
                 if ($instance->id === $resultInstance->id) {
-                    $io->success('Import completed, please test your site at ' . $instance->weburl);
+                    $this->io->success('Import completed, please test your site at ' . $instance->weburl);
                     return 0;
                 }
             } else {
                 $instance->delete();
-                $io->error('Unable to import. An application was detected in this instance.');
+                $this->io->error('Unable to import. An application was detected in this instance.');
                 return 1;
             }
         } else {
             $instance->delete();
-            $io->error('Unable to import. An application was not detected in this instance.');
+            $this->io->error('Unable to import. An application was not detected in this instance.');
             return 1;
         }
     }
@@ -276,10 +272,42 @@ class ImportInstanceCommand extends Command
         $webroot = $input->getOption('webroot');
         $tempdir = $input->getOption('tempdir');
 
+        $rhost = $input->getOption('host');
+        $rport = $input->getOption('port');
+        $ruser = $input->getOption('user');
+        $rpass = $input->getOption('pass');
+
+        if (empty($type)) {
+            if (empty($rhost)) {
+                $type = 'local';
+            } else {
+                if ($rport === '22') {
+                    $type = 'ssh';
+                } elseif ($rport === '21') {
+                    $type = 'ssh';
+                }
+            }
+        }
+
+        if (empty($name) && ! empty($weburl)) {
+            $parts = parse_url($weburl);
+
+            if (! empty($parts['host'])) {
+                $name = $parts['host'];
+            }
+            unset($parts);
+        }
+
+        if (empty($tempdir)) {
+            $tempdir = '/tmp/trim_temp';
+            if (! empty($_ENV['TRIM_TEMP'])) {
+                $tempdir = $_ENV['TRIM_TEMP'];
+            }
+        }
+
         if (!empty($type)
             && !empty($weburl)
             && !empty($name)
-            && !empty($contact)
             && !empty($webroot)
             && !empty($tempdir)
         ) {
@@ -291,16 +319,11 @@ class ImportInstanceCommand extends Command
                 throw new \InvalidArgumentException('Instance web url invalid.');
             }
 
-            if (filter_var($contact, FILTER_VALIDATE_EMAIL) === false) {
+            if (! empty($contact) && filter_var($contact, FILTER_VALIDATE_EMAIL) === false) {
                 throw new \InvalidArgumentException('Please insert a valid email address.');
             }
 
             if ($type != 'local') {
-                $rhost = $input->getOption('host');
-                $rport = $input->getOption('port');
-                $ruser = $input->getOption('user');
-                $rpass = $input->getOption('pass');
-
                 if (empty($rhost) || !is_numeric($rport) || empty($ruser) || empty($rpass)) {
                     throw new \InvalidArgumentException('Remote server credentials are missing.');
                 }
@@ -328,7 +351,7 @@ class ImportInstanceCommand extends Command
             }
 
             if (!$access->firstConnect()) {
-                error('Failed to setup access');
+                $this->io->error('Failed to setup access');
                 exit(1);
             }
 

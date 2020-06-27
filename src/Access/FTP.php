@@ -22,7 +22,7 @@ class FTP extends Access implements Mountable
     // TODO: change directory using FTP
     public function openShell($workingDir = '')
     {
-        echo "User: {$this->user}, Pass: {$this->password}\n";
+        $this->io->writeln("User: {$this->user}, Pass: {$this->password}");
         passthru("ftp {$this->host} {$this->port}");
     }
 

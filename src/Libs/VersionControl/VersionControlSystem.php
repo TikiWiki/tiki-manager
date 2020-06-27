@@ -7,6 +7,7 @@
 
 namespace TikiManager\Libs\VersionControl;
 
+use TikiManager\Config\App;
 use TikiManager\Application\Instance;
 
 abstract class VersionControlSystem
@@ -16,6 +17,7 @@ abstract class VersionControlSystem
     protected $access;
     protected $repositoryUrl;
     protected $runLocally = false;
+    protected $io;
 
     /**
      * VersionControlSystem constructor.
@@ -25,6 +27,7 @@ abstract class VersionControlSystem
     {
         $this->instance = $instance;
         $this->access = $instance->getBestAccess('scripting');
+        $this->io = App::get('io');
     }
 
     /**

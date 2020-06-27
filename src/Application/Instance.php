@@ -9,11 +9,12 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Config\App;
 use TikiManager\Access\Access;
-use TikiManager\Libs\Database\Database;
-use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\Helpers\Archive;
+use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\VersionControl\Svn;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 
 class Instance
@@ -22,7 +23,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -34,7 +35,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -49,7 +50,7 @@ SQL;
 
     const SQL_SELECT_UPDATABLE_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -83,7 +84,7 @@ SQL;
 
     const SQL_SELECT_LATEST_VERSION = <<<SQL
 SELECT
-    version_id id, instance_id, type, branch, date, revision
+    version_id id, instance_id, type, branch, date, revision, action
 FROM
     version
 WHERE
@@ -236,10 +237,20 @@ SQL;
     public $backup_group;
     public $backup_perm;
     public $selection;
+    public $last_action;
+    public $last_action_date;
+    public $revision;
 
     protected $databaseConfig;
 
+    protected $io;
+
     private $access = [];
+
+    public function __construct()
+    {
+        $this->io = App::get('io');
+    }
 
     public function getId()
     {
@@ -558,7 +569,7 @@ SQL;
             return $version;
         }
 
-        error("No suitable php interpreter was found on {$this->name} instance");
+        $this->io->error("No suitable php interpreter was found on {$this->name} instance");
         exit(1);
     }
 
@@ -701,10 +712,12 @@ SQL;
         $srcFiles = null;
         if ($direct && $src_app instanceof Instance) {
             $srcFiles = $src_app->webroot;
-            info("Restoring files from '{$srcFiles}' into {$this->name}");
+            $message = "Restoring files from '{$srcFiles}' into {$this->name}...";
         } else {
-            info("Restoring files from '{$archive}' into {$this->name}");
+            $message = "Restoring files from '{$archive}' into {$this->name}...";
         }
+
+        $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
 
         $restore = new Restore($this);
         $restore->setProcess($clone);
@@ -712,6 +725,8 @@ SQL;
 
         $this->app = isset($src_app->app) ? $src_app->app : $src_app;
         $this->save();
+
+        $this->io->writeln('Restoring database...');
         $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
 
         $version = null;
@@ -722,7 +737,7 @@ SQL;
         $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
 
         if (!$this->findApplication()) { // a version is created in this call
-            error('Something when wrong with restore. Unable to read application details.');
+            $this->io->error('Something when wrong with restore. Unable to read application details.');
             return;
         }
 
@@ -736,8 +751,13 @@ SQL;
             $version->type = is_object($oldVersion) ? $oldVersion->type : null;
             $version->branch = is_object($oldVersion) ? $oldVersion->branch : null;
             $version->date = is_object($oldVersion) ? $oldVersion->date : null;
-            $version->save();
         }
+
+        // Update version with the correct action
+        $version->action = $clone ? 'clone' : 'restore';
+        $version->save();
+
+        $this->io->writeln('<info>Detected Tiki ' . $version->branch . ' using ' . $version->type . '</info>');
 
         if ($this->vcs_type == 'svn') {
             /** @var Svn $svn */
@@ -746,11 +766,12 @@ SQL;
         }
 
         if ($this->app == 'tiki') {
-            info("Fixing permissions for {$this->name}");
+            $this->io->writeln("Fixing permissions for {$this->name}");
             $this->getApplication()->fixPermissions();
         }
 
         if ($checksumCheck) {
+            $this->io->writeln('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this);
         }
 
@@ -759,7 +780,7 @@ SQL;
             $flags = "-r";
         }
 
-        echo $access->shellExec(
+        $access->shellExec(
             sprintf("rm %s %s", $flags, $this->tempdir . DIRECTORY_SEPARATOR . 'restore')
         );
     }
@@ -813,7 +834,7 @@ SQL;
         if ($this->isLocked()) {
             return true;
         }
-        info('Locking website...');
+        $this->io->writeln('Locking website...');
 
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
@@ -835,7 +856,7 @@ SQL;
             return true;
         }
 
-        info('Unlocking website...');
+        $this->io->writeln('Unlocking website...');
         $access = $this->getBestAccess('scripting');
         $access->deleteFile('.htaccess');
         $access->deleteFile('maintenance.php');
@@ -844,7 +865,33 @@ SQL;
             $access->moveFile('.htaccess.bak', '.htaccess');
         }
 
+        if (!$access->fileExists('.htaccess')) {
+            $this->configureHtaccess();
+        }
+
         return !$this->isLocked();
+    }
+
+
+    public function configureHtaccess()
+    {
+        $access = $this->getBestAccess('scripting');
+
+        if (!$access->fileExists('_htaccess')) {
+            return false;
+        }
+
+        // Try symlink
+        if (!$access->fileExists('.htaccess') && method_exists($access, 'shellExec')) {
+            $access->shellExec('ln -s _htaccess .htaccess');
+        }
+
+        // Copy
+        if (!$access->fileExists('.htaccess')) {
+            $access->copy('_htaccess', '.htaccess');
+        }
+
+        return $access->fileExists('.htaccess');
     }
 
     public function __get($name)

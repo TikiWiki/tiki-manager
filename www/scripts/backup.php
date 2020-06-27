@@ -7,6 +7,9 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
+use TikiManager\Config\App;
+use TikiManager\Config\Environment;
+
 ini_set('zlib.output_compression', 0);
 header('Content-Encoding: none'); //Disable apache compression
 
@@ -19,8 +22,9 @@ if (defined('TIMEOUT')) {
 }
 
 require TRIMPATH . '/vendor/autoload.php';
-$environment = new TikiManager\Config\Environment(TRIMPATH);
-$environment->load();
+Environment::getInstance()->load();
+$io = App::get('io');
+
 ob_end_clean();
 
 ob_implicit_flush(true);
@@ -31,12 +35,13 @@ if (isset($_POST['id'])) {
         try {
             web_backup($instance);
         } catch (\Exception $e) {
-            error($e->getMessage());
+            $io->error($e->getMessage());
             exit(-1);
         }
 //        $instance->backup();
 //        TikiManager\Helpers\Archive::performArchiveCleanup($instance->id, $instance->name);
     } else {
-        die("Unknown instance.");
+        $io->error('Unknown instance');
+        exit(1);
     }
 }

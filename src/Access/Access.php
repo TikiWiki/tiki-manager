@@ -6,6 +6,7 @@
 
 namespace TikiManager\Access;
 
+use TikiManager\Config\App;
 use TikiManager\Application\Instance;
 
 abstract class Access
@@ -13,6 +14,7 @@ abstract class Access
     private $rowid;
     private $type;
     protected $instance;
+    protected $io;
 
     public $host;
     public $user;
@@ -42,6 +44,7 @@ SQL;
     {
         $this->instance = $instance;
         $this->type = $type;
+        $this->io = App::get('io');
     }
 
     public static function getClassFor($type)

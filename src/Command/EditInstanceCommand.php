@@ -2,14 +2,13 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Access\Access;
+use TikiManager\Config\App;
 
-class EditInstanceCommand extends Command
+class EditInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -21,15 +20,13 @@ class EditInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io->newLine();
-            $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+            $this->io->newLine();
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $io->newLine();
+            $this->io->newLine();
             $output->writeln('<comment>In case you want to edit more than one instance, please use a comma (,) between the values</comment>');
 
             $helper = $this->getHelper('question');

@@ -7,16 +7,15 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Access\Access;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class ManagerInfoCommand extends Command
+class ManagerInfoCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -28,15 +27,13 @@ class ManagerInfoCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $instance = new Instance();
 
         $access = Access::getClassFor('local');
         $access = new $access($instance);
         $discovery = new Discovery($instance, $access);
 
-        $io->title('Tiki Manager Info');
-        CommandHelper::displayInfo($discovery, $io);
+        $this->io->title('Tiki Manager Info');
+        CommandHelper::displayInfo($discovery);
     }
 }

@@ -21,6 +21,7 @@ use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 use TikiManager\Libs\Helpers\ApplicationHelper;
@@ -44,7 +45,10 @@ class CommandHelper
                 'name' => $instance->name,
                 'url' => $instance->weburl,
                 'email' => $instance->contact,
-                'branch' => $instance->branch
+                'branch' => $instance->branch,
+                'revision' => $instance->revision,
+                'last_action' => $instance->last_action,
+                'last_action_date' => $instance->last_action_date
             ];
         }
 
@@ -70,7 +74,10 @@ class CommandHelper
             'Name',
             'Web URL',
             'Contact',
-            'Branch'
+            'Branch',
+            'Revision',
+            'Last Action',
+            'Action Date'
         ];
 
         $table = new Table($output);
@@ -219,8 +226,14 @@ class CommandHelper
                 'You must select an instance #ID'
             );
         } else {
+            $reindexedInstances = array();
+            foreach ($instances as $id => $instance) {
+                $reindexedInstances[ $id ] = $instance;
+                $reindexedInstances[ $instance->name ] = $instance;
+            }
+
             $instancesId = array_filter(array_map('trim', explode(',', $answer)));
-            $invalidInstancesId = array_diff($instancesId, array_keys($instances));
+            $invalidInstancesId = array_diff($instancesId, array_keys($reindexedInstances));
 
             if ($invalidInstancesId) {
                 throw new \RuntimeException(
@@ -230,8 +243,8 @@ class CommandHelper
 
             $selectedInstances = [];
             foreach ($instancesId as $index) {
-                if (array_key_exists($index, $instances)) {
-                    $selectedInstances[] = $instances[$index];
+                if (array_key_exists($index, $reindexedInstances)) {
+                    $selectedInstances[] = $reindexedInstances[$index];
                 }
             }
         }
@@ -381,21 +394,17 @@ class CommandHelper
      * Handle application install for a new instance.
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param boolean $nonInteractive
      * @param boolean $checksumCheck
      * @return bool
      */
     public static function performInstall(
         Instance $instance,
-        InputInterface $input,
-        OutputInterface $output,
         $nonInteractive = false,
         $checksumCheck = false
     ) {
 
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($instance->findApplication()) {
             $io->error('Unable to install. An application was detected in this instance.');
@@ -429,7 +438,7 @@ class CommandHelper
 
         $version = Version::buildFake($details[0], $details[1]);
 
-        $io->writeln('Installing application...');
+        $io->writeln('Installing application... (this may take a while)');
         if (!$nonInteractive) {
             $io->note([
                 'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
@@ -444,12 +453,12 @@ class CommandHelper
         }
 
         if ($app->requiresDatabase()) {
-            $dbConn = self::setupDatabaseConnection($instance, $input, $output, $nonInteractive);
+            $dbConn = self::setupDatabaseConnection($instance, $nonInteractive);
             $app->setupDatabase($dbConn);
         }
 
         if (isset($error)) {
-            CommandHelper::setInstanceSetupError($instance->id, $input, $output);
+            CommandHelper::setInstanceSetupError($instance->id);
             return false;
         }
 
@@ -461,19 +470,15 @@ class CommandHelper
      * Check, configure and  test database connection for a given instance
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param boolean $nonInteractive
      * @return Database|null
      */
     public static function setupDatabaseConnection(
         Instance $instance,
-        InputInterface $input,
-        OutputInterface $output,
         $nonInteractive = false
     ) {
         $dbUser = null;
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($dbUser = $instance->getDatabaseConfig()) {
             return $dbUser;
@@ -512,8 +517,7 @@ class CommandHelper
                 $valid = $dbRoot->testConnection();
             }
 
-            $logger = new ConsoleLogger($output);
-            $logger->debug('Connected to MySQL with administrative privileges');
+            $io->writeln('Connected to MySQL with administrative privileges');
 
             $create = $io->confirm('Should a new database and user be created now (both)?');
 
@@ -651,10 +655,10 @@ class CommandHelper
     /**
      * Display Info
      * @param $discovery
-     * @param $io
      */
-    public static function displayInfo($discovery, $io)
+    public static function displayInfo($discovery)
     {
+        $io = App::get('io');
         $io->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
         $io->writeln('<info>PHP Version: ' . self::formatPhpVersion($discovery->detectPHPVersion()) . '</info>');
         $io->writeln('<info>PHP exec: ' . $discovery->detectPHP() . '</info>');
@@ -746,14 +750,12 @@ class CommandHelper
      * Build error message to fix instance if setup fails
      *
      * @param $instanceId
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @param \Exception|null $e
      */
-    public static function setInstanceSetupError($instanceId, InputInterface $input, OutputInterface $output, \Exception $e = null)
+    public static function setInstanceSetupError($instanceId, \Exception $e = null)
     {
         $errors = [];
-        $io = new SymfonyStyle($input, $output);
+        $io = App::get('io');
 
         if ($e instanceof VcsException) {
             $errors[] = 'Tiki Manager detected a problem with your instance´s VCS.';

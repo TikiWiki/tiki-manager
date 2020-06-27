@@ -7,13 +7,12 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class ListInstanceCommand extends Command
+class ListInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -26,8 +25,6 @@ class ListInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances) ?? [];
 
@@ -37,7 +34,7 @@ class ListInstanceCommand extends Command
         }
 
         if (!empty($instancesInfo)) {
-            $io->newLine();
+            $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
         } else {
             $output->writeln('<comment>No instances available to list.</comment>');

@@ -62,7 +62,14 @@
 -->
                 </ul>
                 <div class="navbar-nav">
-                    <a class="nav-link" href="<?php echo html(url('logout')) ?>">Log out</a>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> <?php echo USERNAME; ?>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="<?php echo html(url('logout')) ?>">Log out</a>
+                        </div>
+                    </div>
                 </div>
 <?php } ?>
             </div>

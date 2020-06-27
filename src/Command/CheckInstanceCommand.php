@@ -3,16 +3,15 @@
 namespace TikiManager\Command;
 
 use Symfony\Component\Console\Exception\InvalidArgumentException;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
-class CheckInstanceCommand extends Command
+class CheckInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -36,7 +35,6 @@ class CheckInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
         $helper = $this->getHelper('question');
 
         $instances = CommandHelper::getInstances('all', true);
@@ -46,11 +44,11 @@ class CheckInstanceCommand extends Command
             $instancesOption = $input->getOption('instances');
 
             if (empty($instancesOption)) {
-                $io->newLine();
+                $this->io->newLine();
                 CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-                $io->newLine();
-                $io->writeln('<comment>In case you want to check more than one instance, please use a comma (,) between the values</comment>');
+                $this->io->newLine();
+                $this->io->writeln('<comment>In case you want to check more than one instance, please use a comma (,) between the values</comment>');
 
                 $question = CommandHelper::getQuestion('Which instance(s) do you want to check', null, '?');
                 $question->setValidator(function ($answer) use ($instances) {
@@ -68,39 +66,39 @@ class CheckInstanceCommand extends Command
                 $version = $instance->getLatestVersion();
 
                 if (! $version) {
-                    $io->writeln('<comment>Instance [' . $instance->id . '] (' . $instance->name . ') does not have a registered version. Skip.</comment>');
+                    $this->io->writeln('<comment>Instance [' . $instance->id . '] (' . $instance->name . ') does not have a registered version. Skip.</comment>');
                     continue;
                 }
 
-                $io->writeln('<fg=cyan>Checking instance: ' . $instance->name . '...</>');
+                $this->io->writeln('<fg=cyan>Checking instance: ' . $instance->name . '...</>');
 
                 $versionRevision = $version->revision;
                 $tikiRevision = $instance->getRevision();
 
                 if (!empty($versionRevision) && $versionRevision == $tikiRevision && $version->hasChecksums()) {
-                    Checksum::handleCheckResult($instance, $version, $version->performCheck($instance), $io);
+                    Checksum::handleCheckResult($instance, $version, $version->performCheck($instance));
                     continue;
                 }
 
                 $fetchChecksum = false;
 
                 if (empty($versionRevision)) {
-                    warning('No revision detected for instance.');
+                    $this->io->warning('No revision detected for instance.');
                     $fetchChecksum = true;
                 }
 
                 if (!empty($versionRevision) && $versionRevision != $tikiRevision) {
-                    warning('Revision mismatch between Tiki Manager version and instance.');
+                    $this->io->warning('Revision mismatch between Tiki Manager version and instance.');
                     $fetchChecksum = true;
                 }
 
                 if (empty($trimInstanceRevision) || $trimInstanceRevision != $tikiRevision) {
-                    warning('It is recommended to fetch new checksum information.');
+                    $this->io->warning('It is recommended to fetch new checksum information.');
                     $fetchChecksum = true;
                 }
 
                 if (! $version->hasChecksums()) {
-                    warning('No checksums exist.');
+                    $this->io->warning('No checksums exist.');
                     $fetchChecksum = true;
                 }
 
@@ -116,10 +114,10 @@ class CheckInstanceCommand extends Command
 
                     $updateFromOption = $input->getOption('update-from');
                     if (empty($updateFromOption)) {
-                        $io->writeln('<comment>No checksums exist.</comment>');
-                        $io->newLine();
+                        $this->io->writeln('<comment>No checksums exist.</comment>');
+                        $this->io->newLine();
                         CommandHelper::renderCheckOptionsAndActions($output);
-                        $io->newLine();
+                        $this->io->newLine();
 
                         $question = new ChoiceQuestion(
                             'Please select an option to apply:',
@@ -143,7 +141,7 @@ class CheckInstanceCommand extends Command
                     switch ($option) {
                         case 'source':
                             $version->collectChecksumFromSource($instance);
-                            Checksum::handleCheckResult($instance, $version, $version->performCheck($instance), $io);
+                            Checksum::handleCheckResult($instance, $version, $version->performCheck($instance));
                             break;
                         case 'current':
                             $version->collectChecksumFromInstance($instance);
@@ -152,7 +150,7 @@ class CheckInstanceCommand extends Command
                 }
             }
         } else {
-            $io->writeln('<comment>No instances available to check.</comment>');
+            $this->io->writeln('<comment>No instances available to check.</comment>');
         }
     }
 }

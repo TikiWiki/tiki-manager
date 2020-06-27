@@ -21,7 +21,7 @@ class ArchiveTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Libs\Helpers\Archive::performArchiveCleanup
+     * @covers \TikiManager\Libs\Helpers\Archive::cleanup
      */
     public function testArchiveCleanUp()
     {
@@ -94,11 +94,13 @@ class ArchiveTest extends TestCase
         $fs->touch($backupDirectory . $file4);
 
         $files = glob($backupDirectory . '/*.tar.bz2');
-        $this->assertCount(4, $files);
+        $expectedCount = $date2 != $date4 ? 4 : 3;
+        $this->assertCount($expectedCount, $files);
 
         Archive::cleanup($instanceId, $instanceName);
         $files = glob($backupDirectory . '/*.tar.bz2');
-        $this->assertCount(3, $files);
+        $expectedCount = $date2 != $date4 ? 3 : 2;
+        $this->assertCount($expectedCount, $files);
         $this->assertFalse($fs->exists($file3));
     }
 

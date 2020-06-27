@@ -6,9 +6,9 @@
  * @copyright (c) 2008, Luis Argerich, Garland Foster, Eduardo Polidor, et. al.
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
-use TikiManager\Application\Instance;
-use TikiManager\Libs\Database\Database;
-use TikiManager\Command\Helper\CommandHelper;
+
+use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 
 ini_set('zlib.output_compression', 0);
 header('Content-Encoding: none'); //Disable apache compression
@@ -22,8 +22,9 @@ if (defined('TIMEOUT')) {
 }
 
 require TRIMPATH . '/vendor/autoload.php';
-$environment = new TikiManager\Config\Environment(TRIMPATH);
-$environment->load();
+Environment::getInstance()->load();
+$io = App::get('io');
+
 ob_end_clean();
 
 ob_implicit_flush(true);
@@ -36,20 +37,20 @@ $targetInstance = TikiManager\Application\Instance::getInstance($targetInstanceI
 
 if (!empty($sourceInstanceId) && !empty($targetInstance)) {
     try {
-        warning("Initiating backup of {$sourceInstance->name}");
+        $io->warning("Initiating backup of {$sourceInstance->name}");
         $archive = $sourceInstance->backup();
 
-        warning("Initiating clone of {$sourceInstance->name} to {$targetInstance->name}");
+        $io->warning("Initiating clone of {$sourceInstance->name} to {$targetInstance->name}");
         $targetInstance->lock();
         $targetInstance->restore($sourceInstance->app, $archive, true);
         $targetInstance->unlock();
 
-        info("Deleting archive...");
+        $io->writeln("Deleting archive...");
         $access = $sourceInstance->getBestAccess('scripting');
         $access->shellExec("rm -f " . $archive);
     } catch (Exception $ex) {
-        error($ex->getMessage());
+        $io->error($ex->getMessage());
     }
 } else {
-    error("Unknown instance.");
+    $io->error("Unknown instance.");
 }

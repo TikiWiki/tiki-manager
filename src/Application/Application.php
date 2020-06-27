@@ -9,15 +9,21 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Style\TikiManagerStyle;
 
 abstract class Application
 {
     protected $instance;
 
+    /** @var TikiManagerStyle $io */
+    protected $io;
+
     public function __construct(Instance $instance)
     {
         $this->instance = $instance;
+        $this->io = App::get('io');
     }
 
     public static function getApplications(Instance $instance)
@@ -105,29 +111,32 @@ abstract class Application
             $new->type = $current->type;
             $new->branch = $current->branch;
             $new->date = date('Y-m-d');
-            $new->save();
         } else {
             // Provided version, copy properties
             $new = $instance->createVersion();
             $new->type = $version->type;
             $new->branch = $version->branch;
             $new->date = $version->date;
-            $new->save();
         }
+        $new->action = 'update';
 
         $checksumCheck = isset($options['checksum-check']) && is_bool($options['checksum-check']) ?
             $options['checksum-check'] : false;
 
         if ($checksumCheck) {
-            info('Checking old instance checksums.');
+            $this->io->writeln('Checking old instance checksums.');
             $oldPristine = $current->performCheck($instance);
             $oldPristine = $oldPristine['pri'] ?: [];
 
-            info('Obtaining checksum from source.');
+            $this->io->writeln('Obtaining checksum from source.');
             $new->collectChecksumFromSource($instance);
         }
 
         $this->performActualUpdate($new, $options);
+
+        //Update new version with revision
+        $new->revision = $this->getRevision();
+        $new->save();
 
         if (! $checksumCheck) {
             return [
@@ -137,7 +146,7 @@ abstract class Application
             ];
         }
 
-        info('Checking new instance checksums.');
+        $this->io->writeln('Checking new instance checksums.');
         $newDiff = $new->performCheck($instance);
 
         $toSave = [];
@@ -184,10 +193,12 @@ abstract class Application
         $new->type = $version->type;
         $new->branch = $version->branch;
         $new->date = $version->date;
+        $new->revision = $instance->getRevision();
+        $new->action = 'upgrade';
         $new->save();
 
         if (isset($options['checksum-check']) && $options['checksum-check']) {
-            info('Obtaining new checksum from source.');
+            $this->io->writeln('Obtaining new checksum from source.');
             $new->collectChecksumFromSource($instance);
         }
     }

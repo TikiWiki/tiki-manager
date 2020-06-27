@@ -203,7 +203,7 @@ $(document).ready(function () {
             modal.find('.log').html('<span class="cyan">Cloning ' + ins_name + '...</span>');
         }
 
-        var loading = "<i id=\"loading-icon\" class=\"fa fa-circle-o-notch fa-spin fa-fw cyan\"></i>\n" +
+        var loading = "<i id=\"loading-icon\" class=\"fas fa-circle-notch fa-spin fa-fw cyan\"></i>\n" +
             "<span class=\"sr-only\">Loading...</span>";
         modal.find('.log').append(loading);
 
@@ -221,6 +221,9 @@ $(document).ready(function () {
                         last_response_len = response.length;
                     }
                     log = this_response.trim();
+                    // This replaces \n that in <pre> causes double lines
+                    log = log.replace(/(\r\n|\n\r|\r|\n)/g, '');
+
                     var parsed_log = '';
 
                     for (var i = 0; i < log.length; i++) {

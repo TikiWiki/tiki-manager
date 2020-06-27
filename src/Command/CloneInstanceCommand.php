@@ -7,19 +7,18 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 
-class CloneInstanceCommand extends Command
+class CloneInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -96,7 +95,6 @@ class CloneInstanceCommand extends Command
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (isset($instancesInfo)) {
-            $io = new SymfonyStyle($input, $output);
             $helper = $this->getHelper('question');
 
             $clone = false;
@@ -113,7 +111,7 @@ class CloneInstanceCommand extends Command
             $argument = $input->getArgument('mode');
 
             if ($direct && ($keepBackup || $useLastBackup)) {
-                $io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
+                $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
                 exit(-1);
             }
 
@@ -136,11 +134,11 @@ class CloneInstanceCommand extends Command
             } elseif ($sourceOption = $input->getOption("source")) {
                 $selectedSourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
             } else {
-                $io->newLine();
+                $this->io->newLine();
                 $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
 
-                $io->newLine();
-                $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+                $this->io->newLine();
+                CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                 $question = CommandHelper::getQuestion('Select the source instance', null);
                 $question->setValidator(function ($answer) use ($instances) {
@@ -160,7 +158,7 @@ class CloneInstanceCommand extends Command
             }
             $instances = $instances_pruned;
 
-            $databaseConfig = CommandHelper::setupDatabaseConnection($selectedSourceInstances[0], $input, $output);
+            $databaseConfig = CommandHelper::setupDatabaseConnection($selectedSourceInstances[0]);
             $selectedSourceInstances[0]->setDatabaseConfig($databaseConfig);
 
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -170,7 +168,7 @@ class CloneInstanceCommand extends Command
                 } elseif ($targetOption = implode(',', $input->getOption("target"))) {
                     $selectedDestinationInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
                 } else {
-                    $io->newLine();
+                    $this->io->newLine();
                     $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                     $question = CommandHelper::getQuestion('Select the destination instance(s)', null);
@@ -187,7 +185,7 @@ class CloneInstanceCommand extends Command
                     } else {
                         $branch = $input->getOption('branch');
                         if (empty($branch)) {
-                            $branch = $this->getUpgradeVersion($selectedSourceInstances[0], $input, $output);
+                            $branch = $this->getUpgradeVersion($selectedSourceInstances[0]);
                             $input->setOption('branch', $branch);
                         }
                     }
@@ -195,7 +193,7 @@ class CloneInstanceCommand extends Command
 
                 foreach ($selectedDestinationInstances as $destinationInstance) {
                     $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
-                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance, $input, $output);
+                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance);
                     $destinationInstance->setDatabaseConfig($databaseConfig);
 
                     if ($direct && ($selectedSourceInstances[0]->type != 'local' || $destinationInstance->type != 'local')) {
@@ -218,10 +216,10 @@ class CloneInstanceCommand extends Command
                             $output->writeln('<fg=cyan>Using last created backup of: ' . $selectedSourceInstances[0]->name . '</>');
                             $keepBackup = true;
                         } else {
-                            $standardProcess = $io->confirm('Backups not found for ' . $selectedSourceInstances[0]->name . ' instance. Continue with standard process?', true);
+                            $standardProcess = $this->io->confirm('Backups not found for ' . $selectedSourceInstances[0]->name . ' instance. Continue with standard process?', true);
 
                             if (!$standardProcess) {
-                                $io->error('Backups not found for instance ' . $selectedSourceInstances[0]->name);
+                                $this->io->error('Backups not found for instance ' . $selectedSourceInstances[0]->name);
                                 exit(-1);
                             }
                         }
@@ -229,12 +227,12 @@ class CloneInstanceCommand extends Command
                 }
 
                 if ($standardProcess) {
-                    $output->writeln('<fg=cyan>Creating snapshot of: ' . $selectedSourceInstances[0]->name . '</>');
+                    App::get('io')->section('Creating snapshot of: ' . $selectedSourceInstances[0]->name);
                     $archive = $selectedSourceInstances[0]->backup();
                 }
 
                 if (empty($archive)) {
-                    $output->writeln('<error>Error: Snapshot creation failed.</error>');
+                    $this->io->error('Snapshot creation failed.');
                     exit(-1);
                 }
 
@@ -252,7 +250,7 @@ class CloneInstanceCommand extends Command
                         continue;
                     }
 
-                    $output->writeln('<fg=cyan>Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name . '</>');
+                    $this->io->section('Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name);
 
                     $destinationInstance->lock();
                     $destinationInstance->restore($selectedSourceInstances[0], $archive, true, false, $direct);
@@ -273,7 +271,7 @@ class CloneInstanceCommand extends Command
                                 'live-reindex' => $liveReindex
                             ]);
                         } catch (\Exception $e) {
-                            CommandHelper::setInstanceSetupError($destinationInstance->id, $input, $output, $e);
+                            CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
                             continue;
                         }
                     }
@@ -283,7 +281,7 @@ class CloneInstanceCommand extends Command
                 }
 
                 if (! $keepBackup) {
-                    $output->writeln('<fg=cyan>Deleting archive...</>');
+                    $output->writeln('Deleting archive...');
                     $access = $selectedSourceInstances[0]->getBestAccess('scripting');
                     $access->shellExec("rm -f " . $archive);
                 }
@@ -299,11 +297,9 @@ class CloneInstanceCommand extends Command
      * Get version to update instance to
      *
      * @param Instance $instance
-     * @param InputInterface $input
-     * @param OutputInterface $output
      * @return string
      */
-    private function getUpgradeVersion($instance, $input, $output)
+    private function getUpgradeVersion($instance)
     {
         $found_incompatibilities = false;
         $instance->detectPHP();
@@ -325,15 +321,14 @@ class CloneInstanceCommand extends Command
             }
         }
 
-        $output->writeln('<fg=cyan>We detected PHP release: ' . CommandHelper::formatPhpVersion($instance->phpversion) . '</>');
+        $this->io->writeln('<fg=cyan>We detected PHP release: ' . CommandHelper::formatPhpVersion($instance->phpversion) . '</>');
 
         if ($found_incompatibilities) {
-            $output->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
-            $output->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
+            $this->io->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
+            $this->io->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
         }
 
-        $io = new SymfonyStyle($input, $output);
-        $choice = $io->choice('Which version do you want to update to', $choices);
+        $choice = $this->io->choice('Which version do you want to update to', $choices);
         $choice = explode(':', $choice);
         return trim($choice[1]);
     }

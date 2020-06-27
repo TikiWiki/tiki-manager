@@ -1,19 +1,19 @@
 <?php
 
-
 namespace TikiManager\Libs\VersionControl;
 
 use TikiManager\Application\Restore;
 use TikiManager\Application\Version;
-use TikiManager\Libs\Host\Command;
+use TikiManager\Config\Environment;
+use TikiManager\Traits\FileArchive;
 
 class Src extends VersionControlSystem
 {
+    use FileArchive;
 
     public static $pattern = '/tiki-(.*)\.(tar\.bz2|zip|7z|tar\.gz)/';
 
     protected $command = 'src';
-
 
     /**
      * Get available branches within the repository
@@ -60,7 +60,7 @@ class Src extends VersionControlSystem
      * Clones a specific branch within a repository
      * @param string $branchName
      * @param string $targetFolder
-     * @return mixed
+     * @return void|false
      */
     public function clone($branchName, $targetFolder)
     {
@@ -69,7 +69,7 @@ class Src extends VersionControlSystem
             return false;
         }
         //extract file
-        $this->unArchive($_ENV['TRIM_SRC_FOLDER'] . DIRECTORY_SEPARATOR . $files[0], $targetFolder);
+        $this->extract(Environment::get('TRIM_SRC_FOLDER') . DIRECTORY_SEPARATOR . $files[0], $targetFolder);
     }
 
     /**
@@ -185,42 +185,6 @@ class Src extends VersionControlSystem
             $restore->restoreFolder($cacheFolder, $targetFolder);
         }
         //Find for compatible and superior versions
-    }
-
-    public function unArchive($file, $target)
-    {
-        if (preg_match('/(.*)\.(tar\.bz2|zip|7z|tar\.gz)/', basename($file), $matches)) {
-            $name = $matches[1];
-            $ext = $matches[2];
-            switch ($ext) {
-                case 'tar.bz2':
-                    $command = sprintf('tar -xvjf %s -C %s --strip-components 1 1> nul', $file, $target);
-                    break;
-                case 'tar.gz':
-                    $command =sprintf('tar -xzf %s -C %s --strip-components 1 1> nul', $file, $target);
-                    break;
-                case 'zip':
-                    $command = "unzip -d \"$target\" \"$file\" 1> nul && f=(\"$target/$name\"/*) && mv \"$target/$name\"/* \"$target\"";
-                    break;
-                case '7z':
-                    $command = "7za x \"$file\" -o\"$target\" 1> nul && mv \"$target/$name\"/* \"$target\" 1> nul";
-                    break;
-                default:
-                    $command = false;
-            }
-            if ($command) {
-                mkdir($target);
-                $output = shell_exec($command);
-                if ($output) {
-                    error($output);
-                } else {
-                    return true;
-                }
-
-                return true;
-            }
-        }
-        return false;
     }
 
     public function getBranchToUpdate($branch)

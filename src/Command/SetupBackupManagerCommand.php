@@ -7,16 +7,14 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 
-class SetupBackupManagerCommand extends Command
+class SetupBackupManagerCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -42,17 +40,19 @@ class SetupBackupManagerCommand extends Command
                 'e',
                 InputOption::VALUE_REQUIRED,
                 'Email address to report backup failures (multiple emails must be separated by comma (,)).'
+            )
+            ->addOption(
+                'max-backups',
+                'mb',
+                InputOption::VALUE_REQUIRED,
+                'Max number of backups to keep by instance'
             );
     }
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-        $helper = $this->getHelper('question');
-
         if (empty($input->getOption('time'))) {
-            $helper = $this->getHelper('question');
-            $answer = $io->ask('What time should it run at?', '00:00', function ($answer) {
+            $answer = $this->io->ask('What time should it run at?', '00:00', function ($answer) {
                 return CommandHelper::validateTimeInput($answer);
             });
 
@@ -64,10 +64,10 @@ class SetupBackupManagerCommand extends Command
 
         if (isset($instancesInfo) && empty($input->getOption('exclude'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
-            $io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
 
                 if (! empty($answer)) {
@@ -86,12 +86,12 @@ class SetupBackupManagerCommand extends Command
         try {
             CommandHelper::validateEmailInput($email);
         } catch (\RuntimeException $e) {
-            $io->error($e->getMessage());
+            $this->io->error($e->getMessage());
             $email = null;
         }
 
         if (empty($email)) {
-            $email = $io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, function ($answer) {
+            $email = $this->io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, function ($answer) {
                 if (!empty($answer)) {
                     return  CommandHelper::validateEmailInput($answer);
                 }
@@ -102,7 +102,6 @@ class SetupBackupManagerCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
         $time = $input->getOption('time');
         list($hours, $minutes) = CommandHelper::validateTimeInput($time);
         $arguments = '--instances=all --no-interaction';
@@ -119,6 +118,15 @@ class SetupBackupManagerCommand extends Command
             $arguments .= ' --email=' . $email;
         }
 
+        $maxBackups = $input->getOption('max-backups') ?: Environment::get('DEFAULT_MAX_BACKUPS', 0);
+        if (isset($maxBackups) && filter_var($maxBackups, FILTER_VALIDATE_INT) === false) {
+            $this->io->error('Max number of backups to keep by instance is not a number');
+            return 1;
+        }
+        if ($maxBackups > 0) {
+            $arguments .= ' --max-backups=' . $maxBackups;
+        }
+
         $backupInstanceCommand = new BackupInstanceCommand();
         $managerPath = realpath(dirname(__FILE__) . '/../..');
         $entry = sprintf(
@@ -133,9 +141,9 @@ class SetupBackupManagerCommand extends Command
 
         file_put_contents($file = $_ENV['TEMP_FOLDER'] . '/crontab', `crontab -l` . $entry);
 
-        $io->newLine();
-        $io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');
-        $io->text($entry);
+        $this->io->newLine();
+        $this->io->note('If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.');
+        $this->io->text($entry);
 
         `crontab $file`;
     }

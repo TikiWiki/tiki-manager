@@ -6,6 +6,7 @@
 
 namespace TikiManager\Libs\Host;
 
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Local
@@ -15,11 +16,13 @@ class Local
     private $env;
     private $last_command_exit_code = 0;
     private $location;
+    protected $io;
 
     public function __construct()
     {
         $_ENV['HTTP_ACCEPT_ENCODING'] = '';
         $this->env = $_ENV ?: [];
+        $this->io = App::get('io');
     }
 
     public function chdir($location)
@@ -135,7 +138,7 @@ class Local
                 if ($code != 0) {
                     if ($output) {
                         warning(sprintf('%s [%d]', $cmd, $code));
-                        error($result, $prefix = '    ');
+                        $this->io->error($result, $prefix = '    ');
                     }
                 } else {
                     $contents .= (!empty($contents) ? "\n" : '') . $result;
@@ -200,7 +203,7 @@ class Local
 
         if (!is_dir($workingDir)) {
             $error = sprintf("Cannot connect: path (%s) is invalid or does not exist.\n", $workingDir);
-            error($error);
+            $this->io->error($error);
             return;
         }
 
@@ -219,7 +222,7 @@ class Local
         $exclude = '';
         if (!empty($args['exclude'])) {
             $exclude = is_array($args['exclude']) ? $args['exclude'] : [$args['exclude']];
-            $exclude = array_map(function($path) {
+            $exclude = array_map(function ($path) {
                 return '--exclude=' . $path;
             }, $exclude);
             $exclude = implode(' ', $exclude);
@@ -242,9 +245,8 @@ class Local
         }
 
         if ($return_var != 0) {
-            warning($command);
-            error("RSYNC exit code: $return_var");
-            error($output);
+            $message = sprintf('Command: %s\nRSYNC exit code: %s\nOutput: %s', $command, $return_var, $output);
+            $this->io->error($message);
         }
 
         debug($output, $prefix = "({$return_var})>>", "\n\n");
@@ -305,9 +307,8 @@ class Local
         }
         if ($returnVar > 8) {
             // Any value greater than 8 indicates that there was at least one failure during the copy operation.
-            warning($command);
-            error("ROBOCOPY exit code: $returnVar");
-            error($output);
+            $message = sprintf('Command: %s\ROBOCOPY exit code: %s\nOutput: %s', $command, $returnVar, $output);
+            $this->io->error($message);
         }
 
         debug($output, $prefix = "({$returnVar})>>", PHP_EOL . PHP_EOL);

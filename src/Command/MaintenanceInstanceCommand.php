@@ -7,16 +7,15 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 
-class MaintenanceInstanceCommand extends Command
+class MaintenanceInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -40,15 +39,13 @@ class MaintenanceInstanceCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         $helper = $this->getHelper('question');
         $status = $input->getArgument('status');
         $instancesOption = $input->getOption('instances');
         $instancesOption = ! empty($instancesOption) ? explode(',', $instancesOption) : [];
 
         if (! in_array($status, ['on', 'off'])) {
-            $io->error('Please insert a valid status [on, off].');
+            $this->io->error('Please insert a valid status [on, off].');
             return false;
         }
 
@@ -61,7 +58,7 @@ class MaintenanceInstanceCommand extends Command
 
         $validInstancesOptions = count(array_intersect($instancesOption, $validInstances)) == count($instancesOption);
         if (! $validInstancesOptions) {
-            $io->error('Please insert a valid instance id.');
+            $this->io->error('Please insert a valid instance id.');
             return false;
         }
 
@@ -81,11 +78,11 @@ class MaintenanceInstanceCommand extends Command
                 $instance->getApplication()->fixPermissions();
             }
             if (! empty($messages)) {
-                $io->success('Instances [' . implode(',', $messages) . '] maintenance "' . $status . '"');
+                $this->io->success('Instances [' . implode(',', $messages) . '] maintenance "' . $status . '"');
                 $result = 0;
             }
             if (! empty($errors)) {
-                $io->error('Instances [' . implode(',', $errors) . '] change maintenance "' . $status . '" failed');
+                $this->io->error('Instances [' . implode(',', $errors) . '] change maintenance "' . $status . '" failed');
                 $result = 1;
             }
         } else {
@@ -105,10 +102,10 @@ class MaintenanceInstanceCommand extends Command
                 $instance->getApplication()->fixPermissions();
 
                 if ($success) {
-                    $io->success('Instance ' . $instance->name . ' maintenance ' . $status);
+                    $this->io->success('Instance ' . $instance->name . ' maintenance ' . $status);
                     $result = 0;
                 } else {
-                    $io->error('Instance ' . $instance->name . ' maintenance ' . $status);
+                    $this->io->error('Instance ' . $instance->name . ' maintenance ' . $status);
                 }
             }
         }

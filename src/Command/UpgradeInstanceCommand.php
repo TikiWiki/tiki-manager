@@ -7,17 +7,16 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
-class UpgradeInstanceCommand extends Command
+class UpgradeInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -67,8 +66,6 @@ class UpgradeInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
-        $io = new SymfonyStyle($input, $output);
         $helper = $this->getHelper('question');
 
         $checksumCheck = false;
@@ -83,11 +80,11 @@ class UpgradeInstanceCommand extends Command
         $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
 
         if (empty($instancesOption)) {
-            $io->newLine();
+            $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
 
-            $io->newLine();
-            $io->writeln('<comment>In case you want to upgrade more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to upgrade more than one instance, please use a comma (,) between the values</comment>');
 
             $question = CommandHelper::getQuestion('Which instance(s) do you want to upgrade', null, '?');
             $question->setValidator(function ($answer) use ($instances) {
@@ -108,7 +105,7 @@ class UpgradeInstanceCommand extends Command
             $discovery = new Discovery($instance, $access);
             $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
-            $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
+            $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
             $instance->lock();
             $instance->detectPHP();
@@ -127,7 +124,7 @@ class UpgradeInstanceCommand extends Command
                 }
             }
 
-            $io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
+            $this->io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
 
             $counter = 0;
             $found_incompatibilities = false;
@@ -187,18 +184,18 @@ class UpgradeInstanceCommand extends Command
                         $version = $instance->getLatestVersion();
 
                         if ($checksumCheck) {
-                            Checksum::handleCheckResult($instance, $version, $filesToResolve, $io);
+                            Checksum::handleCheckResult($instance, $version, $filesToResolve);
                         }
                     } catch (\Exception $e) {
-                        CommandHelper::setInstanceSetupError($instance->id, $input, $output, $e);
+                        CommandHelper::setInstanceSetupError($instance->id, $e);
                         continue;
                     }
                 } else {
-                    $io->writeln('<comment>No version selected. Nothing to perform.</comment>');
+                    $this->io->writeln('<comment>No version selected. Nothing to perform.</comment>');
                 }
             } else {
-                $io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-                $io->writeln('<comment>the latest version permitted by the server.</comment>');
+                $this->io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
+                $this->io->writeln('<comment>the latest version permitted by the server.</comment>');
             }
 
             if ($instance->isLocked()) {

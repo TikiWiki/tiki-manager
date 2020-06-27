@@ -64,10 +64,12 @@ class CloneAndUpgradeCommandTester extends TestCase
             [
                 '--webroot' => self::$instancePath1,
                 '--branch' => VersionControl::formatBranch($branch),
+                '--name' => 'source-test.tiki.org',
             ],
             [
                 '--webroot' => self::$instancePath2,
                 '--branch' => VersionControl::formatBranch($branch),
+                '--name' => 'target-test.tiki.org',
             ]
         ];
 

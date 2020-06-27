@@ -2,15 +2,13 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Libs\Helpers\Archive;
+use TikiManager\Config\Environment;
 
-class BackupInstanceCommand extends Command
+class BackupInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
@@ -46,17 +44,16 @@ class BackupInstanceCommand extends Command
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-        $io->note('Backups are only available on Local and SSH instances.');
+        $this->io->note('Backups are only available on Local and SSH instances.');
 
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
         if (isset($instancesInfo) && empty($input->getOption('instances'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
+            $this->io->newLine();
 
-            $instances = $io->ask('Which instance(s) do you want to backup', 'all', function ($answer) use ($instances) {
+            $instances = $this->io->ask('Which instance(s) do you want to backup', 'all', function ($answer) use ($instances) {
                 if ($answer == 'all') {
                     return $answer;
                 }
@@ -69,10 +66,10 @@ class BackupInstanceCommand extends Command
 
         if (isset($instancesInfo) && $input->getOption('instances') == 'all' && empty($input->getOption('exclude'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $io->newLine();
-            $io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
+            $this->io->newLine();
+            $this->io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
                 if (!empty($answer)) {
                     $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
@@ -87,7 +84,7 @@ class BackupInstanceCommand extends Command
         $email = $input->getOption('email');
 
         if (!$email) {
-            $email = $io->ask('Email address to contact', null, function ($value) {
+            $email = $this->io->ask('Email address to contact', null, function ($value) {
                 if (empty(trim($value))) {
                     return null;
                 }
@@ -103,11 +100,9 @@ class BackupInstanceCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
-        $maxBackups = $input->getOption('max-backups') ?: 0;
+        $maxBackups = $input->getOption('max-backups') ?: Environment::get('DEFAULT_MAX_BACKUPS', 0);
         if (isset($maxBackups) && filter_var($maxBackups, FILTER_VALIDATE_INT) === false) {
-            $io->error('Max number of backups to keep by instance is not a number');
+            $this->io->error('Max number of backups to keep by instance is not a number');
             return 0;
         }
 
@@ -115,7 +110,7 @@ class BackupInstanceCommand extends Command
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
         if (empty($instancesInfo)) {
-            $io->writeln('<comment>No instances available to backup.</comment>');
+            $this->io->writeln('<comment>No instances available to backup.</comment>');
             return 0;
         }
 
@@ -153,8 +148,8 @@ class BackupInstanceCommand extends Command
             try {
                 $backupFile = $instance->backup();
                 if (!empty($backupFile)) {
-                    $io->success('Backup created with success.');
-                    $io->note('Backup file: ' . $backupFile);
+                    $this->io->success('Backup created with success.');
+                    $this->io->note('Backup file: ' . $backupFile);
                 } else {
                     $log[] = 'Failed to backup instance.';
                 }
@@ -184,7 +179,7 @@ class BackupInstanceCommand extends Command
                 );
             } catch (\RuntimeException $e) {
                 debug($e->getMessage());
-                $io->error($e->getMessage());
+                $this->io->error($e->getMessage());
             }
         }
 
