@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
  *     See copyright.txt for details and a complete list of authors.
@@ -7,20 +8,19 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Config\Environment;
 
 /**
  * Setup automatic instance clone using CRON
  * Class SetupCloneCommand
  * @package TikiManager\Command
  */
-class SetupCloneManagerCommand extends Command
+class SetupCloneManagerCommand extends TikiManagerCommand
 {
     /**
      * Command configuration function
@@ -100,15 +100,12 @@ class SetupCloneManagerCommand extends Command
                 InputOption::VALUE_NONE,
                 'Use source instance last created backup.'
             );
-    } 
-    
+    }
+
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-
         if (empty($input->getOption('time'))) {
-            $helper = $this->getHelper('question');
-            $answer = $io->ask('What time should it run at?', '00:00', function ($answer) {
+            $answer = $this->io->ask('What time should it run at?', '00:00', function ($answer) {
                 return CommandHelper::validateTimeInput($answer);
             });
 
@@ -124,7 +121,6 @@ class SetupCloneManagerCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
 
         $time = $input->getOption('time');
         // Check if option (set in cli is also valid)
@@ -133,46 +129,45 @@ class SetupCloneManagerCommand extends Command
         //command line execute
         $managerPath = realpath(dirname(__FILE__) . '/../..');
         $cloneInstance = new CloneInstanceCommand();
-        $cloneInstanceCommand= $_ENV['TIKI_MANAGER_EXECUTABLE'] . ' ' . $cloneInstance->getName() . ' --no-interaction ';
+        $cloneInstanceCommand = Environment::get('TIKI_MANAGER_EXECUTABLE') . ' ' . $cloneInstance->getName() . ' --no-interaction ';
         if ($input->getOption('check')) {
-            $cloneInstanceCommand.= ' --check';
+            $cloneInstanceCommand .= ' --check';
         }
 
         if ($source = $input->getOption('source')) {
-            $cloneInstanceCommand.= ' --source=' . $source;
+            $cloneInstanceCommand .= ' --source=' . $source;
         }
 
         if ($target = $input->getOption('target')) {
-            $cloneInstanceCommand.= ' --target=' . $target;
+            $cloneInstanceCommand .= ' --target=' . $target;
         }
 
         if ($branch = $input->getOption('branch')) {
-            $cloneInstanceCommand.= ' --branch=' . $branch;
+            $cloneInstanceCommand .= ' --branch=' . $branch;
         }
 
         if ($skipReindex = $input->getOption('skip-reindex')) {
-            $cloneInstanceCommand.= ' --skip-reindex=' . $skipReindex;
+            $cloneInstanceCommand .= ' --skip-reindex=' . $skipReindex;
         }
 
         if ($skipCacheWarmup = $input->getOption('skip-cache-warmup')) {
-            $cloneInstanceCommand.= ' --slip-cache-warmup=' . $skipCacheWarmup;
-
+            $cloneInstanceCommand .= ' --slip-cache-warmup=' . $skipCacheWarmup;
         }
 
         if ($liveReindex = is_null($input->getOption('live-reindex')) ? true : filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN)) {
-            $cloneInstanceCommand.= ' --live-reindex=' . $liveReindex;
+            $cloneInstanceCommand .= ' --live-reindex=' . $liveReindex;
         }
 
         if ($direct = $input->getOption('direct')) {
-            $cloneInstanceCommand.= ' --direct=' . $direct;
+            $cloneInstanceCommand .= ' --direct=' . $direct;
         }
 
         if ($keepBackup = $input->getOption('keep-backup')) {
-            $cloneInstanceCommand.= ' --keep-backup=' . $keepBackup ;
+            $cloneInstanceCommand .= ' --keep-backup=' . $keepBackup;
         }
 
         if ($useLastBackup = $input->getOption('use-last-backup')) {
-            $cloneInstanceCommand.= ' --use-last-backup=' . $useLastBackup ;
+            $cloneInstanceCommand .= ' --use-last-backup=' . $useLastBackup;
         }
 
         $entry = sprintf(
@@ -184,9 +179,8 @@ class SetupCloneManagerCommand extends Command
             $cloneInstanceCommand
         );
 
-        file_put_contents($file = $_ENV['TEMP_FOLDER'] . '/crontab', `crontab -l` . $entry);
-        $io->writeln("\n<fg=cyan>If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.</>");
-        $io->writeln("<fg=cyan>\t$entry</>");
+        file_put_contents($file = Environment::get('TEMP_FOLDER') . '/crontab', `crontab -l` . $entry);
+        $this->io->error("Failed to edit contab file. Please add the following line to your crontab file: \n{$entry}");
         `crontab $file`;
     }
 }
