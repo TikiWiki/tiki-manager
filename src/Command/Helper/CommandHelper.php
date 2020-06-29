@@ -457,6 +457,9 @@ class CommandHelper
             $app->setupDatabase($dbConn);
         }
 
+        $io->writeln('Fixing permissions...');
+        $app->fixPermissions();
+
         if (isset($error)) {
             CommandHelper::setInstanceSetupError($instance->id);
             return false;
