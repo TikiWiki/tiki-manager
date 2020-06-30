@@ -101,8 +101,8 @@ class Svn extends VersionControlSystem
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
         static $tmpFolderChecked;
-        if (empty($tmpFolderChecked) || !in_array($targetFolder, $tmpFolderChecked)) {
-            $this->ensureTempFolder($targetFolder);
+        if ((empty($tmpFolderChecked) || !in_array($targetFolder,
+                    $tmpFolderChecked)) && $this->ensureTempFolder($targetFolder)) {
             $tmpFolderChecked[] = $targetFolder;
         }
 
@@ -292,10 +292,17 @@ class Svn extends VersionControlSystem
 
     public function ensureTempFolder($targetFolder)
     {
+        // If .svn is not set, cannot ensure temp folder (not a .svn repository, yet)
+        if (!$this->access->fileExists(dirname($targetFolder . self::SVN_TEMP_FOLDER_PATH))) {
+            return false;
+        }
+
         if (!$this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
             $path = $this->access->getInterpreterPath();
             $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }
+
+        return true;
     }
 }
