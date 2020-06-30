@@ -8,6 +8,7 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
@@ -89,17 +90,25 @@ class Git extends VersionControlSystem
         }
 
         if ($this->runLocally) {
-            return `$command`;
+            $cmd = Process::fromShellCommandline($command, null, null, null, 1800);  // 30min tops
+            $cmd->run();
+            $output = $cmd->getOutput();
+            $error = $cmd->getErrorOutput();
+            $exitCode = $cmd->getExitCode();
+        } else {
+            $commandInstance = new Command($command);
+            $result = $this->access->runCommand($commandInstance);
+
+            $output = $result->getStdoutContent();
+            $error = $result->getStderrContent();
+            $exitCode = $result->getReturn();
         }
 
-        $commandInstance = new Command($command);
-        $result = $this->access->runCommand($commandInstance);
-
-        if ($result->getReturn() !== 0) {
-            throw new VcsException($result->getStderrContent());
+        if ($exitCode !== 0) {
+            throw new VcsException($error);
         }
 
-        return rtrim($result->getStdoutContent(), "\n");
+        return rtrim($output, "\n");
     }
 
     public function clone($branchName, $targetFolder)

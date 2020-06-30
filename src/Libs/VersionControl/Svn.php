@@ -8,6 +8,7 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsConflictException;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
@@ -110,17 +111,25 @@ class Svn extends VersionControlSystem
         $command = implode(' ', [$this->command, $globalOptions, $toAppend]);
 
         if ($this->runLocally) {
-            return `$command`;
+            $cmd = Process::fromShellCommandline($command, null, null, null, 1800);  // 30min tops
+            $cmd->run();
+            $output = $cmd->getOutput();
+            $error = $cmd->getErrorOutput();
+            $exitCode = $cmd->getExitCode();
+        } else {
+            $commandInstance = new Command($command);
+            $result = $this->access->runCommand($commandInstance);
+
+            $output = $result->getStdoutContent();
+            $error = $result->getStderrContent();
+            $exitCode = $result->getReturn();
         }
 
-        $commandInstance = new Command($command);
-        $result = $this->access->runCommand($commandInstance);
-
-        if ($result->getReturn() !== 0) {
-            throw new VcsException($result->getStderrContent());
+        if ($exitCode !== 0) {
+            throw new VcsException($error);
         }
 
-        return rtrim($result->getStdoutContent(), "\n");
+        return rtrim($output, "\n");
     }
 
     public function clone($branchName, $targetFolder)
@@ -134,14 +143,14 @@ class Svn extends VersionControlSystem
 
     public function revert($targetFolder)
     {
-        return $this->cleanup($targetFolder) &&
-            $this->exec($targetFolder, "revert $targetFolder --recursive");
+        $this->cleanup($targetFolder);
+        return $this->exec($targetFolder, "revert $targetFolder --recursive");
     }
 
     public function pull($targetFolder)
     {
-        return $this->cleanup($targetFolder) &&
-            $this->exec($targetFolder, "up $targetFolder");
+        $this->cleanup($targetFolder);
+        return $this->exec($targetFolder, "up $targetFolder");
     }
 
     public function cleanup($targetFolder)
