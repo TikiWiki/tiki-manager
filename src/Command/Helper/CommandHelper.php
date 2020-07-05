@@ -448,20 +448,17 @@ class CommandHelper
 
         try {
             $app->install($version, $checksumCheck);
+
+            if ($app->requiresDatabase()) {
+                $dbConn = self::setupDatabaseConnection($instance, $nonInteractive);
+                $app->setupDatabase($dbConn);
+            }
+
+           $io->writeln('Fixing permissions...');
+           $app->fixPermissions();
+
         } catch (\Exception $e) {
-            $error = true;
-        }
-
-        if ($app->requiresDatabase()) {
-            $dbConn = self::setupDatabaseConnection($instance, $nonInteractive);
-            $app->setupDatabase($dbConn);
-        }
-
-        $io->writeln('Fixing permissions...');
-        $app->fixPermissions();
-
-        if (isset($error)) {
-            CommandHelper::setInstanceSetupError($instance->id);
+            CommandHelper::setInstanceSetupError($instance->id, $e);
             return false;
         }
 
@@ -774,7 +771,9 @@ class CommandHelper
         }
         $io->error($errors);
 
-        static::logException($e, $instanceId);
+        if ($e) {
+            static::logException($e, $instanceId);
+        }
     }
 
     /**

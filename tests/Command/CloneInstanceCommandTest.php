@@ -17,15 +17,15 @@ use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
 /**
- * Class CloneInstanceCommandTester
+ * Class CloneInstanceCommandTest
  * @group Commands
  * @backupGlobals true
  */
-class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
+class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 {
     static $instancePath;
-    static $instancePath1;
-    static $instancePath2;
+    static $sourceInstancePath;
+    static $targetInstancePath;
     static $dbLocalFile1;
     static $dbLocalFile2;
     static $instanceIds = [];
@@ -41,29 +41,30 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
             $branch = $_ENV['MASTER_BRANCH'];
         }
 
-        $basePath = $_ENV['TESTS_BASE_FOLDER'];
-        $scriptOwner = get_current_user();
+        $basePath = $_ENV['TESTS_BASE_FOLDER'] . '/clone';
 
-        self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'clone']);
-        self::$instancePath1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance1']);
-        self::$instancePath2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance2']);
-        self::$dbLocalFile1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath1, 'db', 'local.php']);
-        self::$dbLocalFile2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath2, 'db', 'local.php']);
+        self::$sourceInstancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'source']);
+        self::$targetInstancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'target']);
+        self::$dbLocalFile1 = implode(DIRECTORY_SEPARATOR, [self::$sourceInstancePath, 'db', 'local.php']);
+        self::$dbLocalFile2 = implode(DIRECTORY_SEPARATOR, [self::$targetInstancePath, 'db', 'local.php']);
 
-        self::$ListCommandInput = [
-            [
-                InstanceHelper::WEBROOT_OPTION => self::$instancePath1,
-                InstanceHelper::BACKUP_USER_OPTION => isset($scriptOwner) ? $scriptOwner : 'root', // Backup user
-                InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($prevVersionBranch),
-                InstanceHelper::NAME_OPTION => 'source-test.tiki.org',
-            ],
-            [
-                InstanceHelper::WEBROOT_OPTION => self::$instancePath2,
-                InstanceHelper::BACKUP_USER_OPTION => isset($scriptOwner) ? $scriptOwner : 'root', // Backup user
-                InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($branch),
-                InstanceHelper::NAME_OPTION => 'target-test.tiki.org',
-            ]
+        $sourceDetails = [
+            InstanceHelper::WEBROOT_OPTION => self::$sourceInstancePath,
+            InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($prevVersionBranch),
+            InstanceHelper::URL_OPTION => 'http://source-test.tiki.org',
         ];
+
+        $targetDetails = [
+            InstanceHelper::WEBROOT_OPTION => self::$targetInstancePath,
+            InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($branch),
+            InstanceHelper::NAME_OPTION => 'http://target-test.tiki.org',
+        ];
+
+        $sourceInstanceId = InstanceHelper::create($sourceDetails);
+        $targetInstanceId = InstanceHelper::create($targetDetails);
+
+        self::$instanceIds['source'] = $sourceInstanceId;
+        self::$instanceIds['target'] = $targetInstanceId;
     }
 
     public static function tearDownAfterClass()
@@ -76,17 +77,9 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
     {
         $prevVersionBranch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['PREV_SRC_MAJOR_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
 
-        $count = 1;
-        foreach (self::$ListCommandInput as $commandInput) {
-            $instanceId = InstanceHelper::create($commandInput);
-            $this->assertNotFalse($instanceId);
-            self::$instanceIds[$count] = $instanceId;
-            $count++;
-        }
-
         $arguments = [
-            '--source' => strval(self::$instanceIds[1]),
-            '--target' => [strval(self::$instanceIds[2])],
+            '--source' => strval(self::$instanceIds['source']),
+            '--target' => [strval(self::$instanceIds['target'])],
             '--skip-cache-warmup' => true,
         ];
 
@@ -94,7 +87,7 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
         $result = InstanceHelper::clone($arguments);
         $this->assertTrue($result);
 
-        $instance = (new Instance())->getInstance(self::$instanceIds[2]);
+        $instance = (new Instance())->getInstance(self::$instanceIds['target']);
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
 
@@ -104,15 +97,15 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
         $this->assertNotEquals([], $diffDbFile);
     }
 
-    /**
-     * @depends testLocalCloneInstance
-     */
     public function testCloneSameDatabase()
     {
+        $this->assertFileExists(self::$dbLocalFile1);
         $fileSystem = new Filesystem();
-        if ($fileSystem->exists(self::$dbLocalFile1)) {
-            $fileSystem->copy(self::$dbLocalFile1, self::$dbLocalFile2, true);
-        }
+        $fileSystem->copy(self::$dbLocalFile1, self::$dbLocalFile2, true);
+
+        $this->assertFileExists(self::$dbLocalFile2);
+        $diffDbFile = Files::compareFiles(self::$dbLocalFile1, self::$dbLocalFile2);
+        $this->assertEquals([], $diffDbFile);
 
         // Clone command
         $application = new Application();
@@ -122,8 +115,8 @@ class CloneInstanceCommandTester extends \PHPUnit\Framework\TestCase
 
         $arguments = [
             'command' => 'instance:clone',
-            '--source' => strval(self::$instanceIds[1]),
-            '--target' => [strval(self::$instanceIds[2])],
+            '--source' => strval(self::$instanceIds['source']),
+            '--target' => [strval(self::$instanceIds['target'])],
             '--skip-cache-warmup' => true,
         ];
 

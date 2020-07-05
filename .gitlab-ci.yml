@@ -1,12 +1,5 @@
 image: xorti/tiki-manager-qa:7.1-qa
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}-composer
-  paths:
-    - vendor/
-    - vendor-bin/
-    - .composercache/files
-
 variables:
   MYSQL_ROOT_PASSWORD: secret
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
@@ -18,37 +11,25 @@ stages:
   - build
   - quality
   - unit-tests
+  - pre-functional-tests
   - functional-tests
   - package
+
+.composer-cache:
+  cache: &composer-cache
+    key: cache-tiki-manager
+    paths:
+      - vendor/
+      - vendor-bin/
+      - .composercache/files
 
 composer:
   stage: build
   script:
     - composer install $COMPOSER_FLAGS
     - composer bin all install $COMPOSER_FLAGS
-
-download-tiki-src-files:
-  stage: build
-  script:
-    - |
-      source .env.gitlab-ci &&\
-      SRC_PATH='data/tiki_src/' &&\
-      if [ ! -f "${SRC_PATH}tiki-${LATEST_SRC_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_LATEST_SRC_RELEASE}; fi; \
-      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MINOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MINOR_RELEASE}; fi; \
-      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MAJOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MAJOR_RELEASE}; fi;
-  artifacts:
-    expire_in: 1 month
-    paths:
-      - data/tiki_src
   cache:
-    key: ${CI_COMMIT_REF_SLUG}-tiki-src-files
-    paths:
-      - data/tiki_src
-  only:
-    refs:
-      - schedules
-    variables:
-      - $SCHEDULER == $SRC_SCHEDULER_NAME
+    <<: *composer-cache
 
 #
 # Lint
@@ -71,6 +52,7 @@ php-53-scripts:
     - php -l scripts/tiki/tiki_dbinstall_ftp.php
     - php -l scripts/tiki/remote_setup_channels.php
     - php -l scripts/tiki/mysqldump.php
+  needs: []
   allow_failure: false
 
 phpcs:
@@ -81,6 +63,11 @@ phpcs:
     - git log -m -1 --name-only
     - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
   allow_failure: true
+  needs:
+    - composer
+  cache:
+    <<: *composer-cache
+    policy: pull
   only:
     - master
 
@@ -94,9 +81,13 @@ phpcs-branches:
     - git diff --name-status origin/$SBRANCH
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
   allow_failure: true
+  needs:
+    - composer
+  cache:
+    <<: *composer-cache
+    policy: pull
   except:
     - master
-
 
 code_quality:
   image: docker:stable
@@ -113,6 +104,7 @@ code_quality:
       --volume "$PWD":/code
       --volume /var/run/docker.sock:/var/run/docker.sock
       "registry.gitlab.com/gitlab-org/security-products/codequality:$SP_VERSION" /code
+  needs: []
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
@@ -130,31 +122,118 @@ unit-tests:
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
     - composer install $COMPOSER_FLAGS
     - ./vendor/bin/phpunit tests/ --group unit
+  needs:
+    - composer
+  cache:
+    <<: *composer-cache
+    policy: pull
   allow_failure: false
 
+#----------------------------------------------------------------------------------------------------------------------#
+# FUNCTIONAL TESTS SECTION
+#----------------------------------------------------------------------------------------------------------------------#
+.tiki-manager-cache:
+  cache: &tiki-manager-cache
+    key: cache-tiki-$VCS
+    paths:
+      - cache/
+      - vendor/
+      - vendor-bin/
+      - .composercache/files
+
+.cache-warmup-tiki:
+  stage: pre-functional-tests
+  before_script:
+    - source .env.gitlab-ci
+    - composer install $COMPOSER_FLAGS
+  cache:
+    <<: *tiki-manager-cache
+  needs:
+    - composer
+  dependencies:
+    - composer
+
+cache-warmup-tiki-git:
+  extends: .cache-warmup-tiki
+  variables:
+    VCS: git
+  script:
+    - TIKI_CACHE=cache/tiki-git-$PREV_VERSION_BRANCH
+    - |
+      if [ ! -d "$TIKI_CACHE" ]; then
+        git clone --depth 1 --no-single-branch -b $PREV_VERSION_BRANCH $GIT_TIKIWIKI_URI $TIKI_CACHE;
+      else
+        git -C $TIKI_CACHE pull
+      fi;
+  except:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULER == $SVN_SCHEDULER_NAME
+      - $SCHEDULER == $SRC_SCHEDULER_NAME
+
+cache-warmup-tiki-svn:
+  extends: .cache-warmup-tiki
+  variables:
+    VCS: svn
+  script:
+    - TIKI_CACHE=cache/tiki-svn-branches_$PREV_VERSION_BRANCH
+    - |
+      if [ ! -d "$TIKI_CACHE" ]; then
+        svn checkout $SVN_TIKIWIKI_URI/branches/$PREV_VERSION_BRANCH $TIKI_CACHE
+      else
+        cd $TIKI_CACHE && svn up
+      fi;
+  only:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULER == $SVN_SCHEDULER_NAME
+
+download-tiki-src-files:
+  extends: .cache-warmup-tiki
+  script:
+    - |
+      SRC_PATH='data/tiki_src/' &&\
+      if [ ! -f "${SRC_PATH}tiki-${LATEST_SRC_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_LATEST_SRC_RELEASE}; fi; \
+      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MINOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MINOR_RELEASE}; fi; \
+      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MAJOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MAJOR_RELEASE}; fi;
+  only:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULER == $SRC_SCHEDULER_NAME
 
 #----------------------------------------------------------------------------------------------------------------------#
 # FUNCTIONAL TESTS SECTION
 #----------------------------------------------------------------------------------------------------------------------#
 
-.template-tiki-manager-commands: &template-tiki-manager-commands
+.template-tiki-manager-commands:
   image: xorti/tiki-manager-qa:7.2-qa
   stage: functional-tests
   services:
     - name: mysql:5.6
       alias: mysql
-  script:
+  before_script:
     - echo APP_ENV=gitlab-ci >> .env
     - echo DEFAULT_VCS=$VCS >> .env
     - cat .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
     - composer install $COMPOSER_FLAGS
     - composer bin all install $COMPOSER_FLAGS
+  script:
     - ./vendor/bin/phpunit tests/Command/$TEST_FILE
+  cache:
+    <<: *tiki-manager-cache
+    policy: pull
   allow_failure: false
 
 .template-tiki-manager-commands-git: &template-tiki-manager-commands-git
-  <<: *template-tiki-manager-commands
+  extends: .template-tiki-manager-commands
+  dependencies:
+    - cache-warmup-tiki-git
+  needs:
+    - cache-warmup-tiki-git
   except:
     refs:
       - schedules
@@ -163,7 +242,11 @@ unit-tests:
       - $SCHEDULER == $SRC_SCHEDULER_NAME
 
 .template-tiki-manager-commands-svn: &template-tiki-manager-commands-svn
-  <<: *template-tiki-manager-commands
+  extends: .template-tiki-manager-commands
+  dependencies:
+    - cache-warmup-tiki-svn
+  needs:
+    - cache-warmup-tiki-svn
   only:
     refs:
       - schedules
@@ -171,16 +254,11 @@ unit-tests:
       - $SCHEDULER == $SVN_SCHEDULER_NAME
 
 .template-tiki-manager-commands-src: &template-tiki-manager-commands-src
-  <<: *template-tiki-manager-commands
+  extends: .template-tiki-manager-commands
   dependencies:
     - download-tiki-src-files
-  before_script:
-    - |
-      source .env.gitlab-ci &&\
-      SRC_PATH='data/tiki_src/' &&\
-      if [ ! -f "${SRC_PATH}tiki-${LATEST_SRC_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_LATEST_SRC_RELEASE}; fi; \
-      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MINOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MINOR_RELEASE}; fi; \
-      if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MAJOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MAJOR_RELEASE}; fi;
+  needs:
+    - download-tiki-src-files
   only:
     refs:
       - schedules
@@ -323,6 +401,10 @@ phar:
     - composer install $COMPOSER_FLAGS
     - composer build-phar
   allow_failure: false
+  needs:
+    - composer
+  cache:
+    <<: *composer-cache
   artifacts:
     name: tiki-manager.phar
     paths:

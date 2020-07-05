@@ -17,11 +17,11 @@ use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
 /**
- * Class UpgradeInstanceCommandTester
+ * Class UpgradeInstanceCommandTest
  * @group Commands
  * @backupGlobals true
  */
-class UpgradeInstanceCommandTester extends TestCase
+class UpgradeInstanceCommandTest extends TestCase
 {
     protected static $instancePath;
     protected static $instancePath1;

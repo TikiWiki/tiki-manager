@@ -17,11 +17,11 @@ use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
 /**
- * Class UpdateInstanceCommandTester
+ * Class UpdateInstanceCommandTest
  * @group Commands
  * @backupGlobals true
  */
-class UpdateInstanceCommandTester extends TestCase
+class UpdateInstanceCommandTest extends TestCase
 {
     protected static $instancePath;
     protected static $instancePath1;
@@ -45,8 +45,8 @@ class UpdateInstanceCommandTester extends TestCase
             $branch = $_ENV['PREV_SRC_MINOR_RELEASE'];
             $updateBranch = $_ENV['LATEST_SRC_RELEASE'];
         } else {
-            $branch = $_ENV['MASTER_BRANCH'];
-            $updateBranch = $_ENV['MASTER_BRANCH'];
+            // Branch does not change
+            $branch = $updateBranch = $_ENV['PREV_VERSION_BRANCH'];
         }
 
         $instanceId = InstanceHelper::create([

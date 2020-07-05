@@ -34,7 +34,7 @@ class Instance
 
     public static function create($config = [], $blank = false)
     {
-        $branch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['MASTER_BRANCH'];
+        $branch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
 
         $defaults = [
             self::TYPE_OPTION => 'local',

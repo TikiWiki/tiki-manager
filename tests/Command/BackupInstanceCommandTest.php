@@ -32,7 +32,6 @@ class BackupInstanceCommandTest extends TestCase
     public static function setUpBeforeClass()
     {
         $basePath = $_ENV['TESTS_BASE_FOLDER'];
-        $scriptOwner = get_current_user();
 
         self::$archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], '/');
 
@@ -43,7 +42,6 @@ class BackupInstanceCommandTest extends TestCase
         self::$instanceId = InstanceHelper::create([
             InstanceHelper::WEBROOT_OPTION => self::$instance1Path,
             InstanceHelper::TEMPDIR_OPTION => self::$tempPath,
-            InstanceHelper::BACKUP_USER_OPTION => isset($scriptOwner) ? $scriptOwner : 'root', // Backup user
         ]);
     }
 

@@ -20,11 +20,11 @@ use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
 /**
- * Class BlockWebManagerCommandTester
+ * Class BlockWebManagerCommandTest
  * @group Commands
  * @backupGlobals true
  */
-class BlockWebManagerCommandTester extends TestCase
+class BlockWebManagerCommandTest extends TestCase
 {
     public function testResetLoginAttempts()
     {

@@ -12,11 +12,11 @@ use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 use TikiManager\Tests\Helpers\VersionControl;
 
 /**
- * Class CreateInstanceCommandTester
+ * Class CreateInstanceCommandTest
  * @group Commands
  * @backupGlobals true
  */
-class CreateInstanceCommandTester extends \PHPUnit\Framework\TestCase
+class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
 {
     protected static $instancePath;
     protected static $tempPath;

@@ -19,11 +19,11 @@ use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
 /**
- * Class CloneInstanceCommandTester
+ * Class CloneInstanceCommandTest
  * @group Commands
  * @backupGlobals true
  */
-class CloneAndUpgradeCommandTester extends TestCase
+class CloneAndUpgradeCommandTest extends TestCase
 {
     protected static $instancePath;
     protected static $instancePath1;
@@ -107,7 +107,7 @@ class CloneAndUpgradeCommandTester extends TestCase
      */
     public function testCloneSameDatabase()
     {
-        $upgradeBranch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['MASTER_BRANCH'];
+        $upgradeBranch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
 
         $fileSystem = new Filesystem();
         if ($fileSystem->exists(self::$dbLocalFile1)) {
