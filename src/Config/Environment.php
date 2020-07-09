@@ -59,6 +59,11 @@ class Environment
 
         if (!$output) {
             $output = PHP_SAPI != 'cli' ? new StreamOutput(fopen('php://output', 'w')) : new ConsoleOutput();
+
+            if (PHP_SAPI != 'cli') {
+                $formatter = App::get('ConsoleHtmlFormatter');
+                $output->setFormatter($formatter);
+            }
         }
 
         $container = App::getContainer();

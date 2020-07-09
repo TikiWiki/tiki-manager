@@ -9,6 +9,7 @@ namespace TikiManager\Config;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use TikiManager\Application\Info;
+use TikiManager\Style\Formatter\HtmlOutputFormatter;
 use TikiManager\Style\TikiManagerStyle;
 
 class App
@@ -31,6 +32,8 @@ class App
 //            ->addArgument(new Reference('io.output'));
 
         $container->register('info', Info::class);
+
+        $container->register('ConsoleHtmlFormatter', HtmlOutputFormatter::class);
 
         return $container;
     }

@@ -154,12 +154,6 @@ $(document).ready(function () {
     });
 
     $('#trimModal').on('show.bs.modal', function (event) {
-        var ansi = {
-            '\\[36m': '<span class="cyan">',
-            '\\[33m': '<span class="orange">',
-            '\\[31m': '<span class="red">',
-            '\\[0m': '</span>'
-        };
 
         var replaceable_ascii = {
             27: ''
@@ -223,6 +217,7 @@ $(document).ready(function () {
                     log = this_response.trim();
                     // This replaces \n that in <pre> causes double lines
                     log = log.replace(/(\r\n|\n\r|\r|\n)/g, '');
+                    log += "\n";
 
                     var parsed_log = '';
 
@@ -234,10 +229,6 @@ $(document).ready(function () {
                         }
 
                         parsed_log += char;
-                    }
-
-                    for (var key in ansi) {
-                        parsed_log = parsed_log.replace(new RegExp(key, 'g'), ansi[key]);
                     }
 
                     modal.find('#loading-icon').before(parsed_log);
