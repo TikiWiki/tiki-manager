@@ -684,6 +684,11 @@ SQL;
         return false;
     }
 
+    /**
+     * @param bool $direct
+     * @return bool|string
+     * @throws Exception\FolderPermissionException
+     */
     public function backup($direct = false)
     {
         $backup = new Backup($this, $direct);
@@ -810,8 +815,16 @@ SQL;
 
     public function getArchives()
     {
-        $backup = new Backup($this);
-        return $backup->getArchives();
+        try {
+            $backup = new Backup($this);
+            return $backup->getArchives();
+        } catch (\Exception $e) {
+            // Write the error in Tiki Manager output file
+            // This should be replaced with LoggerInterface
+            trim_output($e->getMessage());
+        }
+
+        return  [];
     }
 
     public function reduceBackups($maxBackups = 0)

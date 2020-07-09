@@ -228,7 +228,11 @@ class CloneInstanceCommand extends TikiManagerCommand
 
                 if ($standardProcess) {
                     App::get('io')->section('Creating snapshot of: ' . $selectedSourceInstances[0]->name);
-                    $archive = $selectedSourceInstances[0]->backup();
+                    try {
+                        $archive = $selectedSourceInstances[0]->backup();
+                    } catch (\Exception $e) {
+                        $this->io->error($e->getMessage());
+                    }
                 }
 
                 if (empty($archive)) {

@@ -6,6 +6,7 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Application\Exception\FolderPermissionException;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
 use TikiManager\Libs\VersionControl\Svn;
@@ -31,6 +32,12 @@ class Backup
     protected $workpath;
     protected $direct;
 
+    /**
+     * Backup constructor.
+     * @param $instance
+     * @param bool $direct
+     * @throws FolderPermissionException
+     */
     public function __construct($instance, $direct = false)
     {
         $this->io = App::get('io');
@@ -196,24 +203,48 @@ class Backup
         return $success ? $tarPath : false;
     }
 
+    /**
+     * @param null $archiveDir
+     * @return bool|string|null
+     * @throws FolderPermissionException
+     */
     public function createArchiveDir($archiveDir = null)
     {
         $archiveDir = $archiveDir ?: $this->archiveDir;
-        if (is_dir($archiveDir) || mkdir($archiveDir, $this->filePerm, true)) {
-            $this->fixPermissions($archiveDir);
-            return $archiveDir;
-        }
-        return false;
+
+        return $this->createDir($archiveDir);
     }
 
+    /**
+     * @param null $backupDir
+     * @return string|null
+     * @throws FolderPermissionException
+     */
     public function createBackupDir($backupDir = null)
     {
         $backupDir = $backupDir ?: $this->backupDir;
 
-        if (is_dir($backupDir) || mkdir($backupDir, $this->filePerm, true)) {
-            $this->fixPermissions($backupDir);
-            return $backupDir;
+        return $this->createDir($backupDir);
+    }
+
+    protected function createDir($folder)
+    {
+        $parentFolder = dirname($folder);
+
+        $exceptionMessage = 'Folder "%s" is not writable. Tiki-manager requires write privileges in order to create backups.';
+
+        if (! is_writable($parentFolder) && ! $this->fixPermissions($parentFolder)) {
+            throw new FolderPermissionException(sprintf($exceptionMessage, $parentFolder));
         }
+
+        if (is_dir($folder) || mkdir($folder, $this->filePerm, true)) {
+            if (! $this->fixPermissions($folder)) {
+                throw new FolderPermissionException(sprintf($exceptionMessage, $folder));
+            }
+
+            return $folder;
+        }
+        return false;
     }
 
     public function createDatabaseDump($app, $backupDir = null)
