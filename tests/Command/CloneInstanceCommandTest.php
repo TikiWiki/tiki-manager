@@ -52,12 +52,14 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
             InstanceHelper::WEBROOT_OPTION => self::$sourceInstancePath,
             InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($prevVersionBranch),
             InstanceHelper::URL_OPTION => 'http://source-test.tiki.org',
+            InstanceHelper::NAME_OPTION => 'source-test.tiki.org',
         ];
 
         $targetDetails = [
             InstanceHelper::WEBROOT_OPTION => self::$targetInstancePath,
             InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($branch),
-            InstanceHelper::NAME_OPTION => 'http://target-test.tiki.org',
+            InstanceHelper::URL_OPTION => 'http://target-test.tiki.org',
+            InstanceHelper::NAME_OPTION => 'target-test.tiki.org',
         ];
 
         $sourceInstanceId = InstanceHelper::create($sourceDetails);
