@@ -11,7 +11,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
 
 class TikiVersionCommand extends TikiManagerCommand
 {
@@ -26,9 +25,9 @@ class TikiVersionCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $vcsOption = CommandHelper::getCliOption('vcs');
+        $vcsOption = $input->getOption('vcs');
         $vcsOption = strtoupper($vcsOption);
-        if (! in_array($vcsOption, ['SVN', 'GIT'])) {
+        if (! in_array($vcsOption, ['SVN', 'GIT', 'SRC'])) {
             $vcsOption = '';
         }
 

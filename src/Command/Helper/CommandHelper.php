@@ -596,14 +596,14 @@ class CommandHelper
     public static function getVersions($vcsType = '')
     {
         $instance = new Instance();
+        $instance->type = 'local';
         if (!empty($vcsType)) {
             $instance->vcs_type = $vcsType;
         }
         $instance->phpversion = 50500;
         $tikiApplication = new Tiki($instance);
-        $versions = $tikiApplication->getCompatibleVersions();
 
-        return $versions;
+        return $tikiApplication->getCompatibleVersions();
     }
 
     /**
