@@ -31,7 +31,7 @@ class CreateInstanceCommand extends TikiManagerCommand
     {
         $this
             ->setName('instance:create')
-            ->setDescription('Creates a new instance')
+            ->setDescription('Creates a new instance (or take over an already installed Tiki)')
             ->setHelp('This command allows you to create a new instance')
             ->addOption(
                 'blank',
