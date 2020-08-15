@@ -201,6 +201,15 @@ class SSH extends Access implements ShellPrompt
         return $linuxName;
     }
 
+    public function createDirectory($path)
+    {
+        $phpexec = $this->instance->phpexec ?? $this->getInterpreterPath($this->instance);
+
+        $script = sprintf("echo mkdir('%s', 0777, true);", $path);
+        $command = $this->createCommand($phpexec, ["-r {$script}"]);
+        return $command->run()->getStdoutContent() == 1;
+    }
+
     public function fileExists($filename)
     {
         if ($filename{0} != '/') {

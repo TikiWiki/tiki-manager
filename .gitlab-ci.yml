@@ -108,6 +108,8 @@ code_quality:
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
+  tags:
+    - docker
 
 #----------------------------------------------------------------------------------------------------------------------#
 # UNIT TESTS SECTION
@@ -121,6 +123,7 @@ unit-tests:
     - echo 'APP_ENV=gitlab-ci' >> .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
     - composer install $COMPOSER_FLAGS
+    - composer build-phar
     - ./vendor/bin/phpunit tests/ --group unit
   needs:
     - composer

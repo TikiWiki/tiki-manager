@@ -41,6 +41,8 @@ class ArchiveTest extends TestCase
         $date3 = (new DateTime())->format($dateFormat);
         $date4 = (new DateTime('8 days ago'))->modify('last saturday')->format($dateFormat);
 
+        $isDay1 = (new DateTime('8 days ago'))->modify('last saturday')->format('d') == '01';
+
         $file1 = sprintf('%s-%s_%s.tar.bz2', $instanceId, $instanceName, $date1);
         $file2 = sprintf('%s-%s_%s.tar.bz2', $instanceId, $instanceName, $date2);
         $file3 = sprintf('%s-%s_%s.tar.bz2', $instanceId, $instanceName, $date3);
@@ -56,7 +58,8 @@ class ArchiveTest extends TestCase
 
         Archive::cleanup($instanceId, $instanceName);
         $files = glob($backupDirectory . '/*.tar.bz2');
-        $this->assertCount(3, $files); // Old backups (more than 7 days should be removed)
+        $expectedFiles = $isDay1 ? 4 : 3; // Old backups (more than 7 days should be removed) Except day 1.
+        $this->assertCount($expectedFiles, $files);
         $this->assertFalse($fs->exists($file4));
 
         Archive::cleanup($instanceId, $instanceName, 2);

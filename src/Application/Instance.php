@@ -236,6 +236,8 @@ SQL;
     public $backup_user;
     public $backup_group;
     public $backup_perm;
+    public $vcs_type;
+
     public $selection;
     public $last_action;
     public $last_action_date;
@@ -428,6 +430,15 @@ SQL;
         return isset($count->numInstances) ? $count->numInstances : 0;
     }
 
+    /**
+     * Checks if there is another instance that shares the same details
+     * (host and webroot)
+     */
+    public function hasDuplicate()
+    {
+        return static::countNumInstances($this) > 1;
+    }
+
     public function delete()
     {
         query(self::SQL_DELETE_ACCESS, [':id' => $this->id]);
@@ -467,7 +478,7 @@ SQL;
      * @param string $type
      * @return Access
      */
-    public function getBestAccess($type)
+    public function getBestAccess($type = null)
     {
         if (empty($this->access)) {
             $this->access = Access::getAccessFor($this);
@@ -603,7 +614,7 @@ SQL;
 
     public function findApplication()
     {
-        foreach (Application::getApplications($this) as $app) {
+        foreach ($this->getApplications() as $app) {
             if ($app->isInstalled()) {
                 $app->registerCurrentInstallation();
                 return $app;
@@ -901,7 +912,7 @@ SQL;
 
         // Copy
         if (!$access->fileExists('.htaccess')) {
-            $access->copy('_htaccess', '.htaccess');
+            $access->copyFile('_htaccess', '.htaccess');
         }
 
         return $access->fileExists('.htaccess');
@@ -930,19 +941,19 @@ SQL;
     }
 
     /**
-     * @param Database $config
+     * @param Database|array $config
      */
-    public function setDatabaseConfig(Database $config)
+    public function setDatabaseConfig($config)
     {
         $this->databaseConfig = $config;
     }
 
     /**
-     * @return Database
+     * @return Database|array
      */
     public function getDatabaseConfig()
     {
-        return $this->databaseConfig ?? $this->loadDatabaseConfig();
+        return $this->databaseConfig ?? $this->loadDatabaseConfig() ?? null;
     }
 
     /**
@@ -954,7 +965,7 @@ SQL;
         $access = $this->getBestAccess('scripting');
         $remoteFile = "{$this->webroot}/db/local.php";
 
-        if (!$access->fileExists($remoteFile)) {
+        if (!$access || !$access->fileExists($remoteFile)) {
             return null;
         }
 
@@ -963,9 +974,58 @@ SQL;
         unlink($localFile);
 
         if ($dbUser instanceof Database) {
+            $this->setDatabaseConfig($dbUser);
             return $dbUser;
         }
 
         return null;
+    }
+
+    public function getCompatibleVersions()
+    {
+
+        $apps = Application::getApplications($this);
+        $selection = getEntries($apps, 0);
+        $app = reset($selection);
+
+        return $app->getCompatibleVersions();
+    }
+
+    /**
+     * @return Discovery
+     */
+    public function getDiscovery(): Discovery
+    {
+        return new Discovery($this);
+    }
+
+    /**
+     * @return array
+     */
+    public function getApplications(): array
+    {
+        return Application::getApplications($this);
+    }
+
+    /**
+     * @param Application $app
+     * @param Version $version
+     * @param bool $checksumCheck
+     * @throws \Exception
+     */
+    public function installApplication(Application $app, Version $version, $checksumCheck = false)
+    {
+        $app->install($version, $checksumCheck);
+
+        if ($app->requiresDatabase()) {
+            $this->database()->setupConnection();
+            $dbConfig = $this->getDatabaseConfig();
+            $app->setupDatabase($dbConfig);
+        }
+    }
+
+    public function database()
+    {
+        return new Database($this);
     }
 }

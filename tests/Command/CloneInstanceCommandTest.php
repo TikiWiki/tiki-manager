@@ -43,6 +43,7 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
         $basePath = $_ENV['TESTS_BASE_FOLDER'] . '/clone';
 
+        self::$instancePath = $basePath;
         self::$sourceInstancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'source']);
         self::$targetInstancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'target']);
         self::$dbLocalFile1 = implode(DIRECTORY_SEPARATOR, [self::$sourceInstancePath, 'db', 'local.php']);

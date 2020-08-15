@@ -7,10 +7,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Traits\InstanceConfigure;
 use TikiManager\Config\App;
 
 class RestoreInstanceCommand extends TikiManagerCommand
 {
+    use InstanceConfigure;
+
     protected function configure()
     {
         $this
@@ -82,8 +85,9 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 }
 
                 $instance->app = $restorableInstance->app; // Required to setup database connection
-                $databaseConfig = CommandHelper::setupDatabaseConnection($instance);
-                $instance->setDatabaseConfig($databaseConfig);
+
+                $this->setupDatabase($instance);
+                $instance->database()->setupConnection();
 
                 $instance->restore($restorableInstance->app, $file, false, $checksumCheck);
 

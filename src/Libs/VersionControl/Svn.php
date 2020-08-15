@@ -102,8 +102,10 @@ class Svn extends VersionControlSystem
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
         static $tmpFolderChecked;
-        if ((empty($tmpFolderChecked) || !in_array($targetFolder,
-                    $tmpFolderChecked)) && $this->ensureTempFolder($targetFolder)) {
+        if ((empty($tmpFolderChecked) || !in_array(
+            $targetFolder,
+            $tmpFolderChecked
+        )) && $this->ensureTempFolder($targetFolder)) {
             $tmpFolderChecked[] = $targetFolder;
         }
 
@@ -225,7 +227,7 @@ class Svn extends VersionControlSystem
         $info = $this->info($targetFolder, true);
 
         if (! empty($info)) {
-            preg_match('/(.*Rev:\s+)(.*)/', $info, $matches);
+            preg_match('/(.*Rev(?:ision)?:\s+)(.*)/', $info, $matches);
             return $matches[2];
         }
 

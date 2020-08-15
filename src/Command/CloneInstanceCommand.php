@@ -14,12 +14,16 @@ use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Traits\InstanceConfigure;
 use TikiManager\Config\App;
+use TikiManager\Command\Helper\InstanceHelper;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 
 class CloneInstanceCommand extends TikiManagerCommand
 {
+    use InstanceConfigure;
+
     protected function configure()
     {
         $this
@@ -158,8 +162,8 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
             $instances = $instances_pruned;
 
-            $databaseConfig = CommandHelper::setupDatabaseConnection($selectedSourceInstances[0]);
-            $selectedSourceInstances[0]->setDatabaseConfig($databaseConfig);
+            $this->setupDatabase($selectedSourceInstances[0]);
+            $selectedSourceInstances[0]->database()->setupConnection();
 
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
             if (isset($instancesInfo)) {
@@ -169,7 +173,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                     $selectedDestinationInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
                 } else {
                     $this->io->newLine();
-                    $renderResult = CommandHelper::renderInstancesTable($output, $instancesInfo);
+                    CommandHelper::renderInstancesTable($output, $instancesInfo);
 
                     $question = CommandHelper::getQuestion('Select the destination instance(s)', null);
                     $question->setValidator(function ($answer) use ($instances) {
@@ -193,8 +197,9 @@ class CloneInstanceCommand extends TikiManagerCommand
 
                 foreach ($selectedDestinationInstances as $destinationInstance) {
                     $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
-                    $databaseConfig = CommandHelper::setupDatabaseConnection($destinationInstance);
-                    $destinationInstance->setDatabaseConfig($databaseConfig);
+
+                    $this->setupDatabase($selectedSourceInstances[0]);
+                    $selectedSourceInstances[0]->database()->setupConnection();
 
                     if ($direct && ($selectedSourceInstances[0]->type != 'local' || $destinationInstance->type != 'local')) {
                         $output->writeln('<comment>Direct backup cannot be used, instance "' . $selectedSourceInstances[0]->name . '" and "' . $destinationInstance->name . '" are not in same location.</comment>');

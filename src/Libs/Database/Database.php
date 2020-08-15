@@ -15,6 +15,7 @@ use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 
 class Database
 {
+    /** @var Instance */
     private $instance;
     private $extensions = array();
     private $mysqlArgs = array();
@@ -27,12 +28,18 @@ class Database
 
     public $dbLocalContent = "";
 
-    public function __construct(Instance $instance, $credentials = array())
+    public function __construct(Instance $instance)
+    {
+        $this->setInstance($instance);
+    }
+
+    public function setInstance(Instance $instance)
     {
         $this->instance = $instance;
         $this->access = $instance->getBestAccess('scripting');
-        $this->setCredentials($credentials);
         $this->locateExtensions();
+
+        return $this;
     }
 
     public function connect()
@@ -52,7 +59,6 @@ class Database
             }
             throw new DatabaseErrorException($e->getMessage(), $e->getCode());
         }
-        throw new DatabaseErrorException("Can't connect to database", 2);
     }
 
     public function createAccess($user, $dbname, $pass = null)
@@ -71,7 +77,9 @@ class Database
             'type'   => $this->type,
             'user'   => $user
         );
-        $db = new self($this->instance, $credentials);
+
+        $db = new self($this->instance);
+        $db->setCredentials($credentials);
         if ($db->testConnection()) {
             return $db;
         }
@@ -96,7 +104,6 @@ class Database
         return (!is_null($database1) &&
             !is_null($database2) &&
             ($database1->host === $database2->host &&
-                $database1->host === $database2->host &&
                 $database1->dbname === $database2->dbname &&
                 $database1->user === $database2->user
             ));
@@ -121,6 +128,7 @@ class Database
             $db->dbLocalContent = file_get_contents($db_local_path);
             return $db;
         }
+
         return null;
     }
 
@@ -299,6 +307,44 @@ class Database
         };
 
         return $getConfig($db_local_path);
+    }
+
+    /**
+     * @param Database|array $config
+     * @return $this|Database|null
+     */
+    public function setupConnection()
+    {
+        $config = $this->instance->getDatabaseConfig();
+
+        if ($config instanceof Database) {
+            return $config;
+        }
+
+        list('host' => $dbHost, 'user' => $dbUser, 'pass' => $dbPass, 'database' => $dbName, 'prefix' => $dbPrefix) = $config;
+
+        $this->host = $dbHost;
+        $this->user = $dbUser;
+        $this->pass = $dbPass;
+
+        $types = $this->getUsableExtensions();
+        $this->type = reset($types) ?: getenv('MYSQL_DRIVER');
+
+        if (!$dbPrefix) {
+            $this->dbname = $dbName;
+            $this->instance->setDatabaseConfig($this);
+            return;
+        }
+
+        $username = "{$dbPrefix}_user";
+        $dbname = "{$dbPrefix}_db";
+
+        try {
+            $config = $this->createAccess($username, $dbname);
+            $this->instance->setDatabaseConfig($config);
+        } catch (DatabaseErrorException $e) {
+            throw new \RuntimeException("Can't setup database!\nError: " . $e->getMessage());
+        }
     }
 }
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

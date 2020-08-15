@@ -46,6 +46,13 @@ class FTP
         return false;
     }
 
+    public function createDirectory($path)
+    {
+        $this->connect();
+        // TODO MAKE IT RECURSIVE
+        return ftp_mkdir($this->conn, $path);
+    }
+
     public function fileExists($filename)
     {
         $this->connect();

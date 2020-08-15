@@ -82,6 +82,12 @@ SQL;
             $access[] = $a;
         }
 
+        if (empty($access)) { // Instance is not yet saved in database
+            $class = self::getClassFor($instance->type);
+            $a = new $class($instance);
+            $access[] = $a;
+        }
+
         return $access;
     }
 
@@ -118,6 +124,8 @@ SQL;
     abstract public function firstConnect();
 
     abstract public function getInterpreterPath($instance2 = null);
+
+    abstract public function createDirectory($path);
 
     abstract public function fileExists($filename);
 

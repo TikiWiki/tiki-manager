@@ -67,6 +67,9 @@ class Environment
         }
 
         $container = App::getContainer();
+        $container->set('input', $input);
+        $container->set('output', $output);
+
         $container->set('io', new TikiManagerStyle($input, $output));
 
         $this->io = $container->get('io');

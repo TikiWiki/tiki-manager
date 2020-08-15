@@ -11,6 +11,8 @@ use TikiManager\Style\TikiManagerStyle;
 
 abstract class TikiManagerCommand extends Command
 {
+    /** @var InputInterface */
+    protected $input;
 
     /** @var TikiManagerStyle */
     protected $io;
@@ -22,6 +24,8 @@ abstract class TikiManagerCommand extends Command
     {
         Environment::getInstance()->setIO($input, $output);
         $this->io = App::get('io');
+
+        $this->input = $input;
 
         return parent::run($input, $output);
     }

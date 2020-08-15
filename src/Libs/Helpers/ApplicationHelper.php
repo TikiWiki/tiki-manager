@@ -6,6 +6,8 @@
 
 namespace TikiManager\Libs\Helpers;
 
+use TikiManager\Application\Instance;
+
 class ApplicationHelper
 {
     /**
@@ -83,5 +85,12 @@ class ApplicationHelper
     public static function isWindows()
     {
         return substr(PHP_OS, 0, 3) == 'WIN';
+    }
+
+    public static function getInstanceTypes()
+    {
+        $instanceTypes = ApplicationHelper::isWindows() ? 'local' : Instance::TYPES;
+        $listInstanceTypes = explode(',', $instanceTypes);
+        return $listInstanceTypes;
     }
 }

@@ -8,10 +8,13 @@
 namespace TikiManager\Tests\Helpers;
 
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Tester\CommandTester;
 use TikiManager\Command\CreateInstanceCommand;
 use TikiManager\Command\CloneAndUpgradeInstanceCommand;
 use TikiManager\Command\CloneInstanceCommand;
+use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 use TikiManager\Libs\Helpers\VersionControl;
 
 class Instance
@@ -44,13 +47,10 @@ class Instance
             self::WEBROOT_OPTION => '/tmp/tiki-manager-www', // This value should be overridden
             self::TEMPDIR_OPTION => '/tmp/tiki-manager-tmp',
             self::BRANCH_OPTION => VersionControl::formatBranch($branch),
-            self::BACKUP_USER_OPTION => 'root',
-            self::BACKUP_GROUP_OPTION => 'root',
-            self::BACKUP_PERMISSION_OPTION => '750',
             self::DB_HOST_OPTION => $_ENV['DB_HOST'],
             self::DB_USER_OPTION => $_ENV['DB_USER'],
             self::DB_PASS_OPTION => $_ENV['DB_PASS'],
-            self::DB_PREFIX_OPTION => substr(md5(random_bytes(5)), 0, 8)
+            self::DB_PREFIX_OPTION => substr(md5(random_bytes(5)), 0, 8),
         ];
 
         $settings = array_merge($defaults, $config);
@@ -64,25 +64,24 @@ class Instance
             $settings['--blank'] = null;
         }
 
-        $application = new Application();
-        $application->add(new CreateInstanceCommand());
-        $command = $application->find('instance:create');
-        $commandTester = new CommandTester($command);
+        $command = new CreateInstanceCommand();
 
-        $commandTester->execute(
-            array_merge([
-                'command' => $command->getName()
-            ], $settings)
-        );
+        $input = new ArrayInput($settings, $command->getDefinition());
+        $input->setInteractive(false);
 
-        // So we have the execution output
-        echo $commandTester->getDisplay();
+        try {
+            $result = $command->run($input, App::get('output'));
 
-        if ($commandTester->getStatusCode() === 0) {
+            // If command fails the output is an error code
+            if (!empty($result)) {
+                return false;
+            }
+
             return self::getLastInstanceId();
-        }
 
-        return false;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     public static function clone($arguments, $upgrade = false) {
@@ -110,4 +109,5 @@ class Instance
         $result = query('SELECT instance_id FROM instance ORDER BY instance_id DESC LIMIT 1');
         return (int)$result->fetchColumn();
     }
+
 }

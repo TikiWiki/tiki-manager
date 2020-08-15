@@ -55,7 +55,7 @@ class UpdateManagerTest extends TestCase
         $json = <<<JSON
 {
     "require": {
-        "monolog/monolog": "1.0.*"
+        "symfony/dotenv": "^4.3"
     }
 }
 JSON;

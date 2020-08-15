@@ -9,18 +9,11 @@ namespace TikiManager\Command\Helper;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Logger\ConsoleLogger;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
-use TikiManager\Application\Application;
-use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
-use TikiManager\Application\Version;
 use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Database\Exception\DatabaseErrorException;
@@ -252,6 +245,56 @@ class CommandHelper
     }
 
     /**
+     * Validator for empty inputs
+     * @param $answer
+     * @param $exceptionMessage
+     * @return mixed
+     */
+    public static function validateEmptyInput($answer, $exceptionMessage)
+    {
+        if (empty($answer)) {
+            throw new \RuntimeException(
+                $exceptionMessage
+            );
+        }
+
+        return $answer;
+    }
+
+    /**
+     * Validator to check for email format
+     * @param $answer
+     * @return mixed
+     */
+    public static function validateEmail($answer)
+    {
+        if (!filter_var($answer, FILTER_VALIDATE_EMAIL)) {
+            throw new \RuntimeException(
+                'You must insert a valid email'
+            );
+        }
+
+        return $answer;
+    }
+
+    /**
+     * Validator to check for an integer input
+     * @param $answer
+     * @param $exceptionMessage
+     * @return mixed
+     */
+    public static function validateInteger($answer, $exceptionMessage)
+    {
+        if (!is_int($answer)) {
+            throw new \RuntimeException(
+                $exceptionMessage
+            );
+        }
+
+        return $answer;
+    }
+
+    /**
      * Validate time input in the format "<hours>:<minutes>"
      *
      * @param $answer
@@ -454,9 +497,8 @@ class CommandHelper
                 $app->setupDatabase($dbConn);
             }
 
-           $io->writeln('Fixing permissions...');
-           $app->fixPermissions();
-
+            $io->writeln('Fixing permissions...');
+            $app->fixPermissions();
         } catch (\Exception $e) {
             CommandHelper::setInstanceSetupError($instance->id, $e);
             return false;
@@ -699,8 +741,7 @@ class CommandHelper
         if (!empty($smtpHost) && $smtpPort) {
             $transport = (new \Swift_SmtpTransport($smtpHost, $smtpPort))
                 ->setUsername($smtpUser)
-                ->setPassword($smtpPass)
-            ;
+                ->setPassword($smtpPass);
         } else {
             $transport = new \Swift_SendmailTransport();
         }
@@ -711,8 +752,7 @@ class CommandHelper
         // Create a message
         $message = (new \Swift_Message($subject))
             ->setTo(is_array($to) ? $to : [$to])
-            ->setBody($message)
-        ;
+            ->setBody($message);
 
         if (empty($from)) {
             $from = getenv('FROM_EMAIL_ADDRESS');
@@ -784,8 +824,7 @@ class CommandHelper
     public static function supportedInstanceTypes()
     {
         $instanceTypes = ApplicationHelper::isWindows() ? 'local' : Instance::TYPES;
-        $listInstanceTypes = explode(',', $instanceTypes);
-        return $listInstanceTypes;
+        return explode(',', $instanceTypes);
     }
 
     /**

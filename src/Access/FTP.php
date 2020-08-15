@@ -69,6 +69,12 @@ class FTP extends Access implements Mountable
         return 'Unknown';
     }
 
+    public function createDirectory($path)
+    {
+        $ftp = $this->getHost();
+        return $ftp->createDirectory($path);
+    }
+
     public function fileExists($filename)
     {
         if ($filename{0} != '/') {

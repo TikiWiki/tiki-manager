@@ -26,7 +26,7 @@ class Discovery
         "Redhat"  => ["release" => "redhat-release",  "regex" => null]
     ];
 
-    public function __construct($instance, $access = null)
+    public function __construct($instance = null, $access = null)
     {
         $this->setInstance($instance);
         $this->setAccess($access);

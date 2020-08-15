@@ -770,8 +770,10 @@ TXT;
     {
         $access = $this->instance->getBestAccess('scripting');
         if (!$access instanceof FTP && $this->instance->hasConsole()) {
-            $command = $access->createCommand($this->instance->phpexec,
-                ['-q', '-d', 'memory_limit=256M', 'console.php', 'database:update']);
+            $command = $access->createCommand(
+                $this->instance->phpexec,
+                ['-q', '-d', 'memory_limit=256M', 'console.php', 'database:update']
+            );
             $command->run();
             if ($command->getReturn() !== 0) {
                 $message = 'Failed to update database. For more information check the logs or access instance and run `php console.php database:update`.';

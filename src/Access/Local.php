@@ -6,6 +6,8 @@
 
 namespace TikiManager\Access;
 
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Libs\Host\Local as LocalHost;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Application\Instance;
@@ -230,6 +232,19 @@ class Local extends Access implements ShellPrompt
         $linuxName = $host->runCommands("$interpreter -r \"$command\"");
 
         return $linuxName;
+    }
+
+    public function createDirectory($path)
+    {
+        $fs = new Filesystem();
+
+        try {
+            $fs->mkdir($path);
+        } catch (IOException $e) {
+            return false;
+        }
+
+        return true;
     }
 
     public function fileExists($filename)

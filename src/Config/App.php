@@ -9,6 +9,8 @@ namespace TikiManager\Config;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use TikiManager\Application\Info;
+use TikiManager\Application\Instance;
+use TikiManager\Libs\Database\Database;
 use TikiManager\Style\Formatter\HtmlOutputFormatter;
 use TikiManager\Style\TikiManagerStyle;
 
@@ -32,6 +34,7 @@ class App
 //            ->addArgument(new Reference('io.output'));
 
         $container->register('info', Info::class);
+        $container->register('instance', Instance::class);
 
         $container->register('ConsoleHtmlFormatter', HtmlOutputFormatter::class);
 
@@ -40,7 +43,7 @@ class App
 
     /**
      * @param $name
-     * @return Info|TikiManagerStyle
+     * @return Database|Info|TikiManagerStyle
      * @throws \Exception
      */
     public static function get($name)
