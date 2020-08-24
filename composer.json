@@ -49,10 +49,9 @@
       "./vendor/bin/phpunit --bootstrap src/env_includes.php tests"
     ],
     "build-phar": [
-      "@composer bin box install --ansi --no-progress --prefer-dist -n",
       "git log -n 1 --format='{\"version\":\"%h\", \"date\":\"%cI\"}' > .version",
       "mkdir -p build",
-      "./vendor/bin/box compile"
+      "box compile"
     ]
   }
 }

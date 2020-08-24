@@ -399,6 +399,7 @@ clone-upgrade-instance-src:
 #----------------------------------------------------------------------------------------------------------------------#
 
 phar:
+  image: xorti/tiki-devops:7.2-qa-box
   stage: package
   script:
     - composer install $COMPOSER_FLAGS
