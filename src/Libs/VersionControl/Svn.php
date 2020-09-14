@@ -288,13 +288,12 @@ class Svn extends VersionControlSystem
             throw new VcsConflictException("SVN MERGE: $conflicts");
         }
 
-        if ($this->isUpgrade($url, $branchUrl)) {
+        if ($this->isUpgrade($url, $branch)) {
             $this->io->writeln("Upgrading to '{$branch}' branch");
             $this->revert($targetFolder);
             $this->upgrade($targetFolder, $branchUrl);
         } else {
             $this->io->writeln("Updating '{$branch}' branch");
-            $this->revert($targetFolder);
             $this->exec($targetFolder, "update $targetFolder --accept theirs-full --force");
         }
 
