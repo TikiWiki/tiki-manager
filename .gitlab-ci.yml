@@ -115,6 +115,7 @@ code_quality:
 # UNIT TESTS SECTION
 #----------------------------------------------------------------------------------------------------------------------#
 unit-tests:
+  image: xorti/tiki-devops:7.2-qa-box
   stage: unit-tests
   services:
     - name: mysql:5.6
@@ -212,7 +213,6 @@ download-tiki-src-files:
 #----------------------------------------------------------------------------------------------------------------------#
 
 .template-tiki-manager-commands:
-  image: xorti/tiki-manager-qa:7.2-qa
   stage: functional-tests
   services:
     - name: mysql:5.6
