@@ -201,6 +201,18 @@ download-tiki-src-files:
       if [ ! -f "${SRC_PATH}tiki-${LATEST_SRC_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_LATEST_SRC_RELEASE}; fi; \
       if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MINOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MINOR_RELEASE}; fi; \
       if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MAJOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MAJOR_RELEASE}; fi;
+  cache:
+    paths:
+        - data/tiki_src/
+        - cache/
+        - vendor/
+        - vendor-bin/
+        - .composercache/files
+  artifacts:
+    name: tiki-src
+    paths:
+      - data/tiki_src/
+    when: on_success
   only:
     refs:
       - schedules
