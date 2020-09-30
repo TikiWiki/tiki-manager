@@ -212,7 +212,7 @@ download-tiki-src-files:
 #----------------------------------------------------------------------------------------------------------------------#
 
 .template-tiki-manager-commands:
-  image: xorti/tiki-manager-qa:7.2-qa
+  image: xorti/tiki-devops:7.4-qa-box
   stage: functional-tests
   services:
     - name: mysql:5.6
