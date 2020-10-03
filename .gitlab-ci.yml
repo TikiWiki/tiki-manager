@@ -1,4 +1,4 @@
-image: xorti/tiki-manager-qa:7.1-qa
+image: xorti/tiki-devops:7.2-qa-box
 
 variables:
   MYSQL_ROOT_PASSWORD: secret
@@ -115,6 +115,7 @@ code_quality:
 # UNIT TESTS SECTION
 #----------------------------------------------------------------------------------------------------------------------#
 unit-tests:
+
   stage: unit-tests
   services:
     - name: mysql:5.6
@@ -411,7 +412,6 @@ clone-upgrade-instance-src:
 #----------------------------------------------------------------------------------------------------------------------#
 
 phar:
-  image: xorti/tiki-devops:7.2-qa-box
   stage: package
   script:
     - composer install $COMPOSER_FLAGS
