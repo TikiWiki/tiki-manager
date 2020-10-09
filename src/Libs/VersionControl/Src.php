@@ -47,10 +47,9 @@ class Src extends VersionControlSystem
      * This function was created to prevent redundancy.
      * @param $targetFolder
      * @param $toAppend
-     * @param $forcePathOnCommand
      * @return mixed
      */
-    public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
+    public function exec($targetFolder, $toAppend)
     {
         // Left blank on purpose;
         return;
@@ -231,5 +230,10 @@ class Src extends VersionControlSystem
     private function deleteFolder($dir)
     {
         `rm -rf $dir`;
+    }
+
+    public function isFileVersioned($targetFolder, $fileName)
+    {
+        return false;
     }
 }
