@@ -162,6 +162,8 @@ cache-warmup-tiki-git:
   variables:
     VCS: git
   script:
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_NAME}"
     - TIKI_CACHE=cache/tiki-git-$PREV_VERSION_BRANCH
     - |
       if [ ! -d "$TIKI_CACHE" ]; then
