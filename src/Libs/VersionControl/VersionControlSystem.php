@@ -114,10 +114,9 @@ abstract class VersionControlSystem
      * This function was created to prevent redundancy.
      * @param $targetFolder
      * @param $toAppend
-     * @param $forcePathOnCommand
      * @return mixed
      */
-    abstract public function exec($targetFolder, $toAppend, $forcePathOnCommand = false);
+    abstract public function exec($targetFolder, $toAppend);
 
     /**
      * Clones a specific branch within a repository
@@ -193,6 +192,8 @@ abstract class VersionControlSystem
      * @return mixed
      */
     abstract public function update($targetFolder, $branch);
+
+    abstract public function isFileVersioned($targetFolder, $fileName);
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

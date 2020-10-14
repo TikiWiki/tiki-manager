@@ -479,19 +479,19 @@ class Tiki extends Application
 
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
-        if ($access instanceof ShellPrompt && ($can_svn || $can_git || $this->vcs_instance->getIdentifier() == 'SRC')) {
-            $this->clearCache();
-
-            $this->vcs_instance->update($this->instance->webroot, $version->branch);
-            foreach (['temp', 'temp/cache'] as $path) {
-                $script = sprintf('chmod(%s, 0777);', $path);
-                $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
-            }
-
-            $this->postInstall($options);
-
+        if (!$access instanceof ShellPrompt ||  !($can_svn || $can_git || $this->vcs_instance->getIdentifier() == 'SRC')) {
             return;
         }
+
+        $this->clearCache();
+        $this->moveVendor();
+        $this->vcs_instance->update($this->instance->webroot, $version->branch);
+        foreach (['temp', 'temp/cache'] as $path) {
+            $script = sprintf('chmod(%s, 0777);', $path);
+            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+        }
+
+        $this->postInstall($options);
     }
 
     public function removeTemporaryFiles()
@@ -751,6 +751,23 @@ TXT;
 
         $this->io->writeln('Fixing permissions...');
         $this->fixPermissions();
+    }
+
+    /**
+     * This function renames de vendor folder, when upgrading to 17.x or newer.
+     *
+     * @return void
+     */
+    protected function moveVendor()
+    {
+        if ($this->vcs_instance->isFileVersioned($this->instance->webroot, 'vendor')) {
+            $access = $this->instance->getBestAccess();
+            $access->moveFile(
+                $this->instance->webroot . DIRECTORY_SEPARATOR . 'vendor',
+                $this->instance->webroot . DIRECTORY_SEPARATOR . 'vendor_old'
+            );
+            $this->io->warning('Vendor folder was renamed to vendor_old because can cause conflicts with the new version.');
+        }
     }
 
     public function clearCache($all = false)

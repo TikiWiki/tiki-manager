@@ -16,9 +16,7 @@ use TikiManager\Libs\Host\Command;
 
 class Git extends VersionControlSystem
 {
-    private $globalOptions = [
-        '--quiet',
-    ];
+    protected $quiet = true;
 
     /**
      * GIT constructor.
@@ -79,14 +77,22 @@ class Git extends VersionControlSystem
         return $this->info($targetFolder);
     }
 
-    public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
+    public function isFileVersioned($targetFolder, $fileName)
     {
-        $toAppend .= ' ' . implode(' ', $this->globalOptions);
+        try {
+            $this->exec($targetFolder, "ls-files --error-unmatch $fileName");
+        } catch (VcsException $ex) {
+            return false;
+        }
+        return true;
+    }
 
-        if ($forcePathOnCommand && !empty($targetFolder)) {
-            $command = sprintf('cd %s && %s %s', $targetFolder, $this->command, $toAppend);
-        } else {
-            $command = sprintf('%s %s', $this->command, $toAppend);
+    public function exec($targetFolder, $toAppend)
+    {
+        $command = sprintf('%s %s', $this->command, $toAppend);
+
+        if (!empty($targetFolder)) {
+            $command = sprintf('cd %s && ', $targetFolder) . $command;
         }
 
         if ($this->runLocally) {
@@ -116,23 +122,26 @@ class Git extends VersionControlSystem
         $branch = escapeshellarg($branchName);
         $repoUrl = escapeshellarg($this->repositoryUrl);
         $folder = escapeshellarg($targetFolder);
-        return $this->exec($targetFolder, sprintf('clone --depth 1 --no-single-branch -b %s %s %s', $branch, $repoUrl, $folder));
+        return $this->exec(null, sprintf('clone --depth 1 --no-single-branch -b %s %s %s', $branch, $repoUrl, $folder));
     }
 
     public function revert($targetFolder)
     {
-        return $this->exec($targetFolder, 'reset --hard', true);
+        $gitCmd = 'reset --hard' . ($this->quiet ? ' --quiet' : '');
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     public function pull($targetFolder)
     {
+        $gitCmd = 'pull' . ($this->quiet ? ' --quiet' : '');
         return $this->cleanup($targetFolder) &&
-            $this->exec($targetFolder, 'pull', true);
+            $this->exec($targetFolder, $gitCmd);
     }
 
     public function cleanup($targetFolder)
     {
-        return $this->exec($targetFolder, 'gc', true);
+        $gitCmd = 'gc' . ($this->quiet ? ' --quiet' : '');
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     public function merge($targetFolder, $branch)
@@ -142,23 +151,29 @@ class Git extends VersionControlSystem
 
     public function info($targetFolder, $raw = false)
     {
-        return $this->exec($targetFolder, "rev-parse --abbrev-ref HEAD", true);
+        $gitCmd = 'rev-parse --abbrev-ref HEAD' . ($this->quiet ? ' --quiet' : '');
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     public function getRevision($targetFolder)
     {
-        return $this->exec($targetFolder, "rev-parse --short HEAD", true);
+        $gitCmd = 'rev-parse --short HEAD' . ($this->quiet ? ' --quiet' : '');
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     public function checkoutBranch($targetFolder, $branch)
     {
-        return $this->exec($targetFolder, "checkout $branch", true);
+        $gitCmd = "checkout $branch" . ($this->quiet ? ' --quiet' : '');
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     public function upgrade($targetFolder, $branch)
     {
         $this->revert($targetFolder);
-        $this->exec($targetFolder, 'fetch --all', true);
+
+        $gitCmd = 'fetch --all' . ($this->quiet ? ' --quiet' : '');
+        $this->exec($targetFolder, $gitCmd);
+
         return $this->checkoutBranch($targetFolder, $branch);
     }
 
@@ -173,7 +188,7 @@ class Git extends VersionControlSystem
         }
 
         $this->io->writeln("Updating '{$branch}' branch");
-        $this->exec($targetFolder, "pull", true);
+        $this->pull($targetFolder);
 
         $this->cleanup($targetFolder);
     }
@@ -184,5 +199,13 @@ class Git extends VersionControlSystem
     public function isUpgrade($current, $branch)
     {
         return $current !== $branch;
+    }
+
+    /**
+     * @param bool $quiet
+     */
+    public function setQuiet(bool $quiet): void
+    {
+        $this->quiet = $quiet;
     }
 }

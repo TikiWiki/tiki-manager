@@ -99,7 +99,7 @@ class Svn extends VersionControlSystem
         return $versionsSorted;
     }
 
-    public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
+    public function exec($targetFolder, $toAppend)
     {
         static $tmpFolderChecked;
         if ((empty($tmpFolderChecked) || !in_array(
@@ -243,7 +243,7 @@ class Svn extends VersionControlSystem
      */
     public function checkoutBranch($targetFolder, $branch)
     {
-        $output = $this->exec($targetFolder, "switch $branch $targetFolder");
+        $output = $this->exec($targetFolder, "switch $branch $targetFolder --accept theirs-full");
         if (preg_match('/Summary of conflicts:/i', $output)) {
             throw new VcsConflictException('SVN CONFLICTS FOUND: ' . $output);
         }
@@ -313,6 +313,16 @@ class Svn extends VersionControlSystem
             $this->access->createCommand($path, ["-r {$script}"])->run();
         }
 
+        return true;
+    }
+
+    public function isFileVersioned($targetFolder, $fileName)
+    {
+        try {
+            $this->exec($targetFolder, "info $fileName");
+        } catch (\Exception $exception) {
+            return false;
+        }
         return true;
     }
 }

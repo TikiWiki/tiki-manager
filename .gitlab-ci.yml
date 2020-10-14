@@ -1,4 +1,4 @@
-image: xorti/tiki-manager-qa:7.1-qa
+image: xorti/tiki-devops:7.2-qa-box
 
 variables:
   MYSQL_ROOT_PASSWORD: secret
@@ -115,7 +115,7 @@ code_quality:
 # UNIT TESTS SECTION
 #----------------------------------------------------------------------------------------------------------------------#
 unit-tests:
-  image: xorti/tiki-devops:7.2-qa-box
+
   stage: unit-tests
   services:
     - name: mysql:5.6
@@ -202,6 +202,18 @@ download-tiki-src-files:
       if [ ! -f "${SRC_PATH}tiki-${LATEST_SRC_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_LATEST_SRC_RELEASE}; fi; \
       if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MINOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MINOR_RELEASE}; fi; \
       if [ ! -f "${SRC_PATH}tiki-${PREV_SRC_MAJOR_RELEASE}.tar.gz" ]; then wget -nv --directory-prefix=${SRC_PATH} ${URL_PREV_SRC_MAJOR_RELEASE}; fi;
+  cache:
+    paths:
+        - data/tiki_src/
+        - cache/
+        - vendor/
+        - vendor-bin/
+        - .composercache/files
+  artifacts:
+    name: tiki-src
+    paths:
+      - data/tiki_src/
+    when: on_success
   only:
     refs:
       - schedules
@@ -213,6 +225,7 @@ download-tiki-src-files:
 #----------------------------------------------------------------------------------------------------------------------#
 
 .template-tiki-manager-commands:
+  image: xorti/tiki-devops:7.4-qa-box
   stage: functional-tests
   services:
     - name: mysql:5.6
@@ -399,7 +412,6 @@ clone-upgrade-instance-src:
 #----------------------------------------------------------------------------------------------------------------------#
 
 phar:
-  image: xorti/tiki-devops:7.2-qa-box
   stage: package
   script:
     - composer install $COMPOSER_FLAGS
