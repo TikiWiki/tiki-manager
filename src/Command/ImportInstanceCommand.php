@@ -16,7 +16,7 @@ use TikiManager\Application\Application;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 
 class ImportInstanceCommand extends TikiManagerCommand
 {
@@ -193,7 +193,7 @@ class ImportInstanceCommand extends TikiManagerCommand
                 ],
                 'tempdir' => [
                     'question' => 'Working directory',
-                    'default' => $_ENV['TRIM_TEMP'],
+                    'default' => $_ENV['INSTANCE_WORKING_TEMP'],
                 ]
             ];
 
@@ -299,9 +299,10 @@ class ImportInstanceCommand extends TikiManagerCommand
         }
 
         if (empty($tempdir)) {
-            $tempdir = '/tmp/trim_temp';
-            if (! empty($_ENV['TRIM_TEMP'])) {
-                $tempdir = $_ENV['TRIM_TEMP'];
+            if (! empty($_ENV['INSTANCE_WORKING_TEMP'])) {
+                $tempdir = $_ENV['INSTANCE_WORKING_TEMP'];
+            } else {
+                $tempdir = Environment::generateUniqueWorkingDirectoryForInstance();
             }
         }
 

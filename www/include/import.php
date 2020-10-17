@@ -81,7 +81,7 @@ $discovery = new Discovery($instance, $access);
 
 $name = 'localhost';
 $weburl = "http://$name";
-$tempdir = $_ENV['TRIM_TEMP'];
+$tempdir = $_ENV['INSTANCE_WORKING_TEMP'];
 
 $access->host = 'localhost';
 $access->user = $discovery->detectUser();

@@ -160,10 +160,24 @@ class Environment
             'scripts/maintenance.htaccess'
         ]);
 
-        $_ENV['TRIM_TEMP'] = '/tmp/trim_temp';
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $_ENV['TRIM_TEMP'] = getenv('TEMP') . "\\trim_temp";
-        }
+        $_ENV['INSTANCE_WORKING_TEMP'] = static::generateUniqueWorkingDirectoryForInstance();
+    }
+
+    /**
+     * Generate a unique directory name that can be used as working directory (temporary) for an instance
+     *
+     * @return string
+     */
+    public static function generateUniqueWorkingDirectoryForInstance()
+    {
+        // to generate a smaller unique suffix, we use the time in seconds since 1st Jan 2020 and 3 random digits at the end
+        // since this was added late 2020, all suffix will be unique
+        $secondsSinceJan2020 = time() - 1577836800;
+        $uniqueTemporaryDirectoryName = sprintf("tiki_mgr_%d%03d", $secondsSinceJan2020, rand(0, 999));
+
+        $tempFolder = sys_get_temp_dir();
+
+        return  $tempFolder . DIRECTORY_SEPARATOR . $uniqueTemporaryDirectoryName;
     }
 
     /**
