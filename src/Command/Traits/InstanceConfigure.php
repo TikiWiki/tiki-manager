@@ -141,6 +141,16 @@ trait InstanceConfigure
                 throw new InvalidOptionException('Name cannot be empty. Please use --name=<NAME>');
             }
 
+            global $db;
+            $query = "SELECT COUNT(*) as numInstances FROM instance WHERE name = :name";
+            $stmt = $db->prepare($query);
+            $stmt->execute([':name' => $value]);
+            $count = $stmt->fetchObject();
+
+            if ($count->numInstances) {
+                throw new InvalidOptionException('Instance name already in use. Please choose another name.');
+            }
+
             return $value;
         });
 
