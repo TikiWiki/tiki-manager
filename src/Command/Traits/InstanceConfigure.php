@@ -271,11 +271,10 @@ trait InstanceConfigure
 
         $add = $this->io->confirm(
             'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
-            $this->input->isInteractive() // TRUE is interactive, false otherwise
+            true
         );
 
         if (!$add) {
-            $instance->delete();
             throw new \Exception('Unable to install. An application was detected in this instance.');
         }
 

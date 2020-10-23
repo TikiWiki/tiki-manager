@@ -1001,9 +1001,7 @@ SQL;
      */
     public function getApplications(): array
     {
-        static $applications;
-
-        return $applications ?? $applications = Application::getApplications($this);
+        return Application::getApplications($this);
     }
 
     /**
