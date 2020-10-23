@@ -30,7 +30,7 @@ abstract class Application
     {
         $objects = [];
 
-        $dir = $dir = __DIR__;
+        $dir = __DIR__;
         $files = scandir($dir);
 
         $apps = [];

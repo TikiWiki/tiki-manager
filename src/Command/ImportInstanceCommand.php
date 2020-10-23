@@ -222,8 +222,15 @@ class ImportInstanceCommand extends TikiManagerCommand
 
         $output->writeln('<info>Instance information saved.</info>');
 
-        $countInstances = Instance::countNumInstances($instance);
         $isInstalled = false;
+        $duplicated = $instance->hasDuplicate();
+
+        if ($duplicated) {
+            $instance->delete();
+            $error = \sprintf('Unable to import. Instance `%s` (id: %s) has the same access and webroot.', $duplicated->name, $duplicated->id);
+            $this->io->error($error);
+            return 1;
+        }
 
         foreach (Application::getApplications($instance) as $app) {
             if ($app->isInstalled()) {
@@ -231,25 +238,23 @@ class ImportInstanceCommand extends TikiManagerCommand
             }
         }
 
-        if ($isInstalled) {
-            if ($countInstances == 1) {
-                $result = $app->registerCurrentInstallation();
-                $resultInstance = $result->getInstance();
-
-                if ($instance->id === $resultInstance->id) {
-                    $this->io->success('Import completed, please test your site at ' . $instance->weburl);
-                    return 0;
-                }
-            } else {
-                $instance->delete();
-                $this->io->error('Unable to import. An application was detected in this instance.');
-                return 1;
-            }
-        } else {
+        if (! $isInstalled) {
             $instance->delete();
             $this->io->error('Unable to import. An application was not detected in this instance.');
             return 1;
         }
+
+        $result = $app->registerCurrentInstallation();
+        $resultInstance = $result->getInstance();
+
+        if ($instance->id !== $resultInstance->id) {
+            $instance->delete();
+            $this->io->error('An error occurred while registering instance/application details');
+            return 2;
+        }
+
+        $this->io->success('Import completed, please test your site at ' . $instance->weburl);
+        return 0;
     }
 
     /**

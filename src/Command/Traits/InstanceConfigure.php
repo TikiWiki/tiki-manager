@@ -248,6 +248,36 @@ trait InstanceConfigure
         return $instance;
     }
 
+    public function detectApplication(Instance $instance)
+    {
+        $apps = $instance->getApplications();
+        // Tiki is the only supported application
+        $app = reset($apps);
+        $isInstalled = $app->isInstalled();
+
+        if (!$isInstalled) {
+            return false;
+        }
+
+        $add = $this->io->confirm(
+            'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
+            $this->input->isInteractive() // TRUE is interactive, false otherwise
+        );
+
+        if (!$add) {
+            $instance->delete();
+            throw new \Exception('Unable to install. An application was detected in this instance.');
+        }
+
+        $result = $app->registerCurrentInstallation();
+        $resultInstance = $result->getInstance();
+
+        if ($instance->id === $resultInstance->id) {
+            $this->io->success('Please test your site at ' . $instance->weburl);
+            return true;
+        }
+    }
+
     /**
      * Setup Tiki Application details (branch).
      * @param Instance $instance
@@ -420,35 +450,13 @@ trait InstanceConfigure
             return;
         }
 
+        if ($this->detectApplication($instance)) {
+            return;
+        }
+
         $apps = $instance->getApplications();
         // Tiki is the only supported application
         $app = reset($apps);
-        $isInstalled = $app->isInstalled();
-
-        if ($isInstalled) {
-            if (!$instance->hasDuplicate()) {
-                $add = $this->io->confirm(
-                    'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
-                    $this->input->isInteractive() // TRUE is interactive, false otherwise
-                );
-
-                if (!$add) {
-                    $instance->delete();
-                    throw new \Exception('Unable to install. An application was detected in this instance.');
-                }
-
-                $result = $app->registerCurrentInstallation();
-                $resultInstance = $result->getInstance();
-
-                if ($instance->id === $resultInstance->id) {
-                    $this->io->success('Please test your site at ' . $instance->weburl);
-                    return;
-                }
-            }
-
-            $instance->delete();
-            throw new \Exception('Unable to install. An application was detected in this instance.');
-        }
 
         $selection = $instance->selection;
         $details = array_map('trim', explode(':', $selection));
