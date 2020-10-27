@@ -123,7 +123,19 @@ class Tiki extends Application
                     // There is no console command nor php script to fix permissions
                     return;
                 } else {
-                    $command = $access->createCommand('bash', ['setup.sh', '-n', 'fix']); // does composer as well
+                    $extraParameters = ['-n']; //by default detect the current user and do not ask
+
+                    // detect (guess) if we should pass a given user to the command, normally when running as root
+                    if ($access->user == 'root' && preg_match('/\/home\/([^\/]+)\/.*/', $instance->webroot, $matches)) {
+                        // get the group for the user
+                        $groupCommand = $access->createCommand('id', ['-g', '-n', $matches[1]]);
+                        $groupCommand->run();
+                        $group = trim($groupCommand->getStdoutContent());
+
+                        $extraParameters = ['-u', $matches[1], '-g', $group ?: $matches[1]];
+                    }
+
+                    $command = $access->createCommand('bash', array_merge(['setup.sh'], $extraParameters,  ['fix'])); // does composer as well
                 }
             } else {
                 $this->io->warning('Old Tiki detected, running bundled Tiki Manager setup.sh script.');

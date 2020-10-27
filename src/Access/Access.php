@@ -77,6 +77,8 @@ SQL;
                 list($a->host, $a->port) = explode(':', $row['host']);
                 $a->user = $row['user'];
                 $a->password = $row['password'];
+            } else {
+                $a->user = $row['user'];
             }
 
             $access[] = $a;
