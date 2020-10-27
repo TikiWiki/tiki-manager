@@ -372,7 +372,7 @@ trait InstanceConfigure
 
         while (!$dbRoot->testConnection()) {
             if (!$this->input->isInteractive()) {
-                throw new \Exception('Unable to access database with administrative privileges');
+                throw new \Exception('Unable to access database.');
             }
 
             $dbRoot->host = $this->io->ask('Database host', $dbRoot->host);
@@ -380,13 +380,35 @@ trait InstanceConfigure
             $dbRoot->pass = $this->io->askHidden('Database password');
         }
 
-        $this->io->writeln('<info>Connected to MySQL with administrative privileges</info>');
+        $this->io->writeln('<info>Connected to MySQL</info>');
 
         $hasPrefix = $this->input->hasOption('db-prefix') ? $this->input->getOption('db-prefix') : null;
         $dbName = $this->input->hasOption('db-name') ? $this->input->getOption('db-name') : null;
 
-        if (!$hasPrefix && ($dbName || !$this->io->confirm('Should a new database and user be created now (both)?'))) {
-            $dbRoot->dbname = $this->io->ask('Database name', $dbName ?? 'tiki_db');
+        $canCreateUser = $dbRoot->hasCreateUserPermissions();
+        $canCreateDB = $dbRoot->hasCreateDatabasePermissions();
+
+        if (!$canCreateUser) {
+            $this->io->caution('MySQL user cannot create users.');
+        }
+
+        if (!$canCreateDB) {
+            $this->io->caution('MySQL user cannot create databases.');
+        }
+
+        $usePrefix = false;
+        if (!$dbName && $canCreateUser && $canCreateDB) {
+            $usePrefix = $hasPrefix ?: $this->io->confirm('Should a new database and user be created now (both)?');
+        }
+
+        if (!$usePrefix) {
+            $dbRoot->dbname = $this->io->ask('Database name', $dbName ?? 'tiki_db', function ($dbname) use ($dbRoot, $canCreateDB) {
+                if (!$dbRoot->databaseExists($dbname) && !$canCreateDB) {
+                    throw new \Exception("Database does not exist and user cannot create.");
+                }
+
+                return $dbname;
+            });
         } else {
             $dbPrefix = $this->input->hasOption('db-prefix') ? ($this->input->getOption('db-prefix') ?: 'tiki') : 'tiki';
 
@@ -395,7 +417,8 @@ trait InstanceConfigure
                 $dbPrefix,
                 function ($prefix) use ($dbRoot, &$dbPrefix) {
 
-                    $maxPrefixLength = $dbRoot->getMaxUsernameLength() - 5;
+                    $maxUsernameLength = $dbRoot->getMaxUsernameLength() ?: 32;
+                    $maxPrefixLength = $maxUsernameLength - 5;
 
                     if (strlen($prefix) > $maxPrefixLength) {
                         $dbPrefix = substr($prefix, 0, $maxPrefixLength);

@@ -4,6 +4,7 @@ namespace TikiManager\Tests\Command\Traits;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
@@ -40,7 +41,8 @@ class InstanceConfigureTest extends TestCase
     {
         $this->input = new ArrayInput([], static::$inputDefinition);
         $this->input->setInteractive(false);
-        Environment::getInstance()->setIO($this->input);
+        $output = new BufferedOutput();
+        Environment::getInstance()->setIO($this->input, $output);
 
         $methods = [
             'installApplication',
@@ -214,7 +216,7 @@ class InstanceConfigureTest extends TestCase
     public function testSetupDatabaseInstanceInvalidAdministrator()
     {
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Unable to access database with administrative privileges');
+        $this->expectExceptionMessage('Unable to access database');
 
         $this->input->setOption('db-host', 'localhost');
         $this->input->setOption('db-user', 'invalid');
@@ -294,6 +296,14 @@ class InstanceConfigureTest extends TestCase
             ->willReturn(true);
 
         $databaseStub->expects($this->once())
+            ->method('hasCreateUserPermissions')
+            ->willReturn(true);
+
+        $databaseStub->expects($this->once())
+            ->method('hasCreateDatabasePermissions')
+            ->willReturn(true);
+
+        $databaseStub->expects($this->once())
             ->method('getMaxUsernameLength')
             ->willReturn(11);
 
@@ -339,6 +349,14 @@ class InstanceConfigureTest extends TestCase
 
         $databaseStub->expects($this->once())
             ->method('testConnection')
+            ->willReturn(true);
+
+        $databaseStub->expects($this->once())
+            ->method('hasCreateUserPermissions')
+            ->willReturn(true);
+
+        $databaseStub->expects($this->once())
+            ->method('hasCreateDatabasePermissions')
             ->willReturn(true);
 
         $databaseStub->expects($this->once())
