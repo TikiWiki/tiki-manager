@@ -141,6 +141,16 @@ trait InstanceConfigure
                 throw new InvalidOptionException('Name cannot be empty. Please use --name=<NAME>');
             }
 
+            global $db;
+            $query = "SELECT COUNT(*) as numInstances FROM instance WHERE name = :name";
+            $stmt = $db->prepare($query);
+            $stmt->execute([':name' => $value]);
+            $count = $stmt->fetchObject();
+
+            if ($count->numInstances) {
+                throw new InvalidOptionException('Instance name already in use. Please choose another name.');
+            }
+
             return $value;
         });
 
@@ -248,6 +258,35 @@ trait InstanceConfigure
         return $instance;
     }
 
+    public function detectApplication(Instance $instance)
+    {
+        $apps = $instance->getApplications();
+        // Tiki is the only supported application
+        $app = reset($apps);
+        $isInstalled = $app->isInstalled();
+
+        if (!$isInstalled) {
+            return false;
+        }
+
+        $add = $this->io->confirm(
+            'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
+            true
+        );
+
+        if (!$add) {
+            throw new \Exception('Unable to install. An application was detected in this instance.');
+        }
+
+        $result = $app->registerCurrentInstallation();
+        $resultInstance = $result->getInstance();
+
+        if ($instance->id === $resultInstance->id) {
+            $this->io->success('Please test your site at ' . $instance->weburl);
+            return true;
+        }
+    }
+
     /**
      * Setup Tiki Application details (branch).
      * @param Instance $instance
@@ -333,7 +372,7 @@ trait InstanceConfigure
 
         while (!$dbRoot->testConnection()) {
             if (!$this->input->isInteractive()) {
-                throw new \Exception('Unable to access database with administrative privileges');
+                throw new \Exception('Unable to access database.');
             }
 
             $dbRoot->host = $this->io->ask('Database host', $dbRoot->host);
@@ -341,13 +380,35 @@ trait InstanceConfigure
             $dbRoot->pass = $this->io->askHidden('Database password');
         }
 
-        $this->io->writeln('<info>Connected to MySQL with administrative privileges</info>');
+        $this->io->writeln('<info>Connected to MySQL</info>');
 
         $hasPrefix = $this->input->hasOption('db-prefix') ? $this->input->getOption('db-prefix') : null;
         $dbName = $this->input->hasOption('db-name') ? $this->input->getOption('db-name') : null;
 
-        if (!$hasPrefix && ($dbName || !$this->io->confirm('Should a new database and user be created now (both)?'))) {
-            $dbRoot->dbname = $this->io->ask('Database name', $dbName ?? 'tiki_db');
+        $canCreateUser = $dbRoot->hasCreateUserPermissions();
+        $canCreateDB = $dbRoot->hasCreateDatabasePermissions();
+
+        if (!$canCreateUser) {
+            $this->io->caution('MySQL user cannot create users.');
+        }
+
+        if (!$canCreateDB) {
+            $this->io->caution('MySQL user cannot create databases.');
+        }
+
+        $usePrefix = false;
+        if (!$dbName && $canCreateUser && $canCreateDB) {
+            $usePrefix = $hasPrefix ?: $this->io->confirm('Should a new database and user be created now (both)?');
+        }
+
+        if (!$usePrefix) {
+            $dbRoot->dbname = $this->io->ask('Database name', $dbName ?? 'tiki_db', function ($dbname) use ($dbRoot, $canCreateDB) {
+                if (!$dbRoot->databaseExists($dbname) && !$canCreateDB) {
+                    throw new \Exception("Database does not exist and user cannot create.");
+                }
+
+                return $dbname;
+            });
         } else {
             $dbPrefix = $this->input->hasOption('db-prefix') ? ($this->input->getOption('db-prefix') ?: 'tiki') : 'tiki';
 
@@ -356,7 +417,8 @@ trait InstanceConfigure
                 $dbPrefix,
                 function ($prefix) use ($dbRoot, &$dbPrefix) {
 
-                    $maxPrefixLength = $dbRoot->getMaxUsernameLength() - 5;
+                    $maxUsernameLength = $dbRoot->getMaxUsernameLength() ?: 32;
+                    $maxPrefixLength = $maxUsernameLength - 5;
 
                     if (strlen($prefix) > $maxPrefixLength) {
                         $dbPrefix = substr($prefix, 0, $maxPrefixLength);
@@ -420,35 +482,13 @@ trait InstanceConfigure
             return;
         }
 
+        if ($this->detectApplication($instance)) {
+            return;
+        }
+
         $apps = $instance->getApplications();
         // Tiki is the only supported application
         $app = reset($apps);
-        $isInstalled = $app->isInstalled();
-
-        if ($isInstalled) {
-            if (!$instance->hasDuplicate()) {
-                $add = $this->io->confirm(
-                    'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
-                    $this->input->isInteractive() // TRUE is interactive, false otherwise
-                );
-
-                if (!$add) {
-                    $instance->delete();
-                    throw new \Exception('Unable to install. An application was detected in this instance.');
-                }
-
-                $result = $app->registerCurrentInstallation();
-                $resultInstance = $result->getInstance();
-
-                if ($instance->id === $resultInstance->id) {
-                    $this->io->success('Please test your site at ' . $instance->weburl);
-                    return;
-                }
-            }
-
-            $instance->delete();
-            throw new \Exception('Unable to install. An application was detected in this instance.');
-        }
 
         $selection = $instance->selection;
         $details = array_map('trim', explode(':', $selection));

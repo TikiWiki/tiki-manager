@@ -132,6 +132,41 @@ class Database
         return null;
     }
 
+    public function getCurrentUserPermissions($refresh = false)
+    {
+        static $grants;
+
+        if ($grants && !$refresh) {
+            return $grants;
+        }
+
+        $sql = 'SHOW GRANTS FOR CURRENT_USER';
+        return $grants = $this->query($sql);
+    }
+
+    /**
+     * Ensure the the logged user has permission to create users and grants
+     *
+     * @return boolean
+     */
+    public function hasCreateUserPermissions()
+    {
+        $grants = $this->getCurrentUserPermissions();
+
+        $regex = '/GRANT (ALL PRIVILEGES|.*CREATE USER).* ON \*\.\* .* WITH GRANT OPTION/m';
+
+        return \preg_match($regex, $grants);
+    }
+
+    public function hasCreateDatabasePermissions()
+    {
+        $grants = $this->getCurrentUserPermissions();
+
+        $regex = '/GRANT (ALL PRIVILEGES|.*CREATE(?! USER)).* ON \*\.\*/m';
+
+        return \preg_match($regex, $grants);
+    }
+
     public function createUser($username, $password)
     {
         if ($username == $this->user) { //DB user is the root user

@@ -70,15 +70,16 @@ WHERE
 ;
 SQL;
 
-    const SQL_COUNT_NUM_INSTANCES = <<<SQL
+    const SQL_DUPLICATED_INSTANCE = <<<SQL
 SELECT
-    COUNT(i.instance_id) numInstances
+    i.instance_id
 FROM
     instance i
 INNER JOIN access a
     ON i.instance_id=a.instance_id
 WHERE
-    (a.host = :host OR a.host IS NULL) AND i.webroot = :webroot
+    (a.host = :host OR a.host IS NULL) AND i.webroot = :webroot AND i.instance_id <> :id
+LIMIT 1
 ;
 SQL;
 
@@ -408,14 +409,12 @@ SQL;
     }
 
     /**
-     * Count the number of instances in database through host and webroot
-     *
-     * @param Instance $instance
-     * @return int
+     * Checks if there is another instance that shares the same details
+     * (host and webroot)
      */
-    public static function countNumInstances($instance)
+    public function hasDuplicate()
     {
-        $access = $instance->getBestAccess('scripting');
+        $access = $this->getBestAccess();
 
         $host = $access->host;
         $port = $access->port;
@@ -424,19 +423,17 @@ SQL;
             $host = sprintf('%s:%s', $host, $port);
         }
 
-        $result = query(self::SQL_COUNT_NUM_INSTANCES, [':host' => $host, ':webroot' => $instance->webroot]);
-        $count = $result->fetchObject();
+        global $db;
 
-        return isset($count->numInstances) ? $count->numInstances : 0;
-    }
+        $stmt = $db->prepare(self::SQL_DUPLICATED_INSTANCE);
+        $stmt->execute([':host' => $host, ':webroot' => $this->webroot, ':id' => $this->id]);
+        $result = $stmt->fetchObject();
 
-    /**
-     * Checks if there is another instance that shares the same details
-     * (host and webroot)
-     */
-    public function hasDuplicate()
-    {
-        return static::countNumInstances($this) > 1;
+        if (empty($result->instance_id)) {
+            return false;
+        }
+
+        return self::getInstance($result->instance_id);
     }
 
     public function delete()
@@ -984,7 +981,7 @@ SQL;
     public function getCompatibleVersions()
     {
 
-        $apps = Application::getApplications($this);
+        $apps = $this->getApplications();
         $selection = getEntries($apps, 0);
         $app = reset($selection);
 

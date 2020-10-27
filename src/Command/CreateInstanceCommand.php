@@ -179,14 +179,28 @@ class CreateInstanceCommand extends TikiManagerCommand
 
         $this->io->title('New Instance Setup');
 
+        $instance = new Instance();
+
         try {
             $instance = new Instance();
             $this->setupAccess($instance);
             $this->setupInstance($instance);
-            $this->setupApplication($instance);
-            $this->setupDatabase($instance);
-            $this->install($instance);
+
+            if ($duplicated = $instance->hasDuplicate()) {
+                $error = \sprintf('Instance `%s` (id: %s) has the same access and webroot.', $duplicated->name, $duplicated->id);
+                throw new \Exception($error);
+            }
+
+            $instance->save();
+
+            if (! $this->detectApplication($instance)) {
+                $this->setupApplication($instance);
+                $this->setupDatabase($instance);
+                $this->install($instance);
+            }
+
         } catch (\Exception $e) {
+            $instance->delete();
             $this->io->error($e->getMessage());
             return -1;
         }
