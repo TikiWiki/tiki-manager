@@ -12,11 +12,10 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Config\App;
-use TikiManager\Libs\Database\Database;
-use TikiManager\Libs\Database\Exception\DatabaseErrorException;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class CommandHelper
@@ -349,26 +348,6 @@ class CommandHelper
     }
 
     /**
-     * Gets a CLI option given the option name eg: "--<option>="
-     *
-     * @param $option
-     * @param null $default
-     * @return bool|null|string
-     */
-    public static function getCliOption($option, $default = null)
-    {
-        global $argv;
-
-        foreach ($argv as $argument) {
-            if (strpos($argument, "--{$option}=") === 0) {
-                return substr($argument, strlen($option) + 3);
-            }
-        }
-
-        return $default;
-    }
-
-    /**
      * Remove folder contents
      *
      * @param array|string $dirs
@@ -431,202 +410,6 @@ class CommandHelper
         }
 
         return true;
-    }
-
-    /**
-     * Handle application install for a new instance.
-     *
-     * @param Instance $instance
-     * @param boolean $nonInteractive
-     * @param boolean $checksumCheck
-     * @return bool
-     */
-    public static function performInstall(
-        Instance $instance,
-        $nonInteractive = false,
-        $checksumCheck = false
-    ) {
-
-        $io = App::get('io');
-
-        if ($instance->findApplication()) {
-            $io->error('Unable to install. An application was detected in this instance.');
-            return false;
-        }
-
-        $apps = Application::getApplications($instance);
-
-        $selection = getEntries($apps, 0);
-        /** @var Application $app */
-        $app = reset($selection);
-
-        if (!$nonInteractive) {
-            $io->writeln('Fetching compatible versions. Please wait...');
-            $io->note([
-                "If some versions are not offered, it's likely because the host",
-                "server doesn't meet the requirements for that version (ex: PHP version is too old)"
-            ]);
-
-            $versions = $app->getCompatibleVersions();
-            $selection = $io->choice('Which version do you want to install?', $versions);
-        } else {
-            $selection = $instance->selection;
-        }
-        $details = array_map('trim', explode(':', $selection));
-
-        if ($details[0] == 'blank') {
-            $io->success('No version to install. This is a blank instance.');
-            return true;
-        }
-
-        $version = Version::buildFake($details[0], $details[1]);
-
-        $io->writeln('Installing application... (this may take a while)');
-        if (!$nonInteractive) {
-            $io->note([
-                'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
-                'you can use \'tiki-manager instance:access\' to complete the installation manually.'
-            ]);
-        }
-
-        try {
-            $app->install($version, $checksumCheck);
-
-            if ($app->requiresDatabase()) {
-                $dbConn = self::setupDatabaseConnection($instance, $nonInteractive);
-                $app->setupDatabase($dbConn);
-            }
-
-            $io->writeln('Fixing permissions...');
-            $app->fixPermissions();
-        } catch (\Exception $e) {
-            CommandHelper::setInstanceSetupError($instance->id, $e);
-            return false;
-        }
-
-        $io->success('Please test your site at ' . $instance->weburl);
-        return true;
-    }
-
-    /**
-     * Check, configure and  test database connection for a given instance
-     *
-     * @param Instance $instance
-     * @param boolean $nonInteractive
-     * @return Database|null
-     */
-    public static function setupDatabaseConnection(
-        Instance $instance,
-        $nonInteractive = false
-    ) {
-        $dbUser = null;
-        $io = App::get('io');
-
-        if ($dbUser = $instance->getDatabaseConfig()) {
-            return $dbUser;
-        }
-
-        if (!$nonInteractive) {
-            $io->section(sprintf('Setup database connection in %s', $instance->name));
-            $io->note('Creating databases and users requires root privileges on MySQL.');
-        }
-
-        $dbRoot = new Database($instance);
-
-        if ($nonInteractive) {
-            $dbUser = $instance->database;
-
-            $types = $dbUser->getUsableExtensions();
-            $type = getenv('MYSQL_DRIVER');
-            $dbUser->type = $type;
-            $dbUser->type = reset($types);
-        } else {
-            $valid = false;
-
-            if ($instance->type == 'local') {
-                if (isset($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'])) {
-                    $dbRoot->host = $_ENV['DB_HOST'];
-                    $dbRoot->user = $_ENV['DB_USER'];
-                    $dbRoot->pass = $_ENV['DB_PASS'];
-                    $valid = $dbRoot->testConnection();
-                }
-            }
-
-            while (!$valid) {
-                $dbRoot->host = $io->ask('Database host', $dbRoot->host ?: 'localhost');
-                $dbRoot->user = $io->ask('Database user', $dbRoot->user ?: 'root');
-                $dbRoot->pass = $io->askHidden('Database password');
-                $valid = $dbRoot->testConnection();
-            }
-
-            $io->writeln('Connected to MySQL with administrative privileges');
-
-            $create = $io->confirm('Should a new database and user be created now (both)?');
-
-            if (!$create) {
-                $dbUser = $dbRoot;
-                $dbUser->dbname = $io->ask('Database name', 'tiki_db');
-            } else {
-                $maxPrefixLength = $dbRoot->getMaxUsernameLength() - 5;
-                $io->note("Prefix is a string with maximum of {$maxPrefixLength} chars");
-
-                $prefix = 'tiki';
-                while (!is_object($dbUser)) {
-                    $prefix = $io->ask('Prefix to use for username and database', $prefix);
-
-                    if (strlen($prefix) > $maxPrefixLength) {
-                        $io->error("Prefix is a string with maximum of {$maxPrefixLength} chars");
-                        $prefix = substr($prefix, 0, $maxPrefixLength);
-                        continue;
-                    }
-
-                    $username = "{$prefix}_user";
-                    if ($dbRoot->userExists($username)) {
-                        $io->error("User '$username' already exists, can't proceed.");
-                        continue;
-                    }
-
-                    $dbname = "{$prefix}_db";
-                    if ($dbRoot->databaseExists($dbname)) {
-                        $io->warning("Database '$dbname' already exists.");
-                        if (!$io->confirm('Continue?')) {
-                            continue;
-                        }
-                    }
-
-                    try {
-                        $dbUser = $dbRoot->createAccess($username, $dbname);
-                    } catch (DatabaseErrorException $e) {
-                        $io->error("Can't setup database!");
-                        $io->error($e->getMessage());
-
-                        $option = $io->choice('What do you want to do?', ['a' => 'Abort', 'r' => 'Retry'], 'a');
-
-                        if ($option === 'a') {
-                            $io->comment('Aborting');
-                            return;
-                        }
-                    }
-                }
-
-                $types = $dbUser->getUsableExtensions();
-                $type = getenv('MYSQL_DRIVER');
-                $dbUser->type = $type;
-
-                if (count($types) == 1) {
-                    $dbUser->type = reset($types);
-                } elseif (empty($type)) {
-                    $options = [];
-                    foreach ($types as $key => $name) {
-                        $options[$key] = $name;
-                    }
-
-                    $dbUser->type = $io->choice('Which extension should be used?', $options);
-                }
-            }
-        }
-
-        return $dbUser;
     }
 
     /**
