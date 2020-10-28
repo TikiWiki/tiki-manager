@@ -6,6 +6,7 @@
 
 namespace TikiManager\Application;
 
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Exception\FolderPermissionException;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
@@ -13,9 +14,12 @@ use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 use TikiManager\Application\Exception\BackupCopyException;
+use TikiManager\Config\Environment;
 
 class Backup
 {
+    public const FULL_BACKUP = 'full';
+    public const PARTIAL_BACKUP = 'partial';
     /** @var Access $access */
     protected $access;
     protected $app;
@@ -31,14 +35,16 @@ class Backup
     protected $instance;
     protected $workpath;
     protected $direct;
+    protected $full;
 
     /**
      * Backup constructor.
      * @param $instance
      * @param bool $direct
+     * @param bool $full
      * @throws FolderPermissionException
      */
-    public function __construct($instance, $direct = false)
+    public function __construct($instance, $direct = false, $full = false)
     {
         $this->io = App::get('io');
 
@@ -56,6 +62,7 @@ class Backup
         $this->fileGroup = $instance->getProp('backup_group');
         $this->direct = $direct;
         $this->errors = [];
+        $this->full = !in_array($instance->vcs_type, ['git', 'svn']) ? true : $full;
 
         $this->createBackupDir();
         $this->createArchiveDir();
@@ -67,6 +74,8 @@ class Backup
         $backupDir = $backupDir ?: $this->backupDir;
         $result = [];
 
+        $fileSystem = new Filesystem();
+
         foreach ($targets as $target) {
             if ($this->direct) {
                 return $access->localizeFolder($target, $backupDir);
@@ -74,7 +83,14 @@ class Backup
                 list($type, $dir) = $target;
                 $hash = md5($dir);
                 $destDir = $backupDir . DIRECTORY_SEPARATOR . $hash;
-                $error_code = $access->localizeFolder($dir, $destDir);
+                if ($type == 'app' && !$this->full) {
+                    $files = $this->app->getFilesToBackup();
+                    $dirTmp = $this->createTempPartial($dir, $files);
+                    $error_code = $access->localizeFolder($dirTmp, $destDir);
+                    $fileSystem->remove([dirname($dirTmp)]);
+                } else {
+                    $error_code = $access->localizeFolder($dir, $destDir);
+                }
 
                 if ($error_code) {
                     if (array_key_exists($this->errors, $error_code)) {
@@ -90,7 +106,12 @@ class Backup
                     }
                 }
 
-                $result[] = [$hash, $type, $dir];
+                $result[] = [
+                    $hash,
+                    $type,
+                    $dir,
+                    $this->full ? Backup::FULL_BACKUP : Backup::PARTIAL_BACKUP
+                ];
             }
         }
 
@@ -118,6 +139,9 @@ class Backup
             $this->io->writeln('Copying files... <fg=yellow>[may take a while]</>');
             $copyResult = $this->copyDirectories($targets, $backupDir);
         }
+
+        $this->io->writeln('Creating changes file...');
+        $this->createChangesFile($backupDir);
 
         $this->io->writeln('Checking system ini config file...');
         $targetSystemIniConfigFile = $this->getSystemIniConfigFile();
@@ -269,7 +293,7 @@ class Backup
         $backupDir = $backupDir ?: $this->backupDir;
         $manifestFile = $backupDir . DIRECTORY_SEPARATOR . 'manifest.txt';
         $file = fopen($manifestFile, 'w');
-        $lineTemplate = ! $this->direct ? '%s    %s    %s' : '%s    %s';
+        $lineTemplate = ! $this->direct ? '%s    %s    %s    %s' : '%s    %s';
 
         foreach ($data as $location) {
             $line = vsprintf($lineTemplate . PHP_EOL, $location);
@@ -279,6 +303,36 @@ class Backup
         fclose($file);
         $this->fixPermissions($manifestFile);
         return $manifestFile;
+    }
+
+    public function createChangesFile($backupDir = null)
+    {
+        list('changed' => $changes, 'untracked' => $untracked, 'deleted' => $deleted) = $this->app->getFileChanges();
+
+        $backupDir = $backupDir ?: $this->backupDir;
+
+        $changesFile = $backupDir . '/changes.txt';
+        $fileStream = fopen($changesFile, 'w');
+        $lineTemplate = '%s    %s';
+
+        foreach ($changes as $file) {
+            $line = sprintf($lineTemplate . PHP_EOL, 'M', $file);
+            fwrite($fileStream, $line);
+        }
+
+        foreach ($untracked as $file) {
+            $line = sprintf($lineTemplate . PHP_EOL, 'A', $file);
+            fwrite($fileStream, $line);
+        }
+
+        foreach ($deleted as $file) {
+            $line = sprintf($lineTemplate . PHP_EOL, 'D', $file);
+            fwrite($fileStream, $line);
+        }
+
+        fclose($fileStream);
+        $this->fixPermissions($changesFile);
+        return $changesFile;
     }
 
     public function fixPermissions($path)
@@ -415,5 +469,26 @@ class Backup
 
         $this->fixPermissions($archiveDir);
         return $success;
+    }
+
+    private function createTempPartial($root, $files)
+    {
+        $fileSystem = new Filesystem();
+        $temp = implode(\DIRECTORY_SEPARATOR, [Environment::get('TEMP_FOLDER'), md5(time()), basename($this->instance->webroot)]);
+        foreach ($files as $file) {
+            $dest = $temp . DIRECTORY_SEPARATOR . $file;
+            $src = $root . DIRECTORY_SEPARATOR . $file;
+            if (!$fileSystem->exists($src)) {
+                continue;
+            }
+            $fileSystem->mkdir(dirname($dest));
+            if (is_dir($src)) {
+                $fileSystem->mirror($src, $dest);
+            } else {
+                $fileSystem->copy($src, $dest, true);
+            }
+        }
+
+        return $temp;
     }
 }

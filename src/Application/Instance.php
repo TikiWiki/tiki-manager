@@ -693,13 +693,14 @@ SQL;
     }
 
     /**
-     * @param bool $direct
+     * @param bool $direct ()
+     * @param bool $full Full backup or partial (backing up only changes against VCS system)
      * @return bool|string
      * @throws Exception\FolderPermissionException
      */
-    public function backup($direct = false)
+    public function backup($direct = false, $full = false)
     {
-        $backup = new Backup($this, $direct);
+        $backup = new Backup($this, $direct, $full);
 
         if ($this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
@@ -779,6 +780,8 @@ SQL;
         }
 
         if ($this->app == 'tiki') {
+            $this->getApplication()->runComposer();
+
             $this->io->writeln("Fixing permissions for {$this->name}");
             $this->getApplication()->fixPermissions();
         }

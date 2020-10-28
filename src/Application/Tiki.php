@@ -26,6 +26,14 @@ class Tiki extends Application
     /** @var Svn|Git|Src  */
     private $vcs_instance = null;
 
+    public static $excludeBackupFolders = [
+        'vendor',
+        'vendor_bundled/vendor',
+        'temp',
+        'bin',
+        'modules/cache'
+    ];
+
     public function __construct(Instance $instance)
     {
         parent::__construct($instance);
@@ -692,7 +700,7 @@ TXT;
 
             if ($instance->hasConsole()) {
                 if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
-                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']);
+                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']);
                 } else {
                     $command = $access->createCommand('bash', ['setup.sh', 'composer']);
                 }
@@ -700,6 +708,15 @@ TXT;
                 $command->run();
                 if ($command->getReturn() !== 0) {
                     throw new \Exception('Composer install failed');
+                }
+
+                if ($access->fileExists('composer.lock') && $instance->type == 'local') {
+                    $command = $access->createCommand('composer', ['install', '--no-interaction', '--prefer-dist']);
+
+                    $command->run();
+                    if ($command->getReturn() !== 0) {
+                        throw new \Exception('Composer install failed');
+                    }
                 }
             }
         }
@@ -826,6 +843,62 @@ TXT;
 TXT;
 
         return $content;
+    }
+
+    public function getFilesToBackup()
+    {
+        if (! $this->vcs_instance || ! $this->vcs_instance->hasRemote($this->instance->webroot, $this->getBranch())) {
+            return false;
+        }
+
+        $files = $this->getFileChanges();
+        $backupFiles = \array_merge($files['changed'], $files['untracked']);
+        $include = ['.git', '.svn'];
+
+        return array_merge($backupFiles, $include);
+    }
+
+    /**
+     * @return Git|Src|Svn
+     */
+    public function getVcsInstance()
+    {
+        return $this->vcs_instance;
+    }
+
+    public function getFileChanges($refresh = false)
+    {
+
+        static $files;
+
+        if ($files && !$refresh) {
+            return $files;
+        }
+
+        $files = [];
+        $files['changed'] = $this->vcs_instance->getChangedFiles($this->instance->webroot);
+        $files['untracked'] = $this->vcs_instance->getUntrackedFiles($this->instance->webroot, true);
+        $files['deleted'] = $this->vcs_instance->getDeletedFiles($this->instance->webroot);
+
+        // Git marks deleted files also as modified, this removes deleted files from the modified files.
+        $files['changed'] = array_filter($files['changed'], function ($file) use ($files) {
+            return !in_array($file, $files['deleted']);
+        });
+
+        $files['untracked'] = array_filter($files['untracked'], function ($path) {
+            if (empty($path)) {
+                return false;
+            }
+
+            foreach (self::$excludeBackupFolders as $excludeBackupFolder) {
+                if (strpos($path, $excludeBackupFolder) === 0) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        return $files;
     }
 }
 
