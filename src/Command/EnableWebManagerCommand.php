@@ -151,6 +151,22 @@ access to the administration panel to local users (safer).');
             throw new \RuntimeException('Tiki Manager Web path does not exist.');
         }
 
+        $user = $input->getOption('www-user') ?? getenv('WWW_USER');
+        $group = $input->getOption('www-group') ?? getenv('WWW_GROUP');
+
+        if ($user) {
+            if (function_exists('posix_getlogin')) {
+                $currentUser = posix_getlogin();
+                if ($currentUser != 'root' && $currentUser != $user) {
+                    throw new \RuntimeException('You need to run this script as root or as ' . $user . ' to be able to write the files using the www-user provided.');
+                }
+            }
+        }
+
+        if (!is_writable($webPath)) {
+            throw new \RuntimeException('You do not have permissions to write in the Web path provided.');
+        }
+
         $cmd = 'cp -a www/. ' . $webPath;
         exec($cmd);
 
@@ -195,18 +211,24 @@ CONFIG
         $logs = $_ENV['TRIM_LOGS'];
         $cache = $_ENV['CACHE_FOLDER'];
         $composer = $_ENV['COMPOSER_PATH'] == 'composer' ? $_ENV['COMPOSER_PATH'] : 'php ' . $_ENV['COMPOSER_PATH'];
-        $user = getenv('WWW_USER');
-        $group = getenv('WWW_GROUP');
 
         `chmod 0666 $db`;
         `chmod 0700 $data`;
-        `chown $user:$group $data`;
-        `chown $user:$group $backup`;
-        `chown $user:$group $archive`;
-        `chown $user:$group $logs`;
-        `chown $user:$group $cache`;
+
         `(rm -rf $webPath/vendor && $composer install -d $webPath)`;
-        `(chown -R $owner $webPath/vendor)`;
+
+        if ($user) {
+            $userGroup = $user;
+            if ($group) {
+                $userGroup = ":" . $group;
+            }
+            `chown $userGroup $data`;
+            `chown $userGroup $backup`;
+            `chown $userGroup $archive`;
+            `chown $userGroup $logs`;
+            `chown $userGroup $cache`;
+            `(chown -R $userGroup $webPath/vendor)`;
+        }
 
         $this->io->success('WWW Tiki Manager is now enabled.');
     }
