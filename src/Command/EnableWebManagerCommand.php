@@ -2,10 +2,13 @@
 
 namespace TikiManager\Command;
 
+use Exception;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use TikiManager\Config\App;
+use Symfony\Component\Process\Process;
+use TikiManager\Config\Environment;
 
 class EnableWebManagerCommand extends TikiManagerCommand
 {
@@ -129,14 +132,6 @@ access to the administration panel to local users (safer).');
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if (function_exists('posix_getuid')) {
-            if (posix_getuid() != 0) {
-                throw new \RuntimeException('You need to run this script as root to write to configuration files.');
-            }
-        } else {
-            throw new \RuntimeException('PHP POSIX functions are not installed, install them and try again.');
-        }
-
         if (!$input->getOption('install')) {
             throw new \RuntimeException('Missing confirmation to proceed installation');
         }
@@ -151,8 +146,8 @@ access to the administration panel to local users (safer).');
             throw new \RuntimeException('Tiki Manager Web path does not exist.');
         }
 
-        $cmd = 'cp -a www/. ' . $webPath;
-        exec($cmd);
+        $fs = new Filesystem();
+        $fs->mirror('www/', $webPath);
 
         $owner = fileowner($webPath . '/index.php');
 
@@ -188,26 +183,53 @@ CONFIG
             );
         }
 
-        $db = $_ENV['DB_FILE'];
-        $data = $_ENV['TRIM_DATA'];
-        $backup = $_ENV['BACKUP_FOLDER'];
-        $archive = $_ENV['ARCHIVE_FOLDER'];
-        $logs = $_ENV['TRIM_LOGS'];
-        $cache = $_ENV['CACHE_FOLDER'];
-        $composer = $_ENV['COMPOSER_PATH'] == 'composer' ? $_ENV['COMPOSER_PATH'] : 'php ' . $_ENV['COMPOSER_PATH'];
-        $user = getenv('WWW_USER');
-        $group = getenv('WWW_GROUP');
+        $db = Environment::get('DB_FILE');
+        $data = Environment::get('TRIM_DATA');
+        $backup = Environment::get('BACKUP_FOLDER');
+        $archive = Environment::get('ARCHIVE_FOLDER');
+        $logs = Environment::get('TRIM_LOGS');
+        $cache = Environment::get('CACHE_FOLDER');
+        $user = $input->getOption('www-user') ?? Environment::get('WWW_USER', 'apache');
+        $group = $input->getOption('www-group') ?? Environment::get('WWW_GROUP', 'apache');
 
-        `chmod 0666 $db`;
-        `chmod 0700 $data`;
-        `chown $user:$group $data`;
-        `chown $user:$group $backup`;
-        `chown $user:$group $archive`;
-        `chown $user:$group $logs`;
-        `chown $user:$group $cache`;
-        `(rm -rf $webPath/vendor && $composer install -d $webPath)`;
-        `(chown -R $owner $webPath/vendor)`;
+        try {
+            $fs->chmod($db, 0666);
+            $fs->chmod($data, 0770);
 
-        $this->io->success('WWW Tiki Manager is now enabled.');
+            $folders = [
+                $data,
+                $backup,
+                $archive,
+                $logs,
+                $cache,
+            ];
+
+            foreach ($folders as $folder) {
+                $fs->chown($folder, $user);
+                $fs->chgrp($folder, $group);
+            }
+
+            $fs->remove($webPath . '/vendor');
+
+            $composer = Environment::get('COMPOSER_PATH') == 'composer' ? [Environment::get('COMPOSER_PATH')] : [PHP_BINARY,  Environment::get('COMPOSER_PATH')];
+            $command = array_merge($composer, ['install']);
+
+            $process = new Process($command, $webPath);
+            $process->setTimeout('300'); // 5min
+            $process->run(function ($type, $buffer) {
+                $this->io->write($buffer);
+            });
+
+            if (!$process->isSuccessful()) {
+                throw new Exception('Failed to install composer dependencies.' . PHP_EOL . $process->getErrorOutput());
+            }
+
+            $fs->chown($webPath . '/vendor', $owner, true);
+
+            $this->io->success('WWW Tiki Manager is now enabled.');
+        } catch(Exception $e) {
+            $this->io->error($e->getMessage());
+            return 1;
+        }
     }
 }
