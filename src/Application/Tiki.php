@@ -777,8 +777,8 @@ TXT;
      */
     protected function moveVendor()
     {
-        if ($this->vcs_instance->isFileVersioned($this->instance->webroot, 'vendor')) {
-            $access = $this->instance->getBestAccess();
+        $access = $this->instance->getBestAccess();
+        if ($access->fileExists('vendor') && !$this->vcs_instance->isFileVersioned($this->instance->webroot, 'vendor')) {
             $access->moveFile(
                 $this->instance->webroot . DIRECTORY_SEPARATOR . 'vendor',
                 $this->instance->webroot . DIRECTORY_SEPARATOR . 'vendor_old'
