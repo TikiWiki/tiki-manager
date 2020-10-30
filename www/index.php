@@ -30,19 +30,18 @@ set_time_limit(TIMEOUT);
 
 session_start();
 
+$op = isset($_GET['op']) ? $_GET['op'] : '';
+
+$loc = strrpos($_SERVER['REQUEST_URI'], $op);
+if (!$loc) {
+    $loc = strlen($_SERVER['REQUEST_URI']);
+}
+define('PRIOR', substr($_SERVER['REQUEST_URI'], 0, $loc));
+
 if (! isset($_SESSION['active'])) {
     require "include/login.php";
     exit;
 }
-
-$op = isset($_GET['op']) ? $_GET['op'] : '' ;
-$id = isset($_GET['op']) ? (int) $_GET['id'] : 0;
-
-$loc = strrpos($_SERVER['REQUEST_URI'], $op);
-if (! $loc) {
-    $loc = strlen($_SERVER['REQUEST_URI']);
-}
-define('PRIOR', substr($_SERVER['REQUEST_URI'], 0, $loc));
 
 function html($string)
 {
@@ -65,6 +64,8 @@ if (empty($op)) {
 if (! in_array($op, [ 'backup', 'blank', 'clone', 'cloneupgrade', 'create', 'delete', 'edit', 'fix', 'import', 'list', 'manage', 'restore', 'update', 'upgrade', 'view', 'watch', 'logout', 'requirements' ])) {
     die("Unknown operation.");
 }
+
+$id = isset($_GET['op']) ? (int) $_GET['id'] : 0;
 
 if (in_array($op, [ 'view', 'edit' ]) && $id == 0) {
     die("ID required.");
