@@ -759,11 +759,11 @@ TXT;
 
                 $this->instance->unlock();
             }
-        }
 
-        if (empty($options['skip-reindex']) && $hasConsole) {
-            $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+            if (empty($options['skip-reindex'])) {
+                $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+            }
         }
 
         $this->io->writeln('Fixing permissions...');
