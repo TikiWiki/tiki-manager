@@ -1,7 +1,12 @@
 <?php
 
+define('DS', DIRECTORY_SEPARATOR);
+
+require_once 'src/Libs/Requirements/Requirements.php';
+require_once 'src/Libs/Requirements/LinuxRequirements.php';
+require_once 'src/Libs/Requirements/WindowsRequirements.php';
+
 use TikiManager\Config\App;
-use TikiManager\Manager\UpdateManager;
 
 if (! function_exists('readline')) {
     /**
@@ -500,4 +505,65 @@ function cache_folder($app, $version)
     $folder = $_ENV['CACHE_FOLDER'] . "/$key";
 
     return $folder;
+}
+
+function installComposer($dir)
+{
+    $expectedSig = \trim(\file_get_contents('https://composer.github.io/installer.sig'));
+    $installerURL = 'https://getcomposer.org/installer';
+    $setupFile = 'composer-setup.php';
+
+    try {
+        if (!\copy($installerURL, $setupFile)) {
+            throw new \Exception('Failed to copy file to ' . $setupFile);
+        }
+    } catch (\Exception $e) {
+        $message = \sprintf('Unable to download composer installer from %s', $installerURL);
+        $message .= PHP_EOL . $e->getMessage();
+        throw new Exception($message);
+    }
+
+    $actualSig = \hash_file('SHA384', $setupFile);
+
+    if ($expectedSig !== $actualSig) {
+        \unlink($setupFile);
+        throw new Exception('Invalid composer installer signature.');
+    }
+
+    $command = sprintf('%s %s --quiet --install-dir=%s', PHP_BINARY, $setupFile, escapeshellarg($dir));
+    exec($command, $output, $exitCode);
+    \unlink($setupFile);
+
+    if ($exitCode !== 0) {
+        throw new Exception('There was a problem when installing Composer.');
+    }
+
+    return rtrim($dir, DS) . DS . 'composer.phar';
+}
+
+function detectComposer($dir)
+{
+    $composerPhar = rtrim($dir, DS) . DS . 'composer.phar';
+
+    if (file_exists($composerPhar)) {
+        return PHP_BINARY . ' ' . $composerPhar;
+    }
+
+    if (TikiManager\Libs\Requirements\Requirements::getInstance()->hasDependency('composer')) {
+        // return 'composer';
+    }
+
+    return null;
+}
+
+function installComposerDependencies($dir)
+{
+    $composer = detectComposer($dir);
+
+    $command = sprintf('%s install --prefer-dist --no-interaction --no-progress --working-dir=%s', $composer, $dir);
+    passthru($command, $exitCode);
+
+    if ($exitCode !== 0) {
+        throw new Exception('There was a problem when installing Tiki Manager dependencies.');
+    }
 }

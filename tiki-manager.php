@@ -4,11 +4,23 @@
  *     See copyright.txt for details and a complete list of authors.
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
+require_once 'src/Libs/Helpers/functions.php';
 
-if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
-    $message = 'ERROR:' . PHP_EOL . 'Cannot locate autoloader file. Please run "composer install".';
-    print(PHP_EOL . $message . PHP_EOL . PHP_EOL);
-    exit(-1);
+try {
+    $pharPath = Phar::running(false);
+    $isPhar = isset($pharPath) && !empty($pharPath);
+
+    if (!$isPhar && !$composer = detectComposer(__DIR__)) {
+        print('Downloading composer.phar...' . PHP_EOL);
+        $composer = PHP_BINARY  . installComposer(__DIR__);
+    }
+
+    if (!$isPhar && !file_exists(__DIR__ . '/vendor/autoload.php')) {
+        installComposerDependencies(__DIR__);
+    }
+} catch (Exception $e) {
+    print($e->getMessage());
+    exit(1);
 }
 
 require __DIR__ . '/vendor/autoload.php';
