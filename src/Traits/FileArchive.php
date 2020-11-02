@@ -47,29 +47,23 @@ trait FileArchive
     {
         $command = sprintf('tar -xvjf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
 
-        $output = shell_exec($command);
-        if ($output) {
-            App::get('io')->error($output);
-        }
-
-        return true;
+        return $this->runCommand($command);
     }
 
     protected function extractTarGz($file, $target)
     {
         $command = sprintf('tar -xzf %s -C %s --strip-components 1 1> /dev/null', $file, $target);
 
-        $output = shell_exec($command);
-        if ($output) {
-            App::get('io')->error('output');
-        }
-
-        return true;
+        return $this->runCommand($command);
     }
 
     protected function extractZip($file, $target)
     {
-        shell_exec(sprintf('unzip -d "%s" "%s" 1> /dev/null ', $target, $file));
+        $command = sprintf('unzip -d "%s" "%s" 2>&1 > /dev/null ', $target, $file);
+
+        if (!$this->runCommand($command)) {
+            return false;
+        }
 
         $extractedFolders = array_filter(glob($target . '/*'), 'is_dir');
 
@@ -87,12 +81,7 @@ trait FileArchive
             $target
         );
 
-        $output = shell_exec($command);
-        if ($output) {
-            App::get('io')->error('output');
-        }
-
-        return true;
+        return $this->runCommand($command);
     }
 
     protected function extract7z($file, $target)
@@ -107,6 +96,17 @@ trait FileArchive
             $target
         );
 
-        return shell_exec($command);
+        return $this->runCommand($command);
+    }
+
+    protected function runCommand($command)
+    {
+        exec($command, $commandOutput, $exitCode);
+        if ($exitCode !== 0) {
+            App::get('io')->error(implode(PHP_EOL, $commandOutput));
+            return false;
+        }
+
+        return true;
     }
 }

@@ -39,9 +39,4 @@ class AccessLocalTest extends TestCase
 
         $this->assertEquals('bar', $output);
     }
-
-    public function testArray(){
-        $line = "x    a    a    p";
-            var_dump(  explode('    ', $line, 3));
-    }
 }
