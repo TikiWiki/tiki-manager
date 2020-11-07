@@ -79,7 +79,7 @@ abstract class UpdateManager
         }
 
         $versionDiff = $currentVersion['version'] !== $updateVersion['version'];
-        $timeDiff = strtotime($currentVersion['date']) < strtotime($updateVersion['date']);
+        $timeDiff = strtotime($currentVersion['date']) <= strtotime($updateVersion['date']);
 
         return $versionDiff && $timeDiff;
     }

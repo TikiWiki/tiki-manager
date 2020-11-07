@@ -60,7 +60,7 @@ class Git extends UpdateManager
         $commit = $this->repository->getHeadCommit();
         return [
             'version' => $commit->getShortHash(),
-            'date' => $commit->getAuthorDate()->format(DATE_RFC3339_EXTENDED)
+            'date' => $commit->getCommitterDate()->format(DATE_RFC3339_EXTENDED)
         ];
     }
 
@@ -100,7 +100,7 @@ class Git extends UpdateManager
                 $commit = $remoteBranch->getCommit();
                 return [
                     'version' => $commit->getShortHash(),
-                    'date' => $commit->getAuthorDate()->format(DATE_RFC3339_EXTENDED)
+                    'date' => $commit->getCommitterDate()->format(DATE_RFC3339_EXTENDED)
                 ];
             } catch (ReferenceNotFoundException $e) {
                 continue;
