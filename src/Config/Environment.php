@@ -83,15 +83,16 @@ class Environment
     {
         $dotenvLoader = new Dotenv();
         $envDistFile = $this->homeDirectory . '/.env.dist';
-        $envFile = $this->homeDirectory . '/.env';
 
-        if (! file_exists($envDistFile)) {
+        if (!file_exists($envDistFile)) {
             throw new ConfigurationErrorException('.env.dist file not found at: "' . $envDistFile . '"');
         }
 
+        $dotenvLoader->load($envDistFile);
+
         $this->setRequiredEnvironmentVariables();
 
-        $dotenvLoader->load($envDistFile);
+        $envFile = static::get('TM_DOTENV');
         $dotenvLoader->loadEnv($envFile);
 
         $this->loadEnvironmentVariablesContainingLogic();
@@ -173,8 +174,11 @@ class Environment
     {
         $pharPath = Phar::running(false);
 
-        $_ENV['TRIM_ROOT'] = isset($pharPath) && !empty($pharPath) ? realpath(dirname($pharPath)) : $this->homeDirectory;
-        $_ENV['IS_PHAR'] = isset($pharPath) && !empty($pharPath);
+        $_ENV['IS_PHAR'] = $isPhar = isset($pharPath) && !empty($pharPath);
+
+        $rootPath = ($isPhar ? realpath(dirname($pharPath)) : $this->homeDirectory);
+        $_ENV['TRIM_ROOT'] = $_ENV['TRIM_ROOT'] ?? $rootPath;
+        $_ENV['TM_DOTENV'] = $rootPath . '/.env';
     }
 
     /**
