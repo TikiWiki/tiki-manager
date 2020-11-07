@@ -81,6 +81,8 @@ class Environment
      */
     public function load()
     {
+        $this->setRequiredEnvironmentVariables();
+
         $dotenvLoader = new Dotenv();
         $envDistFile = $this->homeDirectory . '/.env.dist';
 
@@ -88,12 +90,9 @@ class Environment
             throw new ConfigurationErrorException('.env.dist file not found at: "' . $envDistFile . '"');
         }
 
-        $dotenvLoader->load($envDistFile);
-
-        $this->setRequiredEnvironmentVariables();
-
         $envFile = static::get('TM_DOTENV');
         $dotenvLoader->loadEnv($envFile);
+        $dotenvLoader->load($envDistFile);
 
         $this->loadEnvironmentVariablesContainingLogic();
         $this->initializeComposerEnvironment();
