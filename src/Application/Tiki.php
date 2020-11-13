@@ -710,15 +710,15 @@ TXT;
 
                 $command->run();
                 if ($command->getReturn() !== 0) {
-                    throw new \Exception('Composer install failed');
+                    throw new \Exception('Composer install failed for tiki bundled packages');
                 }
 
-                if ($access->fileExists('composer.lock') && $instance->type == 'local') {
-                    $command = $access->createCommand('composer', ['install', '--no-interaction', '--prefer-dist']);
+                if ($access->fileExists('composer.lock')) {
+                    $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']);
 
                     $command->run();
                     if ($command->getReturn() !== 0) {
-                        throw new \Exception('Composer install failed');
+                        throw new \Exception('Composer install failed for composer.lock in the root folder');
                     }
                 }
             }
