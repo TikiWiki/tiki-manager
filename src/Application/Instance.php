@@ -702,7 +702,7 @@ SQL;
     {
         $backup = new Backup($this, $direct, $full);
 
-        if ($this->detectDistribution() === 'ClearOS') {
+        if ($this->type === 'local' && $this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
         }
 

@@ -93,7 +93,7 @@ class Backup
                 }
 
                 if ($error_code) {
-                    if (array_key_exists($this->errors, $error_code)) {
+                    if (array_key_exists($error_code, $this->errors)) {
                         $this->errors[$error_code][] = $dir;
                     } else {
                         $this->errors[$error_code] = [$error_code => $dir];
@@ -393,9 +393,7 @@ class Backup
 
         foreach ($locations as $type => $directories) {
             foreach ($directories as $dir) {
-                if (file_exists($dir)) {
-                    $targets[] = [$type, $dir];
-                }
+                $targets[] = [$type, $dir];
             }
         }
 

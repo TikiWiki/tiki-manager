@@ -263,6 +263,9 @@ class Tiki extends Application
             $line = rtrim($line, '/');
 
             if (! empty($line)) {
+                if ($line[0] != '/') {
+                    $line = $webroot . '/' . $line;
+                }
                 $folders['data'][] = $line;
             }
         }

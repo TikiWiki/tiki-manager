@@ -152,8 +152,13 @@ class SSH
         $rsyncParams = array_merge($rsyncParams, $exclude);
         $rsyncParams[] = '-e';
         $rsyncParams[] = "ssh -p {$port} -i $key";
-        $rsyncParams[] = $src;
-        $rsyncParams[] = "{$user}@{$host}:{$dest}";
+        if (isset($args['download']) && $args['download']) {
+            $rsyncParams[] = "{$user}@{$host}:{$src}";
+            $rsyncParams[] = $dest;
+        } else {
+            $rsyncParams[] = $src;
+            $rsyncParams[] = "{$user}@{$host}:{$dest}";
+        }
 
         $command = new Command('rsync', $rsyncParams);
         $localHost->runCommand($command);
