@@ -108,6 +108,7 @@ class Svn extends VersionControlSystem
             $tmpFolderChecked
         )) && $this->ensureTempFolder($targetFolder)) {
             $tmpFolderChecked[] = $targetFolder;
+            $this->exec($targetFolder, 'upgrade');
         }
 
         $globalOptions = implode(' ', $this->globalOptions);
