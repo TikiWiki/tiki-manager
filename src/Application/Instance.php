@@ -747,8 +747,12 @@ SQL;
         $oldVersion = $this->getLatestVersion();
 
         $databaseConfig = $this->getDatabaseConfig();
-        $this->getApplication()->deleteAllTables();
-        $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+        if ($databaseConfig) {
+            $this->getApplication()->deleteAllTables();
+            $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+        } else {
+            $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
+        }
 
         if (!$this->findApplication()) { // a version is created in this call
             $this->io->error('Something when wrong with restore. Unable to read application details.');
