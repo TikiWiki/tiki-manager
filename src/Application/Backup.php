@@ -44,7 +44,7 @@ class Backup
      * @param bool $full
      * @throws FolderPermissionException
      */
-    public function __construct($instance, $direct = false, $full = false)
+    public function __construct($instance, $direct = false, $full = true)
     {
         $this->io = App::get('io');
 

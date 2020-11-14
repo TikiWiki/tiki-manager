@@ -698,7 +698,7 @@ SQL;
      * @return bool|string
      * @throws Exception\FolderPermissionException
      */
-    public function backup($direct = false, $full = false)
+    public function backup($direct = false, $full = true)
     {
         $backup = new Backup($this, $direct, $full);
 
