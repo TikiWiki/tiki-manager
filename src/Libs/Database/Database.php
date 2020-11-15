@@ -365,17 +365,22 @@ class Database
         $types = $this->getUsableExtensions();
         $this->type = reset($types) ?: getenv('MYSQL_DRIVER');
 
+        try {
+            if ($dbPrefix) {
+                $username = "{$dbPrefix}_user";
+                $dbname = "{$dbPrefix}_db";
+                $config = $this->createAccess($username, $dbname);
+            }
+
+            if (!$dbPrefix && !$this->databaseExists($dbName)) {
+                $this->createDatabase($dbName);
+            }
+
         if (!$dbPrefix) {
             $this->dbname = $dbName;
-            $this->instance->setDatabaseConfig($this);
-            return;
+                $config = $this;
         }
 
-        $username = "{$dbPrefix}_user";
-        $dbname = "{$dbPrefix}_db";
-
-        try {
-            $config = $this->createAccess($username, $dbname);
             $this->instance->setDatabaseConfig($config);
         } catch (DatabaseErrorException $e) {
             throw new \RuntimeException("Can't setup database!\nError: " . $e->getMessage());
