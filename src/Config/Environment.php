@@ -91,8 +91,8 @@ class Environment
         }
 
         $envFile = static::get('TM_DOTENV');
-        $dotenvLoader->loadEnv($envFile);
         $dotenvLoader->load($envDistFile);
+        $dotenvLoader->loadEnv($envFile);
 
         $this->loadEnvironmentVariablesContainingLogic();
         $this->runSetup();
