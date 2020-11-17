@@ -6,7 +6,6 @@
 
 namespace TikiManager\Application;
 
-use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Access\FTP;
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
@@ -421,7 +420,8 @@ class Tiki extends Application
         $this->installed = true;
 
         $version = $this->registerCurrentInstallation();
-        $this->fixPermissions(); // it also runs composer!
+        $this->runComposer(); // fix permissions does not return a proper exit code if composer fails
+        $this->fixPermissions();
 
         if (! $access->fileExists($this->instance->getWebPath('.htaccess'))) {
             $access->copyFile(
@@ -717,12 +717,16 @@ TXT;
             if ($instance->hasConsole()) {
                 if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
                     $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']);
+                } elseif ($access->fileExists('temp/composer.phar')) {
+                    // In case of instance update, use composer to get proper exit codes if case of failure.
+                    $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']);
                 } else {
                     $command = $access->createCommand('bash', ['setup.sh', 'composer']);
                 }
 
                 $command->run();
-                if ($command->getReturn() !== 0) {
+                if ($command->getReturn() !== 0 || !$access->fileExists('vendor_bundled/vendor/autoload.php')) {
+                    trim_output($command->getStdoutContent());
                     throw new \Exception('Composer install failed for tiki bundled packages');
                 }
 
@@ -730,7 +734,8 @@ TXT;
                     $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']);
 
                     $command->run();
-                    if ($command->getReturn() !== 0) {
+                    if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
+                        trim_output($command->getStdoutContent());
                         throw new \Exception('Composer install failed for composer.lock in the root folder');
                     }
                 }
