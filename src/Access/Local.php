@@ -332,7 +332,7 @@ class Local extends Access implements ShellPrompt
         }
 
         if (file_exists($filename)) {
-            unlink($filename);
+            @unlink($filename);
         }
     }
 

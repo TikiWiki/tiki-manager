@@ -7,12 +7,13 @@
 
 namespace TikiManager\Libs\VersionControl;
 
-use Exception;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Host\Command;
+
+use function foo\func;
 
 class Git extends VersionControlSystem
 {
@@ -207,5 +208,76 @@ class Git extends VersionControlSystem
     public function setQuiet(bool $quiet): void
     {
         $this->quiet = $quiet;
+    }
+
+    public function hasRemote($targetFolder, $branch)
+    {
+        $output = $this->exec(
+            $targetFolder,
+            'ls-remote --heads --exit-code origin ' . $branch,
+            true
+        );
+        return !empty($output);
+    }
+
+    public function getChangedFiles($folder, $exclude = [])
+    {
+        $command = $this->command . ' ls-files --modified';
+
+        $command = sprintf('cd %s && %s', $folder, $command);
+
+        $commandInstance = new Command($command);
+        $result = $this->access->runCommand($commandInstance);
+
+        if ($result->getReturn() !== 0) {
+            throw new VcsException($result->getStderrContent());
+        }
+
+        $output = $result->getStdoutContent();
+        $output = trim($output);
+
+        return empty($output) ? [] : array_values(explode(PHP_EOL, $output));
+    }
+
+    public function getDeletedFiles($folder)
+    {
+        $command = $this->command . ' ls-files -d';
+
+        $command = sprintf('cd %s && %s', $folder, $command);
+
+        $commandInstance = new Command($command);
+        $result = $this->access->runCommand($commandInstance);
+
+        if ($result->getReturn() !== 0) {
+            throw new VcsException($result->getStderrContent());
+        }
+
+        $output = $result->getStdoutContent();
+        $output = trim($output);
+
+        return empty($output) ? [] : array_values(explode(PHP_EOL, $output));
+    }
+
+    public function getUntrackedFiles($folder, $includeIgnore = false)
+    {
+        $command = $this->command . ' ls-files --others';
+
+        if (!$includeIgnore) {
+            $command .= ' --exclude-standard';
+        }
+
+        $command = sprintf('cd %s && %s', $folder, $command);
+
+        $commandInstance = new Command($command);
+        $result = $this->access->runCommand($commandInstance);
+
+        if ($result->getReturn() !== 0) {
+            throw new VcsException($result->getStderrContent());
+        }
+
+        $output = $result->getStdoutContent();
+        $output = trim($output);
+
+        return empty($output) ? [] : array_values(explode(PHP_EOL, $output));
     }
 }

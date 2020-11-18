@@ -194,6 +194,21 @@ abstract class VersionControlSystem
     abstract public function update($targetFolder, $branch);
 
     abstract public function isFileVersioned($targetFolder, $fileName);
+
+    /**
+     * Check if the branch exists in remote server
+     * @param $targetFolder
+     * @param $branch
+     * @return boolean
+     */
+    abstract public function hasRemote($targetFolder, $branch);
+
+    /**
+     * Return an array with all uncommited files
+     * @param $targetFolder
+     * @return mixed
+     */
+    abstract public function getChangedFiles($targetFolder);
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

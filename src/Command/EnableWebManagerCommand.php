@@ -2,10 +2,13 @@
 
 namespace TikiManager\Command;
 
+use Exception;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use TikiManager\Config\App;
+use Symfony\Component\Process\Process;
+use TikiManager\Config\Environment;
 
 class EnableWebManagerCommand extends TikiManagerCommand
 {
@@ -129,14 +132,6 @@ access to the administration panel to local users (safer).');
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if (function_exists('posix_getuid')) {
-            if (posix_getuid() != 0) {
-                throw new \RuntimeException('You need to run this script as root to write to configuration files.');
-            }
-        } else {
-            throw new \RuntimeException('PHP POSIX functions are not installed, install them and try again.');
-        }
-
         if (!$input->getOption('install')) {
             throw new \RuntimeException('Missing confirmation to proceed installation');
         }
@@ -151,6 +146,10 @@ access to the administration panel to local users (safer).');
             throw new \RuntimeException('Tiki Manager Web path does not exist.');
         }
 
+        if (!is_writable($webPath)) {
+            throw new \RuntimeException('You do not have permissions to write in the Web path provided.');
+        }
+
         $user = $input->getOption('www-user') ?? getenv('WWW_USER');
         $group = $input->getOption('www-group') ?? getenv('WWW_GROUP');
 
@@ -163,12 +162,8 @@ access to the administration panel to local users (safer).');
             }
         }
 
-        if (!is_writable($webPath)) {
-            throw new \RuntimeException('You do not have permissions to write in the Web path provided.');
-        }
-
-        $cmd = 'cp -a www/. ' . $webPath;
-        exec($cmd);
+        $fs = new Filesystem();
+        $fs->mirror('www/', $webPath);
 
         $owner = fileowner($webPath . '/index.php');
 
@@ -204,32 +199,55 @@ CONFIG
             );
         }
 
-        $db = $_ENV['DB_FILE'];
-        $data = $_ENV['TRIM_DATA'];
-        $backup = $_ENV['BACKUP_FOLDER'];
-        $archive = $_ENV['ARCHIVE_FOLDER'];
-        $logs = $_ENV['TRIM_LOGS'];
-        $cache = $_ENV['CACHE_FOLDER'];
-        $composer = $_ENV['COMPOSER_PATH'] == 'composer' ? $_ENV['COMPOSER_PATH'] : 'php ' . $_ENV['COMPOSER_PATH'];
+        $db = Environment::get('DB_FILE');
+        $data = Environment::get('TRIM_DATA');
+        $backup = Environment::get('BACKUP_FOLDER');
+        $archive = Environment::get('ARCHIVE_FOLDER');
+        $logs = Environment::get('TRIM_LOGS');
+        $cache = Environment::get('CACHE_FOLDER');
 
-        `chmod 0666 $db`;
-        `chmod 0700 $data`;
+        try {
+            $fs->chmod($db, 0666);
+            $fs->chmod($data, 0770);
 
-        `(rm -rf $webPath/vendor && $composer install -d $webPath)`;
+            $folders = [
+                $data,
+                $backup,
+                $archive,
+                $logs,
+                $cache,
+            ];
 
-        if ($user) {
-            $userGroup = $user;
-            if ($group) {
-                $userGroup = ":" . $group;
+            foreach ($folders as $folder) {
+                if ($user) {
+                    $fs->chown($folder, $user, true);
+                }
+                if ($group) {
+                    $fs->chgrp($folder, $group, true);
+                }
             }
-            `chown $userGroup $data`;
-            `chown $userGroup $backup`;
-            `chown $userGroup $archive`;
-            `chown $userGroup $logs`;
-            `chown $userGroup $cache`;
-            `(chown -R $userGroup $webPath/vendor)`;
-        }
 
-        $this->io->success('WWW Tiki Manager is now enabled.');
+            $fs->remove($webPath . '/vendor');
+
+            $composer = Environment::get('COMPOSER_PATH') == 'composer' ? [Environment::get('COMPOSER_PATH')] : [PHP_BINARY,  Environment::get('COMPOSER_PATH')];
+            $command = array_merge($composer, ['install']);
+
+            $process = new Process($command, $webPath);
+            $process->setTimeout('300'); // 5min
+            $process->run(function ($type, $buffer) {
+                $this->io->write($buffer);
+            });
+
+            if (!$process->isSuccessful()) {
+                throw new Exception('Failed to install composer dependencies.' . PHP_EOL . $process->getErrorOutput());
+            }
+
+            $fs->chown($webPath . '/vendor', $owner, true);
+
+            $this->io->success('WWW Tiki Manager is now enabled.');
+        } catch(Exception $e) {
+            $this->io->error($e->getMessage());
+            return 1;
+        }
     }
 }

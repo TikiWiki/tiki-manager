@@ -57,9 +57,8 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             ->addOption(
                 'live-reindex',
                 null,
-                InputOption::VALUE_OPTIONAL,
-                'Live reindex, set instance maintenance off and after perform index rebuild.',
-                true
+                InputOption::VALUE_NONE,
+                'Live reindex, set instance maintenance off and after perform index rebuild.'
             );
     }
 
@@ -77,7 +76,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
-        $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+        $liveReindex = $input->getOption('live-reindex');
 
         if (empty($instancesOption)) {
             $this->io->newLine();

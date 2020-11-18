@@ -8,6 +8,7 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsConflictException;
 use TikiManager\Application\Exception\VcsException;
@@ -107,6 +108,7 @@ class Svn extends VersionControlSystem
             $tmpFolderChecked
         )) && $this->ensureTempFolder($targetFolder)) {
             $tmpFolderChecked[] = $targetFolder;
+            $this->exec($targetFolder, 'upgrade');
         }
 
         $globalOptions = implode(' ', $this->globalOptions);
@@ -324,5 +326,45 @@ class Svn extends VersionControlSystem
             return false;
         }
         return true;
+    }
+
+    public function hasRemote($targetFolder, $branch)
+    {
+        return true;
+    }
+
+    public function getChangedFiles($folder)
+    {
+        $allFiles = $this->exec($folder, 'status', true);
+
+        $regex = '/(?:^M)\s*(.*)$/m';
+
+        \preg_match_all($regex, $allFiles, $matches);
+
+        return $matches[1] ?? [];
+    }
+
+    public function getDeletedFiles($folder)
+    {
+        $allFiles = $this->exec($folder, 'status', true);
+
+        $regex = '/(?:^\!)\s*(.*)$/m';
+
+        \preg_match_all($regex, $allFiles, $matches);
+
+        return $matches[1] ?? [];
+    }
+
+    public function getUntrackedFiles($folder, $includeIgnore = false)
+    {
+        $command = 'status' . ($includeIgnore ? ' --no-ignore' : '');
+
+        $allFiles = $this->exec($folder, $command, true);
+
+        $regex = $includeIgnore ? '/(?:^I|^\?)\s*(.*)$/m' : '/(?:^\?)\s*(.*)$/m';
+
+        \preg_match_all($regex, $allFiles, $matches);
+
+        return $matches[1] ?? [];
     }
 }

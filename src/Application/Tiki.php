@@ -26,6 +26,14 @@ class Tiki extends Application
     /** @var Svn|Git|Src  */
     private $vcs_instance = null;
 
+    public static $excludeBackupFolders = [
+        'vendor',
+        'vendor_bundled/vendor',
+        'temp',
+        'bin',
+        'modules/cache'
+    ];
+
     public function __construct(Instance $instance)
     {
         parent::__construct($instance);
@@ -267,6 +275,9 @@ class Tiki extends Application
             $line = rtrim($line, '/');
 
             if (! empty($line)) {
+                if ($line[0] != '/') {
+                    $line = $webroot . '/' . $line;
+                }
                 $folders['data'][] = $line;
             }
         }
@@ -704,14 +715,23 @@ TXT;
 
             if ($instance->hasConsole()) {
                 if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
-                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-source']);
+                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']);
                 } else {
                     $command = $access->createCommand('bash', ['setup.sh', 'composer']);
                 }
 
                 $command->run();
                 if ($command->getReturn() !== 0) {
-                    throw new \Exception('Composer install failed');
+                    throw new \Exception('Composer install failed for tiki bundled packages');
+                }
+
+                if ($access->fileExists('composer.lock')) {
+                    $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']);
+
+                    $command->run();
+                    if ($command->getReturn() !== 0) {
+                        throw new \Exception('Composer install failed for composer.lock in the root folder');
+                    }
                 }
             }
         }
@@ -754,11 +774,11 @@ TXT;
 
                 $this->instance->unlock();
             }
-        }
 
-        if (empty($options['skip-reindex']) && $hasConsole) {
-            $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+            if (empty($options['skip-reindex'])) {
+                $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+            }
         }
 
         $this->io->writeln('Fixing permissions...');
@@ -772,8 +792,8 @@ TXT;
      */
     protected function moveVendor()
     {
-        if ($this->vcs_instance->isFileVersioned($this->instance->webroot, 'vendor')) {
-            $access = $this->instance->getBestAccess();
+        $access = $this->instance->getBestAccess();
+        if ($access->fileExists('vendor') && !$this->vcs_instance->isFileVersioned($this->instance->webroot, 'vendor')) {
             $access->moveFile(
                 $this->instance->webroot . DIRECTORY_SEPARATOR . 'vendor',
                 $this->instance->webroot . DIRECTORY_SEPARATOR . 'vendor_old'
@@ -838,6 +858,62 @@ TXT;
 TXT;
 
         return $content;
+    }
+
+    public function getFilesToBackup()
+    {
+        if (! $this->vcs_instance || ! $this->vcs_instance->hasRemote($this->instance->webroot, $this->getBranch())) {
+            return false;
+        }
+
+        $files = $this->getFileChanges();
+        $backupFiles = \array_merge($files['changed'], $files['untracked']);
+        $include = ['.git', '.svn'];
+
+        return array_merge($backupFiles, $include);
+    }
+
+    /**
+     * @return Git|Src|Svn
+     */
+    public function getVcsInstance()
+    {
+        return $this->vcs_instance;
+    }
+
+    public function getFileChanges($refresh = false)
+    {
+
+        static $files;
+
+        if ($files && !$refresh) {
+            return $files;
+        }
+
+        $files = [];
+        $files['changed'] = $this->vcs_instance->getChangedFiles($this->instance->webroot);
+        $files['untracked'] = $this->vcs_instance->getUntrackedFiles($this->instance->webroot, true);
+        $files['deleted'] = $this->vcs_instance->getDeletedFiles($this->instance->webroot);
+
+        // Git marks deleted files also as modified, this removes deleted files from the modified files.
+        $files['changed'] = array_filter($files['changed'], function ($file) use ($files) {
+            return !in_array($file, $files['deleted']);
+        });
+
+        $files['untracked'] = array_filter($files['untracked'], function ($path) {
+            if (empty($path)) {
+                return false;
+            }
+
+            foreach (self::$excludeBackupFolders as $excludeBackupFolder) {
+                if (strpos($path, $excludeBackupFolder) === 0) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        return $files;
     }
 }
 

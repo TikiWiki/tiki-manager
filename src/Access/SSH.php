@@ -420,7 +420,8 @@ class SSH extends Access implements ShellPrompt
         $host = $this->getHost();
         return $host->rsync([
             'src' => $remoteLocation,
-            'dest' => $localMirror
+            'dest' => $localMirror,
+            'download' => true
         ]);
     }
 }

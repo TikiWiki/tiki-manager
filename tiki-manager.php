@@ -4,11 +4,23 @@
  *     See copyright.txt for details and a complete list of authors.
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
+require_once 'src/Libs/Helpers/functions.php';
 
-if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
-    $message = 'ERROR:' . PHP_EOL . 'Cannot locate autoloader file. Please run "composer install".';
-    print(PHP_EOL . $message . PHP_EOL . PHP_EOL);
-    exit(-1);
+try {
+    $pharPath = Phar::running(false);
+    $isPhar = isset($pharPath) && !empty($pharPath);
+
+    if (!$isPhar && !$composer = detectComposer(__DIR__)) {
+        print('Downloading composer.phar...' . PHP_EOL);
+        $composer = PHP_BINARY  . installComposer(__DIR__);
+    }
+
+    if (!$isPhar && !file_exists(__DIR__ . '/vendor/autoload.php')) {
+        installComposerDependencies(__DIR__);
+    }
+} catch (Exception $e) {
+    print($e->getMessage());
+    exit(1);
 }
 
 require __DIR__ . '/vendor/autoload.php';
@@ -23,6 +35,21 @@ use TikiManager\Manager\UpdateManager;
 Environment::getInstance()->load();
 
 $application = new Application();
+$banner = <<<TXT
+
+88888888888 8888888 888    d8P  8888888      888b     d888
+    888       888   888   d8P     888        8888b   d8888
+    888       888   888  d8P      888        88888b.d88888
+    888       888   888d88K       888        888Y88888P888  8888b.  88888b.   8888b.   .d88b.   .d88b.  888d888
+    888       888   8888888b      888        888 Y888P 888     "88b 888 "88b     "88b d88P"88b d8P  Y8b 888P"
+    888       888   888  Y88b     888        888  Y8P  888 .d888888 888  888 .d888888 888  888 88888888 888
+    888       888   888   Y88b    888        888   "   888 888  888 888  888 888  888 Y88b 888 Y8b.     888
+    888     8888888 888    Y88b 8888888      888       888 "Y888888 888  888 "Y888888  "Y88888  "Y8888  888
+                                                                                           888
+                                                                                      Y8b d88P
+                                                                                       "Y88P"
+TXT;
+$application->setName($banner);
 
 $application->add(new \TikiManager\Command\CreateInstanceCommand());
 $application->add(new \TikiManager\Command\AccessInstanceCommand());

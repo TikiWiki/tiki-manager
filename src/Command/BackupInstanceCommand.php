@@ -39,6 +39,11 @@ class BackupInstanceCommand extends TikiManagerCommand
                 'mb',
                 InputOption::VALUE_REQUIRED,
                 'Max number of backups to keep by instance'
+            )->addOption(
+                'partial',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable backups using VCS code base'
             );
     }
 
@@ -141,12 +146,15 @@ class BackupInstanceCommand extends TikiManagerCommand
         }
 
         $logs = [];
+
+        $isFull = !$input->getOption('partial') ?? (Environment::get('BACKUP_TYPE', 'full') != 'partial');
+
         foreach ($selectedInstances as $instance) {
             $output->writeln('<fg=cyan>Performing backup for ' . $instance->name . '</>');
             $log = [];
             $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
             try {
-                $backupFile = $instance->backup();
+                $backupFile = $instance->backup(false, $isFull);
                 if (!empty($backupFile)) {
                     $this->io->success('Backup created with success.');
                     $this->io->note('Backup file: ' . $backupFile);

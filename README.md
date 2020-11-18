@@ -25,7 +25,7 @@ SVN_TIKIWIKI_URI=<CUSTOM_SVN_REPOSITORY_URL>
 
 Tiki Manager is able to use Tiki's distributed version packages as an alternative when there is no connection to external servers like gitlab or sourceforge.
 
-Setting the default VCS to `src`, Tiki Manager will use existing packages in the data/tiki_src folder (default). 
+Setting the default VCS to `src`, Tiki Manager will use existing packages in the data/tiki_src folder (default).
 ```
 DEFAULT_VCS=src
 ```
@@ -39,7 +39,7 @@ FROM_EMAIL_ADDRESS=<SENDER_EMAIL_ADDRESS>
 ```
 
 #### Configure SMTP Server
-By default Tiki-Manager user sendmail to send email notifications. If you intend to use SMTP instead add the following lines to your `.env` file.
+By default Tiki-Manager uses sendmail to send email notifications. If you intend to use SMTP instead add the following lines to your `.env` file.
 ```
 SMTP_HOST=<SERVER_ADDRESS>
 SMTP_PORT=<SERVER_PORT>

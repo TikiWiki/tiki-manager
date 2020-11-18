@@ -16,6 +16,7 @@ use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class CommandHelper
@@ -515,44 +516,42 @@ class CommandHelper
      */
     public static function sendMailNotification($to, $subject, $message, $from = null)
     {
-        $smtpHost = getenv('SMTP_HOST') ?? null;
-        $smtpPort = getenv('SMTP_PORT') ?? null;
-        $smtpUser = getenv('SMTP_USER') ?? null;
-        $smtpPass = getenv('SMTP_PASS') ?? null;
+        $smtpHost = Environment::get('SMTP_HOST');
+        $smtpPort = Environment::get('SMTP_PORT', 25);
+        $smtpUser = Environment::get('SMTP_USER');
+        $smtpPass = Environment::get('SMTP_PASS');
 
-        // Create the Transport
-        if (!empty($smtpHost) && $smtpPort) {
-            $transport = (new \Swift_SmtpTransport($smtpHost, $smtpPort))
-                ->setUsername($smtpUser)
-                ->setPassword($smtpPass);
-        } else {
-            $transport = new \Swift_SendmailTransport();
+        $from = $from ?: Environment::get('FROM_EMAIL_ADDRESS');
+
+        if (!$from) {
+            throw new \RuntimeException('Unable to determine FROM_EMAIL_ADDRESS required to send emails. Please check README.md file.');
         }
 
-        // Create the Mailer using your created Transport
-        $mailer = new \Swift_Mailer($transport);
+        try {
+            // Create the Transport
+            if ($smtpHost && $smtpPort) {
+                $transport = (new \Swift_SmtpTransport($smtpHost, $smtpPort))
+                    ->setUsername($smtpUser)
+                    ->setPassword($smtpPass);
+            } else {
+                $transport = new \Swift_SendmailTransport();
+            }
 
-        // Create a message
-        $message = (new \Swift_Message($subject))
-            ->setTo(is_array($to) ? $to : [$to])
-            ->setBody($message);
+            // Create the Mailer using your created Transport
+            $mailer = new \Swift_Mailer($transport);
 
-        if (empty($from)) {
-            $from = getenv('FROM_EMAIL_ADDRESS');
-        }
+            // Create a message
+            $message = (new \Swift_Message($subject))
+                ->setTo(is_array($to) ? $to : [$to])
+                ->setBody($message);
 
-        if ($from === false && $transport instanceof \Swift_SmtpTransport) {
-            throw new \RuntimeException('Unable to determine FROM_EMAIL_ADDRESS required to send emails using SMTP. Please check README.md file.');
-        }
-
-        if ($from) {
             $message->setFrom($from);
+
+            // Send the message
+            return $mailer->send($message);
+        } catch (\Swift_SwiftException $e){
+            throw new \RuntimeException('Unable to send email notification.' . PHP_EOL . $e->getMessage());
         }
-
-        // Send the message
-        $result = $mailer->send($message);
-
-        return $result;
     }
 
     public static function validateEmailInput($value)

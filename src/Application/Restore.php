@@ -6,8 +6,12 @@
 
 namespace TikiManager\Application;
 
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Exception\RestoreErrorException;
+use TikiManager\Config\Environment;
 use TikiManager\Libs\Helpers\ApplicationHelper;
+use TikiManager\Libs\VersionControl\Git;
+use TikiManager\Libs\VersionControl\Svn;
 
 class Restore extends Backup
 {
@@ -111,6 +115,7 @@ class Restore extends Backup
         $manifest = explode(PHP_EOL, $manifest);
         $manifest = array_map('trim', $manifest);
         $manifest = array_filter($manifest, 'strlen');
+        $backupType = Backup::FULL_BACKUP;
 
         $windowsAbsolutePathsRegex = '/^([a-zA-Z]\:[\/,\\\\]).{1,}/';
 
@@ -123,10 +128,17 @@ class Restore extends Backup
         }
 
         foreach ($manifest as $line) {
-            if ($this->direct) {
-                list($type, $destination) = explode('    ', $line, 2);
-            } else {
-                list($hash, $type, $destination) = explode('    ', $line, 3);
+            $values = explode('    ', $line);
+            switch (count($values)) {
+                case 2:
+                    list($type, $destination) = $values;
+                    break;
+                case 3:
+                    list($hash, $type, $destination) = $values;
+                    break;
+                case 4:
+                    list($hash, $type, $destination, $backupType) = $values;
+                    break;
             }
 
             if ($type == 'conf_local') {
@@ -157,7 +169,8 @@ class Restore extends Backup
             $folders[] = [
                 $type,
                 $source,
-                $destination
+                $destination,
+                $backupType == Backup::FULL_BACKUP,
             ];
         }
         return $folders;
@@ -192,18 +205,25 @@ class Restore extends Backup
         $this->setIniFilesToExclude($manifest);
 
         foreach ($folders as $key => $folder) {
-            list($type, $src, $target) = $folder;
+            list($type, $src, $target, $isFull) = $folder;
             if ($type == 'conf_external') {
                 // system configuration file
                 $access = $this->getAccess();
                 $access->uploadFile($src, $target);
             } else {
-                $this->restoreFolder($src, $target);
+                if ($type == 'app' && !$isFull) {
+                    $this->restoreFromVCS($src, $target, $isFull);
+                }
+
+                $this->restoreFolder($src, $target, $isFull);
             }
         }
+
+        $changes = "{$srcFolder}/changes.txt";
+        $this->applyChanges($changes);
     }
 
-    public function restoreFolder($src, $target)
+    public function restoreFolder($src, $target, $isFull = false)
     {
         $access = $this->getAccess();
         $instance = $this->instance;
@@ -268,7 +288,7 @@ class Restore extends Backup
         } else {
             $rsyncFlags = [
                 '-a',
-                '--delete'
+                $isFull ? '--delete' : '--force'
             ];
 
             $rsyncExcludes = [
@@ -403,9 +423,10 @@ class Restore extends Backup
     /**
      * @param $manifest_file
      */
-    public function setIniFilesToExclude($manifest_file)
+    public function setIniFilesToExclude($manifest)
     {
-        $system_config_file_info = $this->readSystemIniConfigFileFromManifest($manifest_file);
+
+        $system_config_file_info = $this->readSystemIniConfigFileFromManifest($manifest);
 
         if ($this->getProcess() == self::CLONE_PROCESS) {
             // src
@@ -440,11 +461,19 @@ class Restore extends Backup
 
         if (!empty($manifest)) {
             foreach ($manifest as $line) {
-                if ($this->direct) {
-                    $hash = '';
-                    list($type, $path) = explode('    ', $line, 2);
-                } else {
-                    list($hash, $type, $path) = explode('    ', $line, 3);
+                $values = explode('    ', $line);
+                $backupType = Backup::FULL_BACKUP;
+                switch (count($values)) {
+                    case 2:
+                        $hash = '';
+                        list($type, $path) = $values;
+                        break;
+                    case 3:
+                        list($hash, $type, $path) = $values;
+                        break;
+                    case 4:
+                        list($hash, $type, $path, $backupType) = $values;
+                        break;
                 }
 
                 if ($type == 'conf_local' || $type == 'conf_external') {
@@ -452,7 +481,8 @@ class Restore extends Backup
 
                     $result = [
                         'location' => $type,
-                        'file' => $hash
+                        'file' => $hash,
+                        'is_full' => $backupType == Backup::FULL_BACKUP,
                     ];
 
                     break;
@@ -461,5 +491,48 @@ class Restore extends Backup
         }
 
         return $result;
+    }
+
+    private function restoreFromVCS($src, $target)
+    {
+        $fileSystem = new Filesystem();
+        $dest = implode(\DIRECTORY_SEPARATOR, [Environment::get('TEMP_FOLDER'),  md5(time()), $this->instance->name]);
+
+        if ($fileSystem->exists($src . '/.svn')) {
+            $className = Svn::class;
+            $folder = '/.svn';
+        } elseif ($fileSystem->exists($src . '/.git')) {
+            $className = Git::class;
+            $folder = '/.git';
+        } else {
+            return false;
+        }
+
+        $toCopy = $src . $folder;
+        $dest .= $folder;
+        $target .= $folder;
+        $vcsInstance = new $className($this->instance);
+
+        $fileSystem->mirror($toCopy, $dest);
+        if ($this->restoreFolder($dest, $target, false)) {
+            $vcsInstance->revert(dirname($target));
+            return true;
+        }
+        return false;
+    }
+
+    public function applyChanges($changesFile)
+    {
+        $changes = file_exists($changesFile) ? file_get_contents($changesFile) : '';
+
+        preg_match_all('/^D\s*(.*)/m', $changes, $matches);
+
+        if (empty($matches[1])) {
+            return;
+        }
+
+        foreach ($matches[1] as $file) {
+            $this->access->deleteFile($file);
+        }
     }
 }

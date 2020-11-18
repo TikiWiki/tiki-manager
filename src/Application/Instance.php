@@ -693,15 +693,16 @@ SQL;
     }
 
     /**
-     * @param bool $direct
+     * @param bool $direct ()
+     * @param bool $full Full backup or partial (backing up only changes against VCS system)
      * @return bool|string
      * @throws Exception\FolderPermissionException
      */
-    public function backup($direct = false)
+    public function backup($direct = false, $full = true)
     {
-        $backup = new Backup($this, $direct);
+        $backup = new Backup($this, $direct, $full);
 
-        if ($this->detectDistribution() === 'ClearOS') {
+        if ($this->type === 'local' && $this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
         }
 
@@ -746,8 +747,12 @@ SQL;
         $oldVersion = $this->getLatestVersion();
 
         $databaseConfig = $this->getDatabaseConfig();
-        $this->getApplication()->deleteAllTables();
-        $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+        if ($databaseConfig) {
+            $this->getApplication()->deleteAllTables();
+            $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+        } else {
+            $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
+        }
 
         if (!$this->findApplication()) { // a version is created in this call
             $this->io->error('Something when wrong with restore. Unable to read application details.');
@@ -779,6 +784,8 @@ SQL;
         }
 
         if ($this->app == 'tiki') {
+            $this->getApplication()->runComposer();
+
             $this->io->writeln("Fixing permissions for {$this->name}");
             $this->getApplication()->fixPermissions();
         }
