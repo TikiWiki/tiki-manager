@@ -108,7 +108,11 @@ class Svn extends VersionControlSystem
             $tmpFolderChecked
         )) && $this->ensureTempFolder($targetFolder)) {
             $tmpFolderChecked[] = $targetFolder;
-            $this->exec($targetFolder, 'upgrade');
+            try {
+                $this->exec($targetFolder, 'upgrade');
+            } catch (VcsException $e) {
+                // Ignore VcsException exceptions when trying to upgrade since it may already be updated.
+            }
         }
 
         $globalOptions = implode(' ', $this->globalOptions);
