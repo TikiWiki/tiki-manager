@@ -148,6 +148,11 @@ class SSH
 
         $localHost = new Local();
 
+        // is it relative
+        if ($src[0] !== '/' && ! empty($this->location)) {
+            $src = $this->location . '/' . $src;
+        }
+
         $rsyncParams = ['-a', '-L', '--delete'];
         $rsyncParams = array_merge($rsyncParams, $exclude);
         $rsyncParams[] = '-e';
