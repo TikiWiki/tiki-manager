@@ -2,9 +2,9 @@
 
 define('DS', DIRECTORY_SEPARATOR);
 
-require_once 'src/Libs/Requirements/Requirements.php';
-require_once 'src/Libs/Requirements/LinuxRequirements.php';
-require_once 'src/Libs/Requirements/WindowsRequirements.php';
+require_once dirname(__DIR__) . '/Requirements/Requirements.php';
+require_once dirname(__DIR__) . '/Requirements/LinuxRequirements.php';
+require_once dirname(__DIR__) . '/Requirements/WindowsRequirements.php';
 
 use TikiManager\Config\App;
 
