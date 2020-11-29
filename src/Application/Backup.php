@@ -6,6 +6,8 @@
 
 namespace TikiManager\Application;
 
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Exception\FolderPermissionException;
 use TikiManager\Config\App;
@@ -20,6 +22,10 @@ class Backup
 {
     public const FULL_BACKUP = 'full';
     public const PARTIAL_BACKUP = 'partial';
+
+    /** @var SymfonyStyle */
+    protected $io;
+
     /** @var Access $access */
     protected $access;
     protected $app;
@@ -29,9 +35,6 @@ class Backup
     protected $backupDirname;
     protected $backupRoot;
     protected $errors;
-    protected $fileGroup;
-    protected $filePerm;
-    protected $fileUser;
     protected $instance;
     protected $workpath;
     protected $direct;
@@ -46,7 +49,7 @@ class Backup
      */
     public function __construct($instance, $direct = false, $full = true)
     {
-        $this->io = App::get('io');
+        $this->setIO(App::get('io'));
 
         $this->instance = $instance;
         $this->access = $this->getAccess($instance);
@@ -57,9 +60,6 @@ class Backup
         $this->backupDirname = sprintf('%s-%s', $instance->id, $instance->name);
         $this->backupDir = $this->backupRoot . DIRECTORY_SEPARATOR . $this->backupDirname;
         $this->archiveDir = $this->archiveRoot . DIRECTORY_SEPARATOR . $this->backupDirname;
-        $this->filePerm = intval($instance->getProp('backup_perm')) ?: 0770;
-        $this->fileUser = $instance->getProp('backup_user');
-        $this->fileGroup = $instance->getProp('backup_group');
         $this->direct = $direct;
         $this->errors = [];
         $this->full = !in_array($instance->vcs_type, ['git', 'svn']) ? true : $full;
@@ -257,12 +257,12 @@ class Backup
 
         $exceptionMessage = 'Folder "%s" is not writable. Tiki-manager requires write privileges in order to create backups.';
 
-        if (! is_writable($parentFolder) && ! $this->fixPermissions($parentFolder)) {
+        if (!is_writable($parentFolder) && !$this->fixPermissions($parentFolder)) {
             throw new FolderPermissionException(sprintf($exceptionMessage, $parentFolder));
         }
 
-        if (is_dir($folder) || mkdir($folder, $this->filePerm, true)) {
-            if (! $this->fixPermissions($folder)) {
+        if (is_dir($folder) || mkdir($folder, $this->getFilePerm(), true)) {
+            if (!$this->fixPermissions($folder)) {
                 throw new FolderPermissionException(sprintf($exceptionMessage, $folder));
             }
 
@@ -293,7 +293,7 @@ class Backup
         $backupDir = $backupDir ?: $this->backupDir;
         $manifestFile = $backupDir . DIRECTORY_SEPARATOR . 'manifest.txt';
         $file = fopen($manifestFile, 'w');
-        $lineTemplate = ! $this->direct ? '%s    %s    %s    %s' : '%s    %s';
+        $lineTemplate = !$this->direct ? '%s    %s    %s    %s' : '%s    %s';
 
         foreach ($data as $location) {
             $line = vsprintf($lineTemplate . PHP_EOL, $location);
@@ -335,9 +335,18 @@ class Backup
         return $changesFile;
     }
 
+    /**
+     * Fix folder permissions based on current backup properties
+     * @param $path
+     * @return bool
+     */
     public function fixPermissions($path)
     {
-        $perm = $this->filePerm;
+        $filesystem = new Filesystem();
+        $perm = $this->getFilePerm();
+        $user = $this->getFileUser();
+        $group = $this->getFileGroup();
+        $errors = [];
 
         if (is_dir($path)) {       // avoid rw-rw-rw- for dirs
             $perm = (($perm & 0b100100100) >> 2) | $perm;
@@ -345,19 +354,36 @@ class Backup
             $perm = ($perm & 0b001001001) ^ $perm;
         }
 
-        $success = 1;
         if ($perm) {
-            $success &= chmod($path, $perm);
-        }
-        if (getmyuid() === 0) {
-            if ($this->fileUser) {
-                $success &= chown($path, $this->fileUser);
-            }
-            if ($this->fileGroup) {
-                $success &= chgrp($path, $this->fileGroup);
+            try {
+                $filesystem->chmod($path, $perm);
+            } catch (IOException $e) {
+                $errors[] = $e->getMessage();
             }
         }
-        return $success > 0;
+
+        if (!is_null($group)) {
+            try {
+                $filesystem->chgrp($path, $group);
+            } catch (IOException $e) {
+                $errors[] = $e->getMessage();
+            }
+        }
+
+        if (!is_null($user)) {
+            try {
+                $filesystem->chown($path, $user);
+            } catch (IOException $e) {
+                $errors[] = $e->getMessage();
+            }
+        }
+
+        if ($errors) {
+            $this->io->error(implode(PHP_EOL, $errors));
+            return false;
+        }
+
+        return true;
     }
 
     public function getAccess($instance = null)
@@ -456,7 +482,7 @@ class Backup
             if (file_exists($realArchiveDir)) {
                 rename($realArchiveDir, $archiveDir);
             } else {
-                mkdir($archiveDir, $this->filePerm, true);
+                mkdir($archiveDir, $this->getFilePerm(), true);
             }
         }
 
@@ -472,7 +498,10 @@ class Backup
     private function createTempPartial($root, $files)
     {
         $fileSystem = new Filesystem();
-        $temp = implode(\DIRECTORY_SEPARATOR, [Environment::get('TEMP_FOLDER'), md5(time()), basename($this->instance->webroot)]);
+        $temp = implode(
+            \DIRECTORY_SEPARATOR,
+            [Environment::get('TEMP_FOLDER'), md5(time()), basename($this->instance->webroot)]
+        );
         foreach ($files as $file) {
             $dest = $temp . DIRECTORY_SEPARATOR . $file;
             $src = $root . DIRECTORY_SEPARATOR . $file;
@@ -488,5 +517,25 @@ class Backup
         }
 
         return $temp;
+    }
+
+    public function getFilePerm()
+    {
+        return intval($this->instance->getProp('backup_perm')) ?: 0770;
+    }
+
+    public function getFileUser()
+    {
+        return $this->instance->getProp('backup_user');
+    }
+
+    public function getFileGroup()
+    {
+        return $this->instance->getProp('backup_group');
+    }
+
+    public function setIO(SymfonyStyle $io)
+    {
+        $this->io = $io;
     }
 }
