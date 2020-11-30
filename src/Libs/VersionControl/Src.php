@@ -166,11 +166,12 @@ class Src extends VersionControlSystem
 
     /**
      * Update current instance's branch
-     * @param $targetFolder
-     * @param $branch
-     * @return mixed
+     * @param string $targetFolder
+     * @param string $branch
+     * @param int $lag
+     * @return null
      */
-    public function update($targetFolder, $branch)
+    public function update(string $targetFolder, string $branch, int $lag = 0)
     {
         if (preg_match('/(\d+)\.(\d+).*/', $branch, $matches1)) {
             $version = $matches1[0];

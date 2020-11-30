@@ -143,7 +143,7 @@ class Tiki extends Application
                         $extraParameters = ['-u', $matches[1], '-g', $group ?: $matches[1]];
                     }
 
-                    $command = $access->createCommand('bash', array_merge(['setup.sh'], $extraParameters,  ['fix'])); // does composer as well
+                    $command = $access->createCommand('bash', array_merge(['setup.sh'], $extraParameters, ['fix'])); // does composer as well
                 }
             } else {
                 $this->io->warning('Old Tiki detected, running bundled Tiki Manager setup.sh script.');
@@ -478,7 +478,8 @@ class Tiki extends Application
                 $version->branch = $this->vcs_instance->getBranchToUpdate($version->branch);
             }
 
-            $this->vcs_instance->update($this->instance->webroot, $version->branch);
+            $lag = $options['lag'] ?? 0;
+            $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag);
             foreach ([$escaped_temp_path, $escaped_cache_path] as $path) {
                 $script = sprintf('chmod(%s, 0777);', $path);
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
@@ -490,8 +491,6 @@ class Tiki extends Application
         }
 
         $this->postInstall($options);
-
-        return;
     }
 
     public function performActualUpgrade(Version $version, $options = [])
@@ -506,9 +505,11 @@ class Tiki extends Application
             return;
         }
 
+        $lag = $options['lag'] ?? 0;
+
         $this->clearCache();
         $this->moveVendor();
-        $this->vcs_instance->update($this->instance->webroot, $version->branch);
+        $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag);
         foreach (['temp', 'temp/cache'] as $path) {
             $script = sprintf('chmod(%s, 0777);', $path);
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();

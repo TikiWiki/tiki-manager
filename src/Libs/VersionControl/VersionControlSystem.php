@@ -7,6 +7,7 @@
 
 namespace TikiManager\Libs\VersionControl;
 
+use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Config\App;
 use TikiManager\Application\Instance;
 
@@ -188,10 +189,12 @@ abstract class VersionControlSystem
 
     /**
      * Update current instance's branch
-     * @param $targetFolder
-     * @return mixed
+     * @param string $targetFolder
+     * @param string $branch
+     * @param int $lag
+     * @void
      */
-    abstract public function update($targetFolder, $branch);
+    abstract public function update(string $targetFolder, string $branch, int $lag = 0);
 
     abstract public function isFileVersioned($targetFolder, $fileName);
 
@@ -209,6 +212,11 @@ abstract class VersionControlSystem
      * @return mixed
      */
     abstract public function getChangedFiles($targetFolder);
+
+    public function setIO(SymfonyStyle $io): void
+    {
+        $this->io = $io;
+    }
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

@@ -68,6 +68,12 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 InputOption::VALUE_OPTIONAL,
                 'Live reindex, set instance maintenance off and after perform index rebuild.',
                 true
+            )
+            ->addOption(
+                'lag',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Time delay commits by X number of days. Useful for avoiding newly introduced bugs in automated updates.'
             );
     }
 
@@ -126,6 +132,12 @@ class UpdateInstanceCommand extends TikiManagerCommand
                     $instancesOption = explode(',', $instancesOption);
                     $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
                 }
+            }
+
+            $lag = $input->getOption('lag');
+            if ($lag && (!is_numeric($lag) || $lag < 0)) {
+                $this->io->error('Invalid option for --lag, must be a positive integer.');
+                return 1;
             }
 
             $checksumCheck = $input->getOption('check');
@@ -240,7 +252,8 @@ class UpdateInstanceCommand extends TikiManagerCommand
                                 'checksum-check' => $checksumCheck,
                                 'skip-reindex' => $skipReindex,
                                 'skip-cache-warmup' => $skipCache,
-                                'live-reindex' => $liveReindex
+                                'live-reindex' => $liveReindex,
+                                'lag' => $lag
                             ]);
                             $version = $instance->getLatestVersion();
 

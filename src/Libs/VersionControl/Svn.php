@@ -170,7 +170,9 @@ class Svn extends VersionControlSystem
     {
         $toAppend = '';
 
-        if (preg_match('/^(\w+):(\w+)$/', $branch)) {
+        if (preg_match('/^(\w+):(\w+)$/', $branch)
+            || preg_match('/^(\w+):({"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}"})$/', $branch)
+        ) {
             $toAppend .= "--revision {$branch} ";
         } elseif (is_numeric($branch)) {
             $toAppend .= "--change {$branch}";
@@ -263,7 +265,7 @@ class Svn extends VersionControlSystem
         return $this->checkoutBranch($targetFolder, $branch);
     }
 
-    public function update($targetFolder, $branch)
+    public function update(string $targetFolder, string $branch, int $lag = 0)
     {
         $info = $this->info($targetFolder);
         $root = $info['repository']['root'];
@@ -292,6 +294,14 @@ class Svn extends VersionControlSystem
         if (strlen(trim($conflicts)) > 0 &&
             preg_match('/conflicts:/i', $conflicts)) {
             throw new VcsConflictException("SVN MERGE: $conflicts");
+        }
+
+        if ($lag) {
+            $lag = date('{"Y-m-d H:i"}', time() - $lag * 60 * 60 * 24);
+            $this->io->writeln("Updating to '{$branch}@{$lag}'");
+            $this->exec($targetFolder, "update $targetFolder --revision $lag svn:$branchUrl --accept postpone");
+            $this->cleanup($targetFolder);
+            return;
         }
 
         if ($this->isUpgrade($url, $branch)) {

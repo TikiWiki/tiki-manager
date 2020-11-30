@@ -59,7 +59,14 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Live reindex, set instance maintenance off and after perform index rebuild.'
+            )
+            ->addOption(
+                'lag',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Time delay commits by X number of days. Useful for avoiding newly introduced bugs in automated updates.'
             );
+        ;
     }
 
 
@@ -77,6 +84,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
         $liveReindex = $input->getOption('live-reindex');
+        $lag = $input->getOption('lag');
 
         if (empty($instancesOption)) {
             $this->io->newLine();
@@ -177,7 +185,8 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                             'checksum-check' => $checksumCheck,
                             'skip-reindex' => $skipReindex,
                             'skip-cache-warmup' => $skipCache,
-                            'live-reindex' => $liveReindex
+                            'live-reindex' => $liveReindex,
+                            'lag' => $lag
                         ]);
 
                         $version = $instance->getLatestVersion();

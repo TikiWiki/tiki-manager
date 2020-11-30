@@ -13,8 +13,6 @@ use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Host\Command;
 
-use function foo\func;
-
 class Git extends VersionControlSystem
 {
     protected $quiet = true;
@@ -135,8 +133,7 @@ class Git extends VersionControlSystem
     public function pull($targetFolder)
     {
         $gitCmd = 'pull' . ($this->quiet ? ' --quiet' : '');
-        return $this->cleanup($targetFolder) &&
-            $this->exec($targetFolder, $gitCmd);
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     public function cleanup($targetFolder)
@@ -145,9 +142,13 @@ class Git extends VersionControlSystem
         return $this->exec($targetFolder, $gitCmd);
     }
 
-    public function merge($targetFolder, $branch)
+    public function merge($targetFolder, $branch, $commitSHA = null)
     {
-        die('[Merge] missing implementation for Git');
+        $gitCmd = "merge $branch";
+        $gitCmd .= $commitSHA ? " $commitSHA" : '';
+        $gitCmd .= $this->quiet ? ' --quiet' : '';
+
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     public function info($targetFolder, $raw = false)
@@ -162,34 +163,62 @@ class Git extends VersionControlSystem
         return $this->exec($targetFolder, $gitCmd);
     }
 
-    public function checkoutBranch($targetFolder, $branch)
+    public function checkoutBranch($targetFolder, $branch, $commitSHA = null)
     {
-        $gitCmd = "checkout $branch" . ($this->quiet ? ' --quiet' : '');
+        $gitCmd = $commitSHA ? "checkout -B $branch $commitSHA" : "checkout $branch";
+        $gitCmd .= $this->quiet ? ' --quiet' : '';
+
         return $this->exec($targetFolder, $gitCmd);
     }
 
-    public function upgrade($targetFolder, $branch)
+    public function upgrade($targetFolder, $branch, $commitSHA = null)
     {
         $this->revert($targetFolder);
 
         $gitCmd = 'fetch --all' . ($this->quiet ? ' --quiet' : '');
         $this->exec($targetFolder, $gitCmd);
 
-        return $this->checkoutBranch($targetFolder, $branch);
+        return $this->checkoutBranch($targetFolder, $branch, $commitSHA);
     }
 
-    public function update($targetFolder, $branch)
+    /**
+     * Update current instance's branch
+     * @param string $targetFolder
+     * @param string $branch
+     * @param int $lag The number of days
+     * @void
+     * @throws VcsException
+     */
+    public function update(string $targetFolder, string $branch, int $lag = 0)
     {
-        $this->revert($targetFolder);
         $branchInfo = $this->info($targetFolder);
 
-        if ($this->isUpgrade($branchInfo, $branch)) {
-            $this->io->writeln("Upgrading to '{$branch}' branch");
-            $this->upgrade($targetFolder, $branch);
+        $messageUpdate = "Updating '{$branch}' branch";
+        $messageUpgrade = "Upgrading to '{$branch}' branch";
+
+        $commitSHA = null;
+
+        if ($lag) {
+            $time = time() - $lag * 60 * 60 * 24;
+            list('commit' => $commitSHA, 'date' => $date) = $this->getLastCommit($targetFolder, $branch, $time);
+
+            $messageUpdate .= " ({$commitSHA}) at {$date}";
+            $messageUpgrade .= " ({$commitSHA}) at {$date}";
         }
 
-        $this->io->writeln("Updating '{$branch}' branch");
-        $this->pull($targetFolder);
+        if ($this->isUpgrade($branchInfo, $branch)) {
+            $this->revert($targetFolder);
+            $this->io->writeln($messageUpgrade);
+            $this->upgrade($targetFolder, $branch, $commitSHA);
+        } elseif ($commitSHA) {
+            $this->io->writeln($messageUpdate);
+            $this->checkoutBranch($targetFolder, $branch, $commitSHA);
+        }
+
+        if (!$commitSHA) {
+            $this->io->writeln($messageUpdate);
+            $this->pull($targetFolder);
+        }
 
         $this->cleanup($targetFolder);
     }
@@ -214,8 +243,7 @@ class Git extends VersionControlSystem
     {
         $output = $this->exec(
             $targetFolder,
-            'ls-remote --heads --exit-code origin ' . $branch,
-            true
+            'ls-remote --heads --exit-code origin ' . $branch
         );
         return !empty($output);
     }
@@ -279,5 +307,51 @@ class Git extends VersionControlSystem
         $output = trim($output);
 
         return empty($output) ? [] : array_values(explode(PHP_EOL, $output));
+    }
+
+    /**
+     * @param string $targetFolder
+     * @param string $branch
+     * @param array $options
+     * @return mixed|string
+     * @throws VcsException
+     */
+    public function log(string $targetFolder, string $branch, array $options = [])
+    {
+        $logOptions = implode(' ', $options);
+
+        $gitCmd = "log $logOptions $branch";
+        return $this->exec($targetFolder, $gitCmd);
+    }
+
+    /**
+     * @param string $targetFolder
+     * @param string $branch
+     * @param int|null $timestamp
+     * @return array
+     * @throws VcsException
+     */
+    public function getLastCommit(string $targetFolder, string $branch, $timestamp = null): array
+    {
+        $lag = date('Y-m-d H:i', $timestamp ?? time());
+        $options = [
+            '-1',
+            sprintf('--before=%s', escapeshellarg($lag))
+        ];
+
+        $gitLog = $this->log($targetFolder, 'origin/' . $branch, $options);
+
+        if (!$gitLog) {
+            throw new VcsException('Git log returned with empty output');
+        }
+
+        if (!preg_match('/commit (\w+).*Date:\s+([^\\n]*)/s', $gitLog, $matches)) {
+            throw new VcsException('Unable to parse Git log output');
+        }
+
+        return [
+            'commit' => $matches[1],
+            'date' => $matches[2],
+        ];
     }
 }
