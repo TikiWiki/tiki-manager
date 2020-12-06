@@ -95,7 +95,6 @@ class Environment
         $dotenvLoader->load($envDistFile);
 
         $this->loadEnvironmentVariablesContainingLogic();
-        $this->initializeComposerEnvironment();
         $this->runSetup();
         $this->isLoaded = true;
     }
@@ -192,19 +191,6 @@ class Environment
         $rootPath = ($isPhar ? realpath(dirname($pharPath)) : $this->homeDirectory);
         $_ENV['TRIM_ROOT'] = $_ENV['TRIM_ROOT'] ?? $rootPath;
         $_ENV['TM_DOTENV'] = $rootPath . '/.env';
-    }
-
-    /**
-     * Initialize composer related operations and autoload
-     * Load autoload afterwards
-     */
-    private function initializeComposerEnvironment()
-    {
-        if (! $_ENV['IS_PHAR']) {
-            run_composer_install();
-        }
-
-        require_once $this->homeDirectory . '/vendor/autoload.php';
     }
 
     /**

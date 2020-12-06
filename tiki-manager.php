@@ -12,11 +12,11 @@ try {
 
     if (!$isPhar && !$composer = detectComposer(__DIR__)) {
         print('Downloading composer.phar...' . PHP_EOL);
-        $composer = PHP_BINARY  . installComposer(__DIR__);
+        $composer = installComposer(__DIR__);
     }
 
     if (!$isPhar && !file_exists(__DIR__ . '/vendor/autoload.php')) {
-        installComposerDependencies(__DIR__);
+        installComposerDependencies(__DIR__, $composer);
     }
 } catch (Exception $e) {
     print($e->getMessage());

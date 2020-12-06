@@ -238,40 +238,6 @@ function secure_trim_data($should_set = false)
     }
 }
 
-function run_composer_install()
-{
-    $autoload = $_ENV['TRIM_ROOT'] . '/vendor/autoload.php';
-    $composerFolder = $_ENV['TRIM_ROOT'] . '/tmp';
-    $composer = $composerFolder . '/composer';
-
-    if (file_exists($autoload)) {
-        return true;
-    }
-
-    if (!file_exists($composerFolder)) {
-        mkdir($composerFolder);
-    }
-
-    if (!file_exists($composer)) {
-        App::get('io')->writeln("Downloading composer into '{$composer}'");
-        copy('https://getcomposer.org/composer.phar', $composer);
-        chmod($composer, 0755);
-    }
-
-    if (!file_exists($composer)) {
-        App::get('io')->error("Failed to download composer");
-        exit(1);
-    }
-
-    $result = shell_exec(implode(' ', [
-        PHP_BINARY,
-        escapeshellarg($composer),
-        'install'
-    ]));
-
-    return !empty($result);
-}
-
 function isWindows()
 {
     return substr(PHP_OS, 0, 3) == 'WIN';
@@ -507,6 +473,11 @@ function cache_folder($app, $version)
     return $folder;
 }
 
+/**
+ * @param $dir
+ * @return string The composer phar path
+ * @throws Exception
+ */
 function installComposer($dir)
 {
     $expectedSig = \trim(\file_get_contents('https://composer.github.io/installer.sig'));
@@ -541,26 +512,39 @@ function installComposer($dir)
     return rtrim($dir, DS) . DS . 'composer.phar';
 }
 
+/**
+ * Detect the composer path based on a directory
+ * @param $dir
+ * @return string|null
+ */
 function detectComposer($dir)
 {
     $composerPhar = rtrim($dir, DS) . DS . 'composer.phar';
 
     if (file_exists($composerPhar)) {
-        return PHP_BINARY . ' ' . $composerPhar;
+        return $composerPhar;
     }
 
     if (TikiManager\Libs\Requirements\Requirements::getInstance()->hasDependency('composer')) {
-        // return 'composer';
+        return 'composer';
     }
 
     return null;
 }
 
-function installComposerDependencies($dir)
+/**
+ * Install composer dependencies within a directory
+ * @param string $dir
+ * @param string $composerBin Composer Binary path
+ * @throws Exception
+ */
+function installComposerDependencies(string $dir, string $composerBin)
 {
-    $composer = detectComposer($dir);
+    if (!is_executable($composerBin)) {
+        $composerBin = PHP_BINARY . ' ' . $composerBin;
+    }
 
-    $command = sprintf('%s install --prefer-dist --no-interaction --no-progress --working-dir=%s', $composer, $dir);
+    $command = sprintf('%s install --prefer-dist --no-interaction --no-progress --no-dev --working-dir=%s', $composerBin, $dir);
     passthru($command, $exitCode);
 
     if ($exitCode !== 0) {
