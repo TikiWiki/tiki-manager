@@ -16,7 +16,15 @@ if (! file_exists($authFile)) {
 
 ob_start();
 require $authFile;
-require TRIMPATH . '/vendor/autoload.php';
+
+$autoload = TRIMPATH . '/vendor/autoload.php';
+if (! file_exists($autoload)) {
+    require "include/misconfigured.php";
+    exit;
+}
+
+require $autoload;
+
 Environment::getInstance()->load();
 
 ob_end_clean();
