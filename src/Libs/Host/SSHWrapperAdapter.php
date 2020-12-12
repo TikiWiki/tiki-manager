@@ -164,7 +164,7 @@ class SSHWrapperAdapter
         }
 
         $command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand";
-        $command .= ($output ? '' : ' 2>> /tmp/trim.output');
+        $command .= ($output ? '' : ' 2>> '.$_ENV['TRIM_OUTPUT']);
 
         $output = [];
         exec($command, $output);
