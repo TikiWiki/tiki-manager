@@ -4,6 +4,7 @@ namespace TikiManager\Command\Traits;
 
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 use TikiManager\Access\Access;
 use TikiManager\Access\FTP;
 use TikiManager\Access\SSH;
@@ -171,12 +172,24 @@ trait InstanceConfigure
         $access = $instance->getBestAccess();
 
         $webRoot = $this->input->getOption('webroot') ?? $instance->getDiscovery()->detectWebroot();
-        $webRoot = $this->io->ask('WebRoot', $webRoot, function ($value) use ($access) {
+        $webRoot = $this->io->ask('WebRoot', $webRoot, function ($value) use ($access, $instance) {
             if (empty($value)) {
                 throw new InvalidOptionException('WebRoot cannot be empty. Please use --webroot=<PATH>');
             }
 
             $pathExists = $access->fileExists($value);
+
+            if ($pathExists && ($this->input->getOption('force') || $access->isEmptyDir($value))) {
+                return $value;
+            }
+
+            $instance->webroot = $value;
+
+            // Check if webroot has contents and it's not a Tiki Instance
+            if ($pathExists && !$this->detectApplication($instance, true)) {
+                return $this->handleNotEmptyWebrootFolder($value);
+            }
+
             $createDir = !$pathExists ? $this->io->confirm('Create directory?', true) : false;
 
             if ($createDir && !$access->createDirectory($value)) {
@@ -258,12 +271,22 @@ trait InstanceConfigure
         return $instance;
     }
 
-    public function detectApplication(Instance $instance)
+    /**
+     * @param Instance $instance
+     * @param false $check Just check if Application installed
+     * @return bool
+     * @throws \Exception
+     */
+    public function detectApplication(Instance $instance, $check = false): bool
     {
         $apps = $instance->getApplications();
         // Tiki is the only supported application
         $app = reset($apps);
         $isInstalled = $app->isInstalled();
+
+        if ($check) {
+            return $isInstalled;
+        }
 
         if (!$isInstalled) {
             return false;
@@ -504,5 +527,28 @@ trait InstanceConfigure
         $instance->installApplication($app, $version, $checksumCheck);
 
         $this->io->success('Please test your site at ' . $instance->weburl);
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     * @throws \Exception
+     */
+    public function handleNotEmptyWebrootFolder(string $path): string
+    {
+        $message = sprintf('Target webroot folder [%s] is not empty.', $path);
+        if (!$this->input->isInteractive()) {
+            $error = $message . ' Please select an empty webroot folder or use --force option to delete existing files.';
+            throw new \Exception($error);
+        }
+
+        $this->io->warning($message);
+        $confirm = $this->io->confirm("Installing a new Tiki instance, all files will be deleted.\n Do you want to continue?", false);
+
+        if (!$confirm) {
+            throw new \Exception($message . ' Select a different path.');
+        }
+
+        return $path;
     }
 }

@@ -53,6 +53,12 @@ class FTP
         return ftp_mkdir($this->conn, $path);
     }
 
+    public function listFiles($dir)
+    {
+        $this->connect();
+        return ftp_nlist($this->conn, $dir);
+    }
+
     public function fileExists($filename)
     {
         $this->connect();

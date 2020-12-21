@@ -325,4 +325,16 @@ class FTP extends Access implements Mountable
 
         $this->deleteFile($name);
     }
+
+    public function isEmptyDir($path): bool
+    {
+        if ($path{0} != '/') {
+            $path = $this->instance->getWebPath($path);
+        }
+
+        $ftp = $this->getHost();
+        $dirContents = $ftp->listFiles($path);
+
+        return empty($dirContents);
+    }
 }

@@ -424,4 +424,19 @@ class SSH extends Access implements ShellPrompt
             'download' => true
         ]);
     }
+
+    public function isEmptyDir($path)
+    {
+        $phpexec = $this->instance->phpexec ?? $this->getInterpreterPath($this->instance);
+
+        $script = sprintf("echo serialize(scandir('%s'));", $path);
+
+        $command = $this->createCommand($phpexec, ["-r {$script}"]);
+        $output = $command->run()->getStdoutContent();
+
+        $dirContents = unserialize($output);
+        $dirContents = array_diff($dirContents, ['.', '..']);
+
+        return array_values($dirContents);
+    }
 }

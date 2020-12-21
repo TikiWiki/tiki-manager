@@ -129,6 +129,8 @@ SQL;
 
     abstract public function createDirectory($path);
 
+    abstract public function isEmptyDir($path);
+
     abstract public function fileExists($filename);
 
     abstract public function fileGetContents($filename);

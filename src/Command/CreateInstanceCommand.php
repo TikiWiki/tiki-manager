@@ -154,6 +154,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Check files checksum after operation has been performed.'
+            )
+            ->addOption(
+                'force',
+                null,
+                InputOption::VALUE_NONE,
+                'Force deletion of target folder files.'
             );
     }
 

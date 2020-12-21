@@ -457,4 +457,12 @@ class Local extends Access implements ShellPrompt
             ]);
         }
     }
+
+    public function isEmptyDir($path): bool
+    {
+        $dirContents = scandir($path);
+        $dirContents = array_diff($dirContents, ['.','..']);
+
+        return empty($dirContents);
+    }
 }
