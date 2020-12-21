@@ -237,4 +237,18 @@ class Src extends VersionControlSystem
     {
         return false;
     }
+
+    public function getChangedFiles($targetFolder)
+    {
+        // This method is not intended to be used
+        // Used in partial backups (only supported on Git/SVN)
+        return false;
+    }
+
+    public function hasRemote($targetFolder, $branch)
+    {
+        // This method is not intended to be used
+        // Used in partial backups (only supported on Git/SVN)
+        return false;
+    }
 }
