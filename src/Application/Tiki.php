@@ -726,8 +726,10 @@ TXT;
 
                 $command->run();
                 if ($command->getReturn() !== 0 || !$access->fileExists('vendor_bundled/vendor/autoload.php')) {
-                    trim_output($command->getStdoutContent());
-                    throw new \Exception('Composer install failed for tiki bundled packages');
+                    $commandOutput = ! empty($command->getStderrContent()) ? $command->getStderrContent() : $command->getStdoutContent();
+
+                    trim_output($commandOutput);
+                    throw new \Exception("Composer install failed for Tiki bundled packages.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
                 }
 
                 if ($access->fileExists('composer.lock')) {
@@ -735,8 +737,10 @@ TXT;
 
                     $command->run();
                     if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
-                        trim_output($command->getStdoutContent());
-                        throw new \Exception('Composer install failed for composer.lock in the root folder');
+                        $commandOutput = ! empty($command->getStderrContent()) ? $command->getStderrContent() : $command->getStdoutContent();
+
+                        trim_output($commandOutput);
+                        $this->io->error("Composer install failed for composer.lock in the root folder.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
                     }
                 }
             }
