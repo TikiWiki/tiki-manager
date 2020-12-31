@@ -1032,4 +1032,8 @@ SQL;
     {
         return new Database($this);
     }
+
+    public function getVersionControlSystem() {
+        return VersionControlSystem::getVersionControlSystem($this);
+    }
 }

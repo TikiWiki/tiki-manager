@@ -2,14 +2,19 @@
 
 namespace TikiManager\Tests\Application;
 
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\vfsStreamDirectory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use TikiManager\Access\Local;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
+use TikiManager\Application\Version;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Host\Command;
+use TikiManager\Libs\VersionControl\VersionControlSystem;
 use TikiManager\Style\TikiManagerStyle;
 
 class TikiTest extends TestCase
@@ -25,6 +30,114 @@ class TikiTest extends TestCase
         $input = new ArrayInput([]);
         $this->output = $output = new BufferedOutput();
         Environment::getInstance()->setIO($input, $output);
+    }
+
+    /**
+     * @covers \TikiManager\Application\Tiki::extractTo
+     */
+    public function testExtractToFailedToUpdate() {
+
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->type = 'local';
+
+        $vcsStub = $this->createMock(VersionControlSystem::class);
+        $vcsStub
+            ->expects($this->once())
+            ->method('pull')
+            ->willThrowException(new VcsException('error'));
+
+        $instanceStub->vcs_type = 'git';
+        $instanceStub
+            ->method('getVersionControlSystem')
+            ->willReturn($vcsStub);
+
+        $vcsStub
+            ->expects($this->once())
+            ->method('clone')
+            ->willReturn(null);
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['extractTo'])
+            ->getMock();
+
+        $version = Version::buildFake('git', 'master');
+        $vfsStream = vfsStream::setup('cache');
+        $vfsStream->addChild(new vfsStreamDirectory('tiki-git-master'));
+
+        $tikiStub->extractTo($version, $vfsStream->getChild('tiki-git-master')->url());
+
+        // Folder is removed when pull fails
+        $this->assertFalse($vfsStream->hasChild('tiki-git-master'));
+    }
+
+    /**
+     * @covers \TikiManager\Application\Tiki::extractTo
+     */
+    public function testExtractToFolderDoesNotExist() {
+
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->type = 'local';
+
+        $vcsStub = $this->createMock(VersionControlSystem::class);
+        $vcsStub
+            ->expects($this->never())
+            ->method('pull');
+
+        $instanceStub->vcs_type = 'git';
+        $instanceStub
+            ->method('getVersionControlSystem')
+            ->willReturn($vcsStub);
+
+        $vcsStub
+            ->expects($this->once())
+            ->method('clone')
+            ->willReturn(null);
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['extractTo'])
+            ->getMock();
+
+        $version = Version::buildFake('git', 'master');
+        $vfsStream = vfsStream::setup('cache');
+
+        $tikiStub->extractTo($version, $vfsStream->url() . '/tiki-git-master');
+    }
+
+    /**
+     * @covers \TikiManager\Application\Tiki::extractTo
+     */
+    public function testExtractToFolderExist() {
+
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->type = 'local';
+
+        $vcsStub = $this->createMock(VersionControlSystem::class);
+        $vcsStub
+            ->expects($this->once())
+            ->method('pull');
+
+        $instanceStub->vcs_type = 'git';
+        $instanceStub
+            ->method('getVersionControlSystem')
+            ->willReturn($vcsStub);
+
+        $vcsStub
+            ->expects($this->never())
+            ->method('clone')
+            ->willReturn(null);
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['extractTo'])
+            ->getMock();
+
+        $version = Version::buildFake('git', 'master');
+        $vfsStream = vfsStream::setup('cache');
+        $vfsStream->addChild(new vfsStreamDirectory('tiki-git-master'));
+
+        $tikiStub->extractTo($version, $vfsStream->getChild('tiki-git-master')->url());
     }
 
     /**

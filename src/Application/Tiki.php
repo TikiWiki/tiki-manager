@@ -6,9 +6,11 @@
 
 namespace TikiManager\Application;
 
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\FTP;
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
@@ -41,7 +43,7 @@ class Tiki extends Application
             $instance->vcs_type = $this->getInstallType(true);
         }
 
-        $this->vcs_instance = VersionControlSystem::getVersionControlSystem($this->instance);
+        $this->vcs_instance = $instance->getVersionControlSystem();
     }
 
     public function backupDatabase($target)
@@ -72,14 +74,28 @@ class Tiki extends Application
         $this->removeTemporaryFiles();
     }
 
-    public function extractTo(Version $version, $folder)
+    /**
+     * @param Version $version
+     * @param $folder
+     */
+    public function extractTo(Version $version, $folder): void
     {
         $this->vcs_instance->setRunLocally(true);
 
         if (file_exists($folder)) {
-            $this->io->writeln('Updating cache repository from server... <fg=yellow>[may take a while]</>');
-            $this->vcs_instance->revert($folder);
-            $this->vcs_instance->pull($folder);
+            try {
+                $this->io->writeln('Updating cache repository from server... <fg=yellow>[may take a while]</>');
+                $this->vcs_instance->revert($folder);
+                $this->vcs_instance->pull($folder);
+            } catch (VcsException $e) {
+                $this->io->writeln('<error>Failed to update existing cache repository.</error>');
+                trim_output($e->getMessage());
+
+                // Delete the existing cache and attempt to clone
+                $fs = new Filesystem();
+                $fs->remove($folder);
+                $this->extractTo($version, $folder);
+            }
         } else {
             $this->io->writeln('Cloning cache repository from server... <fg=yellow>[may take a while]</>');
             $this->vcs_instance->clone($version->branch, $folder);

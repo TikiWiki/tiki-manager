@@ -71,11 +71,21 @@ class Git extends VersionControlSystem
         return $sortedVersions;
     }
 
+    /**
+     * @param $targetFolder
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function getRepositoryBranch($targetFolder)
     {
         return $this->info($targetFolder);
     }
 
+    /**
+     * @param $targetFolder
+     * @param $fileName
+     * @return bool
+     */
     public function isFileVersioned($targetFolder, $fileName)
     {
         try {
@@ -86,6 +96,12 @@ class Git extends VersionControlSystem
         return true;
     }
 
+    /**
+     * @param $targetFolder
+     * @param $toAppend
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function exec($targetFolder, $toAppend)
     {
         $command = sprintf('%s %s', $this->command, $toAppend);
@@ -124,24 +140,46 @@ class Git extends VersionControlSystem
         return $this->exec(null, sprintf('clone --depth 1 --no-single-branch -b %s %s %s', $branch, $repoUrl, $folder));
     }
 
+    /**
+     * @param $targetFolder
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function revert($targetFolder)
     {
         $gitCmd = 'reset --hard' . ($this->quiet ? ' --quiet' : '');
         return $this->exec($targetFolder, $gitCmd);
     }
 
+    /**
+     * @param $targetFolder
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function pull($targetFolder)
     {
         $gitCmd = 'pull' . ($this->quiet ? ' --quiet' : '');
         return $this->exec($targetFolder, $gitCmd);
     }
 
+    /**
+     * @param $targetFolder
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function cleanup($targetFolder)
     {
         $gitCmd = 'gc' . ($this->quiet ? ' --quiet' : '');
         return $this->exec($targetFolder, $gitCmd);
     }
 
+    /**
+     * @param $targetFolder
+     * @param $branch
+     * @param null $commitSHA
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function merge($targetFolder, $branch, $commitSHA = null)
     {
         $gitCmd = "merge $branch";
@@ -151,18 +189,36 @@ class Git extends VersionControlSystem
         return $this->exec($targetFolder, $gitCmd);
     }
 
+    /**
+     * @param $targetFolder
+     * @param false $raw
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function info($targetFolder, $raw = false)
     {
         $gitCmd = 'rev-parse --abbrev-ref HEAD' . ($this->quiet ? ' --quiet' : '');
         return $this->exec($targetFolder, $gitCmd);
     }
 
+    /**
+     * @param $targetFolder
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function getRevision($targetFolder)
     {
         $gitCmd = 'rev-parse --short HEAD' . ($this->quiet ? ' --quiet' : '');
         return $this->exec($targetFolder, $gitCmd);
     }
 
+    /**
+     * @param $targetFolder
+     * @param $branch
+     * @param null $commitSHA
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function checkoutBranch($targetFolder, $branch, $commitSHA = null)
     {
         $gitCmd = $commitSHA ? "checkout -B $branch $commitSHA" : "checkout $branch";
@@ -171,6 +227,13 @@ class Git extends VersionControlSystem
         return $this->exec($targetFolder, $gitCmd);
     }
 
+    /**
+     * @param $targetFolder
+     * @param $branch
+     * @param null $commitSHA
+     * @return mixed|string
+     * @throws VcsException
+     */
     public function upgrade($targetFolder, $branch, $commitSHA = null)
     {
         $this->revert($targetFolder);
