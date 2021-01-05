@@ -10,6 +10,9 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TikiManager\Manager\Update\Exception\TrackingInformationNotFoundException;
+use TikiManager\Manager\Update\Git;
+use TikiManager\Manager\Update\RemoteSourceNotFoundException;
 use TikiManager\Manager\UpdateManager;
 
 class ManagerUpdateCommand extends TikiManagerCommand
@@ -48,9 +51,19 @@ class ManagerUpdateCommand extends TikiManagerCommand
 
         $this->io->info($updater->info());
 
-        if (!$updater->hasUpdateAvailable(true)) {
-            $this->io->success('Tiki Manager is running the latest version.');
-            return 0;
+        try {
+            if ($updater instanceof Git && $updater->isHeadDetached()) {
+                $this->io->error('Tiki Manager can not be updated. Git HEAD is not currently on a branch.');
+                return 1;
+            }
+
+            if (!$updater->hasUpdateAvailable(true)) {
+                $this->io->success('Tiki Manager is running the latest version.');
+                return 0;
+            }
+        } catch (TrackingInformationNotFoundException $e) {
+            $this->io->error('Tiki Manager can not be updated.' . PHP_EOL . PHP_EOL . $e->getMessage());
+            return 1;
         }
 
         $this->io->warning('New version available.');

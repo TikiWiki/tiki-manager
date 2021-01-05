@@ -11,6 +11,7 @@ use Exception;
 use Gitonomy\Git\Exception\ReferenceNotFoundException;
 use Gitonomy\Git\Reference\Branch;
 use Gitonomy\Git\Repository;
+use TikiManager\Manager\Update\Exception\TrackingInformationNotFoundException;
 use TikiManager\Manager\UpdateManager;
 
 class Git extends UpdateManager
@@ -21,7 +22,7 @@ class Git extends UpdateManager
     public function __construct($targetFolder)
     {
         if (!$targetFolder instanceof Repository) {
-            $targetFolder = new Repository($targetFolder);
+            $targetFolder = new Repository($targetFolder, ['debug' => false]);
         }
 
         $this->repository = $targetFolder;
@@ -80,33 +81,55 @@ class Git extends UpdateManager
         return 'Git';
     }
 
+    /**
+     * @return string
+     * @throws TrackingInformationNotFoundException
+     */
+    public function getUpstreamBranch()
+    {
+        $upstream = trim($this->repository->run('rev-parse', ['--abbrev-ref', '@{upstream}']));
+
+        if (!$upstream) {
+            $branchName = $this->getBranchName();
+            throw new TrackingInformationNotFoundException($branchName);
+        }
+
+        return $upstream;
+    }
+
+    /**
+     * @param null $branch
+     * @return array|false
+     * @throws TrackingInformationNotFoundException
+     */
     public function getRemoteVersion($branch = null)
     {
         // Update remote references
         $this->fetch();
-        $branch = $branch ?? $this->getBranchName();
+        $branch = $branch ?? $this->getUpstreamBranch();
 
         if (empty($branch)) {
             return false;
         }
 
-        $remotes = $this->repository->run('remote');
-        $remotes = trim($remotes) ? explode("\n", trim($remotes)): [];
+        try {
+            $remoteBranch = $this->repository->getReferences()->getRemoteBranch($branch);
+            $commit = $remoteBranch->getCommit();
+            return [
+                'version' => $commit->getShortHash(),
+                'date' => $commit->getCommitterDate()->format(DATE_RFC3339_EXTENDED)
+            ];
+        } catch (ReferenceNotFoundException $e) {
 
-        foreach ($remotes as $remote) {
-            $name = $remote . '/' . $branch;
-            try {
-                $remoteBranch = $this->repository->getReferences()->getRemoteBranch($name);
-                $commit = $remoteBranch->getCommit();
-                return [
-                    'version' => $commit->getShortHash(),
-                    'date' => $commit->getCommitterDate()->format(DATE_RFC3339_EXTENDED)
-                ];
-            } catch (ReferenceNotFoundException $e) {
-                continue;
-            }
         }
 
         return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHeadDetached() {
+        return $this->repository->isHeadDetached();
     }
 }

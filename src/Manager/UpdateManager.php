@@ -11,6 +11,7 @@ use Exception;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Process\Process;
 use TikiManager\Config\Environment;
+use TikiManager\Manager\Update\Exception\TrackingInformationNotFoundException;
 use TikiManager\Manager\Update\Git;
 use TikiManager\Manager\Update\Phar;
 use TikiManager\Manager\Update\Src;
@@ -63,6 +64,11 @@ abstract class UpdateManager
         return boolval($this->getCurrentVersion());
     }
 
+    /**
+     * @param $checkRemote
+     * @return bool
+     * @return TrackingInformationNotFoundException
+     */
     public function hasUpdateAvailable($checkRemote)
     {
         $currentVersion = $this->getCurrentVersion();

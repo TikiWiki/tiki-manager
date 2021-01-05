@@ -7,6 +7,7 @@ use Gitonomy\Git\Repository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Config\Environment;
+use TikiManager\Manager\Update\Exception\TrackingInformationNotFoundException;
 use TikiManager\Manager\Update\Git;
 use TikiManager\Manager\Update\Src;
 use TikiManager\Manager\UpdateManager;
@@ -167,12 +168,12 @@ class GitTest extends TestCase
     public function testGetRemoteVersion()
     {
         $hash = static::$updater->getCurrentVersion();
-        $remoteHash = Tests::invokeMethod(static::$updater, 'getRemoteVersion', ['master']);
+        $remoteHash = Tests::invokeMethod(static::$updater, 'getRemoteVersion', ['origin/master']);
 
         $this->assertEquals($hash, $remoteHash);
     }
 
-    public function testGetRemoveVersionWithoutRemotes()
+    public function testGetRemoveVersionWithoutTrackingBranch()
     {
         $mock = $this->getMockBuilder(Repository::class)
             ->setConstructorArgs([static::$testRepoDir])
@@ -186,9 +187,10 @@ class GitTest extends TestCase
         $updater = $this->getMockBuilder(Git::class)->setConstructorArgs([$mock])
             ->setMethodsExcept(['getRemoteVersion'])->getMock();
         $updater->expects($this->any())->method('fetch')->willReturn(null);
-        $result = Tests::invokeMethod($updater, 'getRemoteVersion', ['master']);
+        $updater->expects($this->any())->method('getUpstreamBranch')->willThrowException(new TrackingInformationNotFoundException('master'));
 
-        $this->assertFalse($result);
+        $this->expectException(TrackingInformationNotFoundException::class);
+        $updater->getRemoteVersion();
     }
 
     public function testGetRemoveVersionWithoutMatchingRemoteBranches()
