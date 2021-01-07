@@ -163,7 +163,7 @@ access to the administration panel to local users (safer).');
         }
 
         $fs = new Filesystem();
-        $fs->mirror('www/', $webPath);
+        $fs->mirror("{$_ENV['TRIM_ROOT']}/www/", $webPath);
 
         $owner = fileowner($webPath . '/index.php');
 
