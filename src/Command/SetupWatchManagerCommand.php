@@ -20,7 +20,7 @@ class SetupWatchManagerCommand extends TikiManagerCommand
     {
         $this
             ->setName('manager:setup-watch')
-            ->setDescription('Set-up cron job to perform an hash check')
+            ->setDescription('Set-up cron job to perform hash checks')
             ->setHelp('This command allows you to set-up a cron job on the Tiki Manager master to perform the Hash check automatically every day.')
             ->addOption(
                 'email',
