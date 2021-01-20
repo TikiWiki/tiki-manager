@@ -99,7 +99,7 @@ class SrcTest extends TestCase
 
         $version = [
             'version' => md5('version'),
-            'date' => date(\DateTime::RFC3339_EXTENDED, time('1year ago'))
+            'date' => date(\DateTime::RFC3339_EXTENDED, strtotime('1year ago'))
         ];
 
         file_put_contents(static::$testPath . '/' . UpdateManager::VERSION_FILENAME, json_encode($version));
@@ -167,7 +167,7 @@ class SrcTest extends TestCase
         $this->assertContains('Version: ' . $version['version'], $info);
         $this->assertContains('Date: ' . date(\DateTime::COOKIE, strtotime($version['date'])), $info);
     }
-    
+
     public function testExtractInvalidZip()
     {
         $fs = new Filesystem();

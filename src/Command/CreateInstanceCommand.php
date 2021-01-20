@@ -201,10 +201,13 @@ class CreateInstanceCommand extends TikiManagerCommand
 
             if (! $this->detectApplication($instance)) {
                 $this->setupApplication($instance);
-                $this->setupDatabase($instance);
+
+                if ($instance->selection != 'blank : none') {
+                    $this->setupDatabase($instance);
+                }
+
                 $this->install($instance);
             }
-
         } catch (\Exception $e) {
             $instance->delete();
             $this->io->error($e->getMessage());

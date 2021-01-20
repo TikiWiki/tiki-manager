@@ -3,6 +3,7 @@
 namespace TikiManager\Tests\Command\Traits;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use TikiManager\Application\Discovery;
@@ -60,6 +61,7 @@ class InstanceConfigureTest extends TestCase
         $this->traitMock = $this->getObjectForTrait(InstanceConfigure::class);
         $this->traitMock->input = $this->input;
         $this->traitMock->io = App::get('io');
+        $this->traitMock->setLogger(new NullLogger());
     }
 
     public function tearDown()
@@ -192,22 +194,6 @@ class InstanceConfigureTest extends TestCase
         $instance->type = 'local';
 
         $this->traitMock->setupApplication($instance);
-    }
-
-    /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupDatabase
-     */
-    public function testSetupDatabaseBlankInstance()
-    {
-        $this->input->setOption('blank', true);
-
-        $instance = new Instance();
-        $instance->type = 'local';
-
-        $this->traitMock->setupApplication($instance);
-        $this->traitMock->setupDatabase($instance);
-
-        $this->assertEmpty($instance->getDatabaseConfig());
     }
 
     /**

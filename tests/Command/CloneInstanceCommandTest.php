@@ -129,4 +129,33 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
         $this->assertContains('Database host and name are the same', $output);
     }
+
+    public function testCloneDatabaseWithTargetMissingDbFile()
+    {
+        $this->assertFileExists(self::$dbLocalFile1);
+        $fileSystem = new Filesystem();
+        $fileSystem->remove(self::$dbLocalFile2);
+
+        $this->assertFileNotExists(self::$dbLocalFile2);
+
+        // Clone command
+        $application = new Application();
+        $application->add(new CloneInstanceCommand());
+        $command = $application->find('instance:clone');
+        $commandTester = new CommandTester($command);
+
+        $arguments = [
+            'command' => 'instance:clone',
+            '--source' => strval(self::$instanceIds['source']),
+            '--target' => [strval(self::$instanceIds['target'])],
+            '--skip-cache-warmup' => true
+        ];
+
+        $commandTester->execute($arguments, ['interactive' => false]);
+
+        $output = $commandTester->getDisplay();
+
+        $this->assertContains('Database configuration file not found', $output);
+        $this->assertContains('Unable to load/set database configuration for instance', $output);
+    }
 }

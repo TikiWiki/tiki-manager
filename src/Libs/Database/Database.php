@@ -95,18 +95,16 @@ class Database
 
     /**
      * Verify if the databases are equal
-     * @param $database1 Database
-     * @param $database2 Database
+     * @param Database $database1
+     * @param Database $database2
      * @return boolean
      */
-    public static function compareDatabase($database1, $database2)
+    public static function compareDatabase(Database $database1, Database $database2)
     {
-        return (!is_null($database1) &&
-            !is_null($database2) &&
-            ($database1->host === $database2->host &&
-                $database1->dbname === $database2->dbname &&
-                $database1->user === $database2->user
-            ));
+        return ($database1->host === $database2->host &&
+            $database1->dbname === $database2->dbname &&
+            $database1->user === $database2->user
+        );
     }
 
     public static function createFromConfig($instance, $db_local_path)
@@ -333,11 +331,11 @@ class Database
         $getConfig = function ($db_local_path) {
             include($db_local_path);
             return array(
-                'type' => $db_tiki,
-                'host' => $host_tiki,
-                'user' => $user_tiki,
-                'pass' => $pass_tiki,
-                'dbname' => $dbs_tiki,
+                'type' => $db_tiki ?? '',
+                'host' => $host_tiki ?? '',
+                'user' => $user_tiki ?? '',
+                'pass' => $pass_tiki ?? '',
+                'dbname' => $dbs_tiki ?? '',
             );
         };
 
@@ -376,10 +374,10 @@ class Database
                 $this->createDatabase($dbName);
             }
 
-        if (!$dbPrefix) {
-            $this->dbname = $dbName;
+            if (!$dbPrefix) {
+                $this->dbname = $dbName;
                 $config = $this;
-        }
+            }
 
             $this->instance->setDatabaseConfig($config);
         } catch (DatabaseErrorException $e) {

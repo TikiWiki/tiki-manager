@@ -2,6 +2,8 @@
 
 namespace TikiManager\Command\Traits;
 
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerTrait;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
@@ -15,6 +17,8 @@ use TikiManager\Config\Environment;
 
 trait InstanceConfigure
 {
+    use LoggerAwareTrait;
+
     /**
      * Configure Instance Access
      *
@@ -365,17 +369,17 @@ trait InstanceConfigure
      */
     public function setupDatabase(Instance $instance): Instance
     {
-        if ($instance->selection == 'blank : none') {
-            return $instance;
-        }
+        try {
+            if ($this->isValidInstanceDBConnection($instance)) {
+                $this->logger->notice('{instance}: Database connection succeeded.', ['instance' => $instance->name]);
+                return $instance;
+            }
+            $this->logger->error('{instance}: Existing database connection failed to connect.', ['instance' => $instance->name]);
+        } catch (\Exception $e) {
+            // Left empty on purpose
+        };
 
-        $dbRoot = $instance->getDatabaseConfig();
-        if ($dbRoot && $dbRoot->testConnection()) {
-            // Instance has a working database connection
-            return $instance;
-        }
-
-        $this->io->note('Creating databases and users requires root privileges on MySQL.');
+        $this->io->section('Setup '.$instance->name.' database connection');
 
         $dbRoot = $instance->database();
 
@@ -393,17 +397,24 @@ trait InstanceConfigure
         $dbRoot->user = $this->input->hasOption('db-user') ? ($this->input->getOption('db-user') ?: $defaultUser) : $defaultUser;
         $dbRoot->pass = $this->input->hasOption('db-pass') ? ($this->input->getOption('db-pass') ?: $defaultPass) : $defaultPass;
 
-        while (!$dbRoot->testConnection()) {
-            if (!$this->input->isInteractive()) {
-                throw new \Exception('Unable to access database.');
-            }
+        $connected = $dbRoot->testConnection();
 
+        if (!$connected && !$this->input->isInteractive()) {
+            throw new \Exception('Unable to access database.');
+        }
+
+        if (!$connected) {
+            $this->io->writeln('<comment>Note: Creating databases and users requires root privileges on MySQL.</comment>');
+        }
+
+        while (!$connected) {
             $dbRoot->host = $this->io->ask('Database host', $dbRoot->host);
             $dbRoot->user = $this->io->ask('Database user', $dbRoot->user);
             $dbRoot->pass = $this->io->askHidden('Database password');
+            $connected = $dbRoot->testConnection();
         }
 
-        $this->io->writeln('<info>Connected to MySQL</info>');
+        $this->logger->notice('Connected to MySQL as ' . $dbRoot->user);
 
         $hasPrefix = $this->input->hasOption('db-prefix') ? $this->input->getOption('db-prefix') : null;
         $dbName = $this->input->hasOption('db-name') ? $this->input->getOption('db-name') : null;
@@ -412,11 +423,11 @@ trait InstanceConfigure
         $canCreateDB = $dbRoot->hasCreateDatabasePermissions();
 
         if (!$canCreateUser) {
-            $this->io->caution('MySQL user cannot create users.');
+            $this->logger->warning('MySQL user cannot create users.');
         }
 
         if (!$canCreateDB) {
-            $this->io->caution('MySQL user cannot create databases.');
+            $this->logger->warning('MySQL user cannot create databases.');
         }
 
         $usePrefix = false;
@@ -455,7 +466,7 @@ trait InstanceConfigure
 
                     $dbname = "{$prefix}_db";
                     if ($dbRoot->databaseExists($dbname)) {
-                        $this->io->warning("Database '$dbname' already exists.");
+                        $this->logger->warning("Database '$dbname' already exists.");
                         if (!$this->io->confirm('Continue?')) {
                             return false;
                         }
@@ -477,6 +488,22 @@ trait InstanceConfigure
         $instance->setDatabaseConfig($config);
 
         return $instance;
+    }
+
+    /**
+     * @param Instance $instance
+     * @return bool
+     * @throws \Exception
+     */
+    public function isValidInstanceDBConnection(Instance $instance): bool
+    {
+        $dbRoot = $instance->getDatabaseConfig();
+
+        if (!$dbRoot) {
+            throw new \Exception('Database configuration file not found.');
+        }
+
+        return $dbRoot->testConnection();
     }
 
     /**

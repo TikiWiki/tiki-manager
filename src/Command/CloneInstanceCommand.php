@@ -15,8 +15,6 @@ use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
-use TikiManager\Config\App;
-use TikiManager\Command\Helper\InstanceHelper;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 
@@ -98,208 +96,270 @@ class CloneInstanceCommand extends TikiManagerCommand
     {
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
-        if (isset($instancesInfo)) {
-            $helper = $this->getHelper('question');
 
-            $clone = false;
-            $cloneUpgrade = false;
-            $offset = 0;
+        if (empty($instancesInfo)) {
+            $output->writeln('<comment>No instances available to clone/clone and upgrade.</comment>');
+            return 0;
+        }
 
-            $checksumCheck = $input->getOption('check');
-            $skipReindex = $input->getOption('skip-reindex');
-            $skipCache = $input->getOption('skip-cache-warmup');
-            $liveReindex = is_null($input->getOption('live-reindex')) ? true : filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN);
-            $direct = $input->getOption('direct');
-            $keepBackup = $input->getOption('keep-backup');
-            $useLastBackup = $input->getOption('use-last-backup');
-            $argument = $input->getArgument('mode');
+        $helper = $this->getHelper('question');
 
-            if ($direct && ($keepBackup || $useLastBackup)) {
-                $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
-                exit(-1);
+        $clone = false;
+        $cloneUpgrade = false;
+        $offset = 0;
+
+        $checksumCheck = $input->getOption('check');
+        $skipReindex = $input->getOption('skip-reindex');
+        $skipCache = $input->getOption('skip-cache-warmup');
+        $liveReindex = is_null($input->getOption('live-reindex')) ? true : filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN);
+        $direct = $input->getOption('direct');
+        $keepBackup = $input->getOption('keep-backup');
+        $useLastBackup = $input->getOption('use-last-backup');
+        $argument = $input->getArgument('mode');
+
+        if ($direct && ($keepBackup || $useLastBackup)) {
+            $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
+            exit(-1);
+        }
+
+        if (isset($argument) && !empty($argument)) {
+            if (is_array($argument)) {
+                $clone = $input->getArgument('mode')[0] == 'clone';
+                $cloneUpgrade = $input->getArgument('mode')[0] == 'upgrade';
+            } else {
+                $cloneUpgrade = $input->getArgument('mode') == 'upgrade';
             }
+        }
 
-            if (isset($argument) && !empty($argument)) {
-                if (is_array($argument)) {
-                    $clone = $input->getArgument('mode')[0] == 'clone' ? true : false;
-                    $cloneUpgrade = $input->getArgument('mode')[0] == 'upgrade' ? true : false;
-                } else {
-                    $cloneUpgrade = $input->getArgument('mode') == 'upgrade' ? true : false;
+        if ($clone != false || $cloneUpgrade != false) {
+            $offset = 1;
+        }
+
+        $arguments = array_slice($input->getArgument('mode'), $offset);
+        if (!empty($arguments[0])) {
+            $selectedSourceInstances = getEntries($instances, $arguments[0]);
+        } elseif ($sourceOption = $input->getOption("source")) {
+            $selectedSourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
+        } else {
+            $this->io->newLine();
+            $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
+
+            $this->io->newLine();
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
+
+            $question = CommandHelper::getQuestion('Select the source instance', null);
+            $question->setValidator(function ($answer) use ($instances) {
+                return CommandHelper::validateInstanceSelection($answer, $instances);
+            });
+
+            $selectedSourceInstances = $helper->ask($input, $output, $question);
+        }
+
+        $sourceInstance = $selectedSourceInstances[0];
+        $instances = CommandHelper::getInstances('all');
+
+        $instances = array_filter($instances, function ($instance) use ($sourceInstance) {
+            return $instance->getId() != $sourceInstance->getId();
+        });
+
+        $instancesInfo = CommandHelper::getInstancesInfo($instances);
+
+        if (empty($instancesInfo)) {
+            $output->writeln('<comment>No instances available as destination.</comment>');
+            return 0;
+        }
+
+        if (!empty($arguments[1])) {
+            $selectedDestinationInstances = getEntries($instances, $arguments[1]);
+        } elseif ($targetOption = implode(',', $input->getOption("target"))) {
+            $selectedDestinationInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
+        } else {
+            $this->io->newLine();
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
+
+            $question = CommandHelper::getQuestion('Select the destination instance(s)', null);
+            $question->setValidator(function ($answer) use ($instances) {
+                return CommandHelper::validateInstanceSelection($answer, $instances);
+            });
+
+            $selectedDestinationInstances = $helper->ask($input, $output, $question);
+        }
+
+        if ($cloneUpgrade) {
+            if (!empty($arguments[2])) {
+                $input->setOption('branch', $arguments[2]);
+            } else {
+                $branch = $input->getOption('branch');
+                if (empty($branch)) {
+                    $branch = $this->getUpgradeVersion($sourceInstance);
+                    $input->setOption('branch', $branch);
                 }
             }
+        }
 
-            if ($clone != false || $cloneUpgrade != false) {
-                $offset = 1;
-            }
+        // PRE-CHECK
+        $this->io->newLine();
+        $this->io->section('Pre-check');
 
-            $arguments = array_slice($input->getArgument('mode'), $offset);
-            if (!empty($arguments[0])) {
-                $selectedSourceInstances = getEntries($instances, $arguments[0]);
-            } elseif ($sourceOption = $input->getOption("source")) {
-                $selectedSourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
-            } else {
-                $this->io->newLine();
-                $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
+        $directWarnMessage = 'Direct backup cannot be used, instance {instance_name} is not local. Only supported on local instances.';
+        // Check if direct flag can be used
+        if ($direct && $sourceInstance->type != 'local') {
+            $direct = false;
+            $this->logger->warning($directWarnMessage, ['instance_name' => $sourceInstance->name]);
+        }
 
-                $this->io->newLine();
-                CommandHelper::renderInstancesTable($output, $instancesInfo);
-
-                $question = CommandHelper::getQuestion('Select the source instance', null);
-                $question->setValidator(function ($answer) use ($instances) {
-                    return CommandHelper::validateInstanceSelection($answer, $instances);
-                });
-
-                $selectedSourceInstances = $helper->ask($input, $output, $question);
-            }
-
-            $instances_pruned = [];
-            $instances = CommandHelper::getInstances('all');
-            foreach ($instances as $instance) {
-                if ($instance->getId() == $selectedSourceInstances[0]->getId()) {
+        if ($direct) {
+            foreach ($selectedDestinationInstances as $destinationInstance) {
+                if ($destinationInstance->type == 'local') {
                     continue;
                 }
-                $instances_pruned[$instance->getId()] = $instance;
+
+                $this->logger->warning($directWarnMessage, ['instance_name' => $destinationInstance->name]);
+                $direct = false;
+                break;
             }
-            $instances = $instances_pruned;
-
-            $this->setupDatabase($selectedSourceInstances[0]);
-            $selectedSourceInstances[0]->database()->setupConnection();
-
-            $instancesInfo = CommandHelper::getInstancesInfo($instances);
-            if (isset($instancesInfo)) {
-                if (!empty($arguments[1])) {
-                    $selectedDestinationInstances = getEntries($instances, $arguments[1]);
-                } elseif ($targetOption = implode(',', $input->getOption("target"))) {
-                    $selectedDestinationInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
-                } else {
-                    $this->io->newLine();
-                    CommandHelper::renderInstancesTable($output, $instancesInfo);
-
-                    $question = CommandHelper::getQuestion('Select the destination instance(s)', null);
-                    $question->setValidator(function ($answer) use ($instances) {
-                        return CommandHelper::validateInstanceSelection($answer, $instances);
-                    });
-
-                    $selectedDestinationInstances = $helper->ask($input, $output, $question);
-                }
-
-                if ($cloneUpgrade) {
-                    if (!empty($arguments[2])) {
-                        $input->setOption('branch', $arguments[2]);
-                    } else {
-                        $branch = $input->getOption('branch');
-                        if (empty($branch)) {
-                            $branch = $this->getUpgradeVersion($selectedSourceInstances[0]);
-                            $input->setOption('branch', $branch);
-                        }
-                    }
-                }
-
-                foreach ($selectedDestinationInstances as $destinationInstance) {
-                    $destinationInstance->app = $selectedSourceInstances[0]->app; // Required to setup database connection
-
-                    $this->setupDatabase($selectedSourceInstances[0]);
-                    $selectedSourceInstances[0]->database()->setupConnection();
-
-                    if ($direct && ($selectedSourceInstances[0]->type != 'local' || $destinationInstance->type != 'local')) {
-                        $output->writeln('<comment>Direct backup cannot be used, instance "' . $selectedSourceInstances[0]->name . '" and "' . $destinationInstance->name . '" are not in same location.</comment>');
-                        $direct = false;
-                    }
-                }
-
-                $archive = '';
-                $standardProcess = true;
-                if ($useLastBackup) {
-                    $standardProcess = false;
-                    $archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-                    $archiveDir .= sprintf('%s-%s', $selectedSourceInstances[0]->id, $selectedSourceInstances[0]->name);
-
-                    if (file_exists($archiveDir)) {
-                        $archiveFiles = array_diff(scandir($archiveDir, SCANDIR_SORT_DESCENDING), ['.', '..']);
-                        if (! empty($archiveFiles[0])) {
-                            $archive = $archiveDir . DIRECTORY_SEPARATOR . $archiveFiles[0];
-                            $output->writeln('<fg=cyan>Using last created backup of: ' . $selectedSourceInstances[0]->name . '</>');
-                            $keepBackup = true;
-                        } else {
-                            $standardProcess = $this->io->confirm('Backups not found for ' . $selectedSourceInstances[0]->name . ' instance. Continue with standard process?', true);
-
-                            if (!$standardProcess) {
-                                $this->io->error('Backups not found for instance ' . $selectedSourceInstances[0]->name);
-                                exit(-1);
-                            }
-                        }
-                    }
-                }
-
-                if ($standardProcess) {
-                    App::get('io')->section('Creating snapshot of: ' . $selectedSourceInstances[0]->name);
-                    try {
-                        $archive = $selectedSourceInstances[0]->backup();
-                    } catch (\Exception $e) {
-                        $this->io->error($e->getMessage());
-                    }
-                }
-
-                if (empty($archive)) {
-                    $this->io->error('Snapshot creation failed.');
-                    exit(-1);
-                }
-
-                $sourceAccess = $selectedSourceInstances[0]->getBestAccess('scripting');
-                $sourceDB = $selectedSourceInstances[0]->getDatabaseConfig();
-
-                /** @var Instance $destinationInstance */
-                foreach ($selectedDestinationInstances as $destinationInstance) {
-                    $targetAccess = $destinationInstance->getBestAccess('scripting');
-                    $targetDB = $destinationInstance->getDatabaseConfig();
-                    if (($sourceAccess->host == $targetAccess->host ||
-                            ($sourceAccess->host != $targetAccess->host && !in_array($targetDB->host, ['127.0.0.1', 'localhost'])))
-                        && Database::compareDatabase($sourceDB, $targetDB)) {
-                        $output->writeln('<error>Database host and name are the same in the source (' . $selectedSourceInstances[0]->id . ') and destination (' . $destinationInstance->id . ').</error>');
-                        continue;
-                    }
-
-                    $this->io->section('Initiating clone of ' . $selectedSourceInstances[0]->name . ' to ' . $destinationInstance->name);
-
-                    $destinationInstance->lock();
-                    $destinationInstance->restore($selectedSourceInstances[0], $archive, true, false, $direct);
-
-                    if ($cloneUpgrade) {
-                        $branch = $input->getOption('branch');
-                        $branch = VersionControl::formatBranch($branch, $destinationInstance->vcs_type);
-                        $upgrade_version = Version::buildFake($destinationInstance->vcs_type, $branch);
-
-                        $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
-                        $app = $destinationInstance->getApplication();
-
-                        try {
-                            $app->performUpgrade($destinationInstance, $upgrade_version, [
-                                'checksum-check' => $checksumCheck,
-                                'skip-reindex' => $skipReindex,
-                                'skip-cache-warmup' => $skipCache,
-                                'live-reindex' => $liveReindex
-                            ]);
-                        } catch (\Exception $e) {
-                            CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
-                            continue;
-                        }
-                    }
-                    if ($destinationInstance->isLocked()) {
-                        $destinationInstance->unlock();
-                    }
-                }
-
-                if (! $keepBackup) {
-                    $output->writeln('Deleting archive...');
-                    $access = $selectedSourceInstances[0]->getBestAccess('scripting');
-                    $access->shellExec("rm -f " . $archive);
-                }
-            } else {
-                $output->writeln('<comment>No instances available as destination.</comment>');
-            }
-        } else {
-            $output->writeln('<comment>No instances available to clone/clone and upgrade.</comment>');
         }
+
+        $dbConfigErrorMessage = 'Unable to load/set database configuration for instance {instance_name} (id: {instance_id}). {exception_message}';
+        try {
+            if (!$this->input->isInteractive() &&
+                !$this->isValidInstanceDBConnection($sourceInstance)) {
+                throw new \Exception('Existing database configuration failed to connect.');
+            }
+
+            $this->setupDatabase($sourceInstance);
+            $sourceInstance->database()->setupConnection();
+        } catch (\Exception $e) {
+            $this->logger->error($dbConfigErrorMessage, [
+                'instance_name' => $sourceInstance->name,
+                'instance_id' => $sourceInstance->getId(),
+                'exception_message' => $e->getMessage(),
+            ]);
+            return 1;
+        }
+
+        foreach ($selectedDestinationInstances as $key => $destinationInstance) {
+            try {
+                $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
+
+                if (!$this->input->isInteractive() &&
+                    !$this->isValidInstanceDBConnection($destinationInstance)) {
+                    throw new \Exception('Existing database configuration failed to connect.');
+                }
+
+                $this->setupDatabase($destinationInstance);
+                $destinationInstance->database()->setupConnection();
+            } catch (\Exception $e) {
+                $this->logger->error($dbConfigErrorMessage, [
+                    'instance_name' => $destinationInstance->name,
+                    'instance_id' => $destinationInstance->getId(),
+                    'exception_message' => $e->getMessage(),
+                ]);
+                unset($selectedDestinationInstances[$key]);
+                continue;
+            }
+
+            if ($this->isSameDatabase($sourceInstance, $destinationInstance)) {
+                $this->logger->error('Database host and name are the same in the source ({source_instance_name}) and destination ({target_instance_id}).', [
+                    'source_instance_name' => $sourceInstance->name,
+                    'target_instance_id' => $destinationInstance->name
+                ]);
+                unset($selectedDestinationInstances[$key]);
+                continue;
+            }
+        }
+
+        if (empty($selectedDestinationInstances)) {
+            $this->logger->error('No valid instances to continue the clone process.');
+            return 1;
+        }
+
+        $archive = '';
+        $standardProcess = true;
+        if ($useLastBackup) {
+            $standardProcess = false;
+            $archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+            $archiveDir .= sprintf('%s-%s', $sourceInstance->id, $sourceInstance->name);
+
+            if (file_exists($archiveDir)) {
+                $archiveFiles = array_diff(scandir($archiveDir, SCANDIR_SORT_DESCENDING), ['.', '..']);
+                if (! empty($archiveFiles[0])) {
+                    $archive = $archiveDir . DIRECTORY_SEPARATOR . $archiveFiles[0];
+                    $this->logger->notice('Using last created backup ({backup_name}) of {instance_name}', [
+                        'instance_name' => $sourceInstance->name,
+                        'backup_name' => $archiveFiles[0]
+                    ]);
+                    $keepBackup = true;
+                } else {
+                    $this->logger->error('Backups not found for instance {instance_name}', ['instance_name' => $sourceInstance->name]);
+                    $standardProcess = $this->io->confirm('Continue with standard process?', true);
+
+                    if (!$standardProcess) {
+                        $this->io->writeln('Clone process aborted.');
+                        exit(-1);
+                    }
+                }
+            }
+        }
+
+        // SNAPSHOT SOURCE INSTANCE
+        if ($standardProcess) {
+            $this->io->newLine();
+            $this->io->section('Creating snapshot of: ' . $sourceInstance->name);
+            try {
+                $archive = $sourceInstance->backup();
+            } catch (\Exception $e) {
+                $this->logger->error($e->getMessage());
+            }
+        }
+
+        if (empty($archive)) {
+            $this->logger->error('Snapshot creation failed.');
+            exit(-1);
+        }
+
+        /** @var Instance $destinationInstance */
+        foreach ($selectedDestinationInstances as $destinationInstance) {
+            $this->io->newLine();
+            $this->io->section('Initiating clone of ' . $sourceInstance->name . ' to ' . $destinationInstance->name);
+
+            $destinationInstance->lock();
+            $destinationInstance->restore($sourceInstance, $archive, true, false, $direct);
+
+            if ($cloneUpgrade) {
+                $branch = $input->getOption('branch');
+                $branch = VersionControl::formatBranch($branch, $destinationInstance->vcs_type);
+                $upgrade_version = Version::buildFake($destinationInstance->vcs_type, $branch);
+
+                $output->writeln('<fg=cyan>Upgrading to version ' . $upgrade_version->branch . '</>');
+                $app = $destinationInstance->getApplication();
+
+                try {
+                    $app->performUpgrade($destinationInstance, $upgrade_version, [
+                        'checksum-check' => $checksumCheck,
+                        'skip-reindex' => $skipReindex,
+                        'skip-cache-warmup' => $skipCache,
+                        'live-reindex' => $liveReindex
+                    ]);
+                } catch (\Exception $e) {
+                    CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
+                    continue;
+                }
+            }
+            if ($destinationInstance->isLocked()) {
+                $destinationInstance->unlock();
+            }
+        }
+
+        if (! $keepBackup) {
+            $output->writeln('Deleting archive...');
+            $access = $sourceInstance->getBestAccess('scripting');
+            $access->shellExec("rm -f " . $archive);
+        }
+
+        $this->io->newLine();
+        $this->logger->info('Finished');
+        return 0;
     }
 
     /**
@@ -330,7 +390,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
         }
 
-        $this->io->writeln('<fg=cyan>We detected PHP release: ' . CommandHelper::formatPhpVersion($instance->phpversion) . '</>');
+        $this->logger->info('Detected PHP release: {php_version}', ['php_version' => CommandHelper::formatPhpVersion($instance->phpversion)]);
 
         if ($found_incompatibilities) {
             $this->io->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
@@ -340,5 +400,22 @@ class CloneInstanceCommand extends TikiManagerCommand
         $choice = $this->io->choice('Which version do you want to update to', $choices);
         $choice = explode(':', $choice);
         return trim($choice[1]);
+    }
+
+    /**
+     * @param Instance $source
+     * @param Instance $target
+     * @return bool
+     */
+    public function isSameDatabase(Instance $source, Instance $target): bool
+    {
+        $sourceAccess = $source->getBestAccess();
+        $targetAccess = $target->getBestAccess();
+        $sourceDB = $source->getDatabaseConfig();
+        $targetDB = $target->getDatabaseConfig();
+
+        return (($sourceAccess->host == $targetAccess->host ||
+                ($sourceAccess->host != $targetAccess->host && !in_array($targetDB->host, ['127.0.0.1', 'localhost'])))
+            && Database::compareDatabase($sourceDB, $targetDB));
     }
 }
