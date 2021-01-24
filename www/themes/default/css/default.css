@@ -457,4 +457,11 @@ TRIM Responsiveness
   margin: 0px;
 }
 
+div.db_created{
+  margin-bottom: -20px;
+  margin-top: 20px;
+  text-align: right;
+  font-size: 0.8rem;
+}
+
 /*# sourceMappingURL=css/default.css.map */

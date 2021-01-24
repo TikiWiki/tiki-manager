@@ -27,6 +27,8 @@ $dbHost = ! empty($_POST['db_host']) ? $_POST['db_host'] : '';
 $dbUser = ! empty($_POST['db_user']) ? $_POST['db_user'] : '';
 $dbPass = ! empty($_POST['db_pass']) ? $_POST['db_pass'] : '';
 $dbPrefix = ! empty($_POST['db_prefix']) ? $_POST['db_prefix'] : '';
+$dbName= ! empty($_POST['db_name']) ? $_POST['db_name'] : '';
+$dbCreated = isset($_POST['db_created']);
 
 $instance = new Instance;
 $instance->type = 'local';
@@ -156,6 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     dbUser: '<?=$_POST['db_user']?>',
                     dbPass: '<?=$_POST['db_pass']?>',
                     dbPrefix: '<?=$_POST['db_prefix']?>',
+                    dbName: '<?=$_POST['db_name']?>',
+                    dbCreated: '<?=$dbCreated?>',
                 }
             }).done(function (log) {
                 modal.find('#loading-icon').hide();
@@ -261,6 +265,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
             <fieldset>
                 <div class="form-group">
+                    <div class="db_created">
+                        <input type="checkbox" <?=($dbCreated)?'checked':''?> name="db_created" id="db_created" value="true"> Use an existing database
+                    </div>
                     <table class="table table-bordered">
                         <tbody>
                         <tr>
@@ -268,22 +275,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <td width="55%"><input type="text" name="db_host" id="db_host" class="form-control" value="<?=$dbHost?>"/></td>
                         </tr>
                         <tr>
-                            <th scope="row"><label for="db_user">Database User <br><small>with administrative privileges</small></label></th>
+                            <th scope="row"><label for="db_user">Database User <br><small class="db_create">with administrative privileges</small></label></th>
                             <td width="55%"><input type="text" name="db_user" id="db_user" class="form-control" value="<?=$dbUser?>"/></td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="db_pass">Database Password</label></th>
                             <td width="55%"><input type="password" name="db_pass" id="db_pass" class="form-control" value="<?=$dbPass?>"/></td>
                         </tr>
-                        <tr>
+                        <tr class="db_exists">
+                            <th scope="row"><label for="db_name">Database Name</label></th>
+                            <td width="55%"><input type="text" name="db_name" id="db_name" class="form-control" value="<?= $dbName?>"/></td>
+                        </tr>
+                        <tr class="db_create">
                             <th scope="row"><label for="db_prefix">Database Prefix</label></th>
                             <td width="55%"><input type="text" name="db_prefix" id="db_prefix" class="form-control" value="<?= $dbPrefix ?>"/></td>
                         </tr>
-                        <tr>
+                        <tr class="db_create">
                             <th scope="row"><label for="db_user_preview">Database user</label></th>
                             <td width="55%"><input type="text" readonly="readonly" name="db_user_preview" id="db_user_preview" class="form-control" value="<?= !empty($dbPrefix) ? $dbPrefix . '_user' : '' ?>"/></td>
                         </tr>
-                        <tr>
+                        <tr class="db_create">
                             <th scope="row"><label for="db_name_preview">Database name</label></th>
                             <td width="55%"><input type="text" readonly="readonly" name="db_name_preview" id="db_name_preview" class="form-control" value="<?= !empty($dbPrefix) ? $dbPrefix . '_tiki' : '' ?>"/></td>
                         </tr>

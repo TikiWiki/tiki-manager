@@ -44,6 +44,30 @@ $(document).ready(function () {
         })
     }
 
+    function loadDbFields()
+    {
+        if ($('#db_created').is(':checked')) {
+            $('.db_create').hide();
+            $('.db_create input[type=input]')
+                .attr('disabled', true);
+            $('.db_exists').show();
+            $('.db_exists input[type=input]')
+                .attr('disabled', false);
+        } else {
+            $('.db_exists').hide();
+            $('.db_exists input[type=input]')
+                .attr('disabled', true);
+            $('.db_create').show();
+            $('.db_create input[type=input]')
+                .attr('disabled', false);
+        }
+        console.log($('#db_created').is(':checked'))
+    }
+    loadDbFields();
+    $('#db_created').change(function () {
+        loadDbFields();
+    });
+
     $('.trim-instance-main-list li').click(function (event) {
         if (event.target.localName === 'li') {
             window.location.href = $(this).attr('data-href');

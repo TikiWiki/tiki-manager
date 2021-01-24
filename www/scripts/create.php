@@ -42,7 +42,7 @@ if (! empty($_POST['type'])
     && ! empty($_POST['dbHost'])
     && ! empty($_POST['dbUser'])
     && ! empty($_POST['dbPass'])
-    && ! empty($_POST['dbPrefix'])
+    && (! empty($_POST['dbPrefix']) || ($_POST['dbCreated'] && ! empty($_POST['dbName']) ))
 ) {
     // To detect Tiki Manager instance PHP cli
     $instance = new Instance();
@@ -67,13 +67,18 @@ if (! empty($_POST['type'])
         '--db-host=' . $_POST['dbHost'],
         '--db-user=' . $_POST['dbUser'],
         '--db-pass=' . $_POST['dbPass'],
-        '--db-prefix=' . $_POST['dbPrefix'],
     ];
+
+    if ($_POST['dbCreated']) {
+        $command[] = '--db-name=' . $_POST['dbName'];
+    } else {
+        $command[] = '--db-prefix=' . $_POST['dbPrefix'];
+    }
 
     // Unset REQUEST_METHOD to be able to trigger tiki's console.php
     $process = new Process($command, null, ['REQUEST_METHOD' => false]);
     $process->setTimeout(600);
-    $process->run(function ($type, $buffer) {
+    $process->run(function ($type, $buffer) use ($io) {
         $io->write($buffer);
     });
 } else {
