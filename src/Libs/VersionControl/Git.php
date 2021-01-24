@@ -56,6 +56,11 @@ class Git extends VersionControlSystem
                 $versions[] = str_replace('refs/heads/', '', $line); // Example: branch/master
             }
 
+            if (strpos($line, 'refs/tags/tags') !== false) {
+                $versions[] = str_replace('refs/tags/', '', $line); // Example: tags/tags/21.0
+                continue;
+            }
+
             if (strpos($line, 'refs/tags/') !== false) {
                 $versions[] = str_replace('refs/', '', $line); // example: tags/19.x
             }
@@ -198,7 +203,21 @@ class Git extends VersionControlSystem
     public function info($targetFolder, $raw = false)
     {
         $gitCmd = 'rev-parse --abbrev-ref HEAD' . ($this->quiet ? ' --quiet' : '');
-        return $this->exec($targetFolder, $gitCmd);
+        $output = $this->exec($targetFolder, $gitCmd);
+
+        // When using tags, the HEAD is detached (this will calculate if it belongs to a tag)
+        if ($output == 'HEAD') {
+            $gitCmd = 'name-rev --name-only HEAD';
+            $output = $this->exec($targetFolder, $gitCmd);
+
+            if (preg_match('/^tags\\/[^\^\~]*/', $output, $matches)) {
+                $output = str_replace('tags/tags', 'tags', $matches[0]);
+            } else {
+                $output = 'HEAD';
+            }
+        }
+
+        return $output;
     }
 
     /**

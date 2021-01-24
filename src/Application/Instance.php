@@ -664,14 +664,7 @@ SQL;
      */
     public function hasConsole()
     {
-        $current = $this->getLatestVersion();
-        $branch = $current->branch ?? $this->getApplication()->getBranch();
-
-        return in_array($branch, ['trunk','master'])
-            || (
-                preg_match('/(\d+)\.?/', $branch, $matches)
-                && floatval($matches[1]) >= 11
-            );
+        return $this->getBestAccess()->fileExists('console.php');
     }
 
     /**

@@ -80,9 +80,16 @@ class Tiki extends Application
      */
     public function extractTo(Version $version, $folder): void
     {
+        $dirExists = file_exists($folder);
+
+        if ($dirExists && preg_match('/tags\\//', $version->branch)) {
+            // Tags are unchangeable
+            return;
+        }
+
         $this->vcs_instance->setRunLocally(true);
 
-        if (file_exists($folder)) {
+        if ($dirExists) {
             try {
                 $this->io->writeln('Updating cache repository from server... <fg=yellow>[may take a while]</>');
                 $this->vcs_instance->revert($folder);
