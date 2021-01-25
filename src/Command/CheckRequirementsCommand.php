@@ -30,9 +30,11 @@ class CheckRequirementsCommand extends TikiManagerCommand
         $requirements = $osReq->getRequirements();
         foreach ($requirements as $requirementKey => $requirement) {
             if ($osReq->check($requirementKey)) {
-                $this->io->block($requirement['name'] . ' (' . $osReq->getTags($requirementKey) . ')', '<info>Ok</info>');
+                $this->io->block($requirement['name'] . ' (' . $osReq->getTags($requirementKey) . ')', 'OK');
             } else {
-                $this->io->block(ucfirst($osReq->getRequirementMessage($requirementKey)), '<error>missing</error>');
+                $errorMessage = $requirement['errorMessage'] ?? $osReq->getRequirementMessage($requirementKey);
+                $required = $requirement['required'] ?? true;
+                $this->io->block($errorMessage, 'NOT OK', !$required ? 'fg=black;bg=yellow' : 'error');
             }
         }
     }

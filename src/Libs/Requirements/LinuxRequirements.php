@@ -19,7 +19,9 @@ class LinuxRequirements extends Requirements
             'commands' => [
                 'sqlite3'
             ],
-            'tags' => 'sqlite3'
+            'tags' => 'sqlite3',
+            'errorMessage' => 'SQLite command line tool not detected. Please make sure sqlite3 cli is installed. While this does not impact normal operations, will prevent you to be able to see/debug the internal db using "database:view"',
+            'required' => false,
         ],
         'ssh' => [
             'name' => 'SSH tools',
