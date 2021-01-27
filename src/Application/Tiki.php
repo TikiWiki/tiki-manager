@@ -729,10 +729,10 @@ TXT;
 
             if ($instance->hasConsole()) {
                 if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
-                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']);
+                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']);
                 } elseif ($access->fileExists('temp/composer.phar')) {
                     // In case of instance update, use composer to get proper exit codes if case of failure.
-                    $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']);
+                    $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']);
                 } else {
                     $command = $access->createCommand('bash', ['setup.sh', 'composer']);
                 }
