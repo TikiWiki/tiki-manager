@@ -746,7 +746,7 @@ TXT;
 
                 $command->run();
                 if ($command->getReturn() !== 0 || !$access->fileExists('vendor_bundled/vendor/autoload.php')) {
-                    $commandOutput = ! empty($command->getStderrContent()) ? $command->getStderrContent() : $command->getStdoutContent();
+                    $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
 
                     trim_output($commandOutput);
                     throw new \Exception("Composer install failed for Tiki bundled packages.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
