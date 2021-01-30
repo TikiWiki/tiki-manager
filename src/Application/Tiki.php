@@ -443,12 +443,7 @@ class Tiki extends Application
         $this->runComposer(); // fix permissions does not return a proper exit code if composer fails
         $this->fixPermissions();
 
-        if (! $access->fileExists($this->instance->getWebPath('.htaccess'))) {
-            $access->copyFile(
-                $this->instance->getWebPath('_htaccess'),
-                $this->instance->getWebPath('.htaccess')
-            );
-        }
+        $this->instance->configureHtaccess();
 
         $this->setDbLock();
 

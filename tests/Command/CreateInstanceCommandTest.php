@@ -72,6 +72,7 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
         $this->assertNotEquals(0, $instanceId);
         $this->assertTrue($fs->exists(self::$instancePath));
         $this->assertTrue($fs->exists(self::$dbLocalFileTrunk));
+        $this->assertTrue(is_link(self::$instancePath . '/.htaccess'));
 
         static::$instanceId = $instanceId;
     }
