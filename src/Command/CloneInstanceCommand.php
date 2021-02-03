@@ -307,7 +307,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $this->io->newLine();
             $this->io->section('Creating snapshot of: ' . $sourceInstance->name);
             try {
-                $archive = $sourceInstance->backup();
+                $archive = $sourceInstance->backup($direct);
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
             }

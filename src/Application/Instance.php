@@ -699,7 +699,7 @@ SQL;
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
         }
 
-        return $backup->create();
+        return $backup->create($direct);
     }
 
     /**
@@ -716,19 +716,18 @@ SQL;
     {
         $access = $this->getBestAccess('scripting');
 
-        $srcFiles = null;
+        $sourceInstance = null;
+        $message = "Restoring files from '{$archive}' into {$this->name}...";
+
         if ($direct && $src_app instanceof Instance) {
-            $srcFiles = $src_app->webroot;
-            $message = "Restoring files from '{$srcFiles}' into {$this->name}...";
-        } else {
-            $message = "Restoring files from '{$archive}' into {$this->name}...";
+            $message = "Restoring files from '{$src_app->name}' into {$this->name}...";
         }
 
         $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
 
-        $restore = new Restore($this);
+        $restore = new Restore($this, $direct);
         $restore->setProcess($clone);
-        $restore->restoreFiles($archive, $srcFiles);
+        $restore->restoreFiles($archive);
 
         $this->app = isset($src_app->app) ? $src_app->app : $src_app;
         $this->save();
@@ -748,7 +747,7 @@ SQL;
         }
 
         if (!$this->findApplication()) { // a version is created in this call
-            $this->io->error('Something when wrong with restore. Unable to read application details.');
+            $this->io->error('Something went wrong with restore. Unable to read application details.');
             return;
         }
 
@@ -1026,7 +1025,8 @@ SQL;
         return new Database($this);
     }
 
-    public function getVersionControlSystem() {
+    public function getVersionControlSystem()
+    {
         return VersionControlSystem::getVersionControlSystem($this);
     }
 }

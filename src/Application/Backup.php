@@ -133,15 +133,15 @@ class Backup
         $this->app->removeTemporaryFiles();
         $targets = $this->getTargetDirectories();
 
-        if ($this->direct) {
-            $copyResult = $targets;
-        } else {
+        $copyResult = $targets;
+
+        if (!$this->direct) {
             $this->io->writeln('Copying files... <fg=yellow>[may take a while]</>');
             $copyResult = $this->copyDirectories($targets, $backupDir);
-        }
 
-        $this->io->writeln('Creating changes file...');
-        $this->createChangesFile($backupDir);
+            $this->io->writeln('Creating changes file...');
+            $this->createChangesFile($backupDir);
+        }
 
         $this->io->writeln('Checking system ini config file...');
         $targetSystemIniConfigFile = $this->getSystemIniConfigFile();
@@ -164,17 +164,13 @@ class Backup
         $this->io->writeln('Creating database dump...');
         $this->createDatabaseDump($this->app, $backupDir);
 
-        $result = '';
-        if (!$skipArchive) {
+        $result = $backupDir;
+        if (!$skipArchive || !$this->direct) {
             $this->io->writeln('Creating archive... <fg=yellow>[may take a while]</>');
-            $result = $this->createArchive($this->archiveDir, $backupDir);
-
-            if (!$result) {
-                return false;
-            }
+            $result = $this->createArchive();
         }
 
-        return $result;
+        return !$result ? false : $result;
     }
 
     public function createArchive($archiveDir = null)
@@ -466,7 +462,7 @@ class Backup
             $access->downloadFile($filePath, $backupDir);
         }
 
-        $copyResult[] = [$file, 'conf_' . $location, $path];
+        $copyResult[] = $this->direct ? ['conf_' . $location, $path] : [$file, 'conf_' . $location, $path, null];
     }
 
     public function setArchiveSymlink($symlinkPath = null, $archiveDir = null, $instance = null)

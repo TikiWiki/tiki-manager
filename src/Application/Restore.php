@@ -23,11 +23,17 @@ class Restore extends Backup
     protected $process;
     public $iniFilesToExclude = [];
 
-    public function __construct($instance)
+    /**
+     * Restore constructor.
+     * @param Instance $instance
+     * @param bool $direct
+     * @throws Exception\FolderPermissionException
+     */
+    public function __construct(Instance $instance, bool $direct = false)
     {
-        parent::__construct($instance);
+        parent::__construct($instance, $direct);
         $this->restoreRoot = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore';
-        $this->restoreDirname = sprintf('%s-%s', $instance->id, $instance->name);
+        $this->restoreDirname = sprintf('%s-%s', $instance->getId(), $instance->name);
     }
 
     public function getFolderNameFromArchive($srcArchive)
@@ -116,6 +122,7 @@ class Restore extends Backup
         $manifest = array_map('trim', $manifest);
         $manifest = array_filter($manifest, 'strlen');
         $backupType = Backup::FULL_BACKUP;
+        $directWebroot = null;
 
         $windowsAbsolutePathsRegex = '/^([a-zA-Z]\:[\/,\\\\]).{1,}/';
 
@@ -146,7 +153,12 @@ class Restore extends Backup
             }
 
             if ($this->direct) {
-                $source = $archiveFolder;
+                if ($type === 'app') {
+                    $source = $directWebroot = $destination;
+                } else {
+                    // conf_external will not be copied if absolute path;
+                    $source = realpath(rtrim($directWebroot, DS) . DS . $destination);
+                }
             } else {
                 $source = $archiveFolder . DIRECTORY_SEPARATOR . $hash;
                 $source .= $type != 'conf_external' ? DIRECTORY_SEPARATOR . basename($destination) : '';
@@ -176,18 +188,12 @@ class Restore extends Backup
         return $folders;
     }
 
-    public function restoreFiles($srcContent = null, $srcFiles = null)
+    public function restoreFiles($srcContent = null)
     {
-        $this->direct = isset($srcFiles) ? true : false;
-
         if (is_dir($srcContent)) {
             $this->restoreFilesFromFolder($srcContent);
         } elseif (is_file($srcContent)) {
             $this->restoreFilesFromArchive($srcContent);
-        }
-
-        if ($this->direct) {
-            $this->restoreFolder($srcFiles, $this->instance->webroot);
         }
     }
 
@@ -204,7 +210,7 @@ class Restore extends Backup
 
         $this->setIniFilesToExclude($manifest);
 
-        foreach ($folders as $key => $folder) {
+        foreach ($folders as $folder) {
             list($type, $src, $target, $isFull) = $folder;
             if ($type == 'conf_external') {
                 // system configuration file
@@ -212,7 +218,7 @@ class Restore extends Backup
                 $access->uploadFile($src, $target);
             } else {
                 if ($type == 'app' && !$isFull) {
-                    $this->restoreFromVCS($src, $target, $isFull);
+                    $this->restoreFromVCS($src, $target);
                 }
 
                 $this->restoreFolder($src, $target, $isFull);
