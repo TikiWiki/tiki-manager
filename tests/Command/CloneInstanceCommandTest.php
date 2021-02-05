@@ -10,8 +10,10 @@ namespace TikiManager\Tests\Command;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Process;
 use TikiManager\Application\Instance;
 use TikiManager\Command\CloneInstanceCommand;
+use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
@@ -31,13 +33,15 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
     static $instanceIds = [];
     static $ListCommandInput = [];
 
+    static $prevVersionBranch;
+
     public static function setUpBeforeClass()
     {
         if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
-            $prevVersionBranch = $_ENV['PREV_SRC_MAJOR_RELEASE'];
+            static::$prevVersionBranch = $_ENV['PREV_SRC_MAJOR_RELEASE'];
             $branch = $_ENV['LATEST_SRC_RELEASE'];
         } else {
-            $prevVersionBranch = $_ENV['PREV_VERSION_BRANCH'];
+            static::$prevVersionBranch = $_ENV['PREV_VERSION_BRANCH'];
             $branch = $_ENV['MASTER_BRANCH'];
         }
 
@@ -51,7 +55,7 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
         $sourceDetails = [
             InstanceHelper::WEBROOT_OPTION => self::$sourceInstancePath,
-            InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($prevVersionBranch),
+            InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch(static::$prevVersionBranch),
             InstanceHelper::URL_OPTION => 'http://source-test.tiki.org',
             InstanceHelper::NAME_OPTION => 'source-test.tiki.org',
         ];
@@ -74,21 +78,32 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
     {
         $fs = new Filesystem();
         $fs->remove(self::$instancePath);
+
+        $instance = Instance::getInstance(self::$instanceIds['source']);
+        $instance->delete();
+
+        $instance = Instance::getInstance(self::$instanceIds['target']);
+        $instance->delete();
     }
 
-    public function testLocalCloneInstance()
+    /**
+     * @param $direct
+     * @dataProvider successCloneCombinations
+     */
+    public function testLocalCloneInstance($direct)
     {
-        $prevVersionBranch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['PREV_SRC_MAJOR_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
-
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['target'])],
             '--skip-cache-warmup' => true,
         ];
 
-        // Clone command
+        if ($direct) {
+            $arguments['--direct'] = true;
+        }
+
         $result = InstanceHelper::clone($arguments);
-        $this->assertTrue($result);
+        $this->assertTrue($result['exitCode'] === 0);
 
         $instance = (new Instance())->getInstance(self::$instanceIds['target']);
         $app = $instance->getApplication();
@@ -96,8 +111,18 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
         $diffDbFile = Files::compareFiles(self::$dbLocalFile1, self::$dbLocalFile2);
 
-        $this->assertEquals(VersionControl::formatBranch($prevVersionBranch), $resultBranch);
+        $this->assertEquals(VersionControl::formatBranch(static::$prevVersionBranch), $resultBranch);
         $this->assertNotEquals([], $diffDbFile);
+
+        $this->compareDB();
+    }
+
+    public function successCloneCombinations():array
+    {
+        return [
+            ['direct' => false],
+            ['direct' => true],
+        ];
     }
 
     public function testCloneSameDatabase()
@@ -110,24 +135,15 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
         $diffDbFile = Files::compareFiles(self::$dbLocalFile1, self::$dbLocalFile2);
         $this->assertEquals([], $diffDbFile);
 
-        // Clone command
-        $application = new Application();
-        $application->add(new CloneInstanceCommand());
-        $command = $application->find('instance:clone');
-        $commandTester = new CommandTester($command);
-
         $arguments = [
-            'command' => 'instance:clone',
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['target'])],
             '--skip-cache-warmup' => true,
         ];
 
-        $commandTester->execute($arguments);
-
-        $output = $commandTester->getDisplay();
-
-        $this->assertContains('Database host and name are the same', $output);
+        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
+        $this->assertTrue($result['exitCode'] !== 0);
+        $this->assertContains('Database host and name are the same', $result['output']);
     }
 
     public function testCloneDatabaseWithTargetMissingDbFile()
@@ -138,24 +154,53 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
         $this->assertFileNotExists(self::$dbLocalFile2);
 
-        // Clone command
-        $application = new Application();
-        $application->add(new CloneInstanceCommand());
-        $command = $application->find('instance:clone');
-        $commandTester = new CommandTester($command);
-
         $arguments = [
-            'command' => 'instance:clone',
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['target'])],
             '--skip-cache-warmup' => true
         ];
 
-        $commandTester->execute($arguments, ['interactive' => false]);
-
-        $output = $commandTester->getDisplay();
+        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
+        $this->assertTrue($result['exitCode'] !== 0);
+        $output = $result['output'];
 
         $this->assertContains('Database configuration file not found', $output);
         $this->assertContains('Unable to load/set database configuration for instance', $output);
+    }
+
+    public function compareDB()
+    {
+        $fileSystem = new Filesystem();
+        if ($fileSystem->exists(self::$dbLocalFile1) && $fileSystem->exists(self::$dbLocalFile2)) {
+            $sourceDB = Database::getInstanceDataBaseConfig(self::$dbLocalFile1);
+            $targetDB = Database::getInstanceDataBaseConfig(self::$dbLocalFile2);
+
+            $host = getenv('DB_HOST'); // DB Host
+            $user = getenv('DB_USER'); // DB Root User
+            $pass = getenv('DB_PASS'); // DB Root Password
+            $port = getenv('DB_PORT') ?? '3306';
+
+            $db1 = $sourceDB['dbname'];
+            $db2 = $targetDB['dbname'];
+
+            // This command cannot be changed due to dbdiff require autoload path
+            $command = [
+                "vendor/dbdiff/dbdiff/dbdiff",
+                "--server1=$user:$pass@$host:$port",
+                "--type=data",
+                "--include=all", // no UP or DOWN will be used
+                "--nocomments",
+                "server1.$db1:server1.$db2"
+            ];
+
+            $process = new Process($command, $_ENV['TRIM_ROOT'] . '/vendor-bin/dbdiff');
+            $process->setTimeout(0);
+            $process->run();
+
+            $this->assertEquals(0, $process->getExitCode());
+            $output = $process->getOutput();
+            $this->assertContains('Identical resources', $output);
+            $this->assertContains('Completed', $output);
+        }
     }
 }

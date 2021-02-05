@@ -84,8 +84,14 @@ class Instance
         }
     }
 
-    public static function clone($arguments, $upgrade = false) {
-
+    /**
+     * @param array $arguments
+     * @param bool $upgrade
+     * @param array $options
+     * @return array
+     */
+    public static function clone(array $arguments, bool $upgrade = false, array $options = []): array
+    {
         $application = new Application();
         $application->add(new CloneInstanceCommand());
         $application->add(new CloneAndUpgradeInstanceCommand());
@@ -95,13 +101,12 @@ class Instance
         $commandTester = new CommandTester($command);
 
         $arguments = array_merge(['command' => $command->getName()], $arguments);
+        $commandTester->execute($arguments, $options);
 
-        $commandTester->execute($arguments);
-
-        // So we have the execution output
-        echo $commandTester->getDisplay();
-
-        return $commandTester->getStatusCode() === 0;
+        return [
+            'exitCode' => $commandTester->getStatusCode(),
+            'output' => $commandTester->getDisplay(),
+        ];
     }
 
     private static function getLastInstanceId()

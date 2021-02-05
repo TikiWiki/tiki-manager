@@ -727,6 +727,12 @@ SQL;
 
         $restore = new Restore($this, $direct);
         $restore->setProcess($clone);
+
+        if ($direct) {
+            $restore->setRestoreRoot(dirname($archive));
+            $restore->setRestoreDirname(basename($archive));
+        }
+
         $restore->restoreFiles($archive);
 
         $this->app = isset($src_app->app) ? $src_app->app : $src_app;
@@ -787,14 +793,16 @@ SQL;
             $version->collectChecksumFromInstance($this);
         }
 
-        $flags = '-Rf';
-        if (ApplicationHelper::isWindows()) {
-            $flags = "-r";
-        }
+        if (!$direct) {
+            $flags = '-Rf';
+            if (ApplicationHelper::isWindows()) {
+                $flags = "-r";
+            }
 
-        $access->shellExec(
-            sprintf("rm %s %s", $flags, $this->tempdir . DIRECTORY_SEPARATOR . 'restore')
-        );
+            $access->shellExec(
+                sprintf("rm %s %s", $flags, $this->tempdir . DIRECTORY_SEPARATOR . 'restore')
+            );
+        }
     }
 
     public function getExtraBackups()

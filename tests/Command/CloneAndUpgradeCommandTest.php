@@ -8,12 +8,8 @@
 namespace TikiManager\Tests\Command;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
-use TikiManager\Command\CloneAndUpgradeInstanceCommand;
-use TikiManager\Command\CloneInstanceCommand;
 use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
@@ -26,8 +22,8 @@ use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 class CloneAndUpgradeCommandTest extends TestCase
 {
     protected static $instancePath;
-    protected static $instancePath1;
-    protected static $instancePath2;
+    protected static $sourceInstancePath;
+    protected static $targetInstancePath;
     protected static $dbLocalFile1;
     protected static $dbLocalFile2;
     protected static $instanceIds = [];
@@ -37,62 +33,73 @@ class CloneAndUpgradeCommandTest extends TestCase
         $basePath = $_ENV['TESTS_BASE_FOLDER'];
 
         self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'cloneupgrade']);
-        self::$instancePath1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance1']);
-        self::$instancePath2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance2']);
-        self::$dbLocalFile1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath1, 'db', 'local.php']);
-        self::$dbLocalFile2 = implode(DIRECTORY_SEPARATOR, [self::$instancePath2, 'db', 'local.php']);
+        self::$sourceInstancePath = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'source']);
+        self::$targetInstancePath = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'target']);
+        self::$dbLocalFile1 = implode(DIRECTORY_SEPARATOR, [self::$sourceInstancePath, 'db', 'local.php']);
+        self::$dbLocalFile2 = implode(DIRECTORY_SEPARATOR, [self::$targetInstancePath, 'db', 'local.php']);
+
+        $vcs = strtoupper($_ENV['DEFAULT_VCS']);
+        $branch = $vcs === 'SRC' ? $_ENV['PREV_SRC_MAJOR_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
+
+        $sourceDetails = [
+            InstanceHelper::WEBROOT_OPTION => self::$sourceInstancePath,
+            InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($branch),
+            InstanceHelper::URL_OPTION => 'http://source-test.tiki.org',
+            InstanceHelper::NAME_OPTION => 'source-test.tiki.org',
+        ];
+
+        $targetDetails = [
+            InstanceHelper::WEBROOT_OPTION => self::$targetInstancePath,
+            InstanceHelper::BRANCH_OPTION => VersionControl::formatBranch($branch),
+            InstanceHelper::URL_OPTION => 'http://target-test.tiki.org',
+            InstanceHelper::NAME_OPTION => 'target-test.tiki.org',
+        ];
+
+        $sourceInstanceId = InstanceHelper::create($sourceDetails);
+        $targetInstanceId = InstanceHelper::create($targetDetails);
+
+        self::$instanceIds['source'] = $sourceInstanceId;
+        self::$instanceIds['target'] = $targetInstanceId;
+
     }
 
     public static function tearDownAfterClass()
     {
         $fs = new Filesystem();
         $fs->remove(self::$instancePath);
+
+        $instance = Instance::getInstance(self::$instanceIds['source']);
+        $instance->delete();
+
+        $instance = Instance::getInstance(self::$instanceIds['target']);
+        $instance->delete();
     }
 
-    public function testLocalCloneInstance()
+    /**
+     * @param $direct
+     * @dataProvider successCloneCombinations
+     */
+    public function testLocalCloneInstance($direct)
     {
-        if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
-            $branch = $_ENV['PREV_SRC_MAJOR_RELEASE'];
-            $upgradeBranch = $_ENV['LATEST_SRC_RELEASE'];
-        } else {
-            $branch = $_ENV['PREV_VERSION_BRANCH'];
-            $upgradeBranch = $_ENV['MASTER_BRANCH'];
-        }
-
-        $count = 1;
-        $ListCommandInput = [
-            [
-                '--webroot' => self::$instancePath1,
-                '--branch' => VersionControl::formatBranch($branch),
-                '--name' => 'source-test.tiki.org',
-            ],
-            [
-                '--webroot' => self::$instancePath2,
-                '--branch' => VersionControl::formatBranch($branch),
-                '--name' => 'target-test.tiki.org',
-            ]
-        ];
-
-        foreach ($ListCommandInput as $commandInput) {
-            $instanceId = InstanceHelper::create($commandInput);
-            $this->assertNotFalse($instanceId);
-            self::$instanceIds[$count] = $instanceId;
-            $count++;
-        }
+        $vcs = strtoupper($_ENV['DEFAULT_VCS']);
+        $upgradeBranch = $vcs === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['MASTER_BRANCH'];
 
         // Clone command
         $arguments = [
-            '--source' => self::$instanceIds[1],
-            '--target' => [self::$instanceIds[2]],
+            '--source' => self::$instanceIds['source'],
+            '--target' => [self::$instanceIds['target']],
             '--branch' => VersionControl::formatBranch($upgradeBranch),
-            '--direct' => null, // also test direct (rsync source/target)
             '--skip-cache-warmup' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, true);
-        $this->assertTrue($result);
+        if ($direct) {
+            $arguments['--direct'] = true;
+        }
 
-        $instance = (new Instance())->getInstance(self::$instanceIds[2]);
+        $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
+        $this->assertTrue($result['exitCode'] === 0);
+
+        $instance = (new Instance())->getInstance(self::$instanceIds['target']);
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
 
@@ -100,11 +107,21 @@ class CloneAndUpgradeCommandTest extends TestCase
 
         $this->assertEquals(VersionControl::formatBranch($upgradeBranch), $resultBranch);
         $this->assertNotEquals([], $diffDbFile);
+
+        // Just to ensure that the database is not empty, since they might/should be different
+        $db = $instance->getDatabaseConfig();
+        $numTables = $db->query("SELECT COUNT(*) as num_tables FROM information_schema.tables WHERE table_schema = '{$db->dbname}';");
+        $this->assertTrue($numTables > 0);
     }
 
-    /**
-     * @depends testLocalCloneInstance
-     */
+    public function successCloneCombinations(): array
+    {
+        return [
+            ['direct' => false],
+            ['direct' => true],
+        ];
+    }
+
     public function testCloneSameDatabase()
     {
         $upgradeBranch = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
@@ -114,22 +131,14 @@ class CloneAndUpgradeCommandTest extends TestCase
             $fileSystem->copy(self::$dbLocalFile1, self::$dbLocalFile2, true);
         }
 
-        // Clone command
-        $application = new Application();
-        $application->add(new CloneInstanceCommand());
-        $application->add(new CloneAndUpgradeInstanceCommand());
-        $command = $application->find('instance:cloneandupgrade');
-        $commandTester = new CommandTester($command);
-
-        $commandTester->execute([
-            'command' => $command->getName(),
-            '--source' => self::$instanceIds[1],
-            '--target' => [self::$instanceIds[2]],
+        $arguments = [
+            '--source' => self::$instanceIds['source'],
+            '--target' => [self::$instanceIds['target']],
             '--branch' => VersionControl::formatBranch($upgradeBranch),
-        ]);
+        ];
 
-        $output = $commandTester->getDisplay();
-
-        $this->assertContains('Database host and name are the same', $output);
+        $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
+        $this->assertTrue($result['exitCode'] !== 0);
+        $this->assertContains('Database host and name are the same', $result['output']);
     }
 }

@@ -541,4 +541,14 @@ class Restore extends Backup
             $this->access->deleteFile($file);
         }
     }
+
+    public function setRestoreRoot($path): void
+    {
+        $this->restoreRoot = $path;
+    }
+
+    public function setRestoreDirname($dirName): void
+    {
+        $this->restoreDirname = $dirName;
+    }
 }

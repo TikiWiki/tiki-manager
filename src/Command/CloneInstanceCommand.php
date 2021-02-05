@@ -351,7 +351,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
         }
 
-        if (! $keepBackup) {
+        if (!$keepBackup && !$direct) {
             $output->writeln('Deleting archive...');
             $access = $sourceInstance->getBestAccess('scripting');
             $access->shellExec("rm -f " . $archive);
