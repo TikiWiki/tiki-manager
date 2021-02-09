@@ -57,19 +57,19 @@ class CloneInstanceCommand extends TikiManagerCommand
                 'skip-reindex',
                 null,
                 InputOption::VALUE_NONE,
-                'Skip rebuilding index step.'
+                'Skip rebuilding index step. (Only in upgrade mode).'
             )
             ->addOption(
                 'skip-cache-warmup',
                 null,
                 InputOption::VALUE_NONE,
-                'Skip generating cache step.'
+                'Skip generating cache step. (Only in upgrade mode).'
             )
             ->addOption(
                 'live-reindex',
                 null,
                 InputOption::VALUE_OPTIONAL,
-                'Live reindex, set instance maintenance off and after perform index rebuild.',
+                'Live reindex, set instance maintenance off and after perform index rebuild. (Only in upgrade mode)',
                 true
             )
             ->addOption(
@@ -89,6 +89,35 @@ class CloneInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Use source instance last created backup.'
+            )->addOption(
+                'db-host',
+                'dh',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database host'
+            )
+            ->addOption(
+                'db-user',
+                'du',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database user'
+            )
+            ->addOption(
+                'db-pass',
+                'dp',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database password'
+            )
+            ->addOption(
+                'db-prefix',
+                'dpx',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database prefix'
+            )
+            ->addOption(
+                'db-name',
+                'dn',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database name'
             );
     }
 
@@ -116,6 +145,8 @@ class CloneInstanceCommand extends TikiManagerCommand
         $keepBackup = $input->getOption('keep-backup');
         $useLastBackup = $input->getOption('use-last-backup');
         $argument = $input->getArgument('mode');
+
+        $setupTargetDatabase = (bool) ($input->getOption('db-prefix') || $input->getOption('db-name'));
 
         if ($direct && ($keepBackup || $useLastBackup)) {
             $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
@@ -185,6 +216,11 @@ class CloneInstanceCommand extends TikiManagerCommand
             $selectedDestinationInstances = $helper->ask($input, $output, $question);
         }
 
+        if ($setupTargetDatabase && count($selectedDestinationInstances) > 1) {
+            $this->io->error('Database setup options can only be used when a single target instance is passed.');
+            return 1;
+        }
+
         if ($cloneUpgrade) {
             if (!empty($arguments[2])) {
                 $input->setOption('branch', $arguments[2]);
@@ -222,13 +258,10 @@ class CloneInstanceCommand extends TikiManagerCommand
 
         $dbConfigErrorMessage = 'Unable to load/set database configuration for instance {instance_name} (id: {instance_id}). {exception_message}';
         try {
-            if (!$this->input->isInteractive() &&
-                !$this->isValidInstanceDBConnection($sourceInstance)) {
+            // The source instance needs to be well configured by default
+            if (!$this->testExistingDbConnection($sourceInstance)) {
                 throw new \Exception('Existing database configuration failed to connect.');
             }
-
-            $this->setupDatabase($sourceInstance);
-            $sourceInstance->database()->setupConnection();
         } catch (\Exception $e) {
             $this->logger->error($dbConfigErrorMessage, [
                 'instance_name' => $sourceInstance->name,
@@ -242,12 +275,12 @@ class CloneInstanceCommand extends TikiManagerCommand
             try {
                 $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
 
-                if (!$this->input->isInteractive() &&
-                    !$this->isValidInstanceDBConnection($destinationInstance)) {
+                if (!$setupTargetDatabase && !$this->input->isInteractive() &&
+                    !$this->testExistingDbConnection($destinationInstance)) {
                     throw new \Exception('Existing database configuration failed to connect.');
                 }
 
-                $this->setupDatabase($destinationInstance);
+                $this->setupDatabase($destinationInstance, $setupTargetDatabase);
                 $destinationInstance->database()->setupConnection();
             } catch (\Exception $e) {
                 $this->logger->error($dbConfigErrorMessage, [
@@ -324,7 +357,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $this->io->section('Initiating clone of ' . $sourceInstance->name . ' to ' . $destinationInstance->name);
 
             $destinationInstance->lock();
-            $destinationInstance->restore($sourceInstance, $archive, true, false, $direct);
+            $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct);
 
             if ($cloneUpgrade) {
                 $branch = $input->getOption('branch');

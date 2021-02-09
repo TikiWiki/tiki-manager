@@ -1033,6 +1033,21 @@ SQL;
         return new Database($this);
     }
 
+    /**
+     * @return bool
+     * @throws \Exception
+     */
+    public function testDbConnection(): bool
+    {
+        $dbRoot = $this->getDatabaseConfig();
+
+        if (!$dbRoot) {
+            throw new \Exception('Database configuration file not found.');
+        }
+
+        return $dbRoot->testConnection();
+    }
+
     public function getVersionControlSystem()
     {
         return VersionControlSystem::getVersionControlSystem($this);

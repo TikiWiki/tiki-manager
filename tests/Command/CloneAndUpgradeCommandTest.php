@@ -141,4 +141,50 @@ class CloneAndUpgradeCommandTest extends TestCase
         $this->assertTrue($result['exitCode'] !== 0);
         $this->assertContains('Database host and name are the same', $result['output']);
     }
+
+    /**
+     * @depends testLocalCloneInstance
+     */
+    public function testCloneInstanceTargetDB()
+    {
+        if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
+            $upgradeBranch = $_ENV['LATEST_SRC_RELEASE'];
+        } else {
+            $upgradeBranch = $_ENV['MASTER_BRANCH'];
+        }
+
+        $targetDBName = substr(md5(random_bytes(5)), 0, 8);
+
+        // Clone command
+        $arguments = [
+            '--source' => self::$instanceIds['source'],
+            '--target' => [self::$instanceIds['target']],
+            '--branch' => VersionControl::formatBranch($upgradeBranch),
+            '--direct' => null, // also test direct (rsync source/target)
+            '--db-host' => $_ENV['DB_HOST'],
+            '--db-user' => $_ENV['DB_USER'],
+            '--db-pass' => $_ENV['DB_PASS'],
+            '--db-prefix' => $targetDBName,
+            '--skip-cache-warmup' => true,
+        ];
+
+        $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
+        $this->assertTrue($result['exitCode'] === 0);
+
+        $instance = (new Instance())->getInstance(self::$instanceIds['target']);
+        $dbCnf = $instance->getDatabaseConfig();
+
+        $app = $instance->getApplication();
+        $resultBranch = $app->getBranch();
+
+        $diffDbFile = Files::compareFiles(self::$dbLocalFile1, self::$dbLocalFile2);
+
+        $this->assertEquals(VersionControl::formatBranch($upgradeBranch), $resultBranch);
+        $this->assertNotEquals([], $diffDbFile);
+
+        self::assertEquals($arguments['--db-host'], $dbCnf->host);
+        self::assertContains($arguments['--db-prefix'], $dbCnf->user);
+        self::assertContains($arguments['--db-prefix'], $dbCnf->dbname);
+    }
+
 }

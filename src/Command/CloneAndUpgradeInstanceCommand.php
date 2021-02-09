@@ -82,6 +82,35 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Use source instance last created backup.'
+            )->addOption(
+                'db-host',
+                'dh',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database host'
+            )
+            ->addOption(
+                'db-user',
+                'du',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database user'
+            )
+            ->addOption(
+                'db-pass',
+                'dp',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database password'
+            )
+            ->addOption(
+                'db-prefix',
+                'dpx',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database prefix'
+            )
+            ->addOption(
+                'db-name',
+                'dn',
+                InputOption::VALUE_REQUIRED,
+                'Target instance database name'
             );
     }
 
@@ -103,46 +132,15 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
             'mode' => $argumentsToAdd,
         ];
 
-        if ($input->getOption('check')) {
-            $arguments['--check'] = true;
-        }
-        if ($source = $input->getOption('source')) {
-            $arguments['--source'] = $source;
-        }
-
-        if ($target = $input->getOption('target')) {
-            $arguments['--target'] = $target;
-        }
-
-        if ($branch = $input->getOption('branch')) {
-            $arguments['--branch'] = $branch;
-        }
-
-        if ($skipReindex = $input->getOption('skip-reindex')) {
-            $arguments['--skip-reindex'] = $skipReindex;
-        }
-
-        if ($skipCacheWarmup = $input->getOption('skip-cache-warmup')) {
-            $arguments['--skip-cache-warmup'] = $skipCacheWarmup;
-        }
-
-        if ($liveReindex = is_null($input->getOption('live-reindex')) ? true : filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN)) {
-            $arguments['--live-reindex'] = $liveReindex;
-        }
-
-        if ($direct = $input->getOption('direct')) {
-            $arguments['--direct'] = $direct;
-        }
-
-        if ($keepBackup = $input->getOption('keep-backup')) {
-            $arguments['--keep-backup'] = $keepBackup;
-        }
-
-        if ($useLastBackup = $input->getOption('use-last-backup')) {
-            $arguments['--use-last-backup'] = $useLastBackup;
+        foreach ($input->getOptions() as $key => $value) {
+            if ($value) {
+                $arguments['--' . $key] = $value;
+            }
         }
 
         $verifyInstanceInput = new ArrayInput($arguments);
+        $verifyInstanceInput->setInteractive($input->isInteractive());
+
         return $command->run($verifyInstanceInput, $output);
     }
 }

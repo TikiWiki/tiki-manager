@@ -115,4 +115,9 @@ class Instance
         return (int)$result->fetchColumn();
     }
 
+    public static function getRandomDbName()
+    {
+        return substr(md5(random_bytes(5)), 0, 8) . '_db';
+    }
+
 }

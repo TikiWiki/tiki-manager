@@ -3,7 +3,6 @@
 namespace TikiManager\Command\Traits;
 
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerTrait;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
@@ -360,24 +359,39 @@ trait InstanceConfigure
     }
 
     /**
+     * @param Instance $instance
+     * @return bool
+     * @throws \Exception
+     */
+    public function testExistingDbConnection(Instance $instance): bool
+    {
+        if ($instance->testDbConnection()) {
+            $this->logger->notice('{instance}: Database connection succeeded.', ['instance' => $instance->name]);
+            return true;
+        }
+
+        $this->logger->error('{instance}: Existing database connection failed to connect.', ['instance' => $instance->name]);
+        return false;
+    }
+
+    /**
      * Check, configure and test database connection for a given instance
      * It does not make any changes
      *
      * @param Instance $instance
+     * @param bool $reconfigure
      * @return Instance
      * @throws \Exception
      */
-    public function setupDatabase(Instance $instance): Instance
+    public function setupDatabase(Instance $instance, $reconfigure = false): Instance
     {
         try {
-            if ($this->isValidInstanceDBConnection($instance)) {
-                $this->logger->notice('{instance}: Database connection succeeded.', ['instance' => $instance->name]);
+            if (!$reconfigure && $this->testExistingDbConnection($instance)) {
                 return $instance;
             }
-            $this->logger->error('{instance}: Existing database connection failed to connect.', ['instance' => $instance->name]);
         } catch (\Exception $e) {
             // Left empty on purpose
-        };
+        }
 
         $this->io->section('Setup '.$instance->name.' database connection');
 
@@ -488,22 +502,6 @@ trait InstanceConfigure
         $instance->setDatabaseConfig($config);
 
         return $instance;
-    }
-
-    /**
-     * @param Instance $instance
-     * @return bool
-     * @throws \Exception
-     */
-    public function isValidInstanceDBConnection(Instance $instance): bool
-    {
-        $dbRoot = $instance->getDatabaseConfig();
-
-        if (!$dbRoot) {
-            throw new \Exception('Database configuration file not found.');
-        }
-
-        return $dbRoot->testConnection();
     }
 
     /**
