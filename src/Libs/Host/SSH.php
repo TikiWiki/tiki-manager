@@ -99,12 +99,27 @@ class SSH
 
     public function sendFile($localFile, $remoteFile)
     {
-        return $this->adapter->sendFile($localFile, $remoteFile);
+        $exitCode = $this->rsync([
+            'src' => $localFile,
+            'dest' => $remoteFile,
+        ]);
+
+        if ($exitCode == 0) {
+            $this->runCommands(["chmod 0644 $remoteFile"]);
+        }
+
+        return $exitCode == 0;
     }
 
     public function receiveFile($remoteFile, $localFile)
     {
-        return $this->adapter->receiveFile($remoteFile, $localFile);
+        $exitCode = $this->rsync([
+            'src' => $remoteFile,
+            'dest' => $localFile,
+            'download' => true
+        ]);
+
+        return $exitCode == 0;
     }
 
     public function openShell($workingDir = '')

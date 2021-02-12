@@ -104,32 +104,6 @@ class SSHSeclibAdapter
         return $line;
     }
 
-    public function receiveFile($remoteFile, $localFile)
-    {
-        $handle = self::getExtHandle();
-        $success = $handle->get($remoteFile, $localFile);
-        if (! $success) {
-            $this->io->error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
-            return false;
-        }
-
-        $remoteSize = $handle->size($remoteFile);
-        $localSize = filesize($localFile);
-
-        if ($localSize > $remoteSize) {
-            $f = fopen($localFile, 'r+');
-            ftruncate($f, $remoteSize);
-            fclose($f);
-        }
-
-        $remoteCheck = escapeshellarg("echo md5_file('$remoteFile');");
-        $remoteCheck = $handle->exec("php -r $remoteCheck");
-        $localCheck = md5_file($localFile);
-
-        $success = $localCheck === $remoteCheck;
-        return $success;
-    }
-
     public function runCommand($command, $options = [])
     {
         $handle = self::getExtHandle();
@@ -187,20 +161,6 @@ class SSHSeclibAdapter
             $content .= $result;
         }
         return trim($content);
-    }
-
-    public function sendFile($localFile, $remoteFile)
-    {
-        $handle = self::getExtHandle();
-        $success = $handle->put(
-            $remoteFile,
-            file_get_contents($localFile),
-            \phpseclib\Net\SFTP::SOURCE_STRING
-        );
-        if (! $success) {
-            $this->io->error("Could not create remote file $remoteFile on {$this->user}@{$this->host}");
-        }
-        return $success;
     }
 
     public function setEnv($env)

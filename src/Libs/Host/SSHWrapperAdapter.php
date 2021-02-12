@@ -83,18 +83,6 @@ class SSHWrapperAdapter
         return $line;
     }
 
-    public function receiveFile($remoteFile, $localFile)
-    {
-        $localFile = escapeshellarg($localFile);
-        $remoteFile = escapeshellarg($remoteFile);
-        $key = $_ENV['SSH_KEY'];
-        $port = null;
-        if ($this->port != 22) {
-            $port = " -P {$this->port} ";
-        }
-        return `scp -i $key $port {$this->user}@{$this->host}:$remoteFile $localFile`;
-    }
-
     public function runCommand($command, $options = [])
     {
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
@@ -171,21 +159,6 @@ class SSHWrapperAdapter
 
         $output = implode("\n", $output);
         return $output;
-    }
-
-    public function sendFile($localFile, $remoteFile)
-    {
-        $localFile = escapeshellarg($localFile);
-        $remoteFile = escapeshellarg($remoteFile);
-
-        $key = $_ENV['SSH_KEY'];
-        $port = null;
-        if ($this->port != 22) {
-            $port = " -P {$this->port} ";
-        }
-        `scp -i $key $port $localFile {$this->user}@{$this->host}:$remoteFile`;
-
-        $this->runCommands(["chmod 0644 $remoteFile"]);
     }
 
     public function setHost($host)
