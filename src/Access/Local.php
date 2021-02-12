@@ -8,6 +8,7 @@ namespace TikiManager\Access;
 
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Config\Environment as Env;
 use TikiManager\Libs\Host\Local as LocalHost;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Application\Instance;
@@ -291,7 +292,12 @@ class Local extends Access implements ShellPrompt
         return $output;
     }
 
-    public function downloadFile($filename, $dest = '')
+    /**
+     * @param $filename
+     * @param string $target
+     * @return string
+     */
+    public function downloadFile($filename, $target = ''): string
     {
         if (!$this->isLocalPath($filename)) {
             $filename = $this->instance->getWebPath($filename);
@@ -300,17 +306,18 @@ class Local extends Access implements ShellPrompt
         $dot = strrpos($filename, '.');
         $ext = substr($filename, $dot);
 
-        $local = empty($dest) ? tempnam($_ENV['TEMP_FOLDER'], 'trim') : $dest;
+        $tempFolder = Env::get('TEMP_FOLDER');
+        $local = $target ?: tempnam($tempFolder, 'trim');
 
-        $host = $this->getHost();
-        $host->receiveFile($filename, $local);
+        $this->getHost()->receiveFile($filename, $local);
 
-        if (empty($dest)) {
-            rename($local, $local . $ext);
-            chmod($local . $ext, 0644);
+        if (!$target) {
+            $target = $local . $ext;
+            rename($local, $target);
+            chmod($target, 0644);
         }
 
-        return $local . $ext;
+        return $target;
     }
 
     public function uploadFile($filename, $remoteLocation)

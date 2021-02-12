@@ -46,27 +46,34 @@ class Tiki extends Application
         $this->vcs_instance = $instance->getVersionControlSystem();
     }
 
-    public function backupDatabase($target)
+    /**
+     * @param string $targetFile
+     * @return bool
+     */
+    public function backupDatabase(string $targetFile): bool
     {
         $access = $this->instance->getBestAccess('scripting');
-        if ($access instanceof ShellPrompt && !(ApplicationHelper::isWindows() && $this->instance->type == 'local')) {
-            $randomName = md5(time() . 'trimbackup') . '.sql.gz';
-            $remoteFile = $this->instance->getWorkPath($randomName);
-            $access->runPHP(
-                dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
-                [$this->instance->webroot, $remoteFile]
-            );
-            $localName = $access->downloadFile($remoteFile);
-            $access->deleteFile($remoteFile);
 
-            `cat $localName | gzip -d > '$target'`;
-            unlink($localName);
-        } else {
+        if (!$access instanceof ShellPrompt || (ApplicationHelper::isWindows() && $this->instance->type == 'local')) {
             $data = $access->runPHP(
                 dirname(__FILE__) . '/../../scripts/tiki/mysqldump.php'
             );
-            file_put_contents($target, $data);
+
+            return (bool)file_put_contents($targetFile, $data);
         }
+
+        $randomName = md5(time() . 'backup') . '.sql';
+        $remoteFile = $this->instance->getWorkPath($randomName);
+
+        $access->runPHP(
+            dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
+            [$this->instance->webroot, $remoteFile]
+        );
+
+        $access->downloadFile($remoteFile, $targetFile);
+        $access->deleteFile($remoteFile);
+
+        return file_exists($targetFile);
     }
 
     public function beforeChecksumCollect()

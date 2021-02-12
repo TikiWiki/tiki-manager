@@ -121,7 +121,7 @@ class FTP extends Access implements Mountable
         return $output;
     }
 
-    public function downloadFile($filename)
+    public function downloadFile($filename, $target = ''): string
     {
         if ($filename{0} != '/') {
             $filename = $this->instance->getWebPath($filename);

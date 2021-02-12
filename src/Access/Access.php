@@ -139,7 +139,7 @@ SQL;
 
     abstract public function runPHP($localFile, $args = []);
 
-    abstract public function downloadFile($filename);
+    abstract public function downloadFile($filename, $target = '');
 
     abstract public function uploadFile($filename, $remoteLocation);
 

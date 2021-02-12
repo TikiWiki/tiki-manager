@@ -86,7 +86,7 @@ abstract class Application
 
     abstract public function restoreDatabase(Database $database, $remoteFile);
 
-    abstract public function backupDatabase($targetFile);
+    abstract public function backupDatabase(string $targetFile);
 
     abstract public function removeTemporaryFiles();
 
