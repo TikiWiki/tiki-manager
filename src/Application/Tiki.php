@@ -584,6 +584,9 @@ class Tiki extends Application
         $access = $this->instance->getBestAccess('scripting');
         $root = $this->instance->webroot;
 
+        $this->io->writeln("Removing existing tables from '{$database->dbname}'");
+        $this->deleteAllTables();
+
         // FIXME: Not FTP compatible (arguments)
         $this->io->writeln("Loading '$remoteFile' into '{$database->dbname}'");
         $access->runPHP(

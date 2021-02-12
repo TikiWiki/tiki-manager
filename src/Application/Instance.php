@@ -746,7 +746,6 @@ SQL;
 
         $databaseConfig = $this->getDatabaseConfig();
         if ($databaseConfig) {
-            $this->getApplication()->deleteAllTables();
             $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
         } else {
             $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
