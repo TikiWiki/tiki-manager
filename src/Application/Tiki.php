@@ -571,11 +571,14 @@ class Tiki extends Application
             if (isset($this->instance->system_config_file)) {
                 $srcSystemConfigFilePath = $this->instance->system_config_file;
                 if (! empty($srcSystemConfigFilePath)) {
-                    $systemConfigFilePath = "\$system_configuration_file='{$srcSystemConfigFilePath}';" ."\n";
+                    $systemConfigFilePath = "\n\$system_configuration_file='{$srcSystemConfigFilePath}';\n";
                 }
             }
 
-            file_put_contents($tmp, $this->generateDbFileContent($database));
+            $fileContent = $this->generateDbFileContent($database);
+            $fileContent .= $systemConfigFilePath;
+
+            file_put_contents($tmp, $fileContent);
         }
 
         $access = $this->instance->getBestAccess('filetransfer');
