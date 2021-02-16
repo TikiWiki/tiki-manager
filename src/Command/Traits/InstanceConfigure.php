@@ -9,6 +9,7 @@ use Symfony\Component\Console\Question\Question;
 use TikiManager\Access\Access;
 use TikiManager\Access\FTP;
 use TikiManager\Access\SSH;
+use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
@@ -17,6 +18,22 @@ use TikiManager\Config\Environment;
 trait InstanceConfigure
 {
     use LoggerAwareTrait;
+
+    public function printManagerInfo()
+    {
+        if ($this->io->getVerbosity() != OutputInterface::VERBOSITY_DEBUG &&
+            !Environment::get('TRIM_DEBUG', false)) {
+            return;
+        }
+
+        $this->io->title('Tiki Manager Info');
+        $mockInstance = new Instance();
+        $mockAccess = Access::getClassFor('local');
+        $mockAccess = new $mockAccess($mockInstance);
+        $mockDiscovery = new Discovery($mockInstance, $mockAccess);
+
+        CommandHelper::displayInfo($mockDiscovery);
+    }
 
     /**
      * Configure Instance Access
@@ -122,7 +139,7 @@ trait InstanceConfigure
      * @return Instance
      * @throws \TikiManager\Application\Exception\ConfigException
      */
-    public function setupInstance(Instance $instance) : Instance
+    public function setupInstance(Instance $instance, $import = false) : Instance
     {
         $url = $this->input->getOption('url') ?: $instance->getDiscovery()->detectWeburl();
         $url = $this->io->ask('WebUrl', $url, function ($value) {
@@ -175,22 +192,29 @@ trait InstanceConfigure
         $access = $instance->getBestAccess();
 
         $webRoot = $this->input->getOption('webroot') ?? $instance->getDiscovery()->detectWebroot();
-        $webRoot = $this->io->ask('WebRoot', $webRoot, function ($value) use ($access, $instance) {
+        $webRoot = $this->io->ask('WebRoot', $webRoot, function ($value) use ($access, $instance, $import) {
             if (empty($value)) {
                 throw new InvalidOptionException('WebRoot cannot be empty. Please use --webroot=<PATH>');
             }
 
             $pathExists = $access->fileExists($value);
 
-            if ($pathExists && ($this->input->getOption('force') || $access->isEmptyDir($value))) {
+            $force = $this->input->hasOption('force') && $this->input->getOption('force');
+
+            if ($pathExists && ($force || $access->isEmptyDir($value) || $import)) {
                 return $value;
             }
 
             $instance->webroot = $value;
 
             // Check if webroot has contents and it's not a Tiki Instance
-            if ($pathExists && !$this->detectApplication($instance, true)) {
+            if ($pathExists && !$this->detectApplication($instance)) {
                 return $this->handleNotEmptyWebrootFolder($value);
+            }
+
+            if (!$pathExists && $import) {
+                $error = sprintf('Unable to import. Chosen directory (%s) does not exist.', $value);
+                throw new \Exception($error);
             }
 
             $createDir = !$pathExists ? $this->io->confirm('Create directory?', true) : false;
@@ -276,40 +300,35 @@ trait InstanceConfigure
 
     /**
      * @param Instance $instance
-     * @param false $check Just check if Application installed
      * @return bool
      * @throws \Exception
      */
-    public function detectApplication(Instance $instance, $check = false): bool
+    public function detectApplication(Instance $instance): bool
     {
         $apps = $instance->getApplications();
         // Tiki is the only supported application
         $app = reset($apps);
-        $isInstalled = $app->isInstalled();
 
-        if ($check) {
-            return $isInstalled;
-        }
+        return $app->isInstalled();
+    }
 
-        if (!$isInstalled) {
-            return false;
-        }
+    /**
+     * @param Instance $instance
+     * @throws \Exception
+     */
+    public function importApplication(Instance $instance): void
+    {
+        if (!$this->detectApplication($instance)) {
+            throw new Exception('Unable to import. An application was not detected in this instance.');
+        };
 
-        $add = $this->io->confirm(
-            'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
-            true
-        );
+        $instance->app = 'tiki';
 
-        if (!$add) {
-            throw new \Exception('Unable to install. An application was detected in this instance.');
-        }
-
-        $result = $app->registerCurrentInstallation();
+        $result = $instance->getApplication()->registerCurrentInstallation();
         $resultInstance = $result->getInstance();
 
-        if ($instance->id === $resultInstance->id) {
-            $this->io->success('Please test your site at ' . $instance->weburl);
-            return true;
+        if ($instance->id !== $resultInstance->id) {
+            throw new \Exception('An error occurred while registering instance/application details', 2);
         }
     }
 

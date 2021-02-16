@@ -10,16 +10,13 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Question\ChoiceQuestion;
-use TikiManager\Access\Access;
-use TikiManager\Application\Application;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
-use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\Environment;
+use TikiManager\Command\Traits\InstanceConfigure;
 
 class ImportInstanceCommand extends TikiManagerCommand
 {
+    use InstanceConfigure;
+
     private static $nonInteractive;
 
     protected function configure()
@@ -87,6 +84,24 @@ class ImportInstanceCommand extends TikiManagerCommand
                 'td',
                 InputOption::VALUE_REQUIRED,
                 'Instance temporary directory'
+            )
+            ->addOption(
+                'backup-user',
+                'bu',
+                InputOption::VALUE_REQUIRED,
+                'Instance backup user'
+            )
+            ->addOption(
+                'backup-group',
+                'bg',
+                InputOption::VALUE_REQUIRED,
+                'Instance backup group'
+            )
+            ->addOption(
+                'backup-permission',
+                'bp',
+                InputOption::VALUE_REQUIRED,
+                'Instance backup permission'
             );
 
         self::$nonInteractive = false;
@@ -96,284 +111,44 @@ class ImportInstanceCommand extends TikiManagerCommand
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int|null
-     * @throws \TikiManager\Application\Exception\ConfigException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $instance = null;
         try {
-            $nonInteractive = $this->isNonInteractive($input, $output);
+            if ($input->isInteractive()) {
+                $this->printManagerInfo();
+
+                $this->io->title('Import an instance');
+                $output->writeln('<comment>Answer the following to import a new Tiki Manager instance.</comment>');
+            }
+
+            $instance = new Instance();
+            $this->setupAccess($instance);
+            $this->setupInstance($instance, true);
+
+            if ($duplicated = $instance->hasDuplicate()) {
+                $error = \sprintf(
+                    'Instance `%s` (id: %s) has the same access and webroot.',
+                    $duplicated->name,
+                    $duplicated->id
+                );
+                throw new \Exception($error);
+            }
+
+            $instance->save();
+
+            $this->importApplication($instance);
+
+            $this->io->success('Import completed, please test your site at ' . $instance->weburl);
+            return 0;
         } catch (\Exception $e) {
+            if ($instance instanceof Instance) {
+                $instance->delete();
+            }
+
             $this->io->error($e->getMessage());
-            return 1;
+            return $e->getCode() ?: -1;
         }
-
-        if (!empty($nonInteractive)) {
-            $instance = $nonInteractive['instance'];
-            $discovery = $nonInteractive['discovery'];
-            $access = $nonInteractive['access'];
-            self::$nonInteractive = true;
-        }
-
-        if (!self::$nonInteractive) {
-            $this->io->title('Import an instance');
-
-            $output->writeln('<comment>Answer the following to import a new Tiki Manager instance.</comment>');
-
-            $instance = new Instance();
-
-            $helper = $this->getHelper('question');
-            $question = new ChoiceQuestion('Connection type:', CommandHelper::supportedInstanceTypes());
-            $question->setErrorMessage('Connection type %s is invalid.');
-            $instance->type = $type = $helper->ask($input, $output, $question);
-
-            $access = Access::getClassFor($instance->type);
-            $access = new $access($instance);
-            $discovery = new Discovery($instance, $access);
-
-            if ($type != 'local') {
-                $question = CommandHelper::getQuestion('Host name');
-                $access->host = $helper->ask($input, $output, $question);
-
-                $question = CommandHelper::getQuestion('Port number', ($type == 'ssh') ? 22 : 21);
-                $access->port = $helper->ask($input, $output, $question);
-
-                $question = CommandHelper::getQuestion('User');
-                $access->user = $helper->ask($input, $output, $question);
-
-                $question = CommandHelper::getQuestion('Password');
-                $question->setHidden(true);
-                $question->setHiddenFallback(false);
-
-                while ($type == 'ftp' && empty($access->password)) {
-                    $access->password = $helper->ask($input, $output, $question);
-                }
-            } else {
-                $access->host = 'localhost';
-                $access->user = $discovery->detectUser();
-            }
-
-            $question = CommandHelper::getQuestion('Web URL', $discovery->detectWeburl());
-            $instance->weburl = $helper->ask($input, $output, $question);
-
-            $question = CommandHelper::getQuestion('Instance name', $discovery->detectName());
-            $instance->name = $helper->ask($input, $output, $question);
-
-            $question = CommandHelper::getQuestion('Contact email');
-            $question->setValidator(function ($value) {
-                if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                    throw new \RuntimeException('Please insert a valid email address.');
-                }
-                return $value;
-            });
-            $instance->contact = $helper->ask($input, $output, $question);
-
-            if (!$access->firstConnect()) {
-                $this->io->error('Failed to setup access');
-            }
-
-            $instance->save();
-            $access->save();
-            $output->writeln('<info>Instance information saved.</info>');
-            $this->io->newLine();
-
-            if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG || $_ENV['TRIM_DEBUG']) {
-                $this->io->title('Tiki Manager Info');
-                $mock_instance = new Instance();
-                $mock_access = Access::getClassFor('local');
-                $mock_access = new $mock_access($mock_instance);
-                $mock_discovery = new Discovery($mock_instance, $mock_access);
-
-                CommandHelper::displayInfo($mock_discovery);
-            }
-
-            $folders = [
-                'webroot' => [
-                    'question' => 'Webroot directory',
-                    'default' => $discovery->detectWebroot(),
-                ],
-                'tempdir' => [
-                    'question' => 'Working directory',
-                    'default' => $_ENV['INSTANCE_WORKING_TEMP'],
-                ]
-            ];
-
-            foreach ($folders as $key => $folder) {
-                $question = CommandHelper::getQuestion($folder['question'], $folder['default']);
-                $path = $helper->ask($input, $output, $question);
-                $instance->$key = $path;
-            }
-
-            $phpVersion = $discovery->detectPHPVersion();
-            $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
-
-            list($backup_user, $backup_group, $backup_perm) = $discovery->detectBackupPerm();
-
-            $instance->backup_user = trim($backup_user);
-            $instance->backup_group = trim($backup_group);
-            $instance->backup_perm = octdec($backup_perm);
-        }
-
-        $instance->vcs_type = $discovery->detectVcsType();
-        $instance->phpexec = $discovery->detectPHP();
-        $instance->phpversion = $discovery->detectPHPVersion();
-
-        $instance->save();
-        $access->save();
-
-        $output->writeln('<info>Instance information saved.</info>');
-
-        $isInstalled = false;
-        $duplicated = $instance->hasDuplicate();
-
-        if ($duplicated) {
-            $instance->delete();
-            $error = \sprintf('Unable to import. Instance `%s` (id: %s) has the same access and webroot.', $duplicated->name, $duplicated->id);
-            $this->io->error($error);
-            return 1;
-        }
-
-        foreach (Application::getApplications($instance) as $app) {
-            if ($app->isInstalled()) {
-                $isInstalled = true;
-            }
-        }
-
-        if (! $isInstalled) {
-            $instance->delete();
-            $this->io->error('Unable to import. An application was not detected in this instance.');
-            return 1;
-        }
-
-        $result = $app->registerCurrentInstallation();
-        $resultInstance = $result->getInstance();
-
-        if ($instance->id !== $resultInstance->id) {
-            $instance->delete();
-            $this->io->error('An error occurred while registering instance/application details');
-            return 2;
-        }
-
-        $this->io->success('Import completed, please test your site at ' . $instance->weburl);
-        return 0;
-    }
-
-    /**
-     * Check non interactive instance creation mode
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return array|bool|int
-     * @throws \Exception
-     */
-    protected function isNonInteractive(InputInterface $input, OutputInterface $output)
-    {
-        $listInstanceTypes = CommandHelper::supportedInstanceTypes();
-        $listInstanceTypeKeys = array_keys($listInstanceTypes);
-
-        $type = $input->getOption('type');
-        $weburl = $input->getOption('url');
-        $name = $input->getOption('name');
-        $contact = $input->getOption('email');
-        $webroot = $input->getOption('webroot');
-        $tempdir = $input->getOption('tempdir');
-
-        $rhost = $input->getOption('host');
-        $rport = $input->getOption('port');
-        $ruser = $input->getOption('user');
-        $rpass = $input->getOption('pass');
-
-        if (empty($type)) {
-            if (empty($rhost)) {
-                $type = 'local';
-            } else {
-                if ($rport === '22') {
-                    $type = 'ssh';
-                } elseif ($rport === '21') {
-                    $type = 'ssh';
-                }
-            }
-        }
-
-        if (empty($name) && ! empty($weburl)) {
-            $parts = parse_url($weburl);
-
-            if (! empty($parts['host'])) {
-                $name = $parts['host'];
-            }
-            unset($parts);
-        }
-
-        if (empty($tempdir)) {
-            if (! empty($_ENV['INSTANCE_WORKING_TEMP'])) {
-                $tempdir = $_ENV['INSTANCE_WORKING_TEMP'];
-            } else {
-                $tempdir = Environment::generateUniqueWorkingDirectoryForInstance();
-            }
-        }
-
-        if (!empty($type)
-            && !empty($weburl)
-            && !empty($name)
-            && !empty($webroot)
-            && !empty($tempdir)
-        ) {
-            if (!in_array($type, $listInstanceTypes) || !in_array($type, $listInstanceTypeKeys)) {
-                throw new \InvalidArgumentException('Instance type invalid.');
-            }
-
-            if (filter_var($weburl, FILTER_VALIDATE_URL) === false) {
-                throw new \InvalidArgumentException('Instance web url invalid.');
-            }
-
-            if (! empty($contact) && filter_var($contact, FILTER_VALIDATE_EMAIL) === false) {
-                throw new \InvalidArgumentException('Please insert a valid email address.');
-            }
-
-            if ($type != 'local') {
-                if (empty($rhost) || !is_numeric($rport) || empty($ruser) || empty($rpass)) {
-                    throw new \InvalidArgumentException('Remote server credentials are missing.');
-                }
-            }
-
-            $instance = new Instance();
-
-            $type = is_numeric($type) ? $listInstanceTypes[$type] : $type;
-            $instance->type = $type;
-            $instance->weburl = $weburl;
-            $instance->name = $name;
-            $instance->contact = $contact;
-            $instance->webroot = $webroot;
-            $instance->tempdir = $tempdir;
-
-            $access = Access::getClassFor($type);
-            $access = new $access($instance);
-            $discovery = new Discovery($instance, $access);
-
-            if ($type != 'local') {
-                $access->host = $rhost;
-                $access->port = $rport;
-                $access->user = $ruser;
-                $access->password = $rpass;
-            }
-
-            if (!$access->firstConnect()) {
-                $this->io->error('Failed to setup access');
-                exit(1);
-            }
-
-            $instance->save();
-            $access->save();
-
-            $instance->phpexec = $discovery->detectPHP();
-            $instance->phpversion = $discovery->detectPHPVersion();
-
-            return [
-                'instance' => $instance,
-                'discovery' => $discovery,
-                'access' => $access
-            ];
-        }
-
-        return 0;
     }
 }

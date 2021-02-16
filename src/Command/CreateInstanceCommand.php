@@ -10,10 +10,7 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use TikiManager\Access\Access;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
-use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
 
 class CreateInstanceCommand extends TikiManagerCommand
@@ -172,16 +169,7 @@ class CreateInstanceCommand extends TikiManagerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG || $_ENV['TRIM_DEBUG']) {
-            $this->io->title('Tiki Manager Info');
-            $mock_instance = new Instance();
-            $mock_access = Access::getClassFor('local');
-            $mock_access = new $mock_access($mock_instance);
-            $mock_discovery = new Discovery($mock_instance, $mock_access);
-
-            CommandHelper::displayInfo($mock_discovery);
-            $this->io->newLine();
-        }
+        $this->printManagerInfo();
 
         $this->io->title('New Instance Setup');
 
@@ -193,25 +181,44 @@ class CreateInstanceCommand extends TikiManagerCommand
             $this->setupInstance($instance);
 
             if ($duplicated = $instance->hasDuplicate()) {
-                $error = \sprintf('Instance `%s` (id: %s) has the same access and webroot.', $duplicated->name, $duplicated->id);
+                $error = \sprintf(
+                    'Instance `%s` (id: %s) has the same access and webroot.',
+                    $duplicated->name,
+                    $duplicated->id
+                );
                 throw new \Exception($error);
             }
 
             $instance->save();
 
-            if (! $this->detectApplication($instance)) {
-                $this->setupApplication($instance);
+            if ($this->detectApplication($instance)) {
+                $add = $this->io->confirm(
+                    'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
+                    true
+                );
 
-                if ($instance->selection != 'blank : none') {
-                    $this->setupDatabase($instance);
+                if (!$add) {
+                    throw new \Exception('Unable to install. An application was detected in this instance.');
                 }
 
-                $this->install($instance);
+                $this->importApplication($instance);
+
+                $this->io->success('Please test your site at ' . $instance->weburl);
+                return 0;
             }
+
+            $this->setupApplication($instance);
+
+            if ($instance->selection != 'blank : none') {
+                $this->setupDatabase($instance);
+            }
+
+            $this->install($instance);
         } catch (\Exception $e) {
             $instance->delete();
+
             $this->io->error($e->getMessage());
-            return -1;
+            return $e->getCode() ?: -1;
         }
     }
 }
