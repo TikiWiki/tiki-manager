@@ -193,13 +193,13 @@ class EnableWebManagerCommand extends TikiManagerCommand
 
             $tikiManagerPath = realpath(dirname(__FILE__) . '/../..');
 
-            $user = addslashes($username);
-            $pass = addslashes($password);
+            $username = addslashes($username);
+            $password = addslashes($password);
 
             file_put_contents($webPath . '/config.php', <<<CONFIG
 <?php
-define('USERNAME', '$user');
-define('PASSWORD', '$pass');
+define('USERNAME', '$username');
+define('PASSWORD', '$password');
 define('RESTRICT', $restrict);
 define('TIMEOUT', 0);
 define('TRIMPATH', '$tikiManagerPath');
@@ -229,12 +229,8 @@ CONFIG
             ];
 
             foreach ($folders as $folder) {
-                if ($user) {
-                    $fs->chown($folder, $user, true);
-                }
-                if ($group) {
-                    $fs->chgrp($folder, $group, true);
-                }
+                $fs->chown($folder, $user, true);
+                $fs->chgrp($folder, $group, true);
             }
 
             $fs->remove($webPath . '/vendor');
