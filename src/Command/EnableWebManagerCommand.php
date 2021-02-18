@@ -163,12 +163,13 @@ class EnableWebManagerCommand extends TikiManagerCommand
             throw new \RuntimeException('Tiki Manager Web path group not defined.');
         }
 
-
-        if (function_exists('posix_getlogin')) {
-            $currentUser = posix_getlogin();
-            if ($currentUser != 'root' && $currentUser != $user) {
-                throw new \RuntimeException('You need to run this script as root or as ' . $user . ' to be able to write the files using the www-user provided.');
-            }
+        if (!is_writable($webPath)) {
+            $error = sprintf(
+                'You need to run this script as root or as %s to be able to write the files into %s',
+                $user,
+                $webPath
+            );
+            throw new \RuntimeException($error);
         }
 
         $fs = new Filesystem();
