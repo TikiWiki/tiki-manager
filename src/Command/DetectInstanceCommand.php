@@ -12,9 +12,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Access\Access;
-use TikiManager\Application\Discovery;
-use TikiManager\Config\App;
 
 class DetectInstanceCommand extends TikiManagerCommand
 {
@@ -91,9 +88,7 @@ class DetectInstanceCommand extends TikiManagerCommand
                 }
             }
 
-            $access = Access::getClassFor($instance->type);
-            $access = new $access($instance);
-            $discovery = new Discovery($instance, $access);
+            $discovery = $instance->getDiscovery();
             $phpVersion = $discovery->detectPHPVersion();
             $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
 

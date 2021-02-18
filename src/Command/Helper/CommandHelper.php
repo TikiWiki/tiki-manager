@@ -12,6 +12,7 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Application\Discovery;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
@@ -480,9 +481,9 @@ class CommandHelper
 
     /**
      * Display Info
-     * @param $discovery
+     * @param Discovery $discovery
      */
-    public static function displayInfo($discovery)
+    public static function displayInfo(Discovery $discovery)
     {
         $io = App::get('io');
         $io->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
@@ -549,7 +550,7 @@ class CommandHelper
 
             // Send the message
             return $mailer->send($message);
-        } catch (\Swift_SwiftException $e){
+        } catch (\Swift_SwiftException $e) {
             throw new \RuntimeException('Unable to send email notification.' . PHP_EOL . $e->getMessage());
         }
     }

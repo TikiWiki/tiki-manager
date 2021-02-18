@@ -1,7 +1,5 @@
 <?php
 
-use TikiManager\Access\Access;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 
 $import = false;
@@ -33,9 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $instance = new Instance;
         $instance->type = $type;
-        $access = Access::getClassFor($instance->type);
-        $access = new $access($instance);
-        $discovery = new Discovery($instance, $access);
+        $access = $instance->getBestAccess();
+        $discovery = $instance->getDiscovery();
 
         if ($type == 'local') {
             $access->host = 'localhost';
@@ -75,9 +72,8 @@ require dirname(__FILE__) . "/layout/nav.php";
 
 $instance = new Instance;
 $instance->type = 'local';
-$access = Access::getClassFor($instance->type);
-$access = new $access($instance);
-$discovery = new Discovery($instance, $access);
+$access = $instance->getBestAccess();
+$discovery = $instance->getDiscovery();
 
 $name = 'localhost';
 $weburl = "http://$name";

@@ -7,13 +7,17 @@
 namespace TikiManager\Application;
 
 use TikiManager\Access\Access;
+use TikiManager\Application\Discovery\ClearOSDiscovery;
+use TikiManager\Application\Discovery\LinuxDiscovery;
+use TikiManager\Application\Discovery\VirtualminDiscovery;
+use TikiManager\Application\Discovery\WindowsDiscovery;
 use TikiManager\Application\Exception\ConfigException;
 
-class Discovery
+abstract class Discovery
 {
     protected $access;
     protected $instance;
-    protected $config = [];
+    protected $config;
 
     protected $distroProbes = [
         "Arch"    => ["release" => "arch-release",    "regex" => null],
@@ -21,40 +25,53 @@ class Discovery
         "Debian"  => ["release" => "debian_version",  "regex" => null],
         "Fedora"  => ["release" => "fedora-release",  "regex" => null],
         "ClearOS" => ["release" => "clearos-release", "regex" => null],
-        "CentOS"  => ["release" => "centos-release",  "regex" => null],
-        "Mageia"  => ["release" => "mageia-release",  "regex" => null],
-        "Redhat"  => ["release" => "redhat-release",  "regex" => null]
+        "CentOS" => ["release" => "centos-release", "regex" => null],
+        "Mageia" => ["release" => "mageia-release", "regex" => null],
+        "Redhat" => ["release" => "redhat-release", "regex" => null]
     ];
 
-    public function __construct($instance = null, $access = null)
+    public function __construct(Instance $instance, Access $access, $config = [])
     {
         $this->setInstance($instance);
         $this->setAccess($access);
+        $this->config = $config;
     }
 
-    public function detectBackupPerm()
+    abstract public function detectBackupPerm();
+
+    public function detectOS()
     {
-        $os = $this->getConf('os') ?: $this->detectOS();
-        $user = $this->getConf('user') ?: $this->detectUser();
-        $distro = $this->getConf('distro') ?: $this->detectDistro();
+        if (isset($this->config['os'])) {
+            return $this->config['os'];
+        }
+        $command = $this->access->createCommand('php', ['-r', 'echo PHP_OS;']);
+        $command->run();
 
-        if ($os === 'WINDOWS' || $os === 'WINNT') {
-            return ['Administrator', 'Administrator', 0750];
+        $out = null;
+        if ($command->getReturn() === 0) {
+            $out = $command->getStdoutContent();
+            $out = trim($out);
+            $out = strtoupper($out);
+
+            return $this->config['os'] = $out;
         }
 
-        if ($distro === 'ClearOS') {
-            return [$user, 'allusers', 0750];
-        }
+        $out = $command->getStderrContent();
+        $out = trim($out);
 
-        return [$user, $user, 0750];
+        throw new ConfigException(
+            sprintf("Failed to detect OS: %s", $out),
+            ConfigException::DETECT_ERROR
+        );
     }
 
     public function detectDistro()
     {
+        if (isset($this->config['distro'])) {
+            return $this->config['distro'];
+        }
+        $os = $this->detectOS();
         $distro = null;
-
-        $os = !empty($this->config['os']) ? $this->config['os'] : $this->detectOS();
-
         if ($os == 'DARWIN') {
             $distro = 'OSX';
         }
@@ -64,11 +81,8 @@ class Discovery
         }
 
         // attempt 1: check distro on modern Linux (>= 2012)
-        $found = $this->detectDistroSystemd();
-        if ($found) {
-            if (isset($this->distroProbes[$found])) {
-                $distro = $found;
-            }
+        if (!$distro && $found = $this->detectDistroSystemd()) {
+            $distro = isset($this->distroProbes[$found]) ? $found : null;
         }
 
         // attempt 2: check by files we know
@@ -81,34 +95,33 @@ class Discovery
             $distro = $found;
         }
 
-        $this->config['distro'] = $distro;
-        return $distro;
+        return $this->config['distro'] = $distro;
     }
 
-    public function detectDistroByProbing()
+    private function detectDistroByProbing()
     {
-        $access = $this->getAccess();
         foreach ($this->distroProbes as $name => $probe) {
             $filename = '/etc/' . $probe['release'];
             $regex = $probe['regex'];
-            $content = $access->fileGetContents($filename);
+            $content = $this->access->fileGetContents($filename);
 
             $found = $content && (
-                (isset($regex) && preg_match($regex, $content))
-                || $regex === null
-            );
+                    (isset($regex) && preg_match($regex, $content))
+                    || $regex === null
+                );
 
             if ($found) {
                 return $name;
             }
         }
+
+        return null;
     }
 
     // http://0pointer.de/blog/projects/os-release
-    public function detectDistroSystemd()
+    private function detectDistroSystemd()
     {
-        $access = $this->getAccess();
-        $info = $access->fileGetContents('/etc/os-release');
+        $info = $this->access->fileGetContents('/etc/os-release');
         $info = trim($info);
         $info = parse_ini_string($info);
 
@@ -117,226 +130,66 @@ class Discovery
         }
     }
 
-    public function detectOS()
+    abstract protected function detectPHPOS();
+
+    public function detectPHP()
     {
-        $access = $this->getAccess();
-        $command = $access->createCommand('php', ['-r', 'echo PHP_OS;']);
+        $result = $this->detectPHPOS();
+
+        if (empty($result)) {
+            return null;
+        }
+        $this->config['phpexec'] = $result[0];
+        return $this->config['phpexec'];
+    }
+
+    public static function createInstance($instance = null, $access = null)
+    {
+        $discover = [
+            ClearOSDiscovery::class,
+            VirtualminDiscovery::class,
+            LinuxDiscovery::class,
+            WindowsDiscovery::class,
+        ];
+
+        foreach ($discover as $class) {
+            $ins = new $class($instance, $access);
+            if ($ins->isAvailable()) {
+                break;
+            }
+        }
+        return $ins;
+    }
+
+    public function detectPHPVersion()
+    {
+        $phpexec = $this->getConf('phpexec') ?: $this->detectPHP();
+        $command = $this->access->createCommand($phpexec, ['-r', 'echo PHP_VERSION_ID;']);
         $command->run();
 
-        $out = null;
         if ($command->getReturn() === 0) {
-            $out = $command->getStdoutContent();
-            $out = trim($out);
-            $out = strtoupper($out);
-            $this->config['os'] = $out;
-            return $out;
+            $version = trim($command->getStdoutContent());
+            $version = intval($version, 10);
+            return $version;
         }
 
         $out = $command->getStderrContent();
         $out = trim($out);
 
         throw new ConfigException(
-            sprintf("Failed to detect OS: %s", $out),
+            sprintf('Failed to detect PHP Version: %s', $out),
             ConfigException::DETECT_ERROR
         );
     }
 
-    public function detectPHP($sel = 0)
-    {
-        $os = $this->getConf('os') ?: $this->detectOS();
-        $distro = $this->getConf('distro') ?: $this->detectDistro();
-        $sel = !is_numeric($sel) ? null : intval($sel, 10);
+    abstract public function detectUser();
 
-        if ($os === 'WINDOWS' || $os === 'WINNT') {
-            $result = $this->detectPHPWindows();
-        } elseif ($distro === 'ClearOS') {
-            $result = $this->detectPHPClearOS();
-        } else {
-            $result = $this->detectPHPLinux();
-        }
-
-        if ($sel === null) {
-            return $result;
-        } elseif (empty($result) || !isset($result[$sel])) {
-            return null;
-        }
-        $this->config['phpexec'] = $result[$sel];
-        return $this->config['phpexec'];
-    }
-
-    public function detectPHPLinux($options = null, $searchOrder = null)
-    {
-        if ($searchOrder === null) {
-            $searchOrder = [
-                ['command', ['-v', 'php']],
-                ['locate', ['-r', 'bin/php$']],
-            ];
-        }
-
-        $out = null;
-        foreach ($searchOrder as $commandSearch) {
-            $access = $this->getAccess();
-            $command = $access->createCommand($commandSearch[0], $commandSearch[1]);
-            if (!empty($options) && is_array($options)) {
-                foreach ($options as $o => $v) {
-                    $command->setOption($o, $v);
-                }
-            }
-            $command->run();
-
-            $result = [];
-            if ($command->getReturn() === 0) {
-                $out = $command->getStdout();
-                $line = fgets($out);
-
-                while ($line !== false) {
-                    $result[] = trim($line);
-                    $line = fgets($out);
-                }
-                return $result;
-            }
-        }
-
-        throw new ConfigException(
-            sprintf("Failed to detect PHP: %s", $out),
-            ConfigException::DETECT_ERROR
-        );
-    }
-
-    public function detectPHPClearOS()
-    {
-        $webroot = $this->getConf('webroot') ?: $this->detectWebroot();
-        $access = $this->getAccess();
-
-        $command = $access->createCommand('test', ['-d', $webroot]);
-        $command->run();
-
-        if ($command->getReturn() === 0) {
-            $options = ['cwd' => $webroot];
-        } else {
-            $options = null;
-        }
-
-        $searchOrder = [
-            ['command', ['-v', '/usr/clearos/bin/php']], // preference to use the php wrapper
-            ['command', ['-v', 'php']],
-            ['locate', ['-r', 'bin/php$']],
-        ];
-
-        return $this->detectPHPLinux($options, $searchOrder);
-    }
-
-    public function detectPHPWindows()
-    {
-        $access = $this->getAccess();
-        $command = $access->createCommand('where', [
-            '$path:php.exe',
-            '$path:php5.exe',
-            '$path:php7.exe',
-        ]);
-        $command->run();
-
-        $result = [];
-        $out = null;
-        if ($command->getReturn() === 0) {
-            $out = $command->getStdout();
-            $line = fgets($out);
-
-            while ($line !== false) {
-                $result[] = trim($line);
-                $line = fgets($out);
-            }
-            return $result;
-        }
-        throw new ConfigException(
-            sprintf("Failed to detect PHP: %s", $out),
-            ConfigException::DETECT_ERROR
-        );
-    }
-
-    public function detectPHPVersion()
-    {
-        $access = $this->getAccess();
-        $phpexec = $this->getConf('phpexec') ?: $this->detectPHP();
-        $command = $access->createCommand($phpexec, ['-r', 'echo PHP_VERSION_ID;']);
-        $command->run();
-        $out = null;
-        if ($command->getReturn() === 0) {
-            $version = trim($command->getStdoutContent());
-            $version = intval($version, 10);
-            return $version;
-        }
-        throw new ConfigException(
-            sprintf("Failed to detect PHP Version: %s", $out),
-            ConfigException::DETECT_ERROR
-        );
-    }
-
-    public function detectUser()
-    {
-        $os = $this->getConf('os') ?: $this->detectOS();
-        if ($os === 'LINUX') {
-            $user = $this->detectUserLinux();
-        } else {
-            $user = $this->detectUserPHP();
-        }
-        $this->config['user'] = $user;
-        return $user;
-    }
-
-    public function detectUserLinux()
-    {
-        $access = $this->getAccess();
-        $command = $access->createCommand('id', ['-un']);
-        $command->run();
-
-        $out = null;
-        if ($command->getReturn() === 0) {
-            $out = $command->getStdoutContent();
-            $out = trim($out);
-            $this->config['user'] = $out;
-            return $out;
-        }
-
-        throw new ConfigException(
-            sprintf("Failed to detect User: %s", $out),
-            ConfigException::DETECT_ERROR
-        );
-    }
-
-    public function detectUserPHP()
-    {
-        $access = $this->getAccess();
-        $script = '<?php echo '
-            . 'function_exists("posix_getpwuid")'
-            . '? posix_getpwuid(posix_geteuid())["name"]'
-            . ': ('
-            .     'isset($_SERVER, $_SERVER["USER"])'
-            .     '? $_SERVER["USER"]'
-            .     ': ""'
-            . ');';
-
-        $command = $access->createCommand('php', [], $script);
-        $command->run();
-
-        $out = null;
-        if ($command->getReturn() === 0) {
-            $out = $command->getStdoutContent();
-            $out = trim($out);
-            $this->config['user'] = $out;
-            return $out;
-        }
-
-        throw new ConfigException(
-            sprintf("Failed to detect User: %s", $out),
-            ConfigException::DETECT_ERROR
-        );
-    }
+    abstract protected function detectWebrootOS();
 
     public function detectVcsType()
     {
         $instance = $this->instance;
-        $access = $this->getAccess();
+        $access = $this->access;
         $webroot = rtrim($instance->webroot, DIRECTORY_SEPARATOR);
 
         if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . '.svn')) {
@@ -354,48 +207,19 @@ class Discovery
         return null;
     }
 
-    public function detectWebroot()
+    public function detectWebroot(): string
     {
-        $instance = $this->instance;
-        $access = $this->getAccess();
-        $distro = $this->getConf('distro') ?: $this->detectDistro();
+        $folders = $this->detectWebrootOS();
+
+        foreach ($folders as $folder) {
+            if ($this->isFolderWriteable($folder)) {
+                return $folder['target'];
+            }
+        }
+
         $user = $this->getConf('user') ?: $this->detectUser();
-        $os = $this->getConf('os') ?: $this->detectOS();
 
-        $folder = [
-            'base' => '/var/www/html',
-            'target' => '/var/www/html/' . $instance->name
-        ];
-
-        if ($distro === 'ClearOS') {
-            $folder = [
-                'base' => '/var/www/virtual',
-                'target' => '/var/www/virtual/' . $instance->name . '/html'
-            ];
-        } elseif ($os === 'WINDOWS' || $os === 'WINNT') {
-            $folder = [
-                'base' => getenv('systemdrive'),
-                'target' => implode(DIRECTORY_SEPARATOR, [getenv('systemdrive') , $instance->name])
-            ];
-        }
-
-        $canWrite = (
-            $access->createCommand('test', [
-                    '-d', $folder['target'],
-                    '-a',
-                    '-w', $folder['target'],
-                    '-o',
-                    '-d', $folder['base'],
-                    '-a',
-                    '-w', $folder['base']
-                ])->run()->getReturn() === 0
-        );
-
-        if ($canWrite) {
-            return $folder['target'];
-        }
-
-        return sprintf('/home/%s/public_html/%s', $user, $instance->name);
+        return sprintf('/home/%s/public_html/%s', $user, $this->instance->name);
     }
 
     public function detectWeburl()
@@ -404,6 +228,7 @@ class Discovery
         if (!empty($instance->name)) {
             return "https://{$instance->name}";
         }
+        $access = $this->access;
         if (!empty($access->host)) {
             return "https://{$access->host}";
         }
@@ -419,10 +244,12 @@ class Discovery
                 return $url['host'];
             }
         }
+
+        $access = $this->access;
         if (!empty($access->host)) {
-            $name = preg_replace('/[^\w]+/', '-', $access->host);
-            return $name;
+            return preg_replace('/[^\w]+/', '-', $access->host);
         }
+
         return "tikiwiki";
     }
 
@@ -442,14 +269,10 @@ class Discovery
      */
     public function getAccess()
     {
-        if ($this->access) {
-            return $this->access;
-        }
-        $this->access = $this->getInstance()->getBestAccess('scripting');
         return $this->access;
     }
 
-    public function getInstance()
+    public function getInstance(): Instance
     {
         return $this->instance;
     }
@@ -462,5 +285,22 @@ class Discovery
     public function setInstance(Instance $instance)
     {
         $this->instance = $instance;
+    }
+
+    abstract public function isAvailable();
+
+    protected function isFolderWriteable(array $folder): bool
+    {
+        $command = $this->access->createCommand('test', [
+                '-d', $folder['target'],
+                '-a',
+                '-w', $folder['target'],
+                '-o',
+                '-d', $folder['base'],
+                '-a',
+                '-w', $folder['base']
+            ])->run();
+
+        return $command->getReturn() === 0;
     }
 }

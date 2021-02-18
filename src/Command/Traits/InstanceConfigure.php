@@ -9,7 +9,6 @@ use Symfony\Component\Console\Question\Question;
 use TikiManager\Access\Access;
 use TikiManager\Access\FTP;
 use TikiManager\Access\SSH;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
@@ -28,9 +27,8 @@ trait InstanceConfigure
 
         $this->io->title('Tiki Manager Info');
         $mockInstance = new Instance();
-        $mockAccess = Access::getClassFor('local');
-        $mockAccess = new $mockAccess($mockInstance);
-        $mockDiscovery = new Discovery($mockInstance, $mockAccess);
+        $mockInstance->type = 'local';
+        $mockDiscovery = $mockInstance->getDiscovery();
 
         CommandHelper::displayInfo($mockDiscovery);
     }

@@ -9,11 +9,8 @@ namespace TikiManager\Command;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use TikiManager\Access\Access;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
 
 class ManagerInfoCommand extends TikiManagerCommand
 {
@@ -28,10 +25,8 @@ class ManagerInfoCommand extends TikiManagerCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $instance = new Instance();
-
-        $access = Access::getClassFor('local');
-        $access = new $access($instance);
-        $discovery = new Discovery($instance, $access);
+        $instance->type = 'local';
+        $discovery = $instance->getDiscovery();
 
         $this->io->title('Tiki Manager Info');
         CommandHelper::displayInfo($discovery);

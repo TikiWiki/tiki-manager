@@ -11,10 +11,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
 class UpdateInstanceCommand extends TikiManagerCommand
@@ -149,8 +147,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $log = [];
                 $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
 
-                $access = $instance->getBestAccess('scripting');
-                $discovery = new Discovery($instance, $access);
+                $discovery = $instance->getDiscovery();
                 $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
                 $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');

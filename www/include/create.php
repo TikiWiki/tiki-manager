@@ -5,8 +5,6 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
-use TikiManager\Access\Access;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
 
@@ -32,9 +30,8 @@ $dbCreated = isset($_POST['db_created']);
 
 $instance = new Instance;
 $instance->type = 'local';
-$access = Access::getClassFor($instance->type);
-$access = new $access($instance);
-$discovery = new Discovery($instance, $access);
+$access = $instance->getBestAccess();
+$discovery = $instance->getDiscovery();
 
 $access->host = 'localhost';
 $access->user = $discovery->detectUser();

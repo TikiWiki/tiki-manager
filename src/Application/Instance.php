@@ -999,7 +999,8 @@ SQL;
      */
     public function getDiscovery(): Discovery
     {
-        return new Discovery($this);
+        $access = $this->getBestAccess('scripting');
+        return Discovery::createInstance($this, $access);
     }
 
     /**

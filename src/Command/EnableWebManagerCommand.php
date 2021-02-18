@@ -9,9 +9,15 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 use TikiManager\Config\Environment;
+use TikiManager\Manager\WebInterface\Config;
 
 class EnableWebManagerCommand extends TikiManagerCommand
 {
+    /**
+     * @var \TikiManager\Manager\WebInterface\GenericConfig
+     */
+    private $conf;
+
     protected function configure()
     {
         $this
@@ -60,26 +66,12 @@ class EnableWebManagerCommand extends TikiManagerCommand
                 InputOption::VALUE_NONE,
                 'Proceed tiki-manager installation'
             );
+        $this->conf = Config::detect();
     }
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln('Tiki Manager web administration files are located in the Tiki Manager directory. In order to
-make the interface available externally, the files will be copied to a web
-accessible location.
-
-Permissions on the data folder will be changed to allow the web server to
-access the files.
-
-For example, if your web root is /var/www/virtual/webtikimanager.example.com
-* Files will be copied to /var/www/virtual/webtikimanager.example.com/html
-* Tiki Manager web administration will be accessible from:
-    http://webtikimanager.example.com
-* You must have write access in /var/www/virtual
-
-Simple authentication will be used. However, it is possible to restrict
-access to the administration panel to local users (safer).');
-
+        $this->conf->showMessage($this->io);
         $this->io->newLine();
 
         if (!$install = $input->getOption('install')) {
@@ -93,7 +85,7 @@ access to the administration panel to local users (safer).');
         }
 
         $path = $this->io->ask(
-            'WWW Tiki Manager directory (ex: /var/www/virtual/webtikimanager.example.com/html)',
+            'WWW Tiki Manager directory (ex: '.$this->conf->getExampleDataDirectory().')',
             getenv('WWW_PATH') ?: null,
             function ($value) {
                 if (empty(trim($value))) {
@@ -107,6 +99,16 @@ access to the administration panel to local users (safer).');
 
         if (file_exists($path . '/config.php')) {
             return;
+        }
+
+        if (!$input->getOption('www-user') && !$this->conf->getUserWebRoot($path)) {
+            $user = $this->io->ask('WWW Tiki Manager directory user');
+            $input->setOption('www-user', $user);
+        }
+
+        if (!$input->getOption('www-group') && !$this->conf->getUserWebRoot($path)) {
+            $group= $this->io->ask('WWW Tiki Manager directory group');
+            $input->setOption('www-group', $group);
         }
 
         if (!$input->getOption('username')) {
@@ -150,13 +152,21 @@ access to the administration panel to local users (safer).');
             throw new \RuntimeException('You do not have permissions to write in the Web path provided.');
         }
 
-        $user = $input->getOption('www-user') ?? getenv('WWW_USER');
-        $group = $input->getOption('www-group') ?? getenv('WWW_GROUP');
+        $user = $input->getOption('www-user') ?? $this->conf->getUserWebRoot($webPath);
+        $group = $input->getOption('www-group') ?? $this->conf->getGroupWebRoot($webPath);
+
+        if (!$user) {
+            throw new \RuntimeException('Tiki Manager Web path user not defined.');
+        }
+
+        if (!$group) {
+            throw new \RuntimeException('Tiki Manager Web path group not defined.');
+        }
 
         if ($user) {
-            if (function_exists('posix_getlogin')) {
-                $currentUser = posix_getlogin();
-                if ($currentUser != 'root' && $currentUser != $user) {
+            if (function_exists('posix_getuid')) {
+                $uid = posix_getuid();
+                if ($uid != 0) {
                     throw new \RuntimeException('You need to run this script as root or as ' . $user . ' to be able to write the files using the www-user provided.');
                 }
             }
@@ -245,7 +255,7 @@ CONFIG
             $fs->chown($webPath . '/vendor', $owner, true);
 
             $this->io->success('WWW Tiki Manager is now enabled.');
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $this->io->error($e->getMessage());
             return 1;
         }

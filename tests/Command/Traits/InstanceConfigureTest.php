@@ -7,6 +7,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use TikiManager\Application\Discovery;
+use TikiManager\Application\Discovery\LinuxDiscovery;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Version;
@@ -75,7 +76,7 @@ class InstanceConfigureTest extends TestCase
      */
     public function testSetupLocalAccess()
     {
-        $discovery = $this->createMock(Discovery::class);
+        $discovery = $this->createMock(LinuxDiscovery::class);
         $discovery
             ->method('detectUser')
             ->willReturn('root');
@@ -363,8 +364,8 @@ class InstanceConfigureTest extends TestCase
      */
     public function testInstall()
     {
-        $discovery = $this->getMockBuilder(Discovery::class)
-            ->setConstructorArgs([$this->instance])
+        $discovery = $this->getMockBuilder(LinuxDiscovery::class)
+            ->setConstructorArgs([$this->instance, $this->instance->getBestAccess()])
             ->setMethods(['detectVcsType', 'detectPHP', 'detectPHPVersion'])
             ->getMock();
 

@@ -10,10 +10,8 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use TikiManager\Application\Discovery;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\Checksum;
 
 class UpgradeInstanceCommand extends TikiManagerCommand
@@ -108,8 +106,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
         //update
         foreach ($selectedInstances as $instance) {
-            $access = $instance->getBestAccess('scripting');
-            $discovery = new Discovery($instance, $access);
+            $discovery = $instance->getDiscovery();
             $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
             $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
