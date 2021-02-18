@@ -239,8 +239,19 @@ CONFIG
 
             $fs->remove($webPath . '/vendor');
 
-            $composer = Environment::get('COMPOSER_PATH') == 'composer' ? [Environment::get('COMPOSER_PATH')] : [PHP_BINARY,  Environment::get('COMPOSER_PATH')];
-            $command = array_merge($composer, ['install']);
+            $composer = Environment::get('COMPOSER_PATH') == 'composer' ?
+                [Environment::get('COMPOSER_PATH')] :
+                [PHP_BINARY,  Environment::get('COMPOSER_PATH')];
+            $command = array_merge(
+                $composer,
+                [
+                    'install',
+                    '--no-interaction',
+                    '--no-dev',
+                    '--prefer-dist',
+                    '--no-progress'
+                ]
+            );
 
             $process = new Process($command, $webPath);
             $process->setTimeout('300'); // 5min
