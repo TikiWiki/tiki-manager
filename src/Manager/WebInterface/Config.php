@@ -3,19 +3,18 @@
 
 namespace TikiManager\Manager\WebInterface;
 
+use TikiManager\Manager\WebInterface\Config\ClearOS;
+use TikiManager\Manager\WebInterface\Config\Generic;
+use TikiManager\Manager\WebInterface\Config\Linux;
+use TikiManager\Manager\WebInterface\Config\Virtualmin;
 use TikiManager\Style\TikiManagerStyle;
 
 abstract class Config
 {
-
     /**
-     * Detects if this configurations match with the system
-     * @return boolean
+     * @param TikiManagerStyle $io
      */
-    abstract public function isAvailable();
-
-
-    public function showMessage(TikiManagerStyle $io)
+    public function showMessage(TikiManagerStyle $io):void
     {
         $io->info('Tiki Manager web administration files are located in the Tiki Manager directory. In order to
 make the interface available externally, the files will be copied to a web
@@ -40,23 +39,18 @@ access to the administration panel to local users (safer).');
 access the files.');
     }
 
-    abstract public function getExampleDomainDirectory();
-
-    abstract public function getExampleDataDirectory();
-
-    abstract public function getExampleURL();
-
-    abstract public function getExamplePermissionDirectory();
-
     /**
-     * @return GenericConfig
+     * @return Generic
      */
     public static function detect(): Config
     {
         $configs = [
-            VirtualminConfig::class,
-            GenericConfig::class
+            Virtualmin::class,
+            ClearOS::class,
+            Linux::class,
+            Generic::class
         ];
+
         foreach ($configs as $item) {
             $conf = new $item();
             if ($conf->isAvailable()) {
@@ -65,7 +59,21 @@ access the files.');
         }
     }
 
-    abstract public function getUserWebRoot($webRoot);
+    /**
+     * Detects if this configurations match with the system
+     * @return boolean
+     */
+    abstract public function isAvailable(): bool;
 
-    abstract public function getGroupWebRoot($webRoot);
+    abstract public function getExampleDomainDirectory(): string;
+
+    abstract public function getExampleDataDirectory(): string;
+
+    abstract public function getExampleURL(): string;
+
+    abstract public function getExamplePermissionDirectory(): string;
+
+    abstract public function getUserWebRoot($webRoot): string;
+
+    abstract public function getGroupWebRoot($webRoot): string;
 }

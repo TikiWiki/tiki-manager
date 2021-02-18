@@ -97,18 +97,18 @@ class EnableWebManagerCommand extends TikiManagerCommand
 
         $input->setOption('path', $path);
 
-        if (file_exists($path . '/config.php')) {
-            return;
-        }
-
-        if (!$input->getOption('www-user') && !$this->conf->getUserWebRoot($path)) {
-            $user = $this->io->ask('WWW Tiki Manager directory user');
+        if (!$input->getOption('www-user')) {
+            $user = $this->io->ask('WWW Tiki Manager directory user', $this->conf->getUserWebRoot($path));
             $input->setOption('www-user', $user);
         }
 
-        if (!$input->getOption('www-group') && !$this->conf->getUserWebRoot($path)) {
-            $group= $this->io->ask('WWW Tiki Manager directory group');
+        if (!$input->getOption('www-group')) {
+            $group= $this->io->ask('WWW Tiki Manager directory group', $this->conf->getUserWebRoot($path));
             $input->setOption('www-group', $group);
+        }
+
+        if (file_exists($path . '/config.php')) {
+            return;
         }
 
         if (!$input->getOption('username')) {
