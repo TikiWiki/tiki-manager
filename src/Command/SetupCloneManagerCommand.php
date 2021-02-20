@@ -10,7 +10,6 @@ namespace TikiManager\Command;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\Environment;
@@ -32,18 +31,23 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             ->setDescription('Setup a cronjob to perform instance clone')
             ->setHelp('This command allows you setup a cronjob to perform another identical copy of Tiki ')
             ->setAliases(['setup:clone'])
-            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
             ->addOption(
                 'time',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'The time clone should be triggered'
+                'A cron time expression of when clone should be triggered'
             )
             ->addOption(
                 'check',
                 null,
                 InputOption::VALUE_NONE,
                 'Check files checksum after operation has been performed.'
+            )
+            ->addOption(
+                'upgrade',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Upgrade Instance after Clone'
             )
             ->addOption(
                 'source',
@@ -105,11 +109,16 @@ class SetupCloneManagerCommand extends TikiManagerCommand
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if (empty($input->getOption('time'))) {
-            $answer = $this->io->ask('What time should it run at?', '00:00', function ($answer) {
-                return CommandHelper::validateTimeInput($answer);
+            $answer = $this->io->ask('What time should it run at?', '0 0 * * *', function ($answer) {
+                return CommandHelper::validateCrontabInput($answer);
             });
 
-            $input->setOption('time', implode(':', $answer));
+            $input->setOption('time', $answer);
+        }
+
+        if (empty($input->getOption('upgrade'))) {
+            $answer = $this->io->confirm('Would you want to upgrade instance after clone?');
+            $input->setOption('upgrade', $answer);
         }
     }
 
@@ -121,17 +130,85 @@ class SetupCloneManagerCommand extends TikiManagerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
+        // select time handle
         $time = $input->getOption('time');
-        // Check if option (set in cli is also valid)
-        list($hours, $minutes) = CommandHelper::validateTimeInput($time);
+        CommandHelper::validateCrontabInput($time);
 
-        //command line execute
+        // check for upgrade mode
+        $argumentToAdd = 'upgrade';
+        if (!$input->getOption('upgrade')) {
+            $argumentToAdd = '';
+        }
+
+        // check for availability of instance
+        $instances = CommandHelper::getInstances('all', true);
+        $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        if (empty($instancesInfo)) {
+            $output->writeln('<comment>No instances available to clone/clone and upgrade.</comment>');
+            return 0;
+        }
+        $helper = $this->getHelper('question');
+
+        // select source instance
+        if (empty($input->getOption('source'))) {
+            $this->io->newLine();
+            $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
+
+            $this->io->newLine();
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
+
+            $question = CommandHelper::getQuestion('Select the source instance', null);
+            $question->setValidator(function ($answer) use ($instances) {
+                return CommandHelper::validateInstanceSelection($answer, $instances);
+            });
+
+            $selectedSourceInstances = $helper->ask($input, $output, $question);
+        }
+        $sourceInstance = $selectedSourceInstances[0];
+        $input->setOption('source', implode(',', CommandHelper::getInstanceIds($selectedSourceInstances)));
+
+        // select target instance
+        $instances = CommandHelper::getInstances('all');
+        $instances = array_filter($instances, function ($instance) use ($sourceInstance) {
+            return $instance->getId() != $sourceInstance->getId();
+        });
+        $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        if (empty($instancesInfo)) {
+            $output->writeln('<comment>No instances available as destination.</comment>');
+            return 0;
+        }
+        if (empty($input->getOption('target'))) {
+            $this->io->newLine();
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
+
+            $question = CommandHelper::getQuestion('Select the destination instance(s)', null);
+            $question->setValidator(function ($answer) use ($instances) {
+                return CommandHelper::validateInstanceSelection($answer, $instances);
+            });
+
+            $selectedDestinationInstances = $helper->ask($input, $output, $question);
+        }
+        $input->setOption('target', implode(',', CommandHelper::getInstanceIds($selectedDestinationInstances)));
+
+        // select branch if upgrade
+        if (!empty($argumentToAdd)) {
+            if (empty($input->getOption('branch'))) {
+                $branch = $this->getUpgradeVersion($sourceInstance);
+                $input->setOption('branch', $branch);
+            }
+        }
+
+        if ($input->getOption('direct') && ($input->getOption('keep-backup')|| $input->getOption('use-last-backup'))) {
+            $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
+            exit(-1);
+        }
+
+        // Create command line
         $managerPath = realpath(dirname(__FILE__) . '/../..');
         $cloneInstance = new CloneInstanceCommand();
-        $cloneInstanceCommand = Environment::get('TIKI_MANAGER_EXECUTABLE') . ' ' . $cloneInstance->getName() . ' --no-interaction ';
-        if ($input->getOption('check')) {
-            $cloneInstanceCommand .= ' --check';
+        $cloneInstanceCommand = Environment::get('TIKI_MANAGER_EXECUTABLE') . ' ' . $cloneInstance->getName().' ' .$argumentToAdd.' --no-interaction ';
+        if ($checksumCheck = $input->getOption('check')) {
+            $cloneInstanceCommand .= ' --check='.$checksumCheck;
         }
 
         if ($source = $input->getOption('source')) {
@@ -171,16 +248,56 @@ class SetupCloneManagerCommand extends TikiManagerCommand
         }
 
         $entry = sprintf(
-            "%d %d * * * cd %s && %s %s\n",
-            $minutes,
-            $hours,
+            "%s cd %s && %s %s\n",
+            $time,
             $managerPath,
             PHP_BINARY,
             $cloneInstanceCommand
         );
 
+        // Write cron in the crontab file
         file_put_contents($file = Environment::get('TEMP_FOLDER') . '/crontab', `crontab -l` . $entry);
         $this->io->error("Failed to edit contab file. Please add the following line to your crontab file: \n{$entry}");
         `crontab $file`;
+    }
+
+    /**
+     * Get version to update instance to
+     *
+     * @param Instance $instance
+     * @return string
+     */
+    private function getUpgradeVersion($instance)
+    {
+        $found_incompatibilities = false;
+        $instance->detectPHP();
+
+        $app = $instance->getApplication();
+        $versions = $app->getVersions();
+        $choices = [];
+
+        foreach ($versions as $key => $version) {
+            preg_match('/(\d+\.|trunk|master)/', $version->branch, $matches);
+            if (array_key_exists(0, $matches)) {
+                if ((($matches[0] >= 13) || ($matches[0] == 'trunk') || ($matches[0] == 'master')) &&
+                    ($instance->phpversion < 50500)) {
+                    // Nothing to do, this match is incompatible...
+                    $found_incompatibilities = true;
+                } else {
+                    $choices[] = $version->type . ' : ' . $version->branch;
+                }
+            }
+        }
+
+        $this->logger->info('Detected PHP release: {php_version}', ['php_version' => CommandHelper::formatPhpVersion($instance->phpversion)]);
+
+        if ($found_incompatibilities) {
+            $this->io->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
+            $this->io->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
+        }
+
+        $choice = $this->io->choice('Which version do you want to update to', $choices);
+        $choice = explode(':', $choice);
+        return trim($choice[1]);
     }
 }
