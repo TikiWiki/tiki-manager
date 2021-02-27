@@ -14,9 +14,15 @@ use TikiManager\Application\Tiki;
 use TikiManager\Application\Version;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Host\Command;
+use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 use TikiManager\Style\TikiManagerStyle;
 
+/**
+ * Class TikiTest
+ * @package TikiManager\Tests\Application
+ * @group unit
+ */
 class TikiTest extends TestCase
 {
     /** @var BufferedOutput */
@@ -251,7 +257,7 @@ class TikiTest extends TestCase
         $accessStub
             ->method('createCommand')
             ->with($instanceStub->phpexec,
-                ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist'])
+                ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist' , '--no-dev'])
             ->willReturn($commandStub);
         $accessStub
             ->expects($this->atLeastOnce())
@@ -298,7 +304,7 @@ class TikiTest extends TestCase
         $accessStub
             ->method('createCommand')
             ->with($instanceStub->phpexec,
-                ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist'])
+                ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev'])
             ->willReturn($commandStub);
         $accessStub
             ->expects($this->atLeastOnce())
@@ -328,7 +334,6 @@ class TikiTest extends TestCase
         $tikiStub->runComposer();
     }
 
-
     public function testRunComposerForRootFolderSuccessfully()
     {
         $commandStub = $this->createMock(Command::class);
@@ -344,7 +349,7 @@ class TikiTest extends TestCase
             ->method('createCommand')
             ->withConsecutive(
                 [$instanceStub->phpexec,
-                    ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']
+                    ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']
                 ],
                 [$instanceStub->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']]
             )
@@ -400,7 +405,7 @@ class TikiTest extends TestCase
             ->method('createCommand')
             ->withConsecutive(
                 [$instanceStub->phpexec,
-                    ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist']
+                    ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']
                 ],
                 [$instanceStub->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']]
             )
@@ -437,4 +442,50 @@ class TikiTest extends TestCase
             $outputContent);
     }
 
+    /**
+     * @covers \TikiManager\Application\Tiki::postInstall
+     */
+    public function testPostInstallWithSkipReindex()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->type = 'local';
+        $instanceStub->vcs_type = 'git';
+        $instanceStub->method('getVersionControlSystem')->willReturn(new Git($instanceStub));
+
+        $instanceStub
+            ->expects($this->once())
+            ->method('hasConsole')
+            ->willReturn(true);
+
+        $accessStub = $this->createMock(Local::class);
+        $accessStub
+            ->expects($this->once())
+            ->method('shellExec')
+            ->willReturn(null);
+
+        $instanceStub
+            ->method('getBestAccess')
+            ->willReturn($accessStub);
+
+        $tikiMock = $this->createPartialMock(
+            Tiki::class,
+            ['runComposer', 'runDatabaseUpdate', 'setDbLock', 'clearCache', 'fixPermissions']
+        );
+
+        $tikiMock->__construct($instanceStub);
+
+        $tikiMock
+            ->expects($this->once())
+            ->method('runDatabaseUpdate');
+
+        $tikiMock
+            ->expects($this->once())
+            ->method('setDbLock');
+
+        $tikiMock
+            ->expects($this->once())
+            ->method('fixPermissions');
+
+        $tikiMock->postInstall(['skip-reindex' => true]);
+    }
 }

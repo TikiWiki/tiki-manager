@@ -804,16 +804,14 @@ TXT;
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
             }
 
-            if (!empty($options['live-reindex'])) {
-                $options['skip-reindex'] = false;
-
-                $this->io->writeln('Fixing permissions...');
-                $this->fixPermissions();
-
-                $this->instance->unlock();
-            }
-
             if (empty($options['skip-reindex'])) {
+                if (!empty($options['live-reindex'])) {
+                    $this->io->writeln('Fixing permissions...');
+                    $this->fixPermissions();
+
+                    $this->instance->unlock();
+                }
+
                 $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
             }
