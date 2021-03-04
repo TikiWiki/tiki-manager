@@ -255,10 +255,17 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             $cloneInstanceCommand
         );
 
+        $this->io->newLine();
+
         // Write cron in the crontab file
-        file_put_contents($file = Environment::get('TEMP_FOLDER') . '/crontab', `crontab -l` . $entry);
-        $this->io->error("Failed to edit contab file. Please add the following line to your crontab file: \n{$entry}");
-        `crontab $file`;
+        $tempFile = Environment::get('TEMP_FOLDER') . '/crontab';
+        $currentCron = shell_exec('crontab -l');
+        if (file_put_contents($tempFile, $currentCron . PHP_EOL . $entry) && shell_exec('crontab ' . $tempFile)) {
+            $this->io->error("Failed to edit crontab file. Please add the following line to your crontab file: \n{$entry}");
+            return 1;
+        }
+
+        $this->io->success('Cronjob configured and installed.');
     }
 
     /**
