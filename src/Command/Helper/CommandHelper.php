@@ -16,9 +16,11 @@ use TikiManager\Application\Discovery;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
+use TikiManager\Command\Exception\InvalidCronTimeException;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Helpers\ApplicationHelper;
+use Cron\CronExpression;
 
 class CommandHelper
 {
@@ -165,7 +167,6 @@ class CommandHelper
      */
     public static function getQuestion($question, $default = null, $character = ':')
     {
-
         if ($default !== null) {
             $question = sprintf($question . " [%s]: ", $default);
         } else {
@@ -626,5 +627,21 @@ class CommandHelper
         $log[] = $e->getTraceAsString();
 
         trim_output(implode(PHP_EOL, $log));
+    }
+
+    /**
+     * Validate CronTab input value
+     *
+     * @param $answer
+     * @return string
+     * @throws InvalidCronTimeException
+     */
+    public static function validateCrontabInput($answer): string
+    {
+        if (!CronExpression::isValidExpression($answer)) {
+            throw new InvalidCronTimeException();
+        }
+
+        return $answer;
     }
 }
