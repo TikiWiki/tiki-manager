@@ -70,17 +70,14 @@ class SetupUpdateCommand extends TikiManagerCommand
             $input->setOption('instances', $answer);
         }
 
-        $email = $input->getOption('email');
-
-        try {
-            CommandHelper::validateEmailInput($email);
-        } catch (\RuntimeException $e) {
-            $this->io->error($e->getMessage());
-            $email = null;
-        }
-
-        if (empty($email)) {
-            $email = $this->io->ask('[Optional] Email address to contact in case of failures (use , to separate multiple emails)', null, CommandHelper::validateEmailInput($value));
+        if (empty($input->getOption('email'))) {
+            $email = $this->io->ask(
+                '[Optional] Email address to contact in case of failures (use , to separate multiple emails)',
+                null,
+                function ($value) {
+                    return CommandHelper::validateEmailInput($value);
+                }
+            );
             $input->setOption('email', $email);
         }
     }
