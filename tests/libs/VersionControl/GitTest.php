@@ -4,9 +4,14 @@ namespace TikiManager\Tests\Libs\VersionControl;
 
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\Local;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
+use TikiManager\Config\Environment;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Style\TikiManagerStyle;
@@ -16,6 +21,19 @@ use TikiManager\Style\TikiManagerStyle;
  */
 class GitTest extends TestCase
 {
+    static $workingDir;
+
+    public function setUp()
+    {
+        $testsPath = Environment::get('TESTS_BASE_FOLDER', '/tmp');
+        static::$workingDir = $testsPath . '/'. md5(random_bytes(10));
+    }
+
+    public function tearDown()
+    {
+        $fs = new Filesystem();
+        $fs->remove(static::$workingDir);
+    }
 
     /**
      * @expectedException \TikiManager\Application\Exception\VcsException
@@ -143,17 +161,25 @@ TXT;
         $git->getLastCommit('/root/tmp', 'master');
     }
 
+    /**
+     * @covers \TikiManager\Libs\VersionControl\Git::update
+     * @throws VcsException
+     */
     public function testUpdateToDifferentBranch()
     {
-        $git = $this->createPartialMock(Git::class, ['isUpgrade', 'info', 'upgrade', 'cleanup', 'revert', 'pull']);
+        $git = $this->createPartialMock(
+            Git::class,
+            ['isUpgrade', 'info', 'checkoutBranch', 'cleanup', 'revert', 'remoteSetBranch', 'fetch', 'isShallow']
+        );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(true);
+        $git->expects(self::once())->method('isShallow')->willReturn(true);
+        $git->expects($this->once())->method('fetch');
         $git->expects(self::once())->method('revert');
-        $git->expects(self::once())->method('upgrade')->with('/root/tmp', 'master', null);
+        $git->expects(self::once())->method('remoteSetBranch')->with('/root/tmp', 'master');
+        $git->expects(self::once())->method('checkoutBranch')->with('/root/tmp', 'master', null);
         $git->expects(self::once())->method('cleanup');
-        // Pull latest changes in case branch was already checked before.
-        $git->expects(self::once())->method('pull');
 
         $git->setIO($this->createMock(TikiManagerStyle::class));
         $git->update('/root/tmp', 'master');
@@ -161,17 +187,27 @@ TXT;
 
     public function testUpdateToDifferentBranchWithLag()
     {
-        $git = $this->createPartialMock(Git::class,
-            ['isUpgrade', 'info', 'upgrade', 'cleanup', 'revert', 'getLastCommit']);
+        $git = $this->createPartialMock(
+            Git::class,
+            ['isUpgrade', 'info', 'checkoutBranch', 'cleanup', 'revert', 'getLastCommit','isShallow', 'fetch', 'remoteSetBranch', 'getVersion']
+        );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(true);
+        $git->expects(self::once())->method('remoteSetBranch')->with('/root/tmp', 'master');
+        $git->expects(self::once())->method('isShallow')->willReturn(true);
+        $git->expects(self::once())->method('getVersion')->willReturn('2.11.0');
+        $git->expects($this->exactly(2))->method('fetch');
         $git->expects(self::once())->method('revert');
-        $git->expects(self::once())->method('getLastCommit')->willReturn(['commit' => '23e88c718205a34f77ed5a6d1c440ab6681d61d2',
+        $git->expects(self::once())->method('getLastCommit')->willReturn([
+            'commit' => '23e88c718205a34f77ed5a6d1c440ab6681d61d2',
             'date' => 'Sun Nov 29 01:57:25 2020 +0000'
         ]);
-        $git->expects(self::once())->method('upgrade')->with('/root/tmp', 'master',
-            '23e88c718205a34f77ed5a6d1c440ab6681d61d2');
+        $git->expects(self::once())->method('checkoutBranch')->with(
+            '/root/tmp',
+            'master',
+            '23e88c718205a34f77ed5a6d1c440ab6681d61d2'
+        );
         $git->expects(self::once())->method('cleanup');
 
         $git->setIO($this->createMock(TikiManagerStyle::class));
@@ -180,33 +216,90 @@ TXT;
 
     public function testUpdateWithLag()
     {
-        $git = $this->createPartialMock(Git::class,
-            ['isUpgrade', 'info', 'getLastCommit', 'checkoutBranch', 'cleanup']);
+        $git = $this->createPartialMock(
+            Git::class,
+            ['isUpgrade', 'info', 'getLastCommit', 'checkoutBranch', 'cleanup', 'isShallow', 'fetch', 'getVersion']
+        );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
+        $git->expects(self::once())->method('isShallow')->willReturn(true);
+        $git->expects(self::once())->method('getVersion')->willReturn('2.11.0');
+        $git->expects($this->exactly(2))->method('fetch');
         $git->expects(self::once())->method('isUpgrade')->willReturn(false);
-        $git->expects(self::once())->method('getLastCommit')->willReturn(['commit' => '23e88c718205a34f77ed5a6d1c440ab6681d61d2',
+        $git->expects(self::once())->method('getLastCommit')->willReturn([
+            'commit' => '23e88c718205a34f77ed5a6d1c440ab6681d61d2',
             'date' => 'Sun Nov 29 01:57:25 2020 +0000'
         ]);
-        $git->expects(self::once())->method('checkoutBranch')->with('/root/tmp', 'master',
-            '23e88c718205a34f77ed5a6d1c440ab6681d61d2');
+        $git->expects(self::once())->method('checkoutBranch')->with(
+            '/root/tmp',
+            'master',
+            '23e88c718205a34f77ed5a6d1c440ab6681d61d2'
+        );
         $git->expects(self::once())->method('cleanup');
 
         $git->setIO($this->createMock(TikiManagerStyle::class));
         $git->update('/root/tmp', 'master', 1);
     }
 
+    /**
+     * @covers \TikiManager\Libs\VersionControl\Git::update
+     * @throws VcsException
+     */
     public function testUpdate()
     {
-        $git = $this->createPartialMock(Git::class, ['isUpgrade', 'info', 'cleanup', 'pull']);
+        $git = $this->createPartialMock(
+            Git::class,
+            ['isUpgrade', 'info', 'cleanup', 'pull', 'isShallow', 'fetch']
+        );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(false);
+        $git->expects(self::once())->method('isShallow')->willReturn(true);
         // Pull latest changes in case branch was already checked before.
+        $git->expects(self::once())->method('fetch');
         $git->expects(self::once())->method('pull');
         $git->expects(self::once())->method('cleanup');
 
         $git->setIO($this->createMock(TikiManagerStyle::class));
         $git->update('/root/tmp', 'master');
+    }
+
+    /**
+     * This covers update/upgrade/upgrade+lag
+     * @covers \TikiManager\Libs\VersionControl\Git::update
+     * @covers \TikiManager\Libs\VersionControl\Git::upgrade
+     */
+    public function testUpgrade()
+    {
+        $path = static::$workingDir;
+        $mainBranch = Environment::get('MASTER_BRANCH', 'master');
+        $prevVersionBranch = Environment::get('PREV_VERSION_BRANCH', '21.x');
+
+        $git = $this->createPartialMock(Git::class, []);
+
+        $git->setIO($this->createMock(TikiManagerStyle::class));
+        $git->setRunLocally(true);
+
+        $repoUrl = Environment::get('GIT_TIKIWIKI_URI');
+        $git->setRepositoryUrl($repoUrl);
+        $git->clone($prevVersionBranch, $path);
+
+        $branch = $git->getRepositoryBranch($path);
+        $this->assertEquals($prevVersionBranch, trim($branch));
+
+        $upgradeBranch = $mainBranch;
+        $git->update($path, $upgradeBranch, 10);
+
+        $branch = $git->getRepositoryBranch($path);
+        $this->assertEquals($upgradeBranch, trim($branch));
+
+        $revision = $git->getRevision($path);
+
+        $git->update($path, $upgradeBranch);
+        $branch = $git->getRepositoryBranch($path);
+        $this->assertEquals($upgradeBranch, trim($branch));
+
+        // Check same branch but different revisions;
+        $this->assertNotEquals($revision, $git->getRevision($path));
     }
 }

@@ -15,6 +15,8 @@ use TikiManager\Libs\Host\Command;
 
 class Git extends VersionControlSystem
 {
+    protected $command = 'git';
+
     protected $quiet = true;
 
     /**
@@ -24,8 +26,12 @@ class Git extends VersionControlSystem
     public function __construct(Instance $instance)
     {
         parent::__construct($instance);
-        $this->command = 'git';
-        $this->repositoryUrl = $_ENV['GIT_TIKIWIKI_URI'];
+        $this->setRepositoryUrl($_ENV['GIT_TIKIWIKI_URI']);
+    }
+
+    public function setRepositoryUrl($url): void
+    {
+        $this->repositoryUrl = $url;
     }
 
     /**
@@ -39,7 +45,7 @@ class Git extends VersionControlSystem
         foreach (explode("\n", `git ls-remote $this->repositoryUrl`) as $line) {
             $parsed = explode("\t", $line);
 
-            if (! isset($parsed[1])) {
+            if (!isset($parsed[1])) {
                 continue;
             }
 
@@ -142,7 +148,7 @@ class Git extends VersionControlSystem
         $branch = escapeshellarg($branchName);
         $repoUrl = escapeshellarg($this->repositoryUrl);
         $folder = escapeshellarg($targetFolder);
-        return $this->exec(null, sprintf('clone --depth 1 --no-single-branch -b %s %s %s', $branch, $repoUrl, $folder));
+        return $this->exec(null, sprintf('clone --depth 1 -b %s %s %s', $branch, $repoUrl, $folder));
     }
 
     /**
@@ -222,6 +228,18 @@ class Git extends VersionControlSystem
 
     /**
      * @param $targetFolder
+     * @param $branch
+     * @param string $remote
+     * @throws VcsException
+     */
+    public function remoteSetBranch($targetFolder, $branch, $remote = 'origin'): void
+    {
+        $gitCmd = sprintf('remote set-branches %s %s', $remote, $branch);
+        $this->exec($targetFolder, $gitCmd);
+    }
+
+    /**
+     * @param $targetFolder
      * @return mixed|string
      * @throws VcsException
      */
@@ -250,17 +268,13 @@ class Git extends VersionControlSystem
      * @param $targetFolder
      * @param $branch
      * @param null $commitSHA
-     * @return mixed|string
      * @throws VcsException
      */
-    public function upgrade($targetFolder, $branch, $commitSHA = null)
+    public function upgrade($targetFolder, $branch, $commitSHA = null): void
     {
         $this->revert($targetFolder);
-
-        $gitCmd = 'fetch --all' . ($this->quiet ? ' --quiet' : '');
-        $this->exec($targetFolder, $gitCmd);
-
-        return $this->checkoutBranch($targetFolder, $branch, $commitSHA);
+        $this->checkoutBranch($targetFolder, $branch, $commitSHA);
+        $this->cleanup($targetFolder);
     }
 
     /**
@@ -273,34 +287,60 @@ class Git extends VersionControlSystem
      */
     public function update(string $targetFolder, string $branch, int $lag = 0)
     {
-        $branchInfo = $this->info($targetFolder);
-
-        $messageUpdate = "Updating '{$branch}' branch";
-        $messageUpgrade = "Upgrading to '{$branch}' branch";
-
         $commitSHA = null;
+        $fetchOptions = [];
+        $time = time() - $lag * 60 * 60 * 24;
+        $messageUpdate = "Updating '{$branch}' branch";
+
+        $branchInfo = $this->info($targetFolder);
+        $isUpgrade = $this->isUpgrade($branchInfo, $branch);
+        $isShallow = $this->isShallow($targetFolder);
+
+        if ($isUpgrade && $isShallow) {
+            $fetchOptions['--depth'] = 1;
+        }
+
+        $fetch = function () use ($targetFolder, $branch, $fetchOptions) {
+            $this->fetch($targetFolder, $branch, 'origin', $fetchOptions);
+        };
+
+        if ($isUpgrade) {
+            $messageUpdate = "Upgrading to '{$branch}' branch";
+            $this->remoteSetBranch($targetFolder, $branch);
+        }
+
+        if ($lag && $isShallow) {
+            $fetch = function () use ($targetFolder, $branch, $time) {
+                $gitVersion = $this->getVersion($targetFolder);
+
+                if (version_compare($gitVersion, '2.11.0', '<')) {
+                    // LARGE NUMBER OF COMMITS as --shallow-since/--deepen is not supported
+                    $this->fetch($targetFolder, $branch, 'origin', ['--depth' => 200]);
+                    return;
+                }
+
+                $this->fetch($targetFolder, $branch, 'origin', ['--shallow-since' => date('Y-m-d H:i', $time)]);
+                $this->fetch($targetFolder, $branch, 'origin', ['--deepen' => 1]);
+            };
+        }
+
+        $fetch();
 
         if ($lag) {
-            $time = time() - $lag * 60 * 60 * 24;
             list('commit' => $commitSHA, 'date' => $date) = $this->getLastCommit($targetFolder, $branch, $time);
-
             $messageUpdate .= " ({$commitSHA}) at {$date}";
-            $messageUpgrade .= " ({$commitSHA}) at {$date}";
         }
 
-        if ($this->isUpgrade($branchInfo, $branch)) {
-            $this->revert($targetFolder);
-            $this->io->writeln($messageUpgrade);
+        $this->io->writeln($messageUpdate);
+
+        if ($isUpgrade) {
             $this->upgrade($targetFolder, $branch, $commitSHA);
-        } elseif ($commitSHA) {
-            $this->io->writeln($messageUpdate);
-            $this->checkoutBranch($targetFolder, $branch, $commitSHA);
+            return;
         }
 
-        if (!$commitSHA) {
-            $this->io->writeln($messageUpdate);
-            $this->pull($targetFolder);
-        }
+        $commitSHA
+            ? $this->checkoutBranch($targetFolder, $branch, $commitSHA)
+            : $this->pull($targetFolder);
 
         $this->cleanup($targetFolder);
     }
@@ -435,5 +475,38 @@ class Git extends VersionControlSystem
             'commit' => $matches[1],
             'date' => $matches[2],
         ];
+    }
+
+    public function fetch($targetFolder, $branch = null, $remote = 'origin', $options = [])
+    {
+        $cmdOptions = [];
+        foreach ($options as $option => $value) {
+            $cmdOptions[] = $option . ($value ? '=' . escapeshellarg($value) : '');
+        }
+
+        $cmd = sprintf('fetch %s %s', $remote, $branch);
+        $cmd .= ' ' . implode(' ', $cmdOptions);
+        $cmd .= ($this->quiet ? ' --quiet' : '');
+
+        return $this->exec($targetFolder, $cmd);
+    }
+
+    public function isShallow($targetFolder): bool
+    {
+        $file = '.git/shallow';
+
+        if ($this->runLocally) {
+            return file_exists($targetFolder . '/' . $file);
+        }
+
+        return $this->access->fileExists($file);
+    }
+
+    public function getVersion($targetFolder): string
+    {
+        $version = $this->exec($targetFolder, '--version');
+        preg_match('/[\d\.]+/', $version, $matches);
+
+        return $matches ? $matches[0] : '';
     }
 }

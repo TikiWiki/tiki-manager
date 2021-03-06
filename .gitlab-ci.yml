@@ -167,7 +167,7 @@ cache-warmup-tiki-git:
     - TIKI_CACHE=cache/tiki-git-$PREV_VERSION_BRANCH
     - |
       if [ ! -d "$TIKI_CACHE" ]; then
-        git clone --depth 1 --no-single-branch -b $PREV_VERSION_BRANCH $GIT_TIKIWIKI_URI $TIKI_CACHE;
+        git clone --depth 1 -b $PREV_VERSION_BRANCH $GIT_TIKIWIKI_URI $TIKI_CACHE;
       else
         git -C $TIKI_CACHE pull
       fi;
