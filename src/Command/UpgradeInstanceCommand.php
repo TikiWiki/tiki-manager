@@ -120,13 +120,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
             $versionSel = [];
             $branch = $input->getOption('branch');
-            $versions = [];
-            $versions_raw = $app->getVersions();
-            foreach ($versions_raw as $version) {
-                if ($version->type == 'svn' || $version->type == 'git' || $version->type = 'src') {
-                    $versions[] = $version;
-                }
-            }
+            $versions = $app->getCompatibleVersions(false);
 
             $this->io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
 

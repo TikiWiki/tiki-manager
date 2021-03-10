@@ -11,13 +11,14 @@ use TikiManager\Access\FTP;
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
 use TikiManager\Application\Exception\VcsException;
+use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
+use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Src;
 use TikiManager\Libs\VersionControl\Svn;
-use TikiManager\Libs\VersionControl\VersionControlSystem;
 
 class Tiki extends Application
 {
@@ -696,7 +697,7 @@ TXT;
     public function getCompatibleVersions($withBlank = true)
     {
         $versions = $this->getVersions();
-
+        $checkTikiVersionRequirement = $this->getTikiRequirementsHelper();
         $compatible = [];
         foreach ($versions as $key => $version) {
             preg_match('/(\d+\.|trunk|master)/', $version->branch, $matches);
@@ -704,12 +705,10 @@ TXT;
                 continue;
             }
 
-            if ((($matches[0] >= 13) || ($matches[0] == 'trunk') || ($matches[0] == 'master')) && ($this->instance->phpversion < 50500)) {
-                // Nothing to do, this match is incompatible...
-                continue;
+            $req = $checkTikiVersionRequirement->findByBranchName($version->branch);
+            if ($req && $req->checkRequirements($this->instance)) {
+                $compatible[$key] = $version;
             }
-
-            $compatible[$key] = $version;
         }
 
         if ($withBlank) {
@@ -950,6 +949,11 @@ TXT;
         });
 
         return $files;
+    }
+
+    public function getTikiRequirementsHelper()
+    {
+        return new TikiRequirementsHelper(new YamlFetcher());
     }
 }
 

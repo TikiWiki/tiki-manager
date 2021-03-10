@@ -8,6 +8,8 @@
     "ext-bz2": "*",
     "ext-json": "*",
     "ext-pdo": "*",
+    "composer/semver": "^3.2",
+    "dragonmantank/cron-expression": "^2.3",
     "gitonomy/gitlib": "^1.2",
     "php": "^7.1",
     "phpseclib/phpseclib": "^2.0",
@@ -21,8 +23,7 @@
     "symfony/filesystem": "^4.1",
     "symfony/process": "^4.3",
     "symfony/yaml": "^4.3",
-    "swiftmailer/swiftmailer": "^6.2.1",
-    "dragonmantank/cron-expression": "^2.3"
+    "swiftmailer/swiftmailer": "^6.2.1"
   },
   "config": {
     "process-timeout": 5000

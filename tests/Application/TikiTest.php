@@ -11,6 +11,10 @@ use TikiManager\Access\Local;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
+use TikiManager\Application\Tiki\Versions\Fetcher\RequirementsFetcher;
+use TikiManager\Application\Tiki\Versions\SoftwareRequirement;
+use TikiManager\Application\Tiki\Versions\TikiRequirements;
+use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Application\Version;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Host\Command;
@@ -488,4 +492,171 @@ class TikiTest extends TestCase
 
         $tikiMock->postInstall(['skip-reindex' => true]);
     }
+
+    /**
+     * @covers \TikiManager\Application\Tiki::getCompatibleVersions
+     */
+    public function testGetCompatibleVersions()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->vcs_type = 'git';
+
+        $vcsStub = $this->createMock(VersionControlSystem::class);
+        $instanceStub
+            ->method('getVersionControlSystem')
+            ->willReturn($vcsStub);
+
+        $fetcher = $this->createMock(RequirementsFetcher::class);
+        $fetcher->method('getRequirements')->willReturn(
+            array_map(function($req){
+                    return new TikiRequirements(
+                        $req['name'],
+                        $req['version'],
+                        new SoftwareRequirement($req['php']['min'] ?? '', $req['php']['max'] ?? ''),
+                        new SoftwareRequirement($req['mysql']['min'] ?? '', $req['mysql']['max'] ?? ''),
+                        new SoftwareRequirement($req['mariadb']['min'] ?? '', $req['mariadb']['max'] ?? ''));
+            },[
+                0 => [
+                    'name' => 'Tiki22',
+                    'version' => 22,
+                    'php' => [
+                        'min' => '7.4.0',
+                    ],
+                    'mysql' => [
+                        'min' => '5.5.0',
+                    ],
+                    'mariadb' => [
+                        'min' => '5.7.0',
+                    ],
+                ],
+                1 => [
+                    'name' => 'Tiki19',
+                    'version' => 19,
+                    'php' => [
+                        'min' => '7.1.0',
+                        'max' => '7.2.0',
+                    ],
+                    'mysql' => [
+                        'min' => '5.5.0',
+                        'max' => '10.4.0',
+                    ],
+                    'mariadb' => [
+                        'min' => '5.5.3',
+                        'max' => '5.7.0',
+                    ],
+                ],
+                2 => [
+                    'name' => 'Tiki12 LTS',
+                    'version' => 12,
+                    'php' => [
+                        'min' => '5.3.0',
+                        'max' => '5.6.0',
+                    ],
+                    'mysql' => [
+                        'min' => '5.1.0',
+                        'max' => '5.5.0',
+                    ],
+                    'mariadb' => [
+                        'min' => '5.0.0',
+                        'max' => '5.5.0',
+                    ],
+                ],
+            ])
+        );
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['getCompatibleVersions'])
+            ->getMock();
+
+        $tikiStub->method('getTikiRequirementsHelper')->willReturn(
+            new TikiRequirementsHelper($fetcher)
+        );
+
+        $tikiStub->method('getVersions')->willReturn(
+            [
+                (object)[
+                    'type' => 'git',
+                    'branch' => '11.x',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => '20.x',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => '22.x',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => 'tags/12.0RC4',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => 'tags/19.0beta1',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => 'tags/22.1^{}',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => 'tags/26.1^{}',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => 'master',
+                    'date' => '2021-02-20',
+                ],
+                (object)[
+                    'type' => 'git',
+                    'branch' => 'trunk',
+                    'date' => '2021-02-20',
+                ],
+            ]
+        );
+        $instanceStub->phpversion = 70415;
+
+        $compatible = $tikiStub->getCompatibleVersions();
+        $branches = array_map(function ($version) {
+            return is_object($version) ? $version->branch : $version;
+        }, $compatible);
+
+        $this->assertContains("tags/22.1^{}", $branches);
+        $this->assertContains("22.x", $branches);
+        $this->assertContains("tags/26.1^{}", $branches);
+        $this->assertContains("master", $branches);
+        $this->assertContains("trunk", $branches);
+        $this->assertCount(6, $branches);
+
+        $instanceStub->phpversion = 70200;
+
+        $compatible = $tikiStub->getCompatibleVersions();
+        $branches = array_map(function ($version) {
+            return is_object($version) ? $version->branch : $version;
+        }, $compatible);
+
+        $this->assertContains("20.x", $branches);
+        $this->assertContains("tags/19.0beta1", $branches);
+        $this->assertCount(3, $branches);
+
+        $instanceStub->phpversion = 50600;
+
+        $compatible = $tikiStub->getCompatibleVersions();
+        $branches = array_map(function ($version) {
+            return is_object($version) ? $version->branch : $version;
+        }, $compatible);
+
+        $this->assertContains("11.x", $branches);
+        $this->assertContains("tags/12.0RC4", $branches);
+        $this->assertCount(3, $branches);
+    }
+
 }
