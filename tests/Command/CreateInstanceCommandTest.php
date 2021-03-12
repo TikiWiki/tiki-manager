@@ -7,8 +7,11 @@
 
 namespace TikiManager\Tests\Command;
 
+use ReflectionClass;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Access\Local;
 use TikiManager\Application\Instance;
+use TikiManager\Libs\Host\Command;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 use TikiManager\Tests\Helpers\VersionControl;
 
@@ -75,6 +78,34 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(is_link(self::$instancePath . '/.htaccess'));
 
         static::$instanceId = $instanceId;
+    }
+
+    /**
+     * @depends testLocalInstance
+     */
+    public function testReindex()
+    {
+        $instance = Instance::getInstance(static::$instanceId);
+        $this->assertTrue($instance->reindex());
+
+        $reflection = new ReflectionClass($instance);
+        $reflection_property = $reflection->getProperty('access');
+        $reflection_property->setAccessible(true);
+        $stbAccess = $this->createMock(Local::class);
+        $stbCommand = $this->createMock(Command::class);
+        $stbCommand->method('getReturn')->willReturn(2);
+        $stbCommand->method('getStdoutContent')->willReturn('Rebuilding index failed');
+        $stbAccess->method('runCommand')->willReturn($stbCommand);
+        $reflection_property->setValue($instance, [$stbAccess]);
+        $this->assertFalse($instance->reindex());
+
+        $stbCommand = $this->createMock(Command::class);
+        $stbCommand->method('getReturn')->willReturn(0);
+        $stbCommand->method('getStdoutContent')->willReturn('Rebuilding index done');
+        $stbAccess = $this->createMock(Local::class);
+        $stbAccess->method('runCommand')->willReturn($stbCommand);
+        $reflection_property->setValue($instance, [$stbAccess]);
+        $this->assertTrue($instance->reindex());
     }
 
     /**

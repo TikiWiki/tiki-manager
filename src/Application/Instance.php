@@ -13,6 +13,7 @@ use TikiManager\Config\App;
 use TikiManager\Access\Access;
 use TikiManager\Libs\Helpers\Archive;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
@@ -1051,5 +1052,14 @@ SQL;
     public function getVersionControlSystem()
     {
         return VersionControlSystem::getVersionControlSystem($this);
+    }
+
+    public function reindex(): bool
+    {
+        $access = $this->getBestAccess('scripting');
+        $command = new Command("{$this->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+        $data = $access->runCommand($command);
+        $output = $data->getStdoutContent();
+        return str_contains($output, 'Rebuilding index done') && $data->getReturn() == 0;
     }
 }

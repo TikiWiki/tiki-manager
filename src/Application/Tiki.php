@@ -812,7 +812,9 @@ TXT;
                 }
 
                 $this->io->writeln('Rebuilding Index... <fg=yellow>[may take a while]</>');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+                if (! $this->instance->reindex()) {
+                    $this->io->error('Rebuilding Index failed.');
+                }
             }
         }
 
