@@ -732,6 +732,7 @@ SQL;
         if ($direct) {
             $restore->setRestoreRoot(dirname($archive));
             $restore->setRestoreDirname(basename($archive));
+            $restore->setSourceInstance($src_app);
         }
 
         $restore->restoreFiles($archive);

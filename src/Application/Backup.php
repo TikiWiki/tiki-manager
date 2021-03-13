@@ -382,11 +382,11 @@ class Backup
         return true;
     }
 
-    public function getAccess($instance = null)
+    public function getAccess($instance = null): Access
     {
         $instance = $instance ?: $this->instance;
-        $access = $instance->getBestAccess('scripting');
-        return $access;
+
+        return $instance->getBestAccess();
     }
 
     public function getArchives($archiveRoot = null, $instance = null)

@@ -21,6 +21,7 @@ class Restore extends Backup
     protected $restoreRoot;
     protected $restoreDirname;
     protected $process;
+    protected $source;
     public $iniFilesToExclude = [];
 
     /**
@@ -114,6 +115,11 @@ class Restore extends Backup
     public function readManifest($manifestPath)
     {
         $access = $this->getAccess();
+
+        if ($this->direct && $this->source->type == 'local') {
+            $access = $this->source->getBestAccess();
+        }
+
         $webroot = rtrim($this->instance->webroot, '/\\');
 
         $archiveFolder = dirname($manifestPath);
@@ -122,7 +128,6 @@ class Restore extends Backup
         $manifest = array_map('trim', $manifest);
         $manifest = array_filter($manifest, 'strlen');
         $backupType = Backup::FULL_BACKUP;
-        $directWebroot = null;
 
         $windowsAbsolutePathsRegex = '/^([a-zA-Z]\:[\/,\\\\]).{1,}/';
 
@@ -153,12 +158,7 @@ class Restore extends Backup
             }
 
             if ($this->direct) {
-                if ($type === 'app') {
-                    $source = $directWebroot = $destination;
-                } else {
-                    // conf_external will not be copied if absolute path;
-                    $source = realpath(rtrim($directWebroot, DS) . DS . $destination);
-                }
+                $source = ($type === 'app') ? $destination : $this->getSourceInstance()->getWebPath($destination);
             } else {
                 $source = $archiveFolder . DIRECTORY_SEPARATOR . $hash;
                 $source .= $type != 'conf_external' ? DIRECTORY_SEPARATOR . basename($destination) : '';
@@ -212,17 +212,23 @@ class Restore extends Backup
 
         foreach ($folders as $folder) {
             list($type, $src, $target, $isFull) = $folder;
+
+            // system configuration file
             if ($type == 'conf_external') {
-                // system configuration file
-                $access = $this->getAccess();
-                $access->uploadFile($src, $target);
-            } else {
-                if ($type == 'app' && !$isFull) {
-                    $this->restoreFromVCS($src, $target);
+                if ($this->isSSHToLocal()) {
+                    $this->getSourceInstance()->getBestAccess()->downloadFile($src, $target);
+                } else {
+                    $this->getAccess()->uploadFile($src, $target);
                 }
 
-                $this->restoreFolder($src, $target, $isFull);
+                continue;
             }
+
+            if ($type == 'app' && !$isFull) {
+                $this->restoreFromVCS($src, $target);
+            }
+
+            $this->restoreFolder($src, $target, $isFull);
         }
 
         $changes = "{$srcFolder}/changes.txt";
@@ -313,6 +319,23 @@ class Restore extends Backup
                 }
             }
 
+            $accessToRestore = $access;
+
+            if ($localToSSH = $this->isLocalToSSH()) {
+                $target = $access->getRsyncPrefix() . $target;
+                $access = $this->source->getBestAccess();
+            }
+
+            if ($sshToLocal = $this->isSSHToLocal()) {
+                $rsyncPrefix = $this->getSourceInstance()->getBestAccess()->getRsyncPrefix();
+                $src = $rsyncPrefix . $src;
+            }
+
+            if ($localToSSH || $sshToLocal) {
+                $rsyncFlags[] = '-e';
+                $rsyncFlags[] = 'ssh -i ' . Environment::get('TRIM_DATA') . '/id_rsa';
+            }
+
             $rsyncFolders = [
                 $src . '/',
                 $target . '/'
@@ -333,6 +356,8 @@ class Restore extends Backup
                     RestoreErrorException::COPY_ERROR
                 );
             }
+
+            $access = $accessToRestore;
 
             if ($access->fileExists($src . '/.htaccess')) {
                 $command = $access->createCommand('rsync');
@@ -424,6 +449,24 @@ class Restore extends Backup
     public function getProcess()
     {
         return $this->process;
+    }
+
+    /**
+     * Set the source associated to this restore instance
+     * @param Instance $source
+     */
+    public function setSourceInstance(Instance $source): void
+    {
+        $this->source = $source;
+    }
+
+    /**
+     * Get the source associated to this restore instance
+     * @return Instance|null
+     */
+    public function getSourceInstance()
+    {
+        return $this->source;
     }
 
     /**
@@ -550,5 +593,17 @@ class Restore extends Backup
     public function setRestoreDirname($dirName): void
     {
         $this->restoreDirname = $dirName;
+    }
+
+    protected function isSSHToLocal(): bool
+    {
+        $sourceInstance = $this->getSourceInstance();
+        return $sourceInstance && $sourceInstance->type == 'ssh' && $this->instance->type == 'local';
+    }
+
+    protected function isLocalToSSH(): bool
+    {
+        $sourceInstance = $this->getSourceInstance();
+        return $sourceInstance && $sourceInstance->type == 'local' && $this->instance->type == 'ssh';
     }
 }

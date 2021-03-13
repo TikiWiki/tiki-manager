@@ -237,26 +237,35 @@ class CloneInstanceCommand extends TikiManagerCommand
         $this->io->newLine();
         $this->io->section('Pre-check');
 
-        $directWarnMessage = 'Direct backup cannot be used, instance {instance_name} is not local. Only supported on local instances.';
+        $directWarnMessage = 'Direct backup cannot be used, instance {instance_name} is ftp.';
         // Check if direct flag can be used
-        if ($direct && $sourceInstance->type != 'local') {
+        if ($direct && $sourceInstance->type == 'ftp') {
             $direct = false;
             $this->logger->warning($directWarnMessage, ['instance_name' => $sourceInstance->name]);
         }
 
         if ($direct) {
             foreach ($selectedDestinationInstances as $destinationInstance) {
-                if ($destinationInstance->type == 'local') {
-                    continue;
+                if ($destinationInstance->type == 'ssh' && $sourceInstance->type == 'ssh') {
+                    $directWarnMessage = 'Direct backup cannot be used, instance {source_name} and instance {target_name} are both ssh.';
+                    $this->logger->warning(
+                        $directWarnMessage,
+                        ['target_name' => $destinationInstance->name, 'source_name' => $sourceInstance->name]
+                    );
+                    $direct = false;
+                    break;
                 }
 
-                $this->logger->warning($directWarnMessage, ['instance_name' => $destinationInstance->name]);
-                $direct = false;
-                break;
+                if ($destinationInstance->type == 'ftp') {
+                    $this->logger->warning($directWarnMessage, ['instance_name' => $destinationInstance->name]);
+                    $direct = false;
+                    break;
+                }
             }
         }
 
         $dbConfigErrorMessage = 'Unable to load/set database configuration for instance {instance_name} (id: {instance_id}). {exception_message}';
+
         try {
             // The source instance needs to be well configured by default
             if (!$this->testExistingDbConnection($sourceInstance)) {

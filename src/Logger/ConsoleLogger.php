@@ -16,6 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ConsoleLogger extends AbstractLogger
 {
     const INFO = 'info';
+    const WARNING = 'fg=black;bg=yellow';
     const ERROR = 'error';
 
     private $output;
@@ -34,7 +35,7 @@ class ConsoleLogger extends AbstractLogger
         LogLevel::ALERT => self::ERROR,
         LogLevel::CRITICAL => self::ERROR,
         LogLevel::ERROR => self::ERROR,
-        LogLevel::WARNING => self::INFO,
+        LogLevel::WARNING => self::WARNING,
         LogLevel::NOTICE => self::INFO,
         LogLevel::INFO => self::INFO,
         LogLevel::DEBUG => self::INFO,
@@ -74,7 +75,7 @@ class ConsoleLogger extends AbstractLogger
         if ($output->getVerbosity() >= $this->verbosityLevelMap[$level]) {
             // the if condition check isn't necessary -- it's the same one that $output will do internally anyway.
             // We only do it for efficiency here as the message formatting is relatively expensive.
-            if ($this->formatLevelMap[$level] == self::ERROR) {
+            if (in_array($this->formatLevelMap[$level], [self::ERROR, self::WARNING])) {
                 $output->writeln(sprintf('<%1$s>[%2$s] %3$s</%1$s>', $this->formatLevelMap[$level], strtoupper($level), $this->interpolate($message, $context)), $this->verbosityLevelMap[$level]);
             } else {
                 $output->writeln(sprintf('%1$s', $this->interpolate($message, $context)));

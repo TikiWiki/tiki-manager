@@ -446,4 +446,13 @@ class SSH extends Access implements ShellPrompt
 
         return array_values($dirContents);
     }
+
+    /**
+     * Get generic rsync prefix for the access to the files of this SSH host
+     * @return string
+     */
+    public function getRsyncPrefix()
+    {
+        return $this->user . "@" . $this->host . ":";
+    }
 }
