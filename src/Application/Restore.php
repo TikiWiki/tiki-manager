@@ -322,18 +322,21 @@ class Restore extends Backup
             $accessToRestore = $access;
 
             if ($localToSSH = $this->isLocalToSSH()) {
+                $sshPort = $access->port;
                 $target = $access->getRsyncPrefix() . $target;
                 $access = $this->source->getBestAccess();
             }
 
             if ($sshToLocal = $this->isSSHToLocal()) {
-                $rsyncPrefix = $this->getSourceInstance()->getBestAccess()->getRsyncPrefix();
+                $sourceAccess = $this->getSourceInstance()->getBestAccess();
+                $sshPort = $sourceAccess->port;
+                $rsyncPrefix = $sourceAccess->getRsyncPrefix();
                 $src = $rsyncPrefix . $src;
             }
 
             if ($localToSSH || $sshToLocal) {
                 $rsyncFlags[] = '-e';
-                $rsyncFlags[] = 'ssh -i ' . Environment::get('TRIM_DATA') . '/id_rsa';
+                $rsyncFlags[] = 'ssh -p ' . ($sshPort ?? 22) .' -i ' . Environment::get('SSH_KEY');
             }
 
             $rsyncFolders = [
