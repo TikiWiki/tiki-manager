@@ -753,6 +753,9 @@ SQL;
             $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
         }
 
+        // Redetect the VCS type in case of change
+        $this->vcs_type = $this->getDiscovery()->detectVcsType();
+
         if (!$this->findApplication()) { // a version is created in this call
             $this->io->error('Something went wrong with restore. Unable to read application details.');
             return;
