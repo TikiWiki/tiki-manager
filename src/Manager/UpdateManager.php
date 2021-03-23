@@ -157,7 +157,7 @@ abstract class UpdateManager
             '--prefer-source'
         ];
 
-        if ($composer != 'composer') {
+        if (!is_executable($composer)) {
             array_unshift($command, PHP_BINARY);
         }
 

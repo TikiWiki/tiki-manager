@@ -71,10 +71,14 @@ class WindowsRequirements extends Requirements
         ]
     ];
 
-    public function hasDependency($command)
+    public function getDependencyPath($command)
     {
-        $hasDependency = !empty(shell_exec('where ' . $command . ' 2> nul'));
+        $path = shell_exec('where ' . $command . ' 2> nul');
 
-        return $hasDependency;
+        if (is_string($path) && ! empty($path)) {
+            $path = trim($path);
+        }
+
+        return $path;
     }
 }

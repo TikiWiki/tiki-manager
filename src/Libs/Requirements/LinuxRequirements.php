@@ -79,9 +79,14 @@ class LinuxRequirements extends Requirements
         ]
     ];
 
-    public function hasDependency($command)
+    public function getDependencyPath($command)
     {
-        $result = `which $command`;
-        return !empty($result);
+        $path = `which $command`;
+
+        if (is_string($path) && ! empty($path)) {
+            $path = trim($path);
+        }
+
+        return $path;
     }
 }

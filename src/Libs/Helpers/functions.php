@@ -525,11 +525,10 @@ function detectComposer($dir)
         return $composerPhar;
     }
 
-    if (TikiManager\Libs\Requirements\Requirements::getInstance()->hasDependency('composer')) {
-        return 'composer';
-    }
+    $requirementsInstance = TikiManager\Libs\Requirements\Requirements::getInstance();
+    $composerPath = $requirementsInstance->getDependencyPath('composer');
 
-    return null;
+    return $composerPath ?: null;
 }
 
 /**

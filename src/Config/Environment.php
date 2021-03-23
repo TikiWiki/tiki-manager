@@ -134,14 +134,12 @@ class Environment
             $_ENV['DIFF'] = 'diff';
         }
 
-        $localComposerPath = $this->homeDirectory . '/composer.phar';
-        if (file_exists($localComposerPath)) {
-            $_ENV['COMPOSER_PATH'] = $localComposerPath;
-        } elseif (Requirements::getInstance()->hasDependency('composer')) {
-            $_ENV['COMPOSER_PATH'] = 'composer';
-        } else {
+        $composerPath = detectComposer($this->homeDirectory);
+        if (!$composerPath) {
             throw new ConfigurationErrorException('Unable to find composer or composer.phar');
         }
+
+        $_ENV['COMPOSER_PATH'] = $composerPath;
 
         $_ENV['EXECUTABLE_SCRIPT'] = implode(',', [
             'scripts/checkversion.php',

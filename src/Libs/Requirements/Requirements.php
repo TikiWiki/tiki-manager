@@ -95,11 +95,21 @@ abstract class Requirements
     }
 
     /**
-     * Abstract function used to check if a specific operating system instance contains a dependency given a command
+     * Check if OS has a specific dependency
+     * @param $command
+     * @return bool
+     */
+    public function hasDependency($command)
+    {
+        return !empty($this->getDependencyPath($command));
+    }
+
+    /**
+     * Abstract function to fetch the dependency path based on OS
      * @param $command
      * @return mixed
      */
-    abstract public function hasDependency($command);
+    abstract public function getDependencyPath($command);
 
     public function getRequirements()
     {
