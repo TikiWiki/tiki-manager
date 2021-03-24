@@ -5,7 +5,7 @@ use TikiManager\Config\App;
 $info = App::get('info');
 $isLoginLocked = $info->isLoginLocked();
 
-$invalidLogin = $_SESSION['invalid_login'] ?: false;
+$invalidLogin = isset($_SESSION['invalid_login']) ? $_SESSION['invalid_login'] : false;
 unset($_SESSION['invalid_login']);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$isLoginLocked) {
