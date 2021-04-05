@@ -89,7 +89,11 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 $this->setupDatabase($instance);
                 $instance->database()->setupConnection();
 
-                $instance->restore($restorableInstance->app, $file, false, $checksumCheck);
+                $errors = $instance->restore($restorableInstance->app, $file, false, $checksumCheck);
+
+                if (isset($errors)) {
+                    return 1;
+                }
 
                 $this->io->success('It is now time to test your site: ' . $instance->name);
                 $this->io->note([

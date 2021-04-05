@@ -366,7 +366,11 @@ class CloneInstanceCommand extends TikiManagerCommand
             $this->io->section('Initiating clone of ' . $sourceInstance->name . ' to ' . $destinationInstance->name);
 
             $destinationInstance->lock();
-            $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct);
+            $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct);
+
+            if (isset($errors)) {
+                return 1;
+            }
 
             if ($cloneUpgrade) {
                 $branch = $input->getOption('branch');

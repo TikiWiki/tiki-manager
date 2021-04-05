@@ -600,10 +600,23 @@ class Tiki extends Application
 
         // FIXME: Not FTP compatible (arguments)
         $this->io->writeln("Loading '$remoteFile' into '{$database->dbname}'");
-        $access->runPHP(
+        $output = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
             [$root, $remoteFile]
         );
+
+        $output = !empty($output) ? explode(PHP_EOL, $output) : [];
+
+        $errors = [];
+        foreach ($output as $message) {
+            if (strpos(strtolower($message), 'error') !== false) {
+                array_push($errors, $message);
+            }
+        }
+
+        if (!empty($errors)) {
+            throw new \RuntimeException(implode(PHP_EOL, $errors));
+        }
     }
 
 //----------------------------------------------------------------

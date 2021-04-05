@@ -711,7 +711,7 @@ SQL;
      * @param bool $clone
      * @param bool $checksumCheck
      * @param bool $direct
-     * @return null
+     * @return mixed
      */
     public function restore($src_app, $archive, $clone = false, $checksumCheck = false, $direct = false)
     {
@@ -748,7 +748,13 @@ SQL;
 
         $databaseConfig = $this->getDatabaseConfig();
         if ($databaseConfig) {
-            $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+            try {
+                $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+            } catch (\Exception $e) {
+                $error = $e->getMessage();
+                $this->io->error($error);
+                return $error;
+            }
         } else {
             $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
         }
