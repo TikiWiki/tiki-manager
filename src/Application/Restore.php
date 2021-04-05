@@ -270,6 +270,10 @@ class Restore extends Backup
                 $src . DIRECTORY_SEPARATOR . 'db' . DIRECTORY_SEPARATOR . 'local.php',
             ];
 
+            if ($this->direct) {
+                $toExclude[] = $src . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '*';
+            }
+
             if ($this->getProcess() == self::CLONE_PROCESS && !empty($this->iniFilesToExclude)) {
                 foreach ($this->iniFilesToExclude as $iniFile) {
                     $toExclude[] = $src . DIRECTORY_SEPARATOR . $iniFile;
@@ -311,6 +315,13 @@ class Restore extends Backup
                 '--exclude',
                 '/db/local.php'
             ];
+
+            if ($this->direct) {
+                $rsyncExcludes = array_merge($rsyncExcludes, [
+                    '--exclude',
+                    '/temp/*'
+                ]);
+            }
 
             if ($this->getProcess() == self::CLONE_PROCESS && !empty($this->iniFilesToExclude)) {
                 foreach ($this->iniFilesToExclude as $iniFile) {
