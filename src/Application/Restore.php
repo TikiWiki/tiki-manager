@@ -20,6 +20,7 @@ class Restore extends Backup
 
     protected $restoreRoot;
     protected $restoreDirname;
+    protected $restoreLockFile;
     protected $process;
     protected $source;
     public $iniFilesToExclude = [];
@@ -35,6 +36,40 @@ class Restore extends Backup
         parent::__construct($instance, $direct);
         $this->restoreRoot = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore';
         $this->restoreDirname = sprintf('%s-%s', $instance->getId(), $instance->name);
+        $this->restoreLockFile = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore.lock';
+    }
+
+    public function lock()
+    {
+        if ($this->access->fileExists($this->restoreLockFile)) {
+            $script = sprintf("echo filemtime('%s');", $this->restoreLockFile);
+            $command = $this->access->createCommand($this->instance->phpexec, ["-r {$script}"]);
+            $command->run();
+
+            $modTimestamp = trim($command->getStdoutContent());
+
+            if ($modTimestamp &&
+                is_numeric($modTimestamp) &&
+                strtotime('+30 minutes', (int)$modTimestamp) > time()
+            ) {
+                throw new RestoreErrorException(
+                    "Restore lock file found in '$this->restoreLockFile', check if there is another restore in progress or delete this file if you are not able to proceed.",
+                    RestoreErrorException::LOCK_ERROR
+                );
+            }
+        }
+
+        $tempDir = Environment::get('TEMP_FOLDER');
+        $tempLock = $tempDir . DS . 'restore.lock';
+
+        touch($tempLock);
+        $this->access->uploadFile($tempLock, $this->restoreLockFile);
+        unlink($tempLock);
+    }
+
+    public function unlock()
+    {
+        $this->access->deleteFile($this->restoreLockFile);
     }
 
     public function getFolderNameFromArchive($srcArchive)
@@ -71,7 +106,7 @@ class Restore extends Backup
      * @return string
      * @throws RestoreErrorException
      */
-    public function prepareArchiveFolder($srcArchive)
+    protected function prepareArchiveFolder($srcArchive)
     {
         $access = $this->access;
         $instance = $this->instance;
@@ -82,34 +117,37 @@ class Restore extends Backup
             $archivePath = $this->uploadArchive($srcArchive);
         }
 
-        $path = $access->getInterpreterPath();
         if (!$access->fileExists($archiveRoot)) {
-            $script = sprintf("echo mkdir('%s', 0777, true);", $archiveRoot);
-            $command = $access->createCommand($path, ["-r {$script}"]);
-            $command->run();
-
-            if (empty($command->getStdoutContent())) {
-                throw new RestoreErrorException(
-                    "Can't create '$archiveRoot': "
-                    . $command->getStderrContent(),
-                    RestoreErrorException::CREATEDIR_ERROR
-                );
-            }
+            $this->createRestoreRootFolder($archiveRoot);
         }
 
         $this->restoreDirname = $this->getFolderNameFromArchive($srcArchive);
-        $archiveFolder = $archiveRoot . DIRECTORY_SEPARATOR . $this->restoreDirname;
+        $restoreFolder =  $this->getRestoreFolder();
 
-        if ($access->fileExists($archiveFolder)) {
-            throw new RestoreErrorException(
-                sprintf("Restore folder %s detected.", $archiveFolder),
-                RestoreErrorException::CREATEDIR_ERROR
-            );
+        // If the restore folder exists, remove to avoid decompression issues;
+        if ($access->fileExists($restoreFolder)) {
+            $this->removeRestoreFolder();
         }
 
         $this->decompressArchive($archiveRoot, $archivePath);
 
-        return $archiveFolder;
+        return $restoreFolder;
+    }
+
+    public function createRestoreRootFolder($archiveRoot)
+    {
+        $path = $this->access->getInterpreterPath();
+        $script = sprintf("echo mkdir('%s', 0777, true);", $archiveRoot);
+        $command = $this->access->createCommand($path, ["-r {$script}"]);
+        $command->run();
+
+        if (empty($command->getStdoutContent())) {
+            throw new RestoreErrorException(
+                "Can't create '$archiveRoot': "
+                . $command->getStderrContent(),
+                RestoreErrorException::CREATEDIR_ERROR
+            );
+        }
     }
 
     public function readManifest($manifestPath)
@@ -188,7 +226,11 @@ class Restore extends Backup
         return $folders;
     }
 
-    public function restoreFiles($srcContent = null)
+    /**
+     * @param string $srcContent
+     * @throws RestoreErrorException
+     */
+    public function restoreFiles(string $srcContent)
     {
         if (is_dir($srcContent)) {
             $this->restoreFilesFromFolder($srcContent);
@@ -197,13 +239,17 @@ class Restore extends Backup
         }
     }
 
-    public function restoreFilesFromArchive($srcArchive)
+    /**
+     * @param string $srcArchive
+     * @throws RestoreErrorException
+     */
+    protected function restoreFilesFromArchive(string $srcArchive)
     {
         $srcFolder = $this->prepareArchiveFolder($srcArchive);
         return $this->restoreFilesFromFolder($srcFolder);
     }
 
-    public function restoreFilesFromFolder($srcFolder)
+    protected function restoreFilesFromFolder(string $srcFolder)
     {
         $manifest = "{$srcFolder}/manifest.txt";
         $folders = $this->readManifest($manifest);
@@ -619,5 +665,27 @@ class Restore extends Backup
     {
         $sourceInstance = $this->getSourceInstance();
         return $sourceInstance && $sourceInstance->type == 'local' && $this->instance->type == 'ssh';
+    }
+
+    public function removeRestoreFolder(): void
+    {
+        $this->removeFolder($this->getRestoreFolder());
+    }
+
+    public function removeRestoreRootFolder(): void
+    {
+        $this->removeFolder($this->getRestoreRoot());
+    }
+
+    private function removeFolder($path):void
+    {
+        $flags = '-Rf';
+        if (ApplicationHelper::isWindows()) {
+            $flags = "-r";
+        }
+
+        $this->access->shellExec(
+            sprintf("rm %s %s", $flags, $path)
+        );
     }
 }

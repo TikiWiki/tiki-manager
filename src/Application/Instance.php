@@ -15,7 +15,6 @@ use TikiManager\Libs\Helpers\Archive;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\VersionControl\Svn;
-use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 
 class Instance
@@ -706,38 +705,38 @@ SQL;
     /**
      * Restore instance
      *
-     * @param $src_app
+     * @param $srcApp
      * @param $archive
      * @param bool $clone
      * @param bool $checksumCheck
      * @param bool $direct
-     * @return mixed
+     * @throws Exception\FolderPermissionException
+     * @throws Exception\RestoreErrorException
      */
-    public function restore($src_app, $archive, $clone = false, $checksumCheck = false, $direct = false)
+    public function restore($srcApp, $archive, $clone = false, $checksumCheck = false, $direct = false)
     {
-        $access = $this->getBestAccess('scripting');
+        $restore = new Restore($this, $direct);
+        $restore->lock();
 
-        $sourceInstance = null;
         $message = "Restoring files from '{$archive}' into {$this->name}...";
 
-        if ($direct && $src_app instanceof Instance) {
-            $message = "Restoring files from '{$src_app->name}' into {$this->name}...";
+        if ($direct && $srcApp instanceof Instance) {
+            $message = "Restoring files from '{$srcApp->name}' into {$this->name}...";
         }
 
         $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
 
-        $restore = new Restore($this, $direct);
         $restore->setProcess($clone);
 
         if ($direct) {
             $restore->setRestoreRoot(dirname($archive));
             $restore->setRestoreDirname(basename($archive));
-            $restore->setSourceInstance($src_app);
+            $restore->setSourceInstance($srcApp);
         }
 
         $restore->restoreFiles($archive);
 
-        $this->app = isset($src_app->app) ? $src_app->app : $src_app;
+        $this->app = isset($srcApp->app) ? $srcApp->app : $srcApp;
         $this->save();
 
         $this->io->writeln('Restoring database...');
@@ -751,9 +750,8 @@ SQL;
             try {
                 $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
             } catch (\Exception $e) {
-                $error = $e->getMessage();
-                $this->io->error($error);
-                return $error;
+                $restore->unlock();
+                throw $e;
             }
         } else {
             $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
@@ -763,6 +761,7 @@ SQL;
         $this->vcs_type = $this->getDiscovery()->detectVcsType();
 
         if (!$this->findApplication()) { // a version is created in this call
+            $restore->unlock();
             $this->io->error('Something went wrong with restore. Unable to read application details.');
             return;
         }
@@ -804,15 +803,10 @@ SQL;
         }
 
         if (!$direct) {
-            $flags = '-Rf';
-            if (ApplicationHelper::isWindows()) {
-                $flags = "-r";
-            }
-
-            $access->shellExec(
-                sprintf("rm %s %s", $flags, $this->tempdir . DIRECTORY_SEPARATOR . 'restore')
-            );
+            $restore->removeRestoreRootFolder();
         }
+
+        $restore->unlock();
     }
 
     public function getExtraBackups()

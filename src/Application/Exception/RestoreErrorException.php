@@ -13,4 +13,5 @@ class RestoreErrorException extends \Exception
     const MANIFEST_ERROR = 3;
     const COPY_ERROR = 4;
     const INVALID_PATHS = 5;
+    const LOCK_ERROR = 6;
 }
