@@ -28,6 +28,7 @@ require __DIR__ . '/vendor/autoload.php';
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use TikiManager\Config\Environment;
 use TikiManager\Manager\UpdateManager;
@@ -108,6 +109,15 @@ $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $
         $io = \TikiManager\Config\App::get('io');
         $io->warning('A new version is available. Run `manager:update` to update.');
     }
+});
+$dispatcher->addListener(ConsoleEvents::ERROR, function (ConsoleErrorEvent $event) {
+    $io = \TikiManager\Config\App::get('io');
+
+    $error = $event->getError();
+    $io->error($error->getMessage());
+    trim_output($error);
+
+    exit($event->getExitCode());
 });
 $application->setDispatcher($dispatcher);
 
