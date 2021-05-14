@@ -24,56 +24,78 @@ use TikiManager\Tests\Helpers\Instance as InstanceHelper;
  */
 class RestoreInstanceCommandTest extends TestCase
 {
+    protected static $instanceType;
     private static $instanceBasePath;
-    private static $tempPath;
     private static $instanceIds = [];
-    private static $dbLocalFileTrunk;
-    private static $instancePathTrunk;
-    private static $dbLocalFileBlankToTrunk;
-    private static $instancePathBlank;
+    private static $dbLocalFileInstance1;
+    private static $instance1Path;
+    private static $dbLocalFileInstance2;
+    private static $instance2Path;
+    protected static $instanceSettings;
 
     public static function setUpBeforeClass()
     {
-        $basePath = $_ENV['TESTS_BASE_FOLDER'];
-        self::$instanceBasePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'restore']);
-        self::$tempPath = implode(DIRECTORY_SEPARATOR, [$basePath, 'manager']);
+        static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
+        self::$instanceBasePath = $_ENV['TESTS_BASE_FOLDER'] . '/restore';
 
         // instances paths
-        self::$instancePathTrunk = implode(DIRECTORY_SEPARATOR, [self::$instanceBasePath, 'instance1']);
-        self::$instancePathBlank = implode(DIRECTORY_SEPARATOR, [self::$instanceBasePath, 'instance2']);
+        self::$instance1Path = implode(DIRECTORY_SEPARATOR, [self::$instanceBasePath, 'instance1']);
+        self::$instance2Path = implode(DIRECTORY_SEPARATOR, [self::$instanceBasePath, 'instance2']);
 
-        self::$dbLocalFileTrunk = implode(DIRECTORY_SEPARATOR, [self::$instancePathTrunk, 'db', 'local.php']);
-        self::$dbLocalFileBlankToTrunk = implode(DIRECTORY_SEPARATOR, [self::$instancePathBlank, 'db', 'local.php']);
+        self::$dbLocalFileInstance1 = implode(DIRECTORY_SEPARATOR, [self::$instance1Path, 'db', 'local.php']);
+        self::$dbLocalFileInstance2 = implode(DIRECTORY_SEPARATOR, [self::$instance2Path, 'db', 'local.php']);
 
-        $instanceId = InstanceHelper::create([
-            InstanceHelper::WEBROOT_OPTION => self::$instancePathTrunk,
-            InstanceHelper::TEMPDIR_OPTION => self::$tempPath,
+        self::$instanceSettings = [
+            'local' => [
+                InstanceHelper::WEBROOT_OPTION => self::$instance1Path,
+            ],
+            'ssh' => [
+                InstanceHelper::TYPE_OPTION => 'ssh',
+                InstanceHelper::HOST_NAME_OPTION => $_ENV['SSH_HOST_NAME'],
+                InstanceHelper::HOST_PORT_OPTION => $_ENV['SSH_HOST_PORT'] ?: 22,
+                InstanceHelper::HOST_USER_OPTION => $_ENV['SSH_HOST_USER'],
+                InstanceHelper::HOST_PASS_OPTION => $_ENV['SSH_HOST_PASS'] ?: null,
+                InstanceHelper::WEBROOT_OPTION => self::$instance1Path,
+                InstanceHelper::DB_HOST_OPTION => $_ENV['SSH_DB_HOST'],
+                InstanceHelper::DB_USER_OPTION => $_ENV['SSH_DB_USER'],
+                InstanceHelper::DB_PASS_OPTION => $_ENV['SSH_DB_PASS'],
+            ]
+        ];
+
+        $instanceId = InstanceHelper::create(self::$instanceSettings[static::$instanceType]);
+
+        self::$instanceIds['instance1'] = $instanceId;
+
+        $blankOptions = array_merge(self::$instanceSettings[static::$instanceType], [
+            InstanceHelper::NAME_OPTION => 'blank.tiki.org',
+            InstanceHelper::WEBROOT_OPTION => self::$instance2Path,
         ]);
 
-        self::$instanceIds[] = $instanceId;
+        $instanceId = InstanceHelper::create($blankOptions, true);
 
-        $instance = Instance::getInstance(self::$instanceIds[0]);
+        self::$instanceIds['instance2'] = $instanceId;
+
+        $instance = Instance::getInstance(self::$instanceIds['instance1']);
         $instance->backup();
-
-        $instanceId = InstanceHelper::create([
-            InstanceHelper::NAME_OPTION => 'blank.tiki.org',
-            InstanceHelper::WEBROOT_OPTION => self::$instancePathBlank,
-            InstanceHelper::TEMPDIR_OPTION => self::$tempPath,
-        ], true);
-
-        self::$instanceIds[] = $instanceId;
     }
 
     public static function tearDownAfterClass()
     {
+        foreach (self::$instanceIds as $instanceId) {
+            $instance = Instance::getInstance($instanceId);
+            $access = $instance->getBestAccess();
+            $access->shellExec('rm -rf ' . $instance->webroot);
+            $instance->delete();
+        }
+
         $fs = new Filesystem();
         $fs->remove(self::$instanceBasePath);
     }
 
-    public function testRestoreLocalInstance()
+    public function testRestoreInstance()
     {
-        $this->assertNotFalse(self::$instanceIds[0]);
-        $this->assertNotFalse(self::$instanceIds[1]);
+        $this->assertNotFalse(self::$instanceIds['instance1']);
+        $this->assertNotFalse(self::$instanceIds['instance2']);
 
         $application = new Application();
         $application->add(new RestoreInstanceCommand());
@@ -81,64 +103,84 @@ class RestoreInstanceCommandTest extends TestCase
         $command = $application->find('instance:restore');
         $commandTester = new CommandTester($command);
 
-        $commandTester->setInputs([
-            self::$instanceIds[1], // blank instance
-            self::$instanceIds[0], // trunk instance
+        $inputs = [
+            self::$instanceIds['instance2'], // blank instance
+            self::$instanceIds['instance1'], // trunk instance
             0, // first backup in list (last backup)
-            // Database ROOT credentials are passed in $_ENV
-            'yes', // DB create database and user
-            substr(md5(random_bytes(5)), 0, 8) // DB prefix
-        ]);
+        ];
+
+        // LOCAL - Database ROOT credentials are passed in $_ENV
+        if (static::$instanceType == 'ssh') {
+            $inputs[] = $_ENV['SSH_DB_HOST'];
+            $inputs[] = $_ENV['SSH_DB_USER'];
+            $inputs[] = $_ENV['SSH_DB_PASS'];
+        }
+
+        $inputs[] = 'yes'; // DB create database and user
+        $inputs[] = substr(md5(random_bytes(5)), 0, 8); // DB prefix
+
+        $commandTester->setInputs($inputs);
 
         $commandTester->execute([
-                'command'  => $command->getName()
+            'command'  => $command->getName()
         ]);
 
         $output = $commandTester->getDisplay();
         $this->assertContains('It is now time to test your site: blank.tiki.org', $output);
         $this->assertEquals(0, $commandTester->getStatusCode());
-        $this->assertFileExists(self::$dbLocalFileBlankToTrunk);
+
+        $restoredInstance = Instance::getInstance(self::$instanceIds['instance2']);
+        $this->assertTrue($restoredInstance->getBestAccess()->fileExists(self::$dbLocalFileInstance2));
     }
 
     /**
-     * @depends testRestoreLocalInstance
+     * @depends testRestoreInstance
      */
     public function testDiffDataBase()
     {
-        $this->assertFileExists(self::$dbLocalFileTrunk);
-        $this->assertFileExists(self::$dbLocalFileBlankToTrunk);
-
-        $fileSystem = new Filesystem();
-        if ($fileSystem->exists(self::$dbLocalFileTrunk) && $fileSystem->exists(self::$dbLocalFileBlankToTrunk)) {
-            $trunkConfig = Database::getInstanceDataBaseConfig(self::$dbLocalFileTrunk);
-            $blankToTrunkConfig = Database::getInstanceDataBaseConfig(self::$dbLocalFileBlankToTrunk);
-
-            $host = getenv('DB_HOST'); // DB Host
-            $user = getenv('DB_USER'); // DB Root User
-            $pass = getenv('DB_PASS'); // DB Root Password
-            $port = getenv('DB_PORT') ?? '3306';
-
-            $db1 = $trunkConfig['dbname'];
-            $db2 = $blankToTrunkConfig['dbname'];
-
-            // This command cannot be changed due to dbdiff require autoload path
-           $command = [
-               "vendor/dbdiff/dbdiff/dbdiff",
-                "--server1=$user:$pass@$host:$port",
-                "--type=data",
-                "--include=all", // no UP or DOWN will be used
-                "--nocomments",
-                "server1.$db1:server1.$db2"
-            ];
-
-            $process = new Process($command, $_ENV['TRIM_ROOT'] . '/vendor-bin/dbdiff');
-            $process->setTimeout(0);
-            $process->run();
-
-            $this->assertEquals(0, $process->getExitCode());
-            $output = $process->getOutput();
-            $this->assertContains('Identical resources', $output);
-            $this->assertContains('Completed', $output);
+        //This only works on Local instances
+        if (static::$instanceType != 'local') {
+            $this->markTestSkipped('Instance types not supported');
         }
+
+        $sourceInstance = Instance::getInstance(self::$instanceIds['instance1']);
+        $restoredInstance = Instance::getInstance(self::$instanceIds['instance2']);
+
+        $this->assertTrue($sourceInstance->getBestAccess()->fileExists(static::$dbLocalFileInstance1));
+        $this->assertTrue($restoredInstance->getBestAccess()->fileExists(static::$dbLocalFileInstance2));
+
+        $trunkConfig = Database::getInstanceDataBaseConfig(self::$dbLocalFileInstance1);
+        $blankToTrunkConfig = Database::getInstanceDataBaseConfig(self::$dbLocalFileInstance2);
+
+        $host = getenv('DB_HOST'); // DB Host
+        $user = getenv('DB_USER'); // DB Root User
+        $pass = getenv('DB_PASS'); // DB Root Password
+        $port = getenv('DB_PORT') ?? '3306';
+
+        $db1 = $trunkConfig['dbname'];
+        $db2 = $blankToTrunkConfig['dbname'];
+
+        // This command cannot be changed due to dbdiff require autoload path
+        $command = [
+            "vendor/dbdiff/dbdiff/dbdiff",
+            "--server1=$user:$pass@$host:$port",
+            "--type=data",
+            "--include=all", // no UP or DOWN will be used
+            "--nocomments",
+            "server1.$db1:server1.$db2"
+        ];
+
+        $process = new Process($command, $_ENV['TRIM_ROOT'] . '/vendor-bin/dbdiff');
+        $process->setTimeout(0);
+        $process->run();
+
+        $this->assertEquals(0, $process->getExitCode());
+        $output = $process->getOutput();
+
+        // For debugging purposes
+        echo $output;
+
+        $this->assertContains('Identical resources', $output);
+        $this->assertContains('Completed', $output);
     }
 }

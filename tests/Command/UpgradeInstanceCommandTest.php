@@ -8,11 +8,11 @@
 namespace TikiManager\Tests\Command;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
 use TikiManager\Command\UpgradeInstanceCommand;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
@@ -23,62 +23,85 @@ use TikiManager\Tests\Helpers\Instance as InstanceHelper;
  */
 class UpgradeInstanceCommandTest extends TestCase
 {
+    protected static $instanceType;
     protected static $instancePath;
-    protected static $instancePath1;
+    protected static $dbLocalFile;
+    protected static $instanceSettings;
+    protected static $instanceIds;
 
     public static function setUpBeforeClass()
     {
-        $basePath = $_ENV['TESTS_BASE_FOLDER'];
-        self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'upgrade']);
-        self::$instancePath1 = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'instance1']);
+        static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
+        $basePath = $_ENV['TESTS_BASE_FOLDER'] . '/upgrade';
+
+        self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'instance']);
+        self::$dbLocalFile =  implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'db', 'local.php']);
+
+        $vcs = strtoupper($_ENV['DEFAULT_VCS']);
+        $branch = $vcs === 'SRC' ? $_ENV['PREV_SRC_MINOR_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
+
+        self::$instanceSettings = [
+            'local' => [
+                InstanceHelper::WEBROOT_OPTION => self::$instancePath,
+                InstanceHelper::BRANCH_OPTION => $branch,
+            ],
+            'ssh' => [
+                InstanceHelper::TYPE_OPTION => 'ssh',
+                InstanceHelper::BRANCH_OPTION => $branch,
+                InstanceHelper::HOST_NAME_OPTION => $_ENV['SSH_HOST_NAME'],
+                InstanceHelper::HOST_PORT_OPTION => $_ENV['SSH_HOST_PORT'] ?: 22,
+                InstanceHelper::HOST_USER_OPTION => $_ENV['SSH_HOST_USER'],
+                InstanceHelper::HOST_PASS_OPTION => $_ENV['SSH_HOST_PASS'] ?: null,
+                InstanceHelper::WEBROOT_OPTION => self::$instancePath,
+                InstanceHelper::DB_HOST_OPTION => $_ENV['SSH_DB_HOST'],
+                InstanceHelper::DB_USER_OPTION => $_ENV['SSH_DB_USER'],
+                InstanceHelper::DB_PASS_OPTION => $_ENV['SSH_DB_PASS'],
+            ]
+        ];
+
+        self::$instanceIds['instance'] = InstanceHelper::create(self::$instanceSettings[static::$instanceType]);
     }
 
     public static function tearDownAfterClass()
     {
-        $fs = new Filesystem();
-        $fs->remove(self::$instancePath);
-    }
-
-    public function testUpgradeLocalCloneInstance()
-    {
-        if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
-            $branch = $_ENV['PREV_SRC_MAJOR_RELEASE'];
-            $upgradeBranch = $_ENV['LATEST_SRC_RELEASE'];
-        } else {
-            $branch = $_ENV['PREV_VERSION_BRANCH'];
-            $upgradeBranch = $_ENV['MASTER_BRANCH'];
+        foreach (self::$instanceIds as $instanceId) {
+            $instance = Instance::getInstance($instanceId);
+            $access = $instance->getBestAccess();
+            $access->shellExec('rm -rf ' . $instance->webroot);
+            $instance->delete();
         }
 
-        $instanceId = InstanceHelper::create([
-            '--webroot' => self::$instancePath1,
-            '--branch' => VersionControl::formatBranch($branch),
-        ]);
-        $this->assertNotFalse($instanceId);
+        $fs = new Filesystem();
+        $fs->remove($_ENV['TESTS_BASE_FOLDER'] . '/upgrade');
+    }
 
-        $application = new Application();
-        $application->add(new UpgradeInstanceCommand());
-        $command = $application->find('instance:upgrade');
-        $commandTester = new CommandTester($command);
+    public function testUpgradeInstance()
+    {
+        $isSrc = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC';
+        $upgradeBranch = $isSrc ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['MASTER_BRANCH'];
+        $expectedBranch = VersionControl::formatBranch($upgradeBranch);
+
+        $instanceId = static::$instanceIds['instance'];
+
+        $command = new UpgradeInstanceCommand();
 
         $arguments = [
-            'command' => $command->getName(),
             '--instances' => $instanceId,
-            '--branch' => VersionControl::formatBranch($upgradeBranch),
+            '--branch' => $expectedBranch,
             '--skip-cache-warmup' => true,
             '--skip-reindex' => true,
         ];
 
-        $commandTester->execute($arguments);
+        $input = new ArrayInput($arguments, $command->getDefinition());
+        $input->setInteractive(false);
 
-        // So we have the execution output
-        echo $commandTester->getDisplay();
+        $exitCode = $command->run($input, App::get('output'));
+        $this->assertEquals(0, $exitCode);
 
-        $this->assertEquals(0, $commandTester->getStatusCode());
-
-        $instance = (new Instance())->getInstance($instanceId);
+        $instance = Instance::getInstance($instanceId);
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
 
-        $this->assertEquals(VersionControl::formatBranch($upgradeBranch), $resultBranch);
+        $this->assertEquals($expectedBranch, $resultBranch);
     }
 }

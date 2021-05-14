@@ -32,11 +32,11 @@ class SSH extends Access implements ShellPrompt
         // try the parent directory
         if ($this->changeLocation === null && !empty($this->instance->webroot)) {
             $output = $host->runCommands(['cd ' . $this->instance->webroot . ' && echo EXISTS']);
-            if ($output == "EXISTS") {
+            if (trim($output) == "EXISTS") {
                 $this->changeLocation = $this->instance->webroot;
             } else {
                 $output = $host->runCommands(['cd ' . dirname($this->instance->webroot) . ' && echo EXISTS']);
-                if ($output == "EXISTS") {
+                if (trim($output) == "EXISTS") {
                     $this->changeLocation = dirname($this->instance->webroot);
                 }
             }
@@ -405,7 +405,7 @@ class SSH extends Access implements ShellPrompt
             $options['env'] = $this->env;
         }
 
-        return $command->run($host);
+        return $command->run($host, $options);
     }
 
     public function openShell($workingDir = '')

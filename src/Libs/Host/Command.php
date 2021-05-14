@@ -322,8 +322,10 @@ class Command
     /**
      * Runs this command in a host object
      *
-     * @param  Host $host    A host object
+     * @param null $host A host object
+     * @param array $options
      * @return Command  $this
+     * @throws CommandException
      */
     public function run($host = null, $options = [])
     {

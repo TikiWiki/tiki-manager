@@ -70,8 +70,6 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $helper = $this->getHelper('question');
-
         $checksumCheck = false;
         if ($input->getOption('check')) {
             $checksumCheck = true;
@@ -91,14 +89,15 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             $this->io->newLine();
             $this->io->writeln('<comment>In case you want to upgrade more than one instance, please use a comma (,) between the values</comment>');
 
-            $question = CommandHelper::getQuestion('Which instance(s) do you want to upgrade', null, '?');
-            $question->setValidator(function ($answer) use ($instances) {
-                return CommandHelper::validateInstanceSelection($answer, $instances);
-            });
-
-            $selectedInstances = $helper->ask($input, $output, $question);
+            $selectedInstances = $this->io->ask(
+                'Which instance(s) do you want to upgrade?',
+                null,
+                function ($answer) use ($instances) {
+                    return CommandHelper::validateInstanceSelection($answer, $instances);
+                }
+            );
         } else {
-            $validInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
+            CommandHelper::validateInstanceSelection($instancesOption, $instances);
             $instancesOption = explode(',', $instancesOption);
             $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
         }
@@ -159,8 +158,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                     }
                     $versionSel = getEntries($versions, $selectedVersion);
                 } else {
-                    $question = CommandHelper::getQuestion('Which version do you want to upgrade to', null, '?');
-                    $selectedVersion = $helper->ask($input, $output, $question);
+                    $selectedVersion = $this->io->ask('Which version do you want to upgrade to?', null);
                     $versionSel = getEntries($versions, $selectedVersion);
                 }
 

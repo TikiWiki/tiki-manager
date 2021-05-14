@@ -6,13 +6,12 @@
 
 namespace TikiManager\Libs\Host;
 
+use Symfony\Component\Process\Process;
 use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 
 class Local
 {
-    private static $resources = [];
-
     private $env;
     private $last_command_exit_code = 0;
     private $location;
@@ -41,55 +40,30 @@ class Local
         return $this->last_command_exit_code !== 0;
     }
 
-    public function runCommand($command, $options = [])
+    public function runCommand(Command $command, array $options = [])
     {
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
-        $env = !empty($options['env']) ? $options['env'] : $this->env;
-
-        if (empty($cwd)) {
-            $cwd = null;
-        }
-
-        if (empty($env)) {
-            $env = null;
-        } else {
-            $env = $this->mergeWithExistingEnvironmentVariables($env);
-        }
-
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-            3 => ["pipe", "w"]
-        ];
+        $env = !empty($options['env']) ? $options['env'] : [];
 
         $commandLine = $command->getFullCommand();
-        $commandLine .= ApplicationHelper::isWindows() ? '' : '; echo $? >&3';
 
-        $process = proc_open($commandLine, $descriptorspec, $pipes, $cwd, $env);
+        $process = Process::fromShellCommandline($commandLine)
+            ->setTimeout(3600)
+            ->setEnv($env);
 
-        if (!is_resource($process)) {
-            return $command;
+        if ($stdIn = $command->getStdin()) {
+            $process->setInput($stdIn);
         }
 
-        $stdin = $command->getStdin();
-        if (is_resource($stdin)) {
-            stream_copy_to_stream($stdin, $pipes[0]);
+        if ($cwd) {
+            $process->setWorkingDirectory($cwd);
         }
-        fclose($pipes[0]);
 
-        $stdOut = stream_get_contents($pipes[1]);
-        $strErr = stream_get_contents($pipes[2]);
-        $return = stream_get_contents($pipes[3]);
+        $process->run();
 
-        $return = intval(trim($return));
-        fclose($pipes[3]);
-
-        $command->setStdout($stdOut);
-        $command->setStderr($strErr);
-        $command->setProcess($process);
-        $command->setReturn($return);
+        $command->setStdout($process->getOutput());
+        $command->setStderr($process->getErrorOutput());
+        $command->setReturn($process->getExitCode());
 
         return $command;
     }
@@ -111,41 +85,31 @@ class Local
             array_unshift($commandPrefixArray, 'cd ' . escapeshellarg($this->location));
         }
 
-        if (!ApplicationHelper::isWindows()) {
-            foreach ($this->env as $name => $value) {
-                array_unshift($commandPrefixArray, "export $name=$value");
-            }
-
-            if (count($commandPrefixArray)) {
-                $commandPrefixArray[] = '';
-                $commandPrefix = implode(' ;', $commandPrefixArray);
-            }
-        }
-
         $contents = '';
         foreach ($commands as $cmd) {
             $cmd = $commandPrefix . $cmd . ' 2>&1';
-
             debug(var_export($this->env, true) . "\n" . $cmd);
-            $ph = popen($cmd, 'r');
 
-            $result = '';
-            if (is_resource($ph)) {
-                $result = trim(stream_get_contents($ph));
-                $code = pclose($ph);
-                $this->last_command_exit_code = $code;
-                trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] ' . $cmd . ' - return: ' . $code . (empty($result) ? '' : "\n" . $result));
-                if ($code != 0) {
-                    if ($output) {
-                        warning(sprintf('%s [%d]', $cmd, $code));
-                        $this->io->error($result, $prefix = '    ');
-                    }
-                } else {
-                    $contents .= (!empty($contents) ? "\n" : '') . $result;
+            $process = Process::fromShellCommandline($cmd . ' 2>&1', $this->location, $this->env, null, 3600);
+            $process->run();
+
+            $result = $process->getOutput();
+            $exitCode = $process->getExitCode();
+
+            $this->last_command_exit_code = $exitCode;
+
+            trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] ' . $cmd . ' - return: ' . $exitCode . (empty($result) ? '' : "\n" . $result));
+
+            if ($exitCode) {
+                if ($output) {
+                    warning(sprintf('%s [%d]', $cmd, $exitCode));
+                    $this->io->error($result);
                 }
-
-                debug($result, $prefix = "({$code})>>", "\n\n");
+            } else {
+                $contents .= (!empty($contents) ? "\n" : '') . $result;
             }
+
+            debug($result, $prefix = "({$exitCode})>>", "\n\n");
         }
 
         return $contents;

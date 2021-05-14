@@ -14,6 +14,7 @@ use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
 use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Config\App;
+use TikiManager\Config\Environment;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\Git;
@@ -448,6 +449,7 @@ class Tiki extends Application
         $this->installed = true;
 
         $version = $this->registerCurrentInstallation();
+        $this->installComposer();
         $this->runComposer(); // fix permissions does not return a proper exit code if composer fails
         $this->fixPermissions();
 
@@ -731,6 +733,24 @@ TXT;
         return $compatible;
     }
 
+    public function installComposer()
+    {
+        if ($this->instance->getBestAccess()->fileExists('temp/composer.phar')) {
+            return;
+        }
+
+        $fs = new Filesystem();
+        $cacheFile = Environment::get('CACHE_FOLDER') . '/composer_v1.phar';
+
+        if (!$fs->exists($cacheFile)) {
+            $tmp = Environment::get('TEMP_FOLDER');
+            $path = installComposer($tmp, 1);
+            $fs->rename($path, $cacheFile);
+        }
+
+        $this->instance->getBestAccess()->uploadFile($cacheFile, 'temp/composer.phar');
+    }
+
     /**
      * Run composer install
      *
@@ -797,6 +817,7 @@ TXT;
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
+            $this->installComposer();
             $this->runComposer();
         }
 

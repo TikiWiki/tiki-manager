@@ -81,7 +81,6 @@ class UpdateInstanceCommand extends TikiManagerCommand
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
         if (isset($instancesInfo)) {
-            $helper = $this->getHelper('question');
             $instancesOption = $input->getOption('instances');
 
             $auto = false;
@@ -90,10 +89,10 @@ class UpdateInstanceCommand extends TikiManagerCommand
             $argument = $input->getArgument('mode');
             if (isset($argument) && !empty($argument)) {
                 if (is_array($argument)) {
-                    $auto = $input->getArgument('mode')[0] == 'auto' ? true : false;
-                    $switch = $input->getArgument('mode')[0] == 'switch' ? true : false;
+                    $auto = $input->getArgument('mode')[0] == 'auto';
+                    $switch = $input->getArgument('mode')[0] == 'switch';
                 } else {
-                    $switch = $input->getArgument('mode') == 'switch' ? true : false;
+                    $switch = $input->getArgument('mode') == 'switch';
                 }
             }
 
@@ -119,12 +118,13 @@ class UpdateInstanceCommand extends TikiManagerCommand
                     $this->io->newLine();
                     $this->io->writeln('<comment>In case you want to ' . $action . ' more than one instance, please use a comma (,) between the values</comment>');
 
-                    $question = CommandHelper::getQuestion('Which instance(s) do you want to ' . $action, null, '?');
-                    $question->setValidator(function ($answer) use ($instances) {
-                        return CommandHelper::validateInstanceSelection($answer, $instances);
-                    });
-
-                    $selectedInstances = $helper->ask($input, $output, $question);
+                    $selectedInstances = $this->io->ask(
+                        'Which instance(s) do you want to ' . $action . '?',
+                        null,
+                        function ($answer) use ($instances) {
+                            return CommandHelper::validateInstanceSelection($answer, $instances);
+                        }
+                    );
                 } else {
                     CommandHelper::validateInstanceSelection($instancesOption, $instances);
                     $instancesOption = explode(',', $instancesOption);
@@ -201,8 +201,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                             }
                             $versionSel = getEntries($versions, $selectedVersion);
                         } else {
-                            $question = CommandHelper::getQuestion('Which version do you want to upgrade to', null, '?');
-                            $selectedVersion = $helper->ask($input, $output, $question);
+                            $selectedVersion = $this->io->ask('Which version do you want to upgrade to?', null);
                             $versionSel = getEntries($versions, $selectedVersion);
                         }
 

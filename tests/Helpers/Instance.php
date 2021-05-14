@@ -34,6 +34,10 @@ class Instance
     const DB_USER_OPTION = '--db-user';
     const DB_PASS_OPTION = '--db-pass';
     const DB_PREFIX_OPTION = '--db-prefix';
+    const HOST_NAME_OPTION = '--host';
+    const HOST_PORT_OPTION = '--port';
+    const HOST_USER_OPTION = '--user';
+    const HOST_PASS_OPTION = '--pass';
 
     public static function create($config = [], $blank = false)
     {
@@ -45,7 +49,6 @@ class Instance
             self::NAME_OPTION => 'managertest.tiki.org',
             self::EMAIL_OPTION => 'dummy@example.com',
             self::WEBROOT_OPTION => '/tmp/tiki-manager-www', // This value should be overridden
-            self::TEMPDIR_OPTION => '/tmp/tiki-manager-tmp',
             self::BRANCH_OPTION => VersionControl::formatBranch($branch),
             self::DB_HOST_OPTION => $_ENV['DB_HOST'],
             self::DB_USER_OPTION => $_ENV['DB_USER'],

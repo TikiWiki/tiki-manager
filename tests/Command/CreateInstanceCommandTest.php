@@ -8,8 +8,10 @@
 namespace TikiManager\Tests\Command;
 
 use ReflectionClass;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\Local;
+use TikiManager\Access\SSH;
 use TikiManager\Application\Instance;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
@@ -20,28 +22,38 @@ use TikiManager\Tests\Helpers\VersionControl;
  * @group Commands
  * @backupGlobals true
  */
-class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
+class CreateInstanceCommandTest extends TestCase
 {
+    protected static $instanceType;
     protected static $instancePath;
     protected static $tempPath;
-    protected static $dbLocalFileTrunk;
     protected static $instanceSettings = [];
     protected static $dbLocalFile;
     protected static $instanceId;
 
     public static function setUpBeforeClass()
     {
+        static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
         $basePath = $_ENV['TESTS_BASE_FOLDER'] . '/create';
 
         self::$tempPath = implode(DIRECTORY_SEPARATOR, [$basePath, 'tmp']);
         self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'instance']);
-        self::$dbLocalFileTrunk = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'db', 'local.php']);
         self::$dbLocalFile = implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'db', 'local.php']);
 
         self::$instanceSettings = [
             'local' => [
                 InstanceHelper::WEBROOT_OPTION => self::$instancePath,
-                InstanceHelper::TEMPDIR_OPTION => self::$tempPath,
+            ],
+            'ssh' => [
+                InstanceHelper::TYPE_OPTION => 'ssh',
+                InstanceHelper::HOST_NAME_OPTION => $_ENV['SSH_HOST_NAME'],
+                InstanceHelper::HOST_PORT_OPTION => $_ENV['SSH_HOST_PORT'] ?? 22,
+                InstanceHelper::HOST_USER_OPTION => $_ENV['SSH_HOST_USER'],
+                InstanceHelper::HOST_PASS_OPTION => $_ENV['SSH_HOST_PASS'] ?? null,
+                InstanceHelper::WEBROOT_OPTION => self::$instancePath,
+                InstanceHelper::DB_HOST_OPTION => $_ENV['SSH_DB_HOST'],
+                InstanceHelper::DB_USER_OPTION => $_ENV['SSH_DB_USER'],
+                InstanceHelper::DB_PASS_OPTION => $_ENV['SSH_DB_PASS'],
             ]
         ];
     }
@@ -51,14 +63,14 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
         static::deleteInstances();
 
         $fs = new Filesystem();
-        $fs->remove(self::$instancePath);
+        $fs->remove($_ENV['TESTS_BASE_FOLDER'] . '/create');
     }
 
-    public static function deleteInstances() {
-        $fs = new Filesystem();
-
+    public static function deleteInstances()
+    {
         if (static::$instanceId && $instance = Instance::getInstance(static::$instanceId)) {
-            $fs->remove($instance->webroot);
+            $access = $instance->getBestAccess();
+            $access->shellExec('rm -rf ' . $instance->webroot);
             $instance->delete();
         }
 
@@ -67,15 +79,19 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
     public function testLocalInstance()
     {
-        $instanceId = InstanceHelper::create(self::$instanceSettings['local']);
-
-        $fs = new Filesystem();
+        $instanceId = InstanceHelper::create(self::$instanceSettings[static::$instanceType]);
 
         $this->assertNotFalse($instanceId);
         $this->assertNotEquals(0, $instanceId);
-        $this->assertTrue($fs->exists(self::$instancePath));
-        $this->assertTrue($fs->exists(self::$dbLocalFileTrunk));
-        $this->assertTrue(is_link(self::$instancePath . '/.htaccess'));
+
+        $instance = Instance::getInstance($instanceId);
+        $access = $instance->getBestAccess();
+        $this->assertTrue($access->fileExists(self::$instancePath));
+        $this->assertTrue($access->fileExists(self::$dbLocalFile));
+
+        if (static::$instanceType == 'local') {
+            $this->assertTrue(is_link(self::$instancePath . '/.htaccess'));
+        }
 
         static::$instanceId = $instanceId;
     }
@@ -113,7 +129,7 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
      */
     public function testCreateWithSameNameInstance()
     {
-        $options = self::$instanceSettings['local'];
+        $options = self::$instanceSettings[static::$instanceType];
 
         $instanceId = InstanceHelper::create($options);
         $this->assertFalse($instanceId);
@@ -124,7 +140,7 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
      */
     public function testCreateWithSameAccessAndWebrootInstance()
     {
-        $options = self::$instanceSettings['local'];
+        $options = self::$instanceSettings[static::$instanceType];
         $options[InstanceHelper::NAME_OPTION] = 'managertest2.tiki.org'; // Instance name needs to be unique
 
         $instanceId = InstanceHelper::create($options);
@@ -140,14 +156,16 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
         $instance = Instance::getInstance(static::$instanceId);
         $instance->delete();
 
-        $options = self::$instanceSettings['local'];
+        $options = self::$instanceSettings[static::$instanceType];
 
         $fs = new Filesystem();
         $instanceId = InstanceHelper::create($options);
         $this->assertNotFalse($instanceId);
         $this->assertNotEquals(0, $instanceId);
-        $this->assertTrue($fs->exists(self::$instancePath));
-        $this->assertTrue($fs->exists(self::$dbLocalFileTrunk));
+        $instance = Instance::getInstance($instanceId);
+        $access = $instance->getBestAccess();
+        $this->assertTrue($access->fileExists(self::$instancePath));
+        $this->assertTrue($access->fileExists(self::$dbLocalFile));
 
         static::$instanceId = $instanceId;
     }
@@ -156,20 +174,24 @@ class CreateInstanceCommandTest extends \PHPUnit\Framework\TestCase
     {
         static::deleteInstances();
 
-        $fs = new Filesystem();
-        $fs->remove(self::$instancePath);
+        // A little hack (before removing the `chdir()` in Host\Local.php in chdir method
+        if (static::$instanceType == 'local') {
+            chdir(dirname(__DIR__, 2));
+        }
 
-        $options = array_merge(self::$instanceSettings['local'], ['--db-name' => 'test_db', '--db-prefix' => '']);
+        $options = array_merge(self::$instanceSettings[static::$instanceType], ['--db-name' => 'test_db', '--db-prefix' => '']);
         $instanceId = InstanceHelper::create($options);
 
-        $fs = new Filesystem();
         $this->assertNotFalse($instanceId);
         $this->assertNotEquals(0, $instanceId);
-        $this->assertTrue($fs->exists(self::$instancePath));
-        $this->assertTrue($fs->exists(self::$dbLocalFileTrunk));
+        $instance = Instance::getInstance($instanceId);
+        $access = $instance->getBestAccess();
+        $this->assertTrue($access->fileExists(self::$instancePath));
+        $this->assertTrue($access->fileExists(self::$dbLocalFile));
 
-        $this->assertTrue(file_exists(self::$dbLocalFile));
-        include(self::$dbLocalFile);
+        $path = $access->downloadFile(self::$dbLocalFile);
+
+        include($path);
 
         $this->assertEquals($options['--db-name'], $dbs_tiki);
 

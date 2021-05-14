@@ -1,3 +1,7 @@
+include:
+  - local: '/.gitlab-ci/stage-functional-tests-local.yml'
+  - local: '/.gitlab-ci/stage-functional-tests-ssh.yml'
+
 image: xorti/tiki-devops:7.2-qa-box
 
 variables:
@@ -6,6 +10,8 @@ variables:
   COMPOSER_FLAGS: '--ansi --no-progress --prefer-dist -n'
   SVN_SCHEDULER_NAME: 'test-tiki-manager-svn'
   SRC_SCHEDULER_NAME: 'test-tiki-manager-src'
+  INSTANCE_TYPE_SSH: 'ssh'
+  INSTANCE_TYPE_FTP: 'ftp'
 
 stages:
   - build
@@ -23,11 +29,14 @@ stages:
       - vendor-bin/
       - .composercache/files
 
+.install-composer-script: &install-composer-script
+  - composer install $COMPOSER_FLAGS
+  - composer bin all install $COMPOSER_FLAGS
+
 composer:
   stage: build
   script:
-    - composer install $COMPOSER_FLAGS
-    - composer bin all install $COMPOSER_FLAGS
+    - *install-composer-script
   cache:
     <<: *composer-cache
 
@@ -58,7 +67,7 @@ php-53-scripts:
 phpcs:
   stage: quality
   script:
-    - composer install $COMPOSER_FLAGS
+    - *install-composer-script
     - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git log -m -1 --name-only && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
     - git log -m -1 --name-only
     - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
@@ -76,7 +85,7 @@ phpcs-branches:
   variables:
     SBRANCH: "master"
   script:
-    - composer install $COMPOSER_FLAGS
+    - *install-composer-script
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git diff --name-status origin/$SBRANCH && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
     - git diff --name-status origin/$SBRANCH
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
@@ -89,7 +98,7 @@ phpcs-branches:
   except:
     - master
 
-code_quality:
+.code_quality:
   image: docker:stable
   stage: quality
   variables:
@@ -123,7 +132,7 @@ unit-tests:
   script:
     - echo 'APP_ENV=gitlab-ci' >> .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
-    - composer install $COMPOSER_FLAGS
+    - *install-composer-script
     - composer build-phar
     - ./vendor/bin/phpunit tests/ --group unit
   needs:
@@ -149,7 +158,7 @@ unit-tests:
   stage: pre-functional-tests
   before_script:
     - source .env.gitlab-ci
-    - composer install $COMPOSER_FLAGS
+    - *install-composer-script
   cache:
     <<: *tiki-manager-cache
   needs:
@@ -226,6 +235,15 @@ download-tiki-src-files:
 # FUNCTIONAL TESTS SECTION
 #----------------------------------------------------------------------------------------------------------------------#
 
+.setup-env: &setup-env
+  - echo APP_ENV=gitlab-ci >> .env
+  - echo DEFAULT_VCS=$VCS >> .env
+  - cat .env
+
+.setup-keys: &setup-keys
+  - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
+
+
 .template-tiki-manager-commands:
   image: xorti/tiki-devops:7.4-qa-box
   stage: functional-tests
@@ -233,12 +251,9 @@ download-tiki-src-files:
     - name: mysql:5.6
       alias: mysql
   before_script:
-    - echo APP_ENV=gitlab-ci >> .env
-    - echo DEFAULT_VCS=$VCS >> .env
-    - cat .env
-    - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
-    - composer install $COMPOSER_FLAGS
-    - composer bin all install $COMPOSER_FLAGS
+    - *setup-env
+    - *setup-keys
+    - *install-composer-script
   script:
     - ./vendor/bin/phpunit tests/Command/$TEST_FILE
   cache:
@@ -253,8 +268,6 @@ download-tiki-src-files:
   needs:
     - cache-warmup-tiki-git
   except:
-    refs:
-      - schedules
     variables:
       - $SCHEDULER == $SVN_SCHEDULER_NAME
       - $SCHEDULER == $SRC_SCHEDULER_NAME
@@ -282,132 +295,6 @@ download-tiki-src-files:
       - schedules
     variables:
       - $SCHEDULER == $SRC_SCHEDULER_NAME
-
-create-instance-git:
-  <<: *template-tiki-manager-commands-git
-  variables:
-    VCS: git
-    TEST_FILE: CreateInstanceCommandTest.php
-
-create-instance-svn:
-  <<: *template-tiki-manager-commands-svn
-  variables:
-    VCS: svn
-    TEST_FILE: CreateInstanceCommandTest.php
-
-create-instance-src:
-  <<: *template-tiki-manager-commands-src
-  variables:
-    VCS: src
-    TEST_FILE: CreateInstanceCommandTest.php
-
-update-instance-git:
-  <<: *template-tiki-manager-commands-git
-  variables:
-    VCS: git
-    TEST_FILE: UpdateInstanceCommandTest.php
-
-update-instance-svn:
-  <<: *template-tiki-manager-commands-svn
-  variables:
-    VCS: svn
-    TEST_FILE: UpdateInstanceCommandTest.php
-
-update-instance-src:
-  <<: *template-tiki-manager-commands-src
-  variables:
-    VCS: src
-    TEST_FILE: UpdateInstanceCommandTest.php
-
-upgrade-instance-git:
-  <<: *template-tiki-manager-commands-git
-  variables:
-    VCS: git
-    TEST_FILE: UpgradeInstanceCommandTest.php
-
-upgrade-instance-svn:
-  <<: *template-tiki-manager-commands-svn
-  variables:
-    VCS: svn
-    TEST_FILE: UpgradeInstanceCommandTest.php
-
-upgrade-instance-src:
-  <<: *template-tiki-manager-commands-src
-  variables:
-    VCS: src
-    TEST_FILE: UpgradeInstanceCommandTest.php
-
-backup-instance-git:
-  <<: *template-tiki-manager-commands-git
-  variables:
-    VCS: git
-    TEST_FILE: BackupInstanceCommandTest.php
-
-backup-instance-svn:
-  <<: *template-tiki-manager-commands-svn
-  variables:
-    VCS: svn
-    TEST_FILE: BackupInstanceCommandTest.php
-
-backup-instance-src:
-  <<: *template-tiki-manager-commands-src
-  variables:
-    VCS: src
-    TEST_FILE: BackupInstanceCommandTest.php
-
-restore-instance-git:
-  <<: *template-tiki-manager-commands-git
-  variables:
-    VCS: git
-    TEST_FILE: RestoreInstanceCommandTest.php
-
-restore-instance-svn:
-  <<: *template-tiki-manager-commands-svn
-  variables:
-    VCS: svn
-    TEST_FILE: RestoreInstanceCommandTest.php
-
-restore-instance-src:
-  <<: *template-tiki-manager-commands-src
-  variables:
-    VCS: src
-    TEST_FILE: RestoreInstanceCommandTest.php
-
-clone-instance-git:
-  <<: *template-tiki-manager-commands-git
-  variables:
-    VCS: git
-    TEST_FILE: CloneInstanceCommandTest.php
-
-clone-instance-svn:
-  <<: *template-tiki-manager-commands-svn
-  variables:
-    VCS: svn
-    TEST_FILE: CloneInstanceCommandTest.php
-
-clone-instance-src:
-  <<: *template-tiki-manager-commands-src
-  variables:
-    VCS: src
-    TEST_FILE: CloneInstanceCommandTest.php
-
-clone-upgrade-instance-git:
-  <<: *template-tiki-manager-commands-git
-  variables:
-    VCS: git
-    TEST_FILE: CloneAndUpgradeCommandTest.php
-
-clone-upgrade-instance-svn:
-  <<: *template-tiki-manager-commands-svn
-  variables:
-    VCS: svn
-    TEST_FILE: CloneAndUpgradeCommandTest.php
-
-clone-upgrade-instance-src:
-  <<: *template-tiki-manager-commands-src
-  variables:
-    VCS: src
-    TEST_FILE: CloneAndUpgradeCommandTest.php
 
 #----------------------------------------------------------------------------------------------------------------------#
 # PACKAGE SECTION

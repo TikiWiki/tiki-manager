@@ -7,6 +7,7 @@
 
 namespace TikiManager\Tests\Command;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Instance;
@@ -20,28 +21,35 @@ use TikiManager\Tests\Helpers\Instance as InstanceHelper;
  * @group Commands
  * @backupGlobals true
  */
-class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
+class CloneInstanceCommandTest extends TestCase
 {
-    static $instancePath;
-    static $instancePaths = [];
-    static $dbLocalFiles = [];
-    static $instanceIds = [];
-    static $ListCommandInput = [];
+    protected static $instanceType;
+    protected static $instancePath;
+    protected static $instancePaths = [];
+    protected static $dbLocalFiles = [];
+    protected static $instanceIds = [];
+    protected static $ListCommandInput = [];
 
-    static $dbConfig = [];
+    protected static $dbConfig = [];
 
-    static $prevVersionBranch;
+    protected static $prevVersionBranch;
 
     public static function setUpBeforeClass()
     {
-        if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
-            static::$prevVersionBranch = $_ENV['PREV_SRC_MAJOR_RELEASE'];
-        } else {
-            static::$prevVersionBranch = $_ENV['PREV_VERSION_BRANCH'];
-        }
+        static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
 
-        $basePath = $_ENV['TESTS_BASE_FOLDER'] . '/clone';
-        self::$instancePath = $basePath;
+        $isSrc = strtoupper($_ENV['DEFAULT_VCS']) === 'SRC';
+        static::$prevVersionBranch = $isSrc ? $_ENV['PREV_SRC_MAJOR_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
+
+        self::$instancePath = $_ENV['TESTS_BASE_FOLDER'] . '/clone';
+
+        $sshOptions = [
+            InstanceHelper::TYPE_OPTION => 'ssh',
+            InstanceHelper::HOST_NAME_OPTION => $_ENV['SSH_HOST_NAME'],
+            InstanceHelper::HOST_PORT_OPTION => $_ENV['SSH_HOST_PORT'] ?? 22,
+            InstanceHelper::HOST_USER_OPTION => $_ENV['SSH_HOST_USER'],
+            InstanceHelper::HOST_PASS_OPTION => $_ENV['SSH_HOST_PASS'] ?? null,
+        ];
 
         $instanceNames = [
             'source' => [],
@@ -51,7 +59,7 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
         ];
 
         foreach ($instanceNames as $instanceName => $options) {
-            self::$instancePaths[$instanceName] = implode(DIRECTORY_SEPARATOR, [$basePath, $instanceName]);
+            self::$instancePaths[$instanceName] = implode(DIRECTORY_SEPARATOR, [self::$instancePath, $instanceName]);
             self::$dbLocalFiles[$instanceName] = implode(DIRECTORY_SEPARATOR, [self::$instancePaths[$instanceName], 'db', 'local.php']);
 
             $sourceDetails = [
@@ -64,35 +72,55 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
             if (isset($options[0]) && is_array($options[0])) {
                 $sourceDetails = array_merge($sourceDetails, $options[0]);
             }
+
+            if (static::$instanceType == 'ssh') {
+                $sourceDetails = array_merge($sourceDetails, $sshOptions);
+            }
+
             self::$instanceIds[$instanceName] = InstanceHelper::create($sourceDetails, isset($options[1]));
 
             if ($instanceName != 'blank') {
-                self::$dbConfig[$instanceName] = file_get_contents(self::$dbLocalFiles[$instanceName]);
+                $instance = Instance::getInstance(self::$instanceIds[$instanceName]);
+                $configFile = $instance->getBestAccess()->downloadFile(self::$dbLocalFiles[$instanceName]);
+                self::$dbConfig[$instanceName] = file_get_contents($configFile);
+                unlink($configFile);
             }
         }
     }
 
-    public function setUp() {
+    public function tearDown()
+    {
         $this->restoreDBConfigFiles();
     }
 
     public static function tearDownAfterClass()
     {
-        $fs = new Filesystem();
-        $fs->remove(self::$instancePath);
-
-        foreach(self::$instanceIds as $instanceId) {
+        foreach (self::$instanceIds as $instanceId) {
             $instance = Instance::getInstance($instanceId);
+            $access = $instance->getBestAccess();
+            $access->shellExec('rm -rf ' . $instance->webroot);
             $instance->delete();
         }
+
+        $fs = new Filesystem();
+        $fs->remove(self::$instancePath);
     }
 
-    protected function restoreDBConfigFiles() {
-        $fs = new Filesystem();
-        foreach(self::$dbConfig as $instanceName => $fileContent) {
-            $file = self::$dbLocalFiles[$instanceName];
-            $fs->remove($file);
-            $fs->appendToFile($file, $fileContent);
+    protected function restoreDBConfigFiles()
+    {
+        foreach (static::$dbConfig as $instanceName => $fileContent) {
+            $filePath = static::$dbLocalFiles[$instanceName];
+            $instance = Instance::getInstance(static::$instanceIds[$instanceName]);
+            $access = $instance->getBestAccess();
+            $access->deleteFile($filePath);
+
+            $file = tempnam($_ENV['TEMP_FOLDER'], '');
+            file_put_contents($file, $fileContent);
+
+            $access->uploadFile($file, $filePath);
+            unlink($file);
+
+            $this->assertTrue($access->fileExists($filePath));
         }
     }
 
@@ -100,7 +128,7 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
      * @param $direct
      * @dataProvider successCloneCombinations
      */
-    public function testLocalCloneInstance($direct)
+    public function testCloneInstance($direct)
     {
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
@@ -119,12 +147,14 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
 
-        $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['target']);
+        if (static::$instanceType == 'local') {
+            $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['target']);
 
-        $this->assertEquals(VersionControl::formatBranch(static::$prevVersionBranch), $resultBranch);
-        $this->assertNotEquals([], $diffDbFile);
+            $this->assertEquals(VersionControl::formatBranch(static::$prevVersionBranch), $resultBranch);
+            $this->assertNotEquals([], $diffDbFile);
 
-        $this->compareDB('source', 'target');
+            $this->compareDB('source', 'target');
+        }
     }
 
     public function successCloneCombinations(): array
@@ -137,13 +167,17 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
     public function testCloneSameDatabase()
     {
-        $this->assertFileExists(self::$dbLocalFiles['source']);
-        $fileSystem = new Filesystem();
-        $fileSystem->copy(self::$dbLocalFiles['source'], self::$dbLocalFiles['target'], true);
+        $sourceInstance = Instance::getInstance(static::$instanceIds['source']);
+        $targetInstance = Instance::getInstance(static::$instanceIds['target']);
 
-        $this->assertFileExists(self::$dbLocalFiles['target']);
-        $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['target']);
-        $this->assertEquals([], $diffDbFile);
+        $this->assertTrue($sourceInstance->getBestAccess()->fileExists(static::$dbLocalFiles['source']));
+        $sourceConfig = $sourceInstance->getBestAccess()->downloadFile(static::$dbLocalFiles['source']);
+
+        $targetInstance->getBestAccess()->deleteFile(static::$dbLocalFiles['target']);
+        $targetInstance->getBestAccess()->uploadFile($sourceConfig, static::$dbLocalFiles['target']);
+        unlink($sourceConfig);
+
+        $this->assertTrue($targetInstance->getBestAccess()->fileExists(static::$dbLocalFiles['target']));
 
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
@@ -159,11 +193,14 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
     public function testCloneDatabaseWithTargetMissingDbFile()
     {
-        $this->assertFileExists(self::$dbLocalFiles['source']);
-        $fileSystem = new Filesystem();
-        $fileSystem->remove(self::$dbLocalFiles['target']);
+        $sourceInstance = Instance::getInstance(static::$instanceIds['source']);
+        $sourceAccess = $sourceInstance->getBestAccess();
+        $this->assertTrue($sourceAccess->fileExists(static::$dbLocalFiles['source']));
 
-        $this->assertFileNotExists(self::$dbLocalFiles['target']);
+        $targetInstance = Instance::getInstance(static::$instanceIds['target']);
+        $targetAccess = $targetInstance->getBestAccess();
+        $targetAccess->deleteFile(static::$dbLocalFiles['target']);
+        $this->assertFalse($targetAccess->fileExists(static::$dbLocalFiles['target']));
 
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
@@ -182,13 +219,19 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
     public function testCloneDatabaseTargetManyInstances()
     {
+        $varPrefix = static::$instanceType == 'local' ? '' : strtoupper(static::$instanceType) . '_';
+
+        $host = getenv($varPrefix . 'DB_HOST'); // DB Host
+        $user = getenv($varPrefix . 'DB_USER'); // DB Root User
+        $pass = getenv($varPrefix . 'DB_PASS'); // DB Root Password
+
         $targetDBName = InstanceHelper::getRandomDbName();
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['target']), strval(self::$instanceIds['target2'])],
-            '--db-host' => $_ENV['DB_HOST'],
-            '--db-user' => $_ENV['DB_USER'],
-            '--db-pass' => $_ENV['DB_PASS'],
+            '--db-host' => $host,
+            '--db-user' => $user,
+            '--db-pass' => $pass,
             '--db-name' => $targetDBName,
             '--skip-cache-warmup' => true,
             '--direct' => true,
@@ -196,18 +239,25 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
 
         $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
         $this->assertEquals(1, $result['exitCode']);
-        $this->assertContains('Database setup options can only be used when a single target instance', $result['output']);
+        $this->assertContains('Database setup options can only be used when a single target instance',
+            $result['output']);
     }
 
     public function testCloneDatabaseTargetBlank()
     {
+        $varPrefix = static::$instanceType == 'local' ? '' : strtoupper(static::$instanceType) . '_';
+
+        $host = getenv($varPrefix . 'DB_HOST'); // DB Host
+        $user = getenv($varPrefix . 'DB_USER'); // DB Root User
+        $pass = getenv($varPrefix . 'DB_PASS'); // DB Root Password
+
         $targetDBName = InstanceHelper::getRandomDbName();
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['blank'])],
-            '--db-host' => $_ENV['DB_HOST'],
-            '--db-user' => $_ENV['DB_USER'],
-            '--db-pass' => $_ENV['DB_PASS'],
+            '--db-host' => $host,
+            '--db-user' => $user,
+            '--db-pass' => $pass,
             '--db-prefix' => $targetDBName,
             '--skip-cache-warmup' => true,
             '--direct' => true,
@@ -219,25 +269,36 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
         $instance = (new Instance())->getInstance(self::$instanceIds['blank']);
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
-
-        $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['blank']);
-
         $this->assertEquals(VersionControl::formatBranch(static::$prevVersionBranch), $resultBranch);
-        $this->assertNotEquals([], $diffDbFile);
-        $dbCnf = $instance->getDatabaseConfig();
-        self::assertEquals($arguments['--db-host'], $dbCnf->host);
-        self::assertContains($arguments['--db-prefix'], $dbCnf->user);
-        self::assertContains($arguments['--db-prefix'], $dbCnf->dbname);
 
-        $this->compareDB('source', 'blank');
+        if (static::$instanceType == 'local') {
+            $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['blank']);
+
+            $this->assertNotEquals([], $diffDbFile);
+            $dbCnf = $instance->getDatabaseConfig();
+            $this->assertEquals($arguments['--db-host'], $dbCnf->host);
+            $this->assertContains($arguments['--db-prefix'], $dbCnf->user);
+            $this->assertContains($arguments['--db-prefix'], $dbCnf->dbname);
+
+            $this->compareDB('source', 'blank');
+        }
     }
 
     public function testCloneNewTargetDB()
     {
+        $varPrefix = static::$instanceType == 'local' ? '' : strtoupper(static::$instanceType) . '_';
+
+        $host = getenv($varPrefix . 'DB_HOST'); // DB Root Host
+        $user = getenv($varPrefix . 'DB_USER'); // DB Root User
+        $pass = getenv($varPrefix . 'DB_PASS'); // DB Root Password
+
         $targetDBName = InstanceHelper::getRandomDbName();
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['target'])],
+            '--db-host' => $host,
+            '--db-user' => $user,
+            '--db-pass' => $pass,
             '--db-name' => $targetDBName,
             '--skip-cache-warmup' => true,
             '--direct' => true,
@@ -249,30 +310,36 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
         $instance = (new Instance())->getInstance(self::$instanceIds['target']);
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
-
-        $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['target']);
-
         $this->assertEquals(VersionControl::formatBranch(static::$prevVersionBranch), $resultBranch);
-        $this->assertNotEquals([], $diffDbFile);
 
-        $dbCnf = $instance->getDatabaseConfig();
-        self::assertEquals($_ENV['DB_HOST'], $dbCnf->host);
-        self::assertEquals($_ENV['DB_USER'], $dbCnf->user);
-        self::assertEquals($_ENV['DB_PASS'], $dbCnf->pass);
-        self::assertEquals($arguments['--db-name'], $dbCnf->dbname);
+        if (static::$instanceType == 'local') {
+            $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['target']);
+            $this->assertNotEquals([], $diffDbFile);
 
-        $this->compareDB('source', 'target');
+            $dbCnf = $instance->getDatabaseConfig();
+            $this->assertEquals($_ENV['DB_HOST'], $dbCnf->host);
+            $this->assertEquals($_ENV['DB_USER'], $dbCnf->user);
+            $this->assertEquals($_ENV['DB_PASS'], $dbCnf->pass);
+            $this->assertEquals($arguments['--db-name'], $dbCnf->dbname);
+
+            $this->compareDB('source', 'target');
+        }
     }
 
     public function testCloneInvalidNewTargetDB()
     {
+        $varPrefix = static::$instanceType == 'local' ? '' : strtoupper(static::$instanceType) . '_';
+
+        $user = getenv($varPrefix . 'DB_USER'); // DB Root User
+        $pass = getenv($varPrefix . 'DB_PASS'); // DB Root Password
+
         $targetDBName = InstanceHelper::getRandomDbName();
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['target'])],
             '--db-host' => 'error_host',
-            '--db-user' => $_ENV['DB_USER'],
-            '--db-pass' => $_ENV['DB_PASS'],
+            '--db-user' => $user,
+            '--db-pass' => $pass,
             '--db-name' => $targetDBName,
             '--skip-cache-warmup' => true,
             '--direct' => true,
@@ -286,7 +353,8 @@ class CloneInstanceCommandTest extends \PHPUnit\Framework\TestCase
     public function compareDB($instance1, $instance2)
     {
         $fileSystem = new Filesystem();
-        if ($fileSystem->exists(self::$dbLocalFiles[$instance1]) && $fileSystem->exists(self::$dbLocalFiles[$instance2])) {
+        if ($fileSystem->exists(self::$dbLocalFiles[$instance1]) &&
+            $fileSystem->exists(self::$dbLocalFiles[$instance2])) {
             $sourceDB = Database::getInstanceDataBaseConfig(self::$dbLocalFiles[$instance1]);
             $targetDB = Database::getInstanceDataBaseConfig(self::$dbLocalFiles[$instance2]);
 

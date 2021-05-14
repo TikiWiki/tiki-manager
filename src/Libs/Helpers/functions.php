@@ -474,11 +474,12 @@ function cache_folder($app, $version)
 }
 
 /**
- * @param $dir
+ * @param string $dir
+ * @param int $version The channel version of composer (1 or 2)
  * @return string The composer phar path
  * @throws Exception
  */
-function installComposer($dir)
+function installComposer(string $dir, int $version = 2): string
 {
     $expectedSig = \trim(\file_get_contents('https://composer.github.io/installer.sig'));
     $installerURL = 'https://getcomposer.org/installer';
@@ -501,7 +502,7 @@ function installComposer($dir)
         throw new Exception('Invalid composer installer signature.');
     }
 
-    $command = sprintf('%s %s --quiet --install-dir=%s', PHP_BINARY, $setupFile, escapeshellarg($dir));
+    $command = sprintf('%s %s --%d --quiet --install-dir=%s', PHP_BINARY, $setupFile, $version, escapeshellarg($dir));
     exec($command, $output, $exitCode);
     \unlink($setupFile);
 

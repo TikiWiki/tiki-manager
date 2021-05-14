@@ -6,6 +6,8 @@
 
 namespace TikiManager\Libs\Host;
 
+use Symfony\Component\Process\Process;
+
 class SSHWrapperAdapter
 {
     private $host;
@@ -88,44 +90,26 @@ class SSHWrapperAdapter
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
         $env = !empty($options['env']) ? $options['env'] : $this->env;
 
-        $pipes = [];
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"],
-            3 => ["pipe", "w"]
-        ];
-
         $cwd = !empty($cwd) ? sprintf('cd %s;', $cwd) : '';
         $env = $this->prepareEnv($env);
 
         $commandLine = $this->getCommandPrefix();
         $commandLine .= ' ';
-        $commandLine .= escapeshellarg($env . $cwd . $command->getFullCommand() . '; echo $? >&3');
+        $commandLine .= escapeshellarg('set -e; ' .$env . $cwd . $command->getFullCommand());
 
-        $process = proc_open($commandLine, $descriptorspec, $pipes);
-
-        if (!is_resource($process)) {
-            $command->setReturn(-1);
-            return $command;
-        }
+        $process = Process::fromShellCommandline($commandLine)
+            ->setTimeout(3600);
 
         $stdin = $command->getStdin();
-        if (is_resource($stdin)) {
-            stream_copy_to_stream($stdin, $pipes[0]);
+        if ($stdin) {
+            $process->setInput($stdin);
         }
-        fclose($pipes[0]);
+        $process->run();
 
-        $stdOut = stream_get_contents($pipes[1]);
-        $stdErr = stream_get_contents($pipes[2]);
-        $return = stream_get_contents($pipes[3]);
-        $return = intval(trim($return));
-        fclose($pipes[3]);
-
-        $command->setStdout($stdOut);
-        $command->setStderr($stdErr);
+        $command->setStdout($process->getOutput());
+        $command->setStderr($process->getErrorOutput());
         $command->setProcess($process);
-        $command->setReturn($return);
+        $command->setReturn($process->getExitCode());
 
         return $command;
     }
@@ -144,21 +128,18 @@ class SSHWrapperAdapter
         }
 
         $string = implode(' && ', $commands);
-        $fullcommand = escapeshellarg($string);
+        $fullCommand = escapeshellarg($string);
 
-        $port = null;
-        if ($this->port != 22) {
-            $port = " -p {$this->port} ";
-        }
+        $port = $this->port != 22 ? $this->port != 22 : null;
 
-        $command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullcommand";
+        $command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullCommand";
         $command .= ($output ? '' : ' 2>> '.$_ENV['TRIM_OUTPUT']);
 
-        $output = [];
-        exec($command, $output);
+        $process = Process::fromShellCommandline($command)
+            ->setTimeout(3600);
+        $process->run();
 
-        $output = implode("\n", $output);
-        return $output;
+        return $process->getOutput();
     }
 
     public function setHost($host)
