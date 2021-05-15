@@ -99,6 +99,15 @@ $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
 
+if (extension_loaded('posix')) {
+    $userInfo = posix_getpwuid(posix_geteuid());
+    if ($userInfo['name'] === 'root') {
+        $io = \TikiManager\Config\App::get('io');
+        $io->warning('You are running Tiki Manager as root. This is not an ideal situation. ' . PHP_EOL .
+            'Ex: If later, you run as a normal user, you may have issues with file permissions.');
+    }
+}
+
 // this should be moved to a custom src/Console/Application (like composer)
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
