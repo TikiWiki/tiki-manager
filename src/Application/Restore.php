@@ -363,9 +363,15 @@ class Restore extends Backup
             ];
 
             if ($this->direct) {
+                // Sync options for the temp folder
                 $rsyncExcludes = array_merge($rsyncExcludes, [
-                    '--exclude',
-                    '/temp/*'
+                    '--include=temp/**/',
+                    '--include=.gitkeep',
+                    '--include=index.php',
+                    '--include=.htaccess',
+                    '--include=README',
+                    '--exclude=temp/**/*',
+                    '--exclude=temp/*',
                 ]);
             }
 
