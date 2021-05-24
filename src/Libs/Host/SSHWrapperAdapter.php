@@ -130,7 +130,7 @@ class SSHWrapperAdapter
         $string = implode(' && ', $commands);
         $fullCommand = escapeshellarg($string);
 
-        $port = $this->port != 22 ? $this->port != 22 : null;
+        $port = $this->port != 22 ? " -p {$this->port} " : null;
 
         $command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullCommand";
         $command .= ($output ? '' : ' 2>> '.$_ENV['TRIM_OUTPUT']);
