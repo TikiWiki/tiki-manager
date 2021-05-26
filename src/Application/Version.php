@@ -35,7 +35,7 @@ SQL;
     public static function buildFake($type, $branch)
     {
         $v = new self;
-        $v->type = $type;
+        $v->type = strtolower($type);
         $v->branch = $branch;
         $v->date = date('Y-m-d');
 
