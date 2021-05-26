@@ -130,7 +130,6 @@ class Backup
         $backupDir = $backupDir ?: $this->backupDir;
 
         $this->io->writeln('Checking directories...');
-        $this->app->removeTemporaryFiles();
         $targets = $this->getTargetDirectories();
 
         $copyResult = $targets;
