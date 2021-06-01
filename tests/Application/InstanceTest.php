@@ -6,8 +6,11 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\Local;
 use TikiManager\Application\Instance;
+use TikiManager\Application\Tiki;
+use TikiManager\Application\Version;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
+use TikiManager\Libs\Database\Database;
 use TikiManager\Style\TikiManagerStyle;
 
 /**
@@ -147,5 +150,49 @@ class InstanceTest extends TestCase
         $this->assertTrue($result);
     }
 
+    /**
+     * @covers \TikiManager\Application\Instance::installApplication
+     */
+    public function testInstallApplication()
+    {
+        $instanceMock = $this->getMockBuilder(Instance::class)
+            ->setMethodsExcept(['installApplication'])->getMock();
+        $instanceMock->tempdir = '/tmp/dummy';
 
+        $appMock = $this->createMock(Tiki::class);
+        $versionMock = $this->createMock(Version::class);
+
+        $appMock
+            ->expects($this->once())
+            ->method('install')
+            ->with($versionMock, false);
+
+        $appMock
+            ->expects($this->once())
+            ->method('requiresDatabase')
+            ->willReturn(true);
+
+        $instanceMock
+            ->expects($this->once())
+            ->method('database')
+            ->willReturn($this->createMock(Database::class));
+
+        $dbConfig = $this->createMock(Database::class);
+        $instanceMock
+            ->expects($this->once())
+            ->method('getDatabaseConfig')
+            ->willReturn($dbConfig);
+
+        $appMock
+            ->expects($this->once())
+            ->method('setupDatabase')
+            ->with($dbConfig);
+
+        $appMock
+            ->expects($this->once())
+            ->method('setPref')
+            ->with('tmpDir', $instanceMock->tempdir);
+
+        $instanceMock->installApplication($appMock, $versionMock);
+    }
 }

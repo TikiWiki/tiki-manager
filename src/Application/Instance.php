@@ -736,7 +736,7 @@ SQL;
 
         $restore->restoreFiles($archive);
 
-        $this->app = isset($srcApp->app) ? $srcApp->app : $srcApp;
+        $this->app = $srcApp->app ?? $srcApp;
         $this->save();
 
         $this->io->writeln('Restoring database...');
@@ -748,7 +748,9 @@ SQL;
         $databaseConfig = $this->getDatabaseConfig();
         if ($databaseConfig) {
             try {
-                $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
+                $app = $this->getApplication();
+                $app->restoreDatabase($databaseConfig, $database_dump);
+                $app->setPref('tmpDir', $this->tempdir);
             } catch (\Exception $e) {
                 $restore->unlock();
                 throw $e;
@@ -1030,6 +1032,7 @@ SQL;
             $this->database()->setupConnection();
             $dbConfig = $this->getDatabaseConfig();
             $app->setupDatabase($dbConfig);
+            $app->setPref('tmpDir', $this->tempdir);
         }
     }
 

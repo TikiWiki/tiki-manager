@@ -17,6 +17,7 @@ use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
+use TikiManager\Libs\Host\Exception\CommandException;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Src;
 use TikiManager\Libs\VersionControl\Svn;
@@ -990,6 +991,69 @@ TXT;
     public function getTikiRequirementsHelper()
     {
         return new TikiRequirementsHelper(new YamlFetcher());
+    }
+
+    /**
+     * Set tiki preference
+     *
+     * @param string $prefName
+     * @param string $prefValue
+     * @return bool
+     */
+    public function setPref(string $prefName, string $prefValue): bool
+    {
+        $access = $this->instance->getBestAccess();
+
+        if (!$this->instance->hasConsole() || !$access instanceof ShellPrompt) {
+            return false;
+        }
+
+        try {
+            $command = $access->createCommand(
+                $this->instance->phpexec,
+                ['-q', 'console.php', 'preferences:set', $prefName, $prefValue]
+            );
+            $command->run();
+        } catch (CommandException $e) {
+            return false;
+        }
+
+        $output = trim($command->getStdoutContent());
+
+        return $command->getReturn() === 0 && preg_match('/was set.$/', $output);
+    }
+
+    /**
+     * Get Tiki Preference
+     *
+     * @param string $prefName
+     * @return false|mixed
+     */
+    public function getPref(string $prefName)
+    {
+        $access = $this->instance->getBestAccess();
+
+        if (!$this->instance->hasConsole() || !$access instanceof ShellPrompt) {
+            return false;
+        }
+
+        try {
+            $command = $access->createCommand(
+                $this->instance->phpexec,
+                ['-q', 'console.php', 'preferences:get', $prefName]
+            );
+            $command->run();
+        } catch (CommandException $e) {
+            return false;
+        }
+
+        $output = trim($command->getStdoutContent());
+
+        if ($command->getReturn() !== 0 || !preg_match('/has value (.*)$/', $output, $matches)) {
+            return false;
+        }
+
+        return $matches[1];
     }
 }
 

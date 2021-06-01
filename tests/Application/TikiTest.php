@@ -659,4 +659,40 @@ class TikiTest extends TestCase
         $this->assertCount(3, $branches);
     }
 
+    /**
+     * @covers Tiki::setPref
+     */
+    public function testSetPref()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->type = 'local';
+        $instanceStub->phpexec = '/usr/bin/php';
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['setPref'])
+            ->getMock();
+
+        $commandStub = $this->createMock(Command::class);
+        $commandStub
+            ->expects($this->once())
+            ->method('getReturn')
+            ->willReturn(0);
+
+        $commandStub
+            ->expects($this->once())
+            ->method('getStdoutContent')
+            ->willReturn('Preference tmpDir was set.');
+
+        $accessStub = $this->createMock(Local::class);
+        $accessStub
+            ->method('createCommand')
+            ->with('/usr/bin/php', ['-q', 'console.php', 'preferences:set', 'tmpDir', '/tmp/random'])
+            ->willReturn($commandStub);
+
+        $instanceStub->method('hasConsole')->willReturn(true);
+        $instanceStub->method('getBestAccess')->willReturn($accessStub);
+
+        $this->assertTrue($tikiStub->setPref('tmpDir', '/tmp/random'));
+    }
 }

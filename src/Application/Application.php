@@ -90,6 +90,10 @@ abstract class Application
 
     abstract public function removeTemporaryFiles();
 
+    abstract public function setPref(string $prefName, string $prefValue): bool;
+
+    abstract public function getPref(string $prefName);
+
     public function beforeChecksumCollect()
     {
     }

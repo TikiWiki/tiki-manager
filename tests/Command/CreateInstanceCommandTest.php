@@ -11,7 +11,6 @@ use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\Local;
-use TikiManager\Access\SSH;
 use TikiManager\Application\Instance;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
@@ -89,6 +88,12 @@ class CreateInstanceCommandTest extends TestCase
         $this->assertTrue($access->fileExists(self::$instancePath));
         $this->assertTrue($access->fileExists(self::$dbLocalFile));
 
+        $this->assertEquals(
+            $instance->tempdir,
+            $instance->getApplication()->getPref('tmpDir'),
+        'tmpDir in Tiki does not match with the instance tempdir in TikiManager'
+        );
+
         if (static::$instanceType == 'local') {
             $this->assertTrue(is_link(self::$instancePath . '/.htaccess'));
         }
@@ -158,7 +163,6 @@ class CreateInstanceCommandTest extends TestCase
 
         $options = self::$instanceSettings[static::$instanceType];
 
-        $fs = new Filesystem();
         $instanceId = InstanceHelper::create($options);
         $this->assertNotFalse($instanceId);
         $this->assertNotEquals(0, $instanceId);
@@ -166,6 +170,12 @@ class CreateInstanceCommandTest extends TestCase
         $access = $instance->getBestAccess();
         $this->assertTrue($access->fileExists(self::$instancePath));
         $this->assertTrue($access->fileExists(self::$dbLocalFile));
+
+        $this->assertEquals(
+            $instance->tempdir,
+            $instance->getApplication()->getPref('tmpDir'),
+            'tmpDir in Tiki does not match with the instance tempdir in TikiManager'
+        );
 
         static::$instanceId = $instanceId;
     }
