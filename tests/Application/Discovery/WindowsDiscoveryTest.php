@@ -8,6 +8,7 @@
 
 namespace TikiManager\Tests\Application\Discovery;
 
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use TikiManager\Access\Local;
 use TikiManager\Application\Discovery\WindowsDiscovery;
@@ -71,12 +72,19 @@ class WindowsDiscoveryTest extends TestCase
      */
     public function testDetectBackupPerm()
     {
+        $vsfStream = vfsStream::setup('testDir');
         $mock = $this->createPartialMock(
             WindowsDiscovery::class,
             []
         );
 
-        $this->assertEquals(['Administrator', 'Administrator', 0750], $mock->detectBackupPerm());
+        $expectedUser = 'Administrator';
+        $expectedGroup = 'Administrator';
+
+        $this->assertEquals(
+            [$expectedUser, $expectedGroup, 0750],
+            $mock->detectBackupPerm($vsfStream->url())
+        );
     }
 
     /**

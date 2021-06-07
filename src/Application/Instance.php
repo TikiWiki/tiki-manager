@@ -249,6 +249,7 @@ SQL;
     protected $io;
 
     private $access = [];
+    protected $discovery;
 
     public function __construct()
     {
@@ -1006,8 +1007,12 @@ SQL;
      */
     public function getDiscovery(): Discovery
     {
-        $access = $this->getBestAccess('scripting');
-        return Discovery::createInstance($this, $access);
+        if (!$this->discovery) {
+            $access = $this->getBestAccess('scripting');
+            $this->discovery = Discovery::createInstance($this, $access);
+        }
+
+        return $this->discovery;
     }
 
     /**

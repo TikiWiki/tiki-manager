@@ -228,7 +228,7 @@ trait InstanceConfigure
             return $value;
         });
 
-        $tempDir = $this->input->getOption('tempdir') ?? Environment::get('INSTANCE_WORKING_TEMP') ?? '';
+        $tempDir = $this->input->getOption('tempdir') ?? $instance->getDiscovery()->detectTmp();
         $tempDir = $this->io->ask('TempDir', $tempDir, function ($value) use ($access) {
             if (empty($value)) {
                 throw new InvalidOptionException('TempDir cannot be empty. Please use --tempDir=<PATH>');
@@ -255,15 +255,16 @@ trait InstanceConfigure
 
         //
         // Backups
+        // Backups are stored in Tiki-Manager instance
         //
         $backupDir = Environment::get('BACKUP_FOLDER');
-        $defaultBackupUser = posix_getpwuid(fileowner($backupDir));
-        $defaultBackupGroup = posix_getgrgid(filegroup($backupDir));
-        $defaultBackupPerm = sprintf('%o', fileperms($backupDir) & 0777);
+        $mockInstance = new Instance();
+        $mockInstance->type = 'local';
+        list($backupUser, $backupGroup, $backupPerm) = $mockInstance->getDiscovery()->detectBackupPerm($backupDir);
 
-        $backupUser = $this->input->getOption('backup-user') ?? $defaultBackupUser['name'] ?? '';
-        $backupGroup = $this->input->getOption('backup-group') ?? $defaultBackupGroup['name'] ?? '';
-        $backupPerm = $this->input->getOption('backup-permission') ?? $defaultBackupPerm ?? '';
+        $backupUser = $this->input->getOption('backup-user') ?? $backupUser ?? '';
+        $backupGroup = $this->input->getOption('backup-group') ?? $backupGroup ?? '';
+        $backupPerm = $this->input->getOption('backup-permission') ?? $backupPerm ?? '';
 
         $backupUser = $this->io->ask('Backup user', $backupUser, function ($value) {
             if (!$value) {

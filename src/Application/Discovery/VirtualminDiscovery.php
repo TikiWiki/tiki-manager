@@ -17,11 +17,13 @@ class VirtualminDiscovery extends LinuxDiscovery
         $folders = [
             [
                 'base' => '/home/' . $user . '/domains/' . $domain,
-                'target' => '/home/' . $user . '/domains/' . $domain . '/public_html'
+                'target' => '/home/' . $user . '/domains/' . $domain . '/public_html',
+                'tmp' => '/home/' . $user . '/domains/' . $domain . '/tmp',
             ],
             [
                 'base' => '/home/' . $user,
-                'target' => '/home/' . $user . '/public_html'
+                'target' => '/home/' . $user . '/public_html',
+                'tmp' => '/home/' . $user . '/tmp',
             ]
         ];
 

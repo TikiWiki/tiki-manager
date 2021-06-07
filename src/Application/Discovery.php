@@ -12,6 +12,7 @@ use TikiManager\Application\Discovery\LinuxDiscovery;
 use TikiManager\Application\Discovery\VirtualminDiscovery;
 use TikiManager\Application\Discovery\WindowsDiscovery;
 use TikiManager\Application\Exception\ConfigException;
+use TikiManager\Config\Environment;
 
 abstract class Discovery
 {
@@ -37,7 +38,7 @@ abstract class Discovery
         $this->config = $config;
     }
 
-    abstract public function detectBackupPerm();
+    abstract public function detectBackupPerm($path):array;
 
     public function detectOS()
     {
@@ -251,6 +252,19 @@ abstract class Discovery
         }
 
         return "tikiwiki";
+    }
+
+    public function detectTmp()
+    {
+        $folders = $this->detectWebrootOS();
+
+        foreach ($folders as $folder) {
+            if (isset($folder['tmp']) && $this->isFolderWriteable($folder)) {
+                return $folder['tmp'];
+            }
+        }
+
+        return Environment::get('INSTANCE_WORKING_TEMP') ?? '';
     }
 
     public function getConf($name)

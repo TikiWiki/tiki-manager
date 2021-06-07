@@ -8,6 +8,7 @@
 
 namespace TikiManager\Tests\Application\Discovery;
 
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use TikiManager\Access\Local;
 use TikiManager\Application\Discovery\LinuxDiscovery;
@@ -57,6 +58,7 @@ class LinuxDiscoveryTest extends TestCase
      */
     public function testDetectBackupPerm()
     {
+        $vsfStream = vfsStream::setup('testDir');
         $mock = $this->createPartialMock(
             LinuxDiscovery::class,
             [
@@ -65,11 +67,17 @@ class LinuxDiscoveryTest extends TestCase
         );
 
         $mock
-            ->expects($this->once())
+            ->expects($this->atMost(1))
             ->method('detectUser')
             ->willReturn('apache');
 
-        $this->assertEquals(['apache', 'apache', 0750], $mock->detectBackupPerm());
+        $expectedUser = extension_loaded('posix') ? posix_getpwuid($vsfStream->getUser())['name'] : 'apache';
+        $expectedGroup = extension_loaded('posix') ? posix_getgrgid($vsfStream->getGroup())['name'] : 'apache';
+
+        $this->assertEquals(
+            [$expectedUser, $expectedGroup, decoct($vsfStream->getPermissions())],
+            $mock->detectBackupPerm($vsfStream->url())
+        );
     }
 
     /**

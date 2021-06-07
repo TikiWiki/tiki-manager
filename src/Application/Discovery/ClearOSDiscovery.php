@@ -37,10 +37,21 @@ class ClearOSDiscovery extends LinuxDiscovery
         ];
     }
 
-    public function detectBackupPerm()
+    public function detectBackupPerm($path): array
     {
-        $user = $this->detectUser();
-        return [$user, 'allusers', 0750];
+        $user = $group = [];
+
+        if (extension_loaded('posix')) {
+            $user = @posix_getpwuid(fileowner($path));
+            $group = @posix_getgrgid(filegroup($path));
+        }
+
+        $user = $user['name'] ?? $this->detectUser();
+        $group= $group['name'] ?? 'allusers';
+
+        $perm = sprintf('%o', fileperms($path) & 0777);
+
+        return [$user, $group, $perm];
     }
 
     public function isAvailable()

@@ -80,7 +80,7 @@ class WindowsDiscovery extends Discovery
         );
     }
 
-    public function detectBackupPerm()
+    public function detectBackupPerm($path): array
     {
         return ['Administrator', 'Administrator', 0750];
     }
