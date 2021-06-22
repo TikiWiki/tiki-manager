@@ -42,12 +42,16 @@ SQL;
         return $v;
     }
 
+    /**
+     * Save current Version instance
+     * @return void
+     */
     public function save()
     {
         $params = [
             ':id' => $this->id,
             ':instance' => $this->instance,
-            ':type' => $this->type,
+            ':type' => strtolower($this->type),
             ':branch' => $this->branch,
             ':revision' => $this->revision,
             ':date' => $this->date,

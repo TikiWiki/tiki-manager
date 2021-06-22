@@ -66,7 +66,7 @@ INNER JOIN (
         instance_id
     ) t ON t.version = v.version_id
 WHERE
-    v.type in('svn', 'tarball', 'git', 'src')
+    LOWER(v.type) in('svn', 'tarball', 'git', 'src')
 ;
 SQL;
 
