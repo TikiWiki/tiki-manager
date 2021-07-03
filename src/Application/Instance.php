@@ -9,6 +9,8 @@
 
 namespace TikiManager\Application;
 
+use TikiManager\Access\ShellPrompt;
+use TikiManager\Application\Instance\CrontabManager;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
 use TikiManager\Libs\Helpers\Archive;
@@ -1073,5 +1075,10 @@ SQL;
         $data = $access->runCommand($command);
         $output = $data->getStdoutContent();
         return str_contains($output, 'Rebuilding index done') && $data->getReturn() == 0;
+    }
+
+    public function getCronManager(): CrontabManager
+    {
+        return new CrontabManager($this);
     }
 }

@@ -422,7 +422,7 @@ class Local extends Access implements ShellPrompt
             $options['env'] = $this->env;
         }
 
-        return $command->run($host);
+        return $command->run($host, $options);
     }
 
     public function openShell($workingDir = '')
