@@ -12,10 +12,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Traits\SendEmail;
 use TikiManager\Config\App;
 
 class WatchInstanceCommand extends TikiManagerCommand
 {
+    use SendEmail;
+
     protected function configure()
     {
         $this
@@ -148,7 +151,7 @@ class WatchInstanceCommand extends TikiManagerCommand
         }
 
         try {
-            if (!CommandHelper::sendMailNotification($email, '[Tiki-Manager] Potential intrusions detected', $log)) {
+            if (!$this->sendEmail($email, '[Tiki-Manager] Potential intrusions detected', $log)) {
                 $this->io->error('Something went wrong when sending email, please check email configurations.');
                 return 1;
             }

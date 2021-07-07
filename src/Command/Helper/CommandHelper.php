@@ -507,55 +507,6 @@ class CommandHelper
         return $phpVersion;
     }
 
-    /**
-     * Send email notification
-     *
-     * @param $to
-     * @param string $from
-     * @param string $subject
-     * @param string $message
-     * @return mixed
-     */
-    public static function sendMailNotification($to, $subject, $message, $from = null)
-    {
-        $smtpHost = Environment::get('SMTP_HOST');
-        $smtpPort = Environment::get('SMTP_PORT', 25);
-        $smtpUser = Environment::get('SMTP_USER');
-        $smtpPass = Environment::get('SMTP_PASS');
-
-        $from = $from ?: Environment::get('FROM_EMAIL_ADDRESS');
-
-        if (!$from) {
-            throw new \RuntimeException('Unable to determine FROM_EMAIL_ADDRESS required to send emails. Please check README.md file.');
-        }
-
-        try {
-            // Create the Transport
-            if ($smtpHost && $smtpPort) {
-                $transport = (new \Swift_SmtpTransport($smtpHost, $smtpPort))
-                    ->setUsername($smtpUser)
-                    ->setPassword($smtpPass);
-            } else {
-                $transport = new \Swift_SendmailTransport();
-            }
-
-            // Create the Mailer using your created Transport
-            $mailer = new \Swift_Mailer($transport);
-
-            // Create a message
-            $message = (new \Swift_Message($subject))
-                ->setTo(is_array($to) ? $to : [$to])
-                ->setBody($message);
-
-            $message->setFrom($from);
-
-            // Send the message
-            return $mailer->send($message);
-        } catch (\Swift_SwiftException $e) {
-            throw new \RuntimeException('Unable to send email notification.' . PHP_EOL . $e->getMessage());
-        }
-    }
-
     public static function validateEmailInput($value)
     {
         if (!empty($value)) {

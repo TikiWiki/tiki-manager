@@ -13,10 +13,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Traits\SendEmail;
 use TikiManager\Libs\Helpers\Checksum;
 
 class UpdateInstanceCommand extends TikiManagerCommand
 {
+    use SendEmail;
+
     protected function configure()
     {
         $this
@@ -279,7 +282,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
             if (!empty($logs) && !empty($emails)) {
                 $logs = implode(PHP_EOL, $logs);
                 try {
-                    CommandHelper::sendMailNotification(
+                    $this->sendEmail(
                         $emails,
                         '[Tiki-Manager] ' . $this->getName() . ' report failures',
                         $logs

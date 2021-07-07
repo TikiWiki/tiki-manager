@@ -6,10 +6,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Traits\SendEmail;
 use TikiManager\Config\Environment;
 
 class BackupInstanceCommand extends TikiManagerCommand
 {
+    use SendEmail;
+
     protected function configure()
     {
         $this
@@ -180,7 +183,7 @@ class BackupInstanceCommand extends TikiManagerCommand
         if (!empty($logs) && !empty($emails)) {
             $logs = implode(PHP_EOL, $logs);
             try {
-                CommandHelper::sendMailNotification(
+                $this->sendEmail(
                     $emails,
                     '[Tiki-Manager] ' . $this->getName() . ' report failures',
                     $logs
