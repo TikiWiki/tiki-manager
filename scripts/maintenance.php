@@ -81,7 +81,7 @@ $timeElapsed = $interval->format('%hh:%im:%ss');
         <div class="container bg-light rounded text-center p-5 border">
             <h4>
                 An update started on <b><?= $dateStart; ?><i>UTC</i></b><br />
-                It has progressed for <b><?= $timeElapsed; ?></b>.<br/> We regret any inconvenience, please try again in few minutes<br>
+                It has progressed for <b><?= $timeElapsed; ?></b>.<br/> We regret any inconvenience, please try again in a few minutes<br>
             </h4>
         </div>
         <div class="col-md-12 text-center pt-5">
