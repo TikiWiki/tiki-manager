@@ -172,12 +172,10 @@ class TikiTest extends TestCase
             ->expects($this->atLeastOnce())
             ->method('fileExists')
             ->withConsecutive(
-                ['temp/composer.phar'],
                 ['vendor_bundled/vendor/autoload.php'],
                 ['composer.lock']
             )
             ->will($this->onConsecutiveCalls(
-                false, // 'temp/composer.phar'
                 true,  //'vendor_bundled/vendor/autoload.php'
                 false  // 'composer.lock'
             ));
@@ -216,19 +214,10 @@ class TikiTest extends TestCase
             ->with('bash', ['setup.sh', 'composer'])
             ->willReturn($commandStub);
         $accessStub
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('fileExists')
-            ->withConsecutive(
-                ['temp/composer.phar'],
-                ['vendor_bundled/vendor/autoload.php'],
-                ['composer.lock']
-            )
-            ->will($this->onConsecutiveCalls(
-                false, // 'temp/composer.phar'
-                false,  //'vendor_bundled/vendor/autoload.php'
-                false  // 'composer.lock'
-            ));
-
+            ->with('vendor_bundled/vendor/autoload.php')
+            ->willReturn(false);
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
@@ -247,82 +236,30 @@ class TikiTest extends TestCase
     /**
      * @covers \TikiManager\Application\Tiki::runComposer
      */
-    public function testRunComposerUsingComposerSuccessfully()
+    public function testRunComposerUsingTikiSetupWithErrorInOutput()
     {
         $commandStub = $this->createMock(Command::class);
         $commandStub->method('run')->willReturn(null);
+        // Tiki Setup does not return exit codes (return only 0)
         $commandStub->method('getReturn')->willReturn(0);
+        $commandStub->method('getStderrContent')->willReturn('');
+        $commandStub->method('getStdoutContent')->willReturn('Loading composer repositories with package information
+Installing dependencies from lock file
+Your requirements could not be resolved to an installable set of packages.');
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
-        $instanceStub->phpexec = '/usr/bin/php';
 
         $accessStub = $this->createMock(Local::class);
         $accessStub
             ->method('createCommand')
-            ->with($instanceStub->phpexec,
-                ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist' , '--no-dev'])
+            ->with('bash', ['setup.sh', 'composer'])
             ->willReturn($commandStub);
         $accessStub
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('fileExists')
-            ->withConsecutive(
-                ['temp/composer.phar'],
-                ['vendor_bundled/vendor/autoload.php'],
-                ['composer.lock']
-            )
-            ->will($this->onConsecutiveCalls(
-                true, // 'temp/composer.phar'
-                true,  //'vendor_bundled/vendor/autoload.php'
-                false  // 'composer.lock'
-            ));
-
-        $instanceStub->method('hasConsole')->willReturn(true);
-        $instanceStub->method('getBestAccess')->willReturn($accessStub);
-
-        $tikiStub = $this->getMockBuilder(Tiki::class)
-            ->setConstructorArgs([$instanceStub])
-            ->setMethodsExcept(['runComposer'])
-            ->getMock();
-
-        $tikiStub->runComposer();
-
-        // runComposer is void. If no exception is thrown assumes it is OK
-        $this->assertTrue(true);
-    }
-
-    /**
-     * @covers \TikiManager\Application\Tiki::runComposer
-     */
-    public function testRunComposerUsingComposerWithErrors()
-    {
-        $commandStub = $this->createMock(Command::class);
-        $commandStub->method('run')->willReturn(null);
-        $commandStub->method('getReturn')->willReturn(1); // Error code different than 0
-
-        $instanceStub = $this->createMock(Instance::class);
-        $instanceStub->type = 'local';
-        $instanceStub->phpexec = '/usr/bin/php';
-
-        $accessStub = $this->createMock(Local::class);
-        $accessStub
-            ->method('createCommand')
-            ->with($instanceStub->phpexec,
-                ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev'])
-            ->willReturn($commandStub);
-        $accessStub
-            ->expects($this->atLeastOnce())
-            ->method('fileExists')
-            ->withConsecutive(
-                ['temp/composer.phar'],
-                ['vendor_bundled/vendor/autoload.php'],
-                ['composer.lock']
-            )
-            ->will($this->onConsecutiveCalls(
-                true, // 'temp/composer.phar'
-                false,  //'vendor_bundled/vendor/autoload.php'
-                false  // 'composer.lock'
-            ));
+            ->with('vendor_bundled/vendor/autoload.php')
+            ->willReturn(true);
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
@@ -352,9 +289,7 @@ class TikiTest extends TestCase
         $accessStub
             ->method('createCommand')
             ->withConsecutive(
-                [$instanceStub->phpexec,
-                    ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']
-                ],
+                ['bash', ['setup.sh', 'composer']],
                 [$instanceStub->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']]
             )
             ->willReturn($commandStub);
@@ -362,13 +297,11 @@ class TikiTest extends TestCase
             ->expects($this->atLeastOnce())
             ->method('fileExists')
             ->withConsecutive(
-                ['temp/composer.phar'],
                 ['vendor_bundled/vendor/autoload.php'],
                 ['composer.lock'],
                 ['vendor/autoload.php']
             )
             ->will($this->onConsecutiveCalls(
-                true, // 'temp/composer.phar'
                 true,  //'vendor_bundled/vendor/autoload.php'
                 true, // 'composer.lock'
                 true  // 'vendor/autoload.php'
@@ -408,9 +341,7 @@ class TikiTest extends TestCase
         $accessStub
             ->method('createCommand')
             ->withConsecutive(
-                [$instanceStub->phpexec,
-                    ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']
-                ],
+                ['bash', ['setup.sh', 'composer']],
                 [$instanceStub->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']]
             )
             ->willReturn($commandStub);
@@ -418,13 +349,11 @@ class TikiTest extends TestCase
             ->expects($this->atLeastOnce())
             ->method('fileExists')
             ->withConsecutive(
-                ['temp/composer.phar'],
                 ['vendor_bundled/vendor/autoload.php'],
                 ['composer.lock'],
                 ['vendor/autoload.php']
             )
             ->will($this->onConsecutiveCalls(
-                true, // 'temp/composer.phar'
                 true,  //'vendor_bundled/vendor/autoload.php'
                 true, // 'composer.lock'
                 false  // 'vendor/autoload.php'

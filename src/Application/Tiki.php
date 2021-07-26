@@ -772,38 +772,37 @@ TXT;
         $access->setenv('COMPOSER_DISCARD_CHANGES', 'true');
         $access->setenv('COMPOSER_NO_INTERACTION', '1');
 
-        if ($access instanceof ShellPrompt) {
-            $access->chdir($instance->webroot);
+        if (! $access instanceof ShellPrompt || ! $instance->hasConsole()) {
+            return;
+        }
 
-            if ($instance->hasConsole()) {
-                if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
-                    $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']);
-                } elseif ($access->fileExists('temp/composer.phar')) {
-                    // In case of instance update, use composer to get proper exit codes if case of failure.
-                    $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']);
-                } else {
-                    $command = $access->createCommand('bash', ['setup.sh', 'composer']);
-                }
+        $access->chdir($instance->webroot);
 
-                $command->run();
-                if ($command->getReturn() !== 0 || !$access->fileExists('vendor_bundled/vendor/autoload.php')) {
-                    $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
+        $command = $access->createCommand('bash', ['setup.sh', 'composer']);
+        if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
+            $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']);
+        }
 
-                    trim_output($commandOutput);
-                    throw new \Exception("Composer install failed for Tiki bundled packages.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
-                }
+        $command->run();
+        $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
 
-                if ($access->fileExists('composer.lock')) {
-                    $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']);
+        if ($command->getReturn() !== 0 ||
+            !$access->fileExists('vendor_bundled/vendor/autoload.php') ||
+            preg_match('/Your requirements could not be resolved/', $commandOutput)
+        ) {
+            trim_output($commandOutput);
+            throw new \Exception("Composer install failed for Tiki bundled packages.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+        }
 
-                    $command->run();
-                    if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
-                        $commandOutput = ! empty($command->getStderrContent()) ? $command->getStderrContent() : $command->getStdoutContent();
+        if ($access->fileExists('composer.lock')) {
+            $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']);
 
-                        trim_output($commandOutput);
-                        $this->io->error("Composer install failed for composer.lock in the root folder.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
-                    }
-                }
+            $command->run();
+            if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
+                $commandOutput = ! empty($command->getStderrContent()) ? $command->getStderrContent() : $command->getStdoutContent();
+
+                trim_output($commandOutput);
+                $this->io->error("Composer install failed for composer.lock in the root folder.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
             }
         }
     }
