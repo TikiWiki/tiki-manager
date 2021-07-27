@@ -1,6 +1,6 @@
 <?php
 
-namespace TikiManger\Tests\Application;
+namespace TikiManager\Tests\Application;
 
 use PHPUnit\Framework\TestCase;
 use TikiManager\Access\Access;
