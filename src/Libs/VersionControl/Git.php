@@ -272,8 +272,17 @@ class Git extends VersionControlSystem
      */
     public function upgrade($targetFolder, $branch, $commitSHA = null): void
     {
-        $this->revert($targetFolder);
+        $stash = count($this->getChangedFiles($targetFolder)) || count($this->getDeletedFiles($targetFolder));
+        if ($stash) {
+            $this->stash($targetFolder);
+        }
+
         $this->checkoutBranch($targetFolder, $branch, $commitSHA);
+
+        if ($stash) {
+            $this->stashPop($targetFolder);
+        }
+
         $this->cleanup($targetFolder);
     }
 
@@ -338,9 +347,19 @@ class Git extends VersionControlSystem
             return;
         }
 
+        $stash = count($this->getChangedFiles($targetFolder)) || count($this->getDeletedFiles($targetFolder));
+        if ($stash) {
+            // Cannot use --include-untracked (due to maintenance.php and .htaccess.bck)
+            $this->stash($targetFolder);
+        }
+
         $commitSHA
             ? $this->checkoutBranch($targetFolder, $branch, $commitSHA)
             : $this->pull($targetFolder);
+
+        if ($stash) {
+            $this->stashPop($targetFolder);
+        }
 
         $this->cleanup($targetFolder);
     }
@@ -508,5 +527,44 @@ class Git extends VersionControlSystem
         preg_match('/[\d\.]+/', $version, $matches);
 
         return $matches ? $matches[0] : '';
+    }
+
+    public function stash(string $targetFolder, bool $includeNonTracked = false)
+    {
+        $cmd = 'stash';
+
+        $cmd .= ($includeNonTracked ? ' --include-untracked' : '');
+        $cmd .= ($this->quiet ? ' --quiet' : '');
+
+        return $this->exec($targetFolder, $cmd);
+    }
+
+    /**
+     * @throws VcsException
+     */
+    public function stashPop(string $targetFolder, bool $revertOnFailure = true)
+    {
+        $cmd = 'stash pop';
+        $cmd .= ($this->quiet ? ' --quiet' : '');
+
+        try {
+            return $this->exec($targetFolder, $cmd);
+        } catch (\Exception $e) {
+            if (!$revertOnFailure) {
+                throw $e;
+            }
+
+            // Because Tiki Manager stashes with --include-untracked
+            // in case of failure, reset --hard can be used.
+            $this->logger->error('Failed to apply stash@{0}.', [
+                'path' => $targetFolder,
+                'exception' => $e,
+            ]);
+            $this->logger->notice('Reverting stashed changes...');
+
+            $this->revert($targetFolder);
+
+            return false;
+        }
     }
 }

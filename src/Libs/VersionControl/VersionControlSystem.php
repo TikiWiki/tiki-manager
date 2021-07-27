@@ -7,12 +7,18 @@
 
 namespace TikiManager\Libs\VersionControl;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TikiManager\Config\App;
 use TikiManager\Application\Instance;
 
-abstract class VersionControlSystem
+abstract class VersionControlSystem implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     protected $command;
     protected $instance;
     protected $access;
@@ -24,11 +30,13 @@ abstract class VersionControlSystem
      * VersionControlSystem constructor.
      * @param Instance $instance
      */
-    public function __construct(Instance $instance)
+    public function __construct(Instance $instance, LoggerInterface $logger = null)
     {
         $this->instance = $instance;
         $this->access = $instance->getBestAccess('scripting');
         $this->io = App::get('io');
+
+        $this->setLogger($logger ?? new NullLogger());
     }
 
     /**
@@ -66,7 +74,7 @@ abstract class VersionControlSystem
     /**
      * Gets VCS for a given instance, if null returns default
      * @param Instance $instance
-     * @return string
+     * @return VersionControlSystem|null
      */
     public static function getVersionControlSystem(Instance $instance)
     {

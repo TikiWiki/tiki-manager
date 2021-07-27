@@ -110,6 +110,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
             $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
+            $instance->getVersionControlSystem()->setLogger($this->logger);
             $instance->lock();
             $instance->detectPHP();
             $app = $instance->getApplication();
@@ -184,6 +185,10 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                             Checksum::handleCheckResult($instance, $version, $filesToResolve);
                         }
                     } catch (\Exception $e) {
+                        $this->logger->error('Failed to upgrade instance!', [
+                            'instance' => $instance->name,
+                            'exception' => $e,
+                        ]);
                         CommandHelper::setInstanceSetupError($instance->id, $e);
                         continue;
                     }

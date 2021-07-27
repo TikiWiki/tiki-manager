@@ -2,6 +2,9 @@
 
 namespace TikiManager\Command;
 
+use Monolog\Handler\BufferHandler;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,12 +22,13 @@ abstract class TikiManagerCommand extends Command
     /** @var TikiManagerStyle */
     protected $io;
 
-    /** @var LoggerInterface */
+    /** @var Logger */
     protected $logger;
 
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
-        $this->logger = new ConsoleLogger($output);
+        $this->logger = new Logger('tiki_manager');
+        $this->logger->pushHandler(new PsrHandler(new ConsoleLogger($output)));
     }
 
     /**

@@ -11,6 +11,7 @@
     "composer/semver": "^3.2",
     "dragonmantank/cron-expression": "^3.0",
     "gitonomy/gitlib": "^1.2",
+    "monolog/monolog": "^1.26",
     "php": "^7.1",
     "phpseclib/phpseclib": "^2.0",
     "psr/log": "^1.1",

@@ -7,14 +7,18 @@
 
 namespace TikiManager\Command;
 
+use Monolog\Formatter\LineFormatter;
+use Monolog\Logger;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\SendEmail;
 use TikiManager\Libs\Helpers\Checksum;
+use TikiManager\Logger\ArrayHandler;
 
 class UpdateInstanceCommand extends TikiManagerCommand
 {
@@ -146,9 +150,15 @@ class UpdateInstanceCommand extends TikiManagerCommand
             $skipCache = $input->getOption('skip-cache-warmup');
             $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
             $logs = [];
+
+            /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
-                $log = [];
-                $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
+                $instanceLogger = $this->logger->withName('instance_' . $instance->id);
+                $arrHandler = new ArrayHandler(Logger::ERROR);
+                $arrHandler->setFormatter($this->getFormatter());
+                $instanceLogger->pushHandler($arrHandler);
+
+                $instance->getVersionControlSystem()->setLogger($instanceLogger);
 
                 $discovery = $instance->getDiscovery();
                 $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
@@ -254,19 +264,21 @@ class UpdateInstanceCommand extends TikiManagerCommand
                                 Checksum::handleCheckResult($instance, $version, $filesToResolve);
                             }
                         } catch (\Exception $e) {
+                            $instanceLogger->error('Failed to update instance!', [
+                                'instance' => $instance->name,
+                                'exception' => $e,
+                            ]);
                             CommandHelper::setInstanceSetupError($instance->id, $e);
-                            $log[] = $e->getMessage() . PHP_EOL;
-                            $log[] = $e->getTraceAsString() . PHP_EOL;
                         }
                     } else {
                         $message = 'Tiki Application branch is different than the one stored in the Tiki Manager db.';
-                        $log[] = $message;
-                        $this->io->error($message);
+                        $instanceLogger->error($message);
                     }
                 }
 
-                if (count($log) > 1) {
-                    $logs = array_merge($logs, $log);
+                if ($instanceLogs = $arrHandler->getLog()) {
+                    $logs[] = sprintf('<h1>%s (id: %s)</h1>', $instance->name, $instance->id);
+                    $logs[] = '<pre>' . implode("\n", $instanceLogs) . '</pre>';
                 }
 
                 if ($instance->isLocked()) {
@@ -299,5 +311,15 @@ class UpdateInstanceCommand extends TikiManagerCommand
         } else {
             $this->io->writeln('<comment>No instances available to update/upgrade.</comment>');
         }
+    }
+
+    private function getFormatter()
+    {
+        $formatter = new LineFormatter();
+        $formatter->ignoreEmptyContextAndExtra(true);
+        $formatter->allowInlineLineBreaks(true);
+        $formatter->includeStacktraces(true);
+
+        return $formatter;
     }
 }

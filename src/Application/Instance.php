@@ -253,6 +253,9 @@ SQL;
     private $access = [];
     protected $discovery;
 
+    /** @var VersionControlSystem */
+    protected $vcs;
+
     public function __construct()
     {
         $this->io = App::get('io');
@@ -1065,7 +1068,11 @@ SQL;
 
     public function getVersionControlSystem()
     {
-        return VersionControlSystem::getVersionControlSystem($this);
+        if (!$this->vcs) {
+            $this->vcs = VersionControlSystem::getVersionControlSystem($this);
+        }
+
+        return $this->vcs;
     }
 
     public function reindex(): bool
