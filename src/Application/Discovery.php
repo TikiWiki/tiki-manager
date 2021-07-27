@@ -193,12 +193,12 @@ abstract class Discovery
         $access = $this->access;
         $webroot = rtrim($instance->webroot, DIRECTORY_SEPARATOR);
 
-        if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . '.svn')) {
-            return 'SVN';
-        }
-
         if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . '.git')) {
             return 'GIT';
+        }
+
+        if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . '.svn')) {
+            return 'SVN';
         }
 
         if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . 'tiki-index.php')) {

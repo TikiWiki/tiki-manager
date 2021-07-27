@@ -100,8 +100,8 @@ class DiscoveryTest extends TestCase
         $accessMock
             ->method('fileExists')
             ->willReturnOnConsecutiveCalls(
-                $file === '.svn',
                 $file === '.git',
+                $file === '.svn',
                 $file === 'tiki-index.php'
             );
 
@@ -115,8 +115,8 @@ class DiscoveryTest extends TestCase
     public function getVCSTypeData()
     {
         return [
-            ['SVN', '.svn'],
             ['GIT', '.git'],
+            ['SVN', '.svn'],
             ['SRC', 'tiki-index.php'],
             [null, 'unable-to-find-vcs']
         ];
