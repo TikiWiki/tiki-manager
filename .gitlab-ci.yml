@@ -267,6 +267,12 @@ download-tiki-src-files:
     - cache-warmup-tiki-git
   needs:
     - cache-warmup-tiki-git
+  before_script:
+    - *setup-env
+    - *setup-keys
+    - *install-composer-script
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_NAME}"
   except:
     variables:
       - $SCHEDULER == $SVN_SCHEDULER_NAME
