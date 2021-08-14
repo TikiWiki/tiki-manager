@@ -26,14 +26,20 @@ abstract class VersionControlSystem implements LoggerAwareInterface
     protected $runLocally = false;
     protected $io;
 
+    protected $vcsOptions;
+
     /**
      * VersionControlSystem constructor.
      * @param Instance $instance
+     * @param array $options An array with settings on how the VCS should behaviour
+     * @param LoggerInterface|null $logger
+     * @throws \Exception
      */
-    public function __construct(Instance $instance, LoggerInterface $logger = null)
+    public function __construct(Instance $instance, array $vcsOptions = [], LoggerInterface $logger = null)
     {
         $this->instance = $instance;
         $this->access = $instance->getBestAccess('scripting');
+        $this->vcsOptions = $vcsOptions;
         $this->io = App::get('io');
 
         $this->setLogger($logger ?? new NullLogger());
@@ -224,6 +230,11 @@ abstract class VersionControlSystem implements LoggerAwareInterface
     public function setIO(SymfonyStyle $io): void
     {
         $this->io = $io;
+    }
+
+    public function setVCSOptions(array $options = [])
+    {
+        $this->vcsOptions = $options;
     }
 }
 

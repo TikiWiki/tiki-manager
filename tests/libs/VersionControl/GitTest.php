@@ -169,15 +169,13 @@ TXT;
     {
         $git = $this->createPartialMock(
             Git::class,
-            ['isUpgrade', 'info', 'checkoutBranch', 'cleanup', 'revert', 'remoteSetBranch', 'fetch', 'isShallow', 'getChangedFiles', 'getDeletedFiles']
+            ['isUpgrade', 'info', 'checkoutBranch', 'cleanup', 'revert', 'remoteSetBranch', 'fetch', 'isShallow']
         );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(true);
         $git->expects(self::once())->method('isShallow')->willReturn(true);
         $git->expects($this->once())->method('fetch');
-        $git->expects($this->once())->method('getChangedFiles')->willReturn([]);
-        $git->expects($this->once())->method('getDeletedFiles')->willReturn([]);
         $git->expects(self::once())->method('remoteSetBranch')->with('/root/tmp', 'master');
         $git->expects(self::once())->method('checkoutBranch')->with('/root/tmp', 'master', null);
         $git->expects(self::once())->method('cleanup');
@@ -190,7 +188,7 @@ TXT;
     {
         $git = $this->createPartialMock(
             Git::class,
-            ['isUpgrade', 'info', 'checkoutBranch', 'cleanup', 'revert', 'getLastCommit','isShallow', 'fetch', 'remoteSetBranch', 'getVersion', 'getChangedFiles', 'getDeletedFiles']
+            ['isUpgrade', 'info', 'checkoutBranch', 'cleanup', 'revert', 'getLastCommit','isShallow', 'fetch', 'remoteSetBranch', 'getVersion']
         );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
@@ -199,8 +197,6 @@ TXT;
         $git->expects(self::once())->method('isShallow')->willReturn(true);
         $git->expects(self::once())->method('getVersion')->willReturn('2.11.0');
         $git->expects($this->exactly(2))->method('fetch');
-        $git->expects($this->once())->method('getChangedFiles')->willReturn([]);
-        $git->expects($this->once())->method('getDeletedFiles')->willReturn([]);
         $git->expects(self::once())->method('getLastCommit')->willReturn([
             'commit' => '23e88c718205a34f77ed5a6d1c440ab6681d61d2',
             'date' => 'Sun Nov 29 01:57:25 2020 +0000'
@@ -220,7 +216,7 @@ TXT;
     {
         $git = $this->createPartialMock(
             Git::class,
-            ['isUpgrade', 'info', 'getLastCommit', 'checkoutBranch', 'cleanup', 'isShallow', 'fetch', 'getVersion', 'getChangedFiles', 'getDeletedFiles']
+            ['isUpgrade', 'info', 'getLastCommit', 'checkoutBranch', 'cleanup', 'isShallow', 'fetch', 'getVersion']
         );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
@@ -228,8 +224,6 @@ TXT;
         $git->expects(self::once())->method('getVersion')->willReturn('2.11.0');
         $git->expects($this->exactly(2))->method('fetch');
         $git->expects(self::once())->method('isUpgrade')->willReturn(false);
-        $git->expects($this->once())->method('getChangedFiles')->willReturn([]);
-        $git->expects($this->once())->method('getDeletedFiles')->willReturn([]);
         $git->expects(self::once())->method('getLastCommit')->willReturn([
             'commit' => '23e88c718205a34f77ed5a6d1c440ab6681d61d2',
             'date' => 'Sun Nov 29 01:57:25 2020 +0000'
@@ -256,6 +250,8 @@ TXT;
             ['isUpgrade', 'info', 'getChangedFiles', 'cleanup', 'stash', 'stashPop', 'fetch', 'isShallow', 'pull']
         );
 
+        $git->setVCSOptions(['allow_stash' => true]);
+
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(false);
         $git->expects($this->once())->method('fetch');
@@ -273,18 +269,40 @@ TXT;
      * @covers \TikiManager\Libs\VersionControl\Git::update
      * @throws VcsException
      */
+    public function testUpdateWithChangesStashDisabled()
+    {
+        $git = $this->createPartialMock(
+            Git::class,
+            ['isUpgrade', 'info', 'getChangedFiles', 'cleanup', 'stash', 'stashPop', 'fetch', 'isShallow', 'pull']
+        );
+
+        $git->expects(self::once())->method('info')->willReturn('22.x');
+        $git->expects(self::once())->method('isUpgrade')->willReturn(false);
+        $git->expects($this->once())->method('fetch');
+        $git->expects($this->never())->method('getChangedFiles');
+        $git->expects($this->never())->method('stash');
+        $git->expects(self::once())->method('pull');
+        $git->expects($this->never())->method('stashPop');
+        $git->expects(self::once())->method('cleanup');
+
+        $git->setIO($this->createMock(TikiManagerStyle::class));
+        $git->update('/root/tmp', '22.x');
+    }
+
+    /**
+     * @covers \TikiManager\Libs\VersionControl\Git::update
+     * @throws VcsException
+     */
     public function testUpdate()
     {
         $git = $this->createPartialMock(
             Git::class,
-            ['isUpgrade', 'info', 'cleanup', 'pull', 'isShallow', 'fetch', 'getChangedFiles', 'getDeletedFiles']
+            ['isUpgrade', 'info', 'cleanup', 'pull', 'isShallow', 'fetch']
         );
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(false);
         $git->expects(self::once())->method('isShallow')->willReturn(true);
-        $git->expects($this->once())->method('getChangedFiles')->willReturn([]);
-        $git->expects($this->once())->method('getDeletedFiles')->willReturn([]);
         // Pull latest changes in case branch was already checked before.
         $git->expects(self::once())->method('fetch');
         $git->expects(self::once())->method('pull');
@@ -305,10 +323,7 @@ TXT;
         $mainBranch = Environment::get('MASTER_BRANCH', 'master');
         $prevVersionBranch = Environment::get('PREV_VERSION_BRANCH', '21.x');
 
-        $git = $this->createPartialMock(Git::class, ['getChangedFiles', 'getDeletedFiles']);
-
-        $git->expects($this->exactly(2))->method('getChangedFiles')->willReturn([]);
-        $git->expects($this->exactly(2))->method('getDeletedFiles')->willReturn([]);
+        $git = $this->createPartialMock(Git::class, []);
 
         $git->setIO($this->createMock(TikiManagerStyle::class));
         $git->setRunLocally(true);

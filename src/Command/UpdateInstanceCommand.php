@@ -79,7 +79,13 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_REQUIRED,
                 'Time delay commits by X number of days. Useful for avoiding newly introduced bugs in automated updates.'
-            );
+            )
+        ->addOption(
+            'stash',
+            null,
+            InputOption::VALUE_NONE,
+            'Only on Git: saves your local modifications, and try to apply after update/upgrade'
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -151,6 +157,10 @@ class UpdateInstanceCommand extends TikiManagerCommand
             $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
             $logs = [];
 
+            $vcsOptions = [
+                'allow_stash' => $input->getOption('stash')
+            ];
+
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
                 $instanceLogger = $this->logger->withName('instance_' . $instance->id);
@@ -158,7 +168,9 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $arrHandler->setFormatter($this->getFormatter());
                 $instanceLogger->pushHandler($arrHandler);
 
-                $instance->getVersionControlSystem()->setLogger($instanceLogger);
+                $instanceVCS = $instance->getVersionControlSystem();
+                $instanceVCS->setLogger($instanceLogger);
+                $instanceVCS->setVCSOptions($vcsOptions);
 
                 $discovery = $instance->getDiscovery();
                 $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());

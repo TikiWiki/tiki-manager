@@ -63,8 +63,13 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_REQUIRED,
                 'Time delay commits by X number of days. Useful for avoiding newly introduced bugs in automated updates.'
+            )
+            ->addOption(
+                'stash',
+                null,
+                InputOption::VALUE_NONE,
+                'Only on Git: saves your local modifications, and try to apply after update/upgrade'
             );
-        ;
     }
 
 
@@ -81,6 +86,9 @@ class UpgradeInstanceCommand extends TikiManagerCommand
         $skipCache = $input->getOption('skip-cache-warmup');
         $liveReindex = $input->getOption('live-reindex');
         $lag = $input->getOption('lag');
+        $vcsOptions = [
+            'allow_stash' => $input->getOption('stash')
+        ];
 
         if (empty($instancesOption)) {
             $this->io->newLine();
@@ -110,7 +118,10 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
             $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
-            $instance->getVersionControlSystem()->setLogger($this->logger);
+            $instanceVCS = $instance->getVersionControlSystem();
+            $instanceVCS->setLogger($this->logger);
+            $instanceVCS->setVCSOptions($vcsOptions);
+
             $instance->lock();
             $instance->detectPHP();
             $app = $instance->getApplication();

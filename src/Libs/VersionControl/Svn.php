@@ -8,6 +8,7 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsConflictException;
@@ -28,9 +29,9 @@ class Svn extends VersionControlSystem
      * SVN constructor.
      * @inheritDoc
      */
-    public function __construct(Instance $instance)
+    public function __construct(Instance $instance, array $vcsOptions = [], LoggerInterface $logger = null)
     {
-        parent::__construct($instance);
+        parent::__construct($instance, $vcsOptions, $logger);
         $this->command = 'svn';
         $this->repositoryUrl = $_ENV['SVN_TIKIWIKI_URI'];
     }

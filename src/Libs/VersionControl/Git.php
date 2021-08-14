@@ -7,6 +7,7 @@
 
 namespace TikiManager\Libs\VersionControl;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
@@ -23,9 +24,9 @@ class Git extends VersionControlSystem
      * GIT constructor.
      * @inheritDoc
      */
-    public function __construct(Instance $instance)
+    public function __construct(Instance $instance, array $vcsOptions = [], LoggerInterface $logger = null)
     {
-        parent::__construct($instance);
+        parent::__construct($instance, $vcsOptions, $logger);
         $this->setRepositoryUrl($_ENV['GIT_TIKIWIKI_URI']);
     }
 
@@ -272,7 +273,8 @@ class Git extends VersionControlSystem
      */
     public function upgrade($targetFolder, $branch, $commitSHA = null): void
     {
-        $stash = count($this->getChangedFiles($targetFolder)) || count($this->getDeletedFiles($targetFolder));
+        $stash = $this->canStash() &&
+            (count($this->getChangedFiles($targetFolder)) || count($this->getDeletedFiles($targetFolder)));
         if ($stash) {
             $this->stash($targetFolder);
         }
@@ -347,7 +349,8 @@ class Git extends VersionControlSystem
             return;
         }
 
-        $stash = count($this->getChangedFiles($targetFolder)) || count($this->getDeletedFiles($targetFolder));
+        $stash = $this->canStash() &&
+            (count($this->getChangedFiles($targetFolder)) || count($this->getDeletedFiles($targetFolder)));
         if ($stash) {
             // Cannot use --include-untracked (due to maintenance.php and .htaccess.bck)
             $this->stash($targetFolder);
@@ -566,5 +569,13 @@ class Git extends VersionControlSystem
 
             return false;
         }
+    }
+
+    /**
+     * @return bool
+     */
+    protected function canStash(): bool
+    {
+        return $this->vcsOptions['allow_stash'] ?? false;
     }
 }
