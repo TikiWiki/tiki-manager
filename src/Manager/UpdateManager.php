@@ -8,6 +8,9 @@
 namespace TikiManager\Manager;
 
 use Exception;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Process\Process;
 use TikiManager\Config\Environment;
@@ -19,6 +22,9 @@ use Phar as PhpPhar;
 
 abstract class UpdateManager
 {
+    use LoggerAwareTrait;
+
+    protected $debug;
     protected $targetFolder;
 
     public const VERSION_FILENAME = '.version';
@@ -28,9 +34,11 @@ abstract class UpdateManager
      * VersionControlSystem constructor.
      * @param $targetFolder
      */
-    public function __construct($targetFolder)
+    public function __construct($targetFolder, LoggerInterface $logger = null)
     {
         $this->targetFolder = $targetFolder;
+        $this->debug = filter_var(getenv('TRIM_DEBUG'), FILTER_VALIDATE_BOOLEAN);
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**

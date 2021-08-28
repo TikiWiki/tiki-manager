@@ -40,6 +40,7 @@ class ManagerUpdateCommand extends TikiManagerCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $updater = UpdateManager::getUpdater();
+        $updater->setLogger($this->logger);
 
         $update = $input->getOption('yes');
         $check = $input->getOption('check');

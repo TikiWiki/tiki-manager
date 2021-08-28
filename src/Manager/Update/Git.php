@@ -11,6 +11,7 @@ use Exception;
 use Gitonomy\Git\Exception\ReferenceNotFoundException;
 use Gitonomy\Git\Reference\Branch;
 use Gitonomy\Git\Repository;
+use Psr\Log\LoggerInterface;
 use TikiManager\Manager\Update\Exception\TrackingInformationNotFoundException;
 use TikiManager\Manager\UpdateManager;
 
@@ -19,10 +20,17 @@ class Git extends UpdateManager
     /** @var Repository */
     protected $repository;
 
-    public function __construct($targetFolder)
+    /**
+     * @param mixed $targetFolder 
+     * @param LoggerInterface|null $logger 
+     * @return void 
+     */
+    public function __construct($targetFolder, LoggerInterface $logger = null)
     {
+        $debug = filter_var(getenv('TRIM_DEBUG'), FILTER_VALIDATE_BOOLEAN);
+
         if (!$targetFolder instanceof Repository) {
-            $targetFolder = new Repository($targetFolder, ['debug' => false]);
+            $targetFolder = new Repository($targetFolder, ['debug' => $debug, 'logger' => $logger]);
         }
 
         $this->repository = $targetFolder;
@@ -35,9 +43,23 @@ class Git extends UpdateManager
      */
     public function update()
     {
-        $this->repository->run('pull');
-        $this->repository->getReferences(true);
+        $oldFileModeConfig = trim($this->repository->run('config', ['core.fileMode']));
 
+        try {
+            $this->setIgnoreFilePermissions('false');
+            $update = $this->repository->run('pull');
+
+            if (is_null($update)) {
+                throw new Exception('Failed to update Tiki Manager. For more details enable Tiki Manager debug mode.');
+            }
+
+            $this->setIgnoreFilePermissions($oldFileModeConfig);
+        } catch (\Exception $e) {
+            $this->setIgnoreFilePermissions($oldFileModeConfig);
+            throw $e;
+        }
+
+        $this->repository->getReferences(true);
         $this->runComposerInstall();
     }
 
@@ -131,5 +153,25 @@ class Git extends UpdateManager
      */
     public function isHeadDetached() {
         return $this->repository->isHeadDetached();
+    }
+
+    /**
+     * Set Git mode to ignore file permission changes
+     * @param string $value
+     */
+    private function setIgnoreFilePermissions(string $value) : void
+    {
+        $this->repository->run('config', ['core.fileMode', $value]);
+    }
+
+    /**
+     * Sets a logger.
+     *
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        $this->repository->setLogger($logger);
     }
 }
