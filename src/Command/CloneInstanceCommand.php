@@ -118,6 +118,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 'dn',
                 InputOption::VALUE_REQUIRED,
                 'Target instance database name'
+            )
+            ->addOption(
+                'stash',
+                null,
+                InputOption::VALUE_NONE,
+                'Only on Git: saves your local modifications, and try to apply after update/upgrade'
             );
     }
 
@@ -145,6 +151,9 @@ class CloneInstanceCommand extends TikiManagerCommand
         $keepBackup = $input->getOption('keep-backup');
         $useLastBackup = $input->getOption('use-last-backup');
         $argument = $input->getArgument('mode');
+        $vcsOptions = [
+            'allow_stash' => $input->getOption('stash')
+        ];
 
         $setupTargetDatabase = (bool) ($input->getOption('db-prefix') || $input->getOption('db-name'));
 
@@ -364,6 +373,10 @@ class CloneInstanceCommand extends TikiManagerCommand
         foreach ($selectedDestinationInstances as $destinationInstance) {
             $this->io->newLine();
             $this->io->section('Initiating clone of ' . $sourceInstance->name . ' to ' . $destinationInstance->name);
+
+            $instanceVCS = $destinationInstance->getVersionControlSystem();
+            $instanceVCS->setLogger($this->logger);
+            $instanceVCS->setVCSOptions($vcsOptions);
 
             $destinationInstance->lock();
             $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct);

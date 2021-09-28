@@ -111,6 +111,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 'dn',
                 InputOption::VALUE_REQUIRED,
                 'Target instance database name'
+            )
+            ->addOption(
+                'stash',
+                null,
+                InputOption::VALUE_NONE,
+                'Only on Git: saves your local modifications, and try to apply after update/upgrade'
             );
     }
 
