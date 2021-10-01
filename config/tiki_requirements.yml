@@ -2,6 +2,7 @@
   version: 23
   php:
     min: 7.4
+    max: 7.4
   mysql:
     min: 5.5
   mariadb:
@@ -11,6 +12,7 @@
   version: 22
   php:
     min: 7.4
+    max: 7.4   
   mysql:
     min: 5.5
   mariadb:
@@ -19,7 +21,8 @@
 - name: Tiki21 LTS
   version: 21
   php:
-    min: 7.1
+    min: 7.2
+    max: 7.3    
   mysql:
     min: 5.5
   mariadb:
