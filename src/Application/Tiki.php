@@ -791,7 +791,7 @@ TXT;
             preg_match('/Your requirements could not be resolved/', $commandOutput)
         ) {
             trim_output($commandOutput);
-            throw new \Exception("Composer install failed for Tiki bundled packages.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+            throw new \Exception("Composer install failed for vendor_bundled/composer.lock (Tiki bundled packages).\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
         }
 
         if ($access->fileExists('composer.lock')) {
@@ -802,7 +802,7 @@ TXT;
                 $commandOutput = ! empty($command->getStderrContent()) ? $command->getStderrContent() : $command->getStdoutContent();
 
                 trim_output($commandOutput);
-                $this->io->error("Composer install failed for composer.lock in the root folder.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+                $this->io->error("Composer install failed for composer.lock in the root folder, which installs packages in the vendor directory.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
             }
         }
     }
