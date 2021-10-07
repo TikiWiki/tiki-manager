@@ -38,7 +38,7 @@ class UpdateInstanceCommandTest extends TestCase
         self::$dbLocalFile =  implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'db', 'local.php']);
 
         $vcs = strtoupper($_ENV['DEFAULT_VCS']);
-        $branch = $vcs === 'SRC' ? $_ENV['PREV_SRC_MINOR_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
+        $branch = $vcs === 'SRC' ? $_ENV['PREV_SRC_MAJOR_RELEASE'] : $_ENV['PREV_VERSION_BRANCH'];
 
         self::$instanceSettings = [
             'local' => [
