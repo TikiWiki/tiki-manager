@@ -228,7 +228,7 @@ class TikiTest extends TestCase
             ->getMock();
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^Composer install failed for Tiki bundled packages/');
+        $this->expectExceptionMessageRegExp('/^Composer install failed for vendor_bundled\/composer.lock/');
 
         $tikiStub->runComposer();
     }
@@ -270,7 +270,7 @@ Your requirements could not be resolved to an installable set of packages.');
             ->getMock();
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^Composer install failed for Tiki bundled packages/');
+        $this->expectExceptionMessageRegExp('/^Composer install failed for vendor_bundled\/composer.lock/');
 
         $tikiStub->runComposer();
     }
