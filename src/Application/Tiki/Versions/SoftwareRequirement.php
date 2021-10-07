@@ -8,6 +8,7 @@
 namespace TikiManager\Application\Tiki\Versions;
 
 use Composer\Semver\Comparator;
+use Composer\Semver\Semver;
 
 class SoftwareRequirement
 {
@@ -46,7 +47,12 @@ class SoftwareRequirement
 
     public function isValidVersion($version): bool
     {
-        return Comparator::greaterThanOrEqualTo($version, $this->min)
-            && (empty($this->max) || Comparator::lessThanOrEqualTo($version, $this->max));
+        if (empty($this->max)) {
+            return Comparator::greaterThanOrEqualTo($version, $this->min);
+        }
+
+        $constraint = sprintf('%s - %s', $this->min, $this->max);
+
+        return Semver::satisfies($version, $constraint);
     }
 }

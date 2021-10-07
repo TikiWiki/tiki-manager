@@ -449,7 +449,7 @@ Your requirements could not be resolved to an installable set of packages.');
                     'name' => 'Tiki22',
                     'version' => 22,
                     'php' => [
-                        'min' => '7.4.0',
+                        'min' => '7.4',
                     ],
                     'mysql' => [
                         'min' => '5.5.0',
@@ -462,8 +462,8 @@ Your requirements could not be resolved to an installable set of packages.');
                     'name' => 'Tiki19',
                     'version' => 19,
                     'php' => [
-                        'min' => '7.1.0',
-                        'max' => '7.2.0',
+                        'min' => '7.1',
+                        'max' => '7.2',
                     ],
                     'mysql' => [
                         'min' => '5.5.0',
@@ -478,8 +478,8 @@ Your requirements could not be resolved to an installable set of packages.');
                     'name' => 'Tiki12 LTS',
                     'version' => 12,
                     'php' => [
-                        'min' => '5.3.0',
-                        'max' => '5.6.0',
+                        'min' => '5.3',
+                        'max' => '5.6',
                     ],
                     'mysql' => [
                         'min' => '5.1.0',
@@ -565,7 +565,7 @@ Your requirements could not be resolved to an installable set of packages.');
         $this->assertContains("trunk", $branches);
         $this->assertCount(6, $branches);
 
-        $instanceStub->phpversion = 70200;
+        $instanceStub->phpversion = 70222;
 
         $compatible = $tikiStub->getCompatibleVersions();
         $branches = array_map(function ($version) {
