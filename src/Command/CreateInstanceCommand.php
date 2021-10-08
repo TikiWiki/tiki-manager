@@ -157,6 +157,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Force deletion of target folder files.'
+            )
+            ->addOption(
+                'phpexec',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'PHP binary to be used to managed the instance'
             );
     }
 

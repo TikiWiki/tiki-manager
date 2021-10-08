@@ -172,13 +172,19 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $instanceVCS->setLogger($instanceLogger);
                 $instanceVCS->setVCSOptions($vcsOptions);
 
-                $discovery = $instance->getDiscovery();
-                $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
+                // Ensure that the current phpexec is still valid;
+                $instance->detectPHP();
+                $phpVersion = CommandHelper::formatPhpVersion($instance->phpversion);
 
-                $this->io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
+                $message = sprintf(
+                    "Working on %s\nPHP version %s found at %s.",
+                    $instance->name,
+                    $phpVersion,
+                    $instance->phpexec
+                );
+                $this->io->writeln('<fg=cyan>' .$message. '</>');
 
                 $instance->lock();
-                $instance->detectPHP();
                 $app = $instance->getApplication();
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();

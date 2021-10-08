@@ -10,6 +10,7 @@ use TikiManager\Config\Environment as Env;
 use TikiManager\Libs\Host\SSH as SSHHost;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Application\Instance;
+use TikiManager\Command\Helper\CommandHelper;
 
 class SSH extends Access implements ShellPrompt
 {
@@ -72,59 +73,52 @@ class SSH extends Access implements ShellPrompt
     // FIXME: Expect all remote to be Unix-like machines
     public function getInterpreterPath($instance2 = null)
     {
-        $host = $this->getHost();
+        if ($this->instance->phpexec) {
+            $detectedBinaries = [$this->instance->phpexec];
+        } else {
+            $detectedBinaries = $this->instance->getDiscovery()->detectPHP();
+        }
 
-        $sets = [
-            ['which php', 'which php5', 'which php4'],
-        ];
-        $php_name = ['php', 'php5'];
+        $valid = [];
 
-        foreach ($sets as $attempt) {
-            // Get possible paths
-            $phps = $host->runCommands($attempt);
-            $phps = explode("\n", $phps);
-
-            // Check different versions
-            $valid = [];
-            foreach ($phps as $interpreter) {
-                if (! in_array(basename($interpreter), ['php', 'php5'])) {
-                    continue;
-                }
-
-                $versionInfo = $host->runCommands("$interpreter -v");
-                if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches)) {
-                    $valid[$matches[1]] = $interpreter;
-                }
-            }
-
-            // Handle easy cases
-            if (count($valid) == 0) {
+        foreach ($detectedBinaries as $binary) {
+            try {
+                $version = $this->getInterpreterVersion($binary);
+            } catch (\Exception $e) {
                 continue;
             }
-            if (count($valid) == 1) {
-                return reset($valid);
-            }
 
-            // List available options for user
-            $this->io->writeln("Multiple PHP interpreters available on host:");
-            $counter = 0;
-            krsort($valid);
-            $versions = array_keys($valid);
-            foreach ($valid as $version => $path) {
-                $this->io->writeln("[$counter] $path ($version)");
-                $counter++;
+            if ($version && $version >= 50300) {
+                $formattedVersion = CommandHelper::formatPhpVersion($version);
+                $valid[$formattedVersion] = $binary;
             }
-
-            // Ask user
-            $counter--;
-            $selection = -1;
-            while (! array_key_exists($selection, $versions)) {
-                $selection = $this->io->ask("Which version do you want to use? (0-$counter) : ");
-            }
-
-            $version = $versions[$selection];
-            return $valid[$version];
         }
+
+        if (count($valid) == 1) {
+            return reset($valid);
+        }
+
+        // Instance current PHPExec no longer valid, re-detect again!
+        if ($this->instance->phpexec) {
+            $this->instance->phpexec = null;
+            return $this->getInterpreterPath($instance2);
+        }
+
+        if (empty($valid)) {
+            throw new \Exception("No suitable php interpreter was found on {$this->instance->name} instance");
+        }
+
+        // Assume that the first in the list should be the default one;
+        $defaultVersion = key($valid);
+
+        // List available options for user
+        krsort($valid);
+
+        $question = 'Multiple PHP interpreters available on host, which version do you want to use?';
+        $options = array_keys($valid);
+        $pickedVersion = $this->io->choice($question, $options, $defaultVersion);
+
+        return $valid[$pickedVersion];
     }
 
     public function getSVNPath()
@@ -186,9 +180,7 @@ class SSH extends Access implements ShellPrompt
 
     public function getInterpreterVersion($interpreter)
     {
-        $host = $this->getHost();
-        $versionInfo = $host->runCommands("$interpreter -r 'echo PHP_VERSION_ID;'");
-        return $versionInfo;
+        return $this->instance->getDiscovery()->detectPHPVersion($interpreter);
     }
 
     public function getDistributionName($interpreter)
@@ -204,11 +196,10 @@ class SSH extends Access implements ShellPrompt
 
     public function createDirectory($path)
     {
-        $phpexec = $this->instance->phpexec ?? $this->getInterpreterPath($this->instance);
+        $options = ['-m', '777', '-p', $path];
+        $command = $this->createCommand('mkdir', $options);
 
-        $script = sprintf("echo mkdir('%s', 0777, true);", $path);
-        $command = $this->createCommand($phpexec, ["-r {$script}"]);
-        return $command->run()->getStdoutContent() == 1;
+        return $command->run()->getReturn() == 0;
     }
 
     public function fileExists($filename)
@@ -217,10 +208,8 @@ class SSH extends Access implements ShellPrompt
             $filename = $this->instance->getWebPath($filename);
         }
 
-        $phpexec = $this->instance->phpexec ?? $this->getInterpreterPath($this->instance);
-
-        $command = $this->createCommand($phpexec, ['-r', 'echo (int) file_exists(\''.$filename.'\');']);
-        return $command->run()->getStdoutContent() == 1;
+        $command = $this->createCommand('test', ['-f', $filename]);
+        return $command->run()->getReturn() == 0;
     }
 
     public function fileGetContents($filename)
@@ -434,7 +423,7 @@ class SSH extends Access implements ShellPrompt
 
     public function isEmptyDir($path)
     {
-        $phpexec = $this->instance->phpexec ?? $this->getInterpreterPath($this->instance);
+        $phpexec = $this->getInterpreterPath();
 
         $script = sprintf("echo serialize(scandir('%s'));", $path);
 

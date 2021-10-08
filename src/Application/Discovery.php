@@ -140,11 +140,11 @@ abstract class Discovery
         if (empty($result)) {
             return null;
         }
-        $this->config['phpexec'] = $result[0];
-        return $this->config['phpexec'];
+
+        return $result;
     }
 
-    public static function createInstance($instance = null, $access = null)
+    public static function createInstance($instance = null, $access = null, $config = [])
     {
         $discover = [
             ClearOSDiscovery::class,
@@ -154,7 +154,7 @@ abstract class Discovery
         ];
 
         foreach ($discover as $class) {
-            $ins = new $class($instance, $access);
+            $ins = new $class($instance, $access, $config);
             if ($ins->isAvailable()) {
                 break;
             }
@@ -162,16 +162,17 @@ abstract class Discovery
         return $ins;
     }
 
-    public function detectPHPVersion()
+    public function detectPHPVersion($phpexec = null)
     {
-        $phpexec = $this->getConf('phpexec') ?: $this->detectPHP();
+        if (!$phpexec) {
+            $phpexec = $this->getConf('phpexec') ?: $this->detectPHP();
+        }
         $command = $this->access->createCommand($phpexec, ['-r', 'echo PHP_VERSION_ID;']);
         $command->run();
 
         if ($command->getReturn() === 0) {
             $version = trim($command->getStdoutContent());
-            $version = intval($version, 10);
-            return $version;
+            return intval($version, 10);
         }
 
         $out = $command->getStderrContent();

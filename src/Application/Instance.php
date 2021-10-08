@@ -9,7 +9,7 @@
 
 namespace TikiManager\Application;
 
-use TikiManager\Access\ShellPrompt;
+use Exception;
 use TikiManager\Application\Instance\CrontabManager;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
@@ -541,50 +541,39 @@ SQL;
             $access = $this->getBestAccess('scripting');
         }
 
-        $path = $access->getInterpreterPath($this);
+        $path = $access->getInterpreterPath();
         $script = sprintf("mkdir('%s', 0777, true);", $this->tempdir);
         $access->createCommand($path, ["-r {$script}"])->run();
 
         return $this->tempdir;
     }
 
-    public function getPHPVersion()
-    {
-        $access = $this->getBestAccess('scripting');
-        $path = $access->getInterpreterPath($this);
-        $version = $access->shellExec("{$path} -r 'echo phpversion();'");
-        return $version;
-    }
-
     public function detectPHP()
     {
         $access = $this->getBestAccess('scripting');
-        $path = $access->getInterpreterPath($this);
+        $path = $access->getInterpreterPath();
 
         $path_env = getenv('PATH');
 
-        if (strlen($path) > 0) {
+        if ($path) {
             $version = $access->getInterpreterVersion($path);
-            $this->phpversion = intval($version);
-            if ($version <  50300) {
-                return false;
+
+            if ($version >=  50300) {
+                $this->phpexec = $path;
+                $this->phpversion = intval($version);
+
+                // even passing full path to php binary, we need to fix PATH
+                // so scripts like setup.sh can use correct php version
+                $bin_folder = dirname($path);
+                if (strpos($path_env, $bin_folder) === false) {
+                    $access->setenv('PATH', "${bin_folder}:${path_env}");
+                }
+
+                return true;
             }
-
-            $this->phpexec = $path;
-            $this->save();
-
-            // even passing full path to php binary, we need to fix PATH
-            // so scripts like setup.sh can use correct php version
-            $bin_folder = dirname($path);
-            if (strpos($path_env, $bin_folder) === false) {
-                $access->setenv('PATH', "${bin_folder}:${path_env}");
-            }
-
-            return $version;
         }
 
-        $this->io->error("No suitable php interpreter was found on {$this->name} instance");
-        exit(1);
+        throw new Exception("No suitable php interpreter was found on {$this->name} instance");
     }
 
     public function detectSVN()
@@ -602,7 +591,7 @@ SQL;
     public function detectDistribution()
     {
         $access = $this->getBestAccess('scripting');
-        $path = $access->getInterpreterPath();
+        $path = $this->phpexec ?? $access->getInterpreterPath();
         return $access->getDistributionName($path);
     }
 
@@ -877,7 +866,7 @@ SQL;
         $this->io->writeln('Locking website...');
 
         $access = $this->getBestAccess('scripting');
-        $path = $access->getInterpreterPath($this);
+        $path = $this->phpexec ?? $access->getInterpreterPath($this);
         $access->uploadFile($_ENV['TRIM_ROOT'] . '/scripts/maintenance.php', 'maintenance.php');
 
         $access->shellExec(sprintf('%s -r "touch(\'maintenance.php\');"', $path));

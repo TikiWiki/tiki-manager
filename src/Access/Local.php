@@ -8,6 +8,7 @@ namespace TikiManager\Access;
 
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\Environment as Env;
 use TikiManager\Libs\Host\Local as LocalHost;
 use TikiManager\Libs\Host\Command;
@@ -81,42 +82,31 @@ class Local extends Access implements ShellPrompt
         return true;
     }
 
+    /**
+     * @param Instance $instance2
+     * @return false|mixed
+     * @throws \Exception When no PHP interpreter was found in the system
+     */
     public function getInterpreterPath($instance2 = null)
     {
-        $host = $this->getHost();
-
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $attempts = [
-                "where php.exe",
-                "where php5.exe",
-                "where php7.exe"
-            ];
+        if ($this->instance->phpexec) {
+            $detectedBinaries = [$this->instance->phpexec];
         } else {
-            $attempts = [
-                'command -v php 2>/dev/null',
-                "command php -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
-                "command php7 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
-                "command php5 -r \"defined('PHP_BINARY') && print(PHP_BINARY);\"",
-                "which php4"
-            ];
+            $detectedBinaries = $this->instance->getDiscovery()->detectPHP();
         }
 
-        // Get possible paths
-        $phps = $host->runCommands($attempts);
-        $phps = explode("\n", $phps);
-
-        // Check different versions
         $valid = [];
-        foreach ($phps as $interpreter) {
-            if ('php' !== substr(basename($interpreter), 0, 3)) {
+
+        foreach ($detectedBinaries as $binary) {
+            try {
+                $version = $this->getInterpreterVersion($binary);
+            } catch (\Exception $e) {
                 continue;
             }
 
-            $versionInfo = $host->runCommands("$interpreter -v");
-            if (preg_match('/PHP (\d+\.\d+\.\d+)/', $versionInfo, $matches)) {
-                if (empty($valid[$matches[1]])) {
-                    $valid[$matches[1]] = $interpreter;
-                }
+            if ($version && $version >= 50300) {
+                $formattedVersion = CommandHelper::formatPhpVersion($version);
+                $valid[$formattedVersion] = $binary;
             }
         }
 
@@ -124,25 +114,27 @@ class Local extends Access implements ShellPrompt
             return reset($valid);
         }
 
+        // Instance current PHPExec no longer valid, re-detect again!
+        if ($this->instance->phpexec) {
+            $this->instance->phpexec = null;
+            return $this->getInterpreterPath($instance2);
+        }
+
+        if (empty($valid)) {
+            throw new \Exception("No suitable php interpreter was found on {$this->instance->name} instance");
+        }
+
+        // Assume that the first in the list should be the default one;
+        $defaultVersion = key($valid);
+
         // List available options for user
-        $this->io->writeln("Multiple PHP interpreters available on host :");
-        $counter = 0;
         krsort($valid);
-        $versions = array_keys($valid);
-        foreach ($valid as $version => $path) {
-            $this->io->writeln("[$counter] $path ($version)");
-            $counter++;
-        }
 
-        // Ask user
-        $counter--;
-        $selection = -1;
-        while (! array_key_exists($selection, $versions)) {
-            $selection = $this->io->ask("Which version do you want to use? (0-$counter) : ");
-        }
+        $question = 'Multiple PHP interpreters available on host, which version do you want to use?';
+        $options = array_keys($valid);
+        $pickedVersion = $this->io->choice($question, $options, $defaultVersion);
 
-        $version = $versions[$selection];
-        return $valid[$version];
+        return $valid[$pickedVersion];
     }
 
     public function getSVNPath()
@@ -215,9 +207,7 @@ class Local extends Access implements ShellPrompt
 
     public function getInterpreterVersion($interpreter)
     {
-        $host = $this->getHost();
-        $versionInfo = $host->runCommands("$interpreter -r \"echo PHP_VERSION_ID;\"");
-        return $versionInfo;
+        return $this->instance->getDiscovery()->detectPHPVersion($interpreter);
     }
 
     public function getDistributionName($interpreter)

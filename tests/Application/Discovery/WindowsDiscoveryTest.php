@@ -139,7 +139,7 @@ class WindowsDiscoveryTest extends TestCase
 
         $mock->setAccess($accessMock);
 
-        $this->assertEquals('C:\\tools\php71\php.exe', $mock->detectPHP());
+        $this->assertEquals(['C:\\tools\php71\php.exe'], $mock->detectPHP());
     }
 
     /**

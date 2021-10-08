@@ -121,7 +121,6 @@ class LinuxDiscoveryTest extends TestCase
         rewind($stream);
 
         $commandMock
-            ->expects($this->once())
             ->method('getStdout')
             ->willReturn($stream);
 
@@ -132,7 +131,7 @@ class LinuxDiscoveryTest extends TestCase
 
         $mock->setAccess($accessMock);
 
-        $this->assertEquals('/usr/bin/php', $mock->detectPHP());
+        $this->assertEquals(['/usr/bin/php'], $mock->detectPHP());
     }
 
     /**

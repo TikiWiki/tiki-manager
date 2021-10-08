@@ -135,6 +135,6 @@ class ClearOSDiscoveryTest extends TestCase
 
         $mock->setAccess($accessMock);
 
-        $this->assertEquals('/usr/clearos/bin/php', $mock->detectPHP());
+        $this->assertEquals(['/usr/clearos/bin/php'], $mock->detectPHP());
     }
 }

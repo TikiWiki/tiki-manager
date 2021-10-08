@@ -250,8 +250,6 @@ trait InstanceConfigure
 
         $instance->webroot = $webRoot;
         $instance->tempdir = $tempDir;
-        $instance->phpexec = $instance->getDiscovery()->detectPHP();
-        $instance->phpversion = $instance->getDiscovery()->detectPHPVersion();
 
         //
         // Backups
@@ -293,6 +291,14 @@ trait InstanceConfigure
         $instance->backup_user = $backupUser;
         $instance->backup_group = $backupGroup;
         $instance->backup_perm = octdec($backupPerm);
+
+        // PHP SECTION DETECTION
+        // If there is a given path, set that, detectPHP will test if valid, if not detect others;
+        $instance->phpexec = $this->input->getOption('phpexec');
+        $instance->detectPHP();
+
+        $this->io->info('Instance PHP Version: ' . CommandHelper::formatPhpVersion($instance->phpversion));
+        $this->io->info('Instance PHP exec: ' . $instance->phpexec);
 
         return $instance;
     }
@@ -534,9 +540,8 @@ trait InstanceConfigure
         $checksumCheck = $this->input->getOption('check') ?? false;
 
         $discovery = $instance->getDiscovery();
-        $instance->vcs_type = $type = $discovery->detectVcsType();
-        $instance->phpexec = $discovery->detectPHP();
-        $instance->phpversion = $discovery->detectPHPVersion();
+        $instance->vcs_type = $discovery->detectVcsType();
+        $instance->detectPHP();
         $instance->save();
         // Save access details
         $instance->getBestAccess()->save();

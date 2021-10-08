@@ -127,6 +127,8 @@ SQL;
 
     abstract public function getInterpreterPath($instance2 = null);
 
+    abstract public function getInterpreterVersion($interpreter);
+
     abstract public function createDirectory($path);
 
     abstract public function isEmptyDir($path);

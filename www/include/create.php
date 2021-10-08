@@ -54,8 +54,7 @@ if ($step == 1) {
 }
 
 $instance->webroot = $webroot;
-$instance->phpexec = $discovery->detectPHP();
-$instance->phpversion = $discovery->detectPHPVersion();
+$instance->detectPHP();
 
 $tikiApplication = new Tiki($instance);
 $versions = $tikiApplication->getCompatibleVersions();

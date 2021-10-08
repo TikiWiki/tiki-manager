@@ -21,7 +21,7 @@ class ClearOSDiscovery extends LinuxDiscovery
         $searchOrder = [
             ['command', ['-v', '/usr/clearos/bin/php']], // preference to use the php wrapper
             ['command', ['-v', 'php']],
-            ['locate', ['-r', 'bin/php$']],
+            ['locate', ['-e', '-r', 'bin/php$']],
         ];
 
         return $this->detectPHPLinux($options, $searchOrder);

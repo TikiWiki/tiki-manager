@@ -122,7 +122,7 @@ abstract class VersionControlSystem implements LoggerAwareInterface
      * @param $targetFolder
      * @return mixed
      */
-    abstract protected function getRepositoryBranch($targetFolder);
+    abstract public function getRepositoryBranch($targetFolder);
 
     /**
      * Main function to execute a command. Small part of logic will should be placed here.

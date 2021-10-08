@@ -488,8 +488,8 @@ class CommandHelper
     {
         $io = App::get('io');
         $io->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
-        $io->writeln('<info>PHP Version: ' . self::formatPhpVersion($discovery->detectPHPVersion()) . '</info>');
-        $io->writeln('<info>PHP exec: ' . $discovery->detectPHP() . '</info>');
+        $io->writeln('<info>PHP Version: ' . phpversion() . '</info>');
+        $io->writeln('<info>PHP exec: ' . PHP_BINARY . '</info>');
     }
 
     /**
@@ -498,10 +498,10 @@ class CommandHelper
      * @param $phpVersion
      * @return string
      */
-    public static function formatPhpVersion($phpVersion)
+    public static function formatPhpVersion($phpVersion, $format = '%d.%d.%d')
     {
         if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-            $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
+            $phpVersion = sprintf($format, $matches[1], $matches[2], $matches[3]);
         }
 
         return $phpVersion;

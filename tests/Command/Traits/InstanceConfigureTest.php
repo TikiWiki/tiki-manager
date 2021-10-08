@@ -375,7 +375,7 @@ class InstanceConfigureTest extends TestCase
 
         $discovery
             ->method('detectPHP')
-            ->willReturn(PHP_BINARY);
+            ->willReturn([PHP_BINARY]);
 
         $discovery
             ->method('detectPHPVersion')

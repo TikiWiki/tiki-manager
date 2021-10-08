@@ -88,9 +88,8 @@ class DetectInstanceCommand extends TikiManagerCommand
                 }
             }
 
-            $discovery = $instance->getDiscovery();
-            $phpVersion = $discovery->detectPHPVersion();
-            $this->io->writeln('<info>Instance PHP Version: ' . CommandHelper::formatPhpVersion($phpVersion) . '</info>');
+            $phpVersion = CommandHelper::formatPhpVersion($instance->phpversion);
+            $this->io->writeln('<info>Instance PHP Version: ' . $phpVersion . '</info>');
 
             $app = $instance->getApplication();
 

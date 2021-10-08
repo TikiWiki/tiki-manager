@@ -27,10 +27,11 @@ class LinuxDiscovery extends Discovery
         if ($searchOrder === null) {
             $searchOrder = [
                 ['command', ['-v', 'php']],
-                ['locate', ['-r', 'bin/php$']],
+                ['locate', ['-e', '-r', 'bin/php$']],
             ];
         }
 
+        $result = [];
         foreach ($searchOrder as $commandSearch) {
             $command = $this->access->createCommand($commandSearch[0], $commandSearch[1]);
 
@@ -47,11 +48,17 @@ class LinuxDiscovery extends Discovery
             $out = $command->getStdout();
             $line = fgets($out);
 
-            $result = [];
             while ($line !== false) {
-                $result[] = trim($line);
+                $line = trim($line);
+
+                if (!in_array($line, $result)) {
+                    $result[] = trim($line);
+                }
                 $line = fgets($out);
             }
+        }
+
+        if (!empty($result)) {
             return $result;
         }
 
