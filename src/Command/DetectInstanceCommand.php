@@ -91,6 +91,10 @@ class DetectInstanceCommand extends TikiManagerCommand
             $phpVersion = CommandHelper::formatPhpVersion($instance->phpversion);
             $this->io->writeln('<info>Instance PHP Version: ' . $phpVersion . '</info>');
 
+            // Redetect the VCS type
+            $instance->vcs_type = $instance->getDiscovery()->detectVcsType();
+            $instance->save();
+
             $app = $instance->getApplication();
 
             if (!$app) {
@@ -98,7 +102,7 @@ class DetectInstanceCommand extends TikiManagerCommand
                 continue;
             }
 
-            $branch = $instance->getApplication()->getBranch();
+            $branch = $app->getBranch();
             if ($instance->branch != $branch) {
                 $instance->updateVersion();
             };

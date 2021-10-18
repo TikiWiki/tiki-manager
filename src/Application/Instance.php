@@ -731,6 +731,9 @@ SQL;
 
         $restore->restoreFiles($archive);
 
+        // Redetect the VCS type
+        $this->vcs_type = $this->getDiscovery()->detectVcsType();
+
         $this->app = $srcApp->app ?? $srcApp;
         $this->save();
 
