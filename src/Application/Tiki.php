@@ -786,15 +786,26 @@ TXT;
         $command->run();
         $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
 
+        // vendor_bundled was introduced in Tiki 17
+        $baseVersion = 'master';
+        $app = $instance->getApplication();
+        $branch = $app->getBranch(true);
+        if (preg_match('/(\d+|trunk|master)/', $branch, $matches)) {
+            $baseVersion = $matches[1];
+        }
+
+        $hasVendorBundled = $baseVersion >= 17 || $baseVersion == 'master' || $baseVersion == 'trunk';
+        $bundled =  $hasVendorBundled ? 'vendor_bundled/' : '';
+
         if ($command->getReturn() !== 0 ||
-            !$access->fileExists('vendor_bundled/vendor/autoload.php') ||
+            !$access->fileExists($bundled . 'vendor/autoload.php') ||
             preg_match('/Your requirements could not be resolved/', $commandOutput)
         ) {
             trim_output($commandOutput);
-            throw new \Exception("Composer install failed for vendor_bundled/composer.lock (Tiki bundled packages).\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+            throw new \Exception("Composer install failed for {$bundled}composer.lock (Tiki bundled packages).\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
         }
 
-        if ($access->fileExists('composer.lock')) {
+        if ($hasVendorBundled && $access->fileExists('composer.lock')) {
             $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']);
 
             $command->run();

@@ -180,9 +180,11 @@ class TikiTest extends TestCase
                 false  // 'composer.lock'
             ));
 
+        $appStub = $this->createMock(Tiki::class);
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
+        $instanceStub->method('getApplication')->willReturn($appStub);
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
@@ -219,8 +221,11 @@ class TikiTest extends TestCase
             ->with('vendor_bundled/vendor/autoload.php')
             ->willReturn(false);
 
+        $appStub = $this->createMock(Tiki::class);
+
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
+        $instanceStub->method('getApplication')->willReturn($appStub);
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
@@ -261,8 +266,11 @@ Your requirements could not be resolved to an installable set of packages.');
             ->with('vendor_bundled/vendor/autoload.php')
             ->willReturn(true);
 
+        $appStub = $this->createMock(Tiki::class);
+
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
+        $instanceStub->method('getApplication')->willReturn($appStub);
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
@@ -307,8 +315,11 @@ Your requirements could not be resolved to an installable set of packages.');
                 true  // 'vendor/autoload.php'
             ));
 
+        $appStub = $this->createMock(Tiki::class);
+
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
+        $instanceStub->method('getApplication')->willReturn($appStub);
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
@@ -359,8 +370,11 @@ Your requirements could not be resolved to an installable set of packages.');
                 false  // 'vendor/autoload.php'
             ));
 
+        $appStub = $this->createMock(Tiki::class);
+
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
+        $instanceStub->method('getApplication')->willReturn($appStub);
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
