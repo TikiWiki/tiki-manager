@@ -56,6 +56,11 @@ $tempFile = escapeshellarg($outputFile);
 $command = "mysql $dbArgs $dbs_tiki -BN -e \"SELECT CONCAT('ALTER DATABASE DEFAULT CHARACTER SET ', default_character_set_name, ' COLLATE ', DEFAULT_COLLATION_NAME, ';') FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()\" > " . $tempFile;
 exec($command);
 
+$command = "mysql $dbArgs $dbs_tiki -BN -e \"SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()\"";
+exec($command, $output);
+$charset = array_shift($output) ?: 'utf8mb4';
+$args[] = "--default-character-set=" . $charset;
+
 $args = implode(' ', $args);
 $command = "mysqldump --quick --create-options --extended-insert $args >> " . $tempFile;
 exec($command);
