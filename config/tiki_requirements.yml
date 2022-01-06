@@ -1,4 +1,4 @@
-- name: Tiki24
+- name: Tiki24 LTS
   version: 24
   php:
     min: 7.4
