@@ -19,6 +19,8 @@ date_timestamp_set($timestamp, filemtime(__FILE__));
 $interval = date_diff($timestamp, $updateTime);
 // Format the display with full date and time of start (timestamp of file)
 $dateStart = gmdate('Y-m-d h:i:s', $timestamp->getTimestamp());
+// Add the total number of days as hours
+$interval->h = $interval->h + ($interval->days * 24);
 // Format the display with usual hours, minutes, seconds (don't need the day, we hope so !)
 $timeElapsed = $interval->format('%hh:%im:%ss');
 
