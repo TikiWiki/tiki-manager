@@ -791,7 +791,8 @@ SQL;
         }
 
         if ($this->app == 'tiki') {
-            $this->getApplication()->runComposer();
+            $this->getApplication()->installComposerDependencies();
+            $this->getApplication()->installTikiPackages();
 
             $this->io->writeln("Fixing permissions for {$this->name}");
             $this->getApplication()->fixPermissions();

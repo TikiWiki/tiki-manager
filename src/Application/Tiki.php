@@ -209,6 +209,17 @@ class Tiki extends Application
         }
     }
 
+    public function getBaseVersion(): string
+    {
+        $baseVersion = 'master';
+        $branch = $this->getBranch(true);
+        if (preg_match('/(\d+|trunk|master)/', $branch, $matches)) {
+            $baseVersion = $matches[1];
+        }
+
+        return $baseVersion;
+    }
+
     public function getAcceptableExtensions()
     {
         return ['mysqli', 'mysql'];
@@ -451,7 +462,8 @@ class Tiki extends Application
 
         $version = $this->registerCurrentInstallation();
         $this->installComposer();
-        $this->runComposer(); // fix permissions does not return a proper exit code if composer fails
+        $this->installComposerDependencies(); // fix permissions does not return a proper exit code if composer fails
+        $this->installTikiPackages();
         $this->fixPermissions();
 
         $this->instance->configureHtaccess();
@@ -758,7 +770,7 @@ TXT;
      * @return null
      * @throws \Exception
      */
-    public function runComposer()
+    public function installComposerDependencies()
     {
         $this->io->writeln('Installing composer dependencies... <fg=yellow>[may take a while]</>');
 
@@ -786,16 +798,7 @@ TXT;
         $command->run();
         $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
 
-        // vendor_bundled was introduced in Tiki 17
-        $baseVersion = 'master';
-        $app = $instance->getApplication();
-        $branch = $app->getBranch(true);
-        if (preg_match('/(\d+|trunk|master)/', $branch, $matches)) {
-            $baseVersion = $matches[1];
-        }
-
-        $hasVendorBundled = $baseVersion >= 17 || $baseVersion == 'master' || $baseVersion == 'trunk';
-        $bundled =  $hasVendorBundled ? 'vendor_bundled/' : '';
+        $bundled =  $this->supportsVendorBundled() ? 'vendor_bundled/' : '';
 
         if ($command->getReturn() !== 0 ||
             !$access->fileExists($bundled . 'vendor/autoload.php') ||
@@ -804,38 +807,92 @@ TXT;
             trim_output($commandOutput);
             throw new \Exception("Composer install failed for {$bundled}composer.lock (Tiki bundled packages).\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
         }
+    }
 
-        if ($hasVendorBundled && $access->fileExists('composer.lock')) {
-            $command = $access->createCommand($this->instance->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']);
+    public function installTikiPackages(bool $update = false)
+    {
+        $instance = $this->instance;
+        $access = $instance->getBestAccess();
 
-            $command->run();
-            if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
-                $commandOutput = ! empty($command->getStderrContent()) ? $command->getStderrContent() : $command->getStdoutContent();
-
-                trim_output($commandOutput);
-                $this->io->error("Composer install failed for composer.lock in the root folder, which installs packages in the vendor directory.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
-            }
+        if (!$this->supportsTikiPackages() || !$access->fileExists('composer.json')) {
+            return;
         }
+
+        $msg = ($update ? 'Updating' : 'Installing') . ' Tiki Packages... <fg=yellow>[may take a while]</>';
+        $this->io->writeln($msg);
+
+        if ($update && $this->updateTikiPackages()) {
+            return;
+        }
+
+        $action = $update ? 'update' : 'install';
+
+        $command = $access->createCommand(
+            $this->instance->phpexec,
+            ['temp/composer.phar', $action, '--no-interaction', '--prefer-dist', '--no-ansi', '--no-progress']
+        );
+
+        $command->run();
+
+        if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
+            $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
+            trim_output($commandOutput);
+
+            $errorMsg = "Failed to " . $action. " Tiki Packages listed in composer.json in the root folder.";
+
+            $this->io->error($errorMsg . "\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+        }
+    }
+
+    /**
+     * @return bool True if operation completed, false if not supported
+     */
+    protected function updateTikiPackages(): bool
+    {
+        $access = $this->instance->getBestAccess();
+        $command = $access->createCommand(
+            $this->instance->phpexec,
+            ['console.php', 'package:update', '--all', '--handle-deprecated']
+        );
+
+        $errorMsg = "Failed to update Tiki Packages.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.";
+        $command->run();
+
+        $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
+
+        // If the command do not support the --handle-deprecated option
+        if ($command->getReturn() !== 0 && preg_match('/option does not exist/', $commandOutput)) {
+            return false;
+        }
+
+        if ($command->getReturn() !== 0) {
+            trim_output($commandOutput);
+            $this->io->error($errorMsg);
+        }
+
+        return true;
     }
 
     /**
      * @param array $options
      * @throws \Exception
      */
-    public function postInstall($options = [])
+    public function postInstall(array $options = [])
     {
         $access = $this->instance->getBestAccess('scripting');
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
             $this->installComposer();
-            $this->runComposer();
+            $this->installComposerDependencies();
         }
 
         $this->io->writeln('Updating database schema...');
         $this->runDatabaseUpdate();
 
         $this->setDbLock();
+
+        $this->installTikiPackages(true);
 
         $hasConsole = $this->instance->hasConsole();
 
@@ -882,6 +939,22 @@ TXT;
             );
             $this->io->warning('Vendor folder was renamed to vendor_old because can cause conflicts with the new version.');
         }
+    }
+
+    protected function supportsVendorBundled(): bool
+    {
+        // vendor_bundled was introduced in Tiki 17
+        $baseVersion = $this->instance->getApplication()->getBaseVersion();
+
+        return $baseVersion >= 17 || $baseVersion == 'master' || $baseVersion == 'trunk';
+    }
+
+    protected function supportsTikiPackages(): bool
+    {
+        // Tiki Packages were introduces in 18.x
+        $baseVersion = $this->instance->getApplication()->getBaseVersion();
+
+        return $baseVersion >= 18 || $baseVersion == 'master' || $baseVersion == 'trunk';
     }
 
     public function clearCache($all = false)

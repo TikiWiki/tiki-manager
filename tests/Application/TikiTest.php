@@ -151,7 +151,7 @@ class TikiTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Tiki::runComposer
+     * @covers \TikiManager\Application\Tiki::installComposerDependencies
      */
     public function testRunComposerUsingTikiSetupSuccessfully()
     {
@@ -169,18 +169,13 @@ class TikiTest extends TestCase
             ->with('bash', ['setup.sh', 'composer'])
             ->willReturn($commandStub);
         $accessStub
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('fileExists')
-            ->withConsecutive(
-                ['vendor_bundled/vendor/autoload.php'],
-                ['composer.lock']
-            )
-            ->will($this->onConsecutiveCalls(
-                true,  //'vendor_bundled/vendor/autoload.php'
-                false  // 'composer.lock'
-            ));
+            ->with('vendor_bundled/vendor/autoload.php')
+            ->willReturn(true);
 
         $appStub = $this->createMock(Tiki::class);
+        $appStub->method('getBaseVersion')->willReturn('master');
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
@@ -188,19 +183,19 @@ class TikiTest extends TestCase
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
-            ->setMethodsExcept(['runComposer'])
+            ->setMethodsExcept(['installComposerDependencies'])
             ->getMock();
 
-        $tikiStub->runComposer();
+        $tikiStub->installComposerDependencies();
 
-        // runComposer is void. If no exception is thrown assumes it is OK
+        // installComposerDependencies is void. If no exception is thrown assumes it is OK
         $this->assertTrue(true);
     }
 
     /**
-     * @covers \TikiManager\Application\Tiki::runComposer
+     * @covers \TikiManager\Application\Tiki::installComposerDependencies
      */
-    public function testRunComposerUsingTikiSetupWithErrors()
+    public function testInstallComposerDependenciesUsingTikiSetupWithErrors()
     {
         $commandStub = $this->createMock(Command::class);
         $commandStub->method('run')->willReturn(null);
@@ -222,6 +217,7 @@ class TikiTest extends TestCase
             ->willReturn(false);
 
         $appStub = $this->createMock(Tiki::class);
+        $appStub->method('getBaseVersion')->willReturn('master');
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
@@ -229,19 +225,19 @@ class TikiTest extends TestCase
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
-            ->setMethodsExcept(['runComposer'])
+            ->setMethodsExcept(['installComposerDependencies'])
             ->getMock();
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageRegExp('/^Composer install failed for vendor_bundled\/composer.lock/');
 
-        $tikiStub->runComposer();
+        $tikiStub->installComposerDependencies();
     }
 
     /**
-     * @covers \TikiManager\Application\Tiki::runComposer
+     * @covers \TikiManager\Application\Tiki::installComposerDependencies
      */
-    public function testRunComposerUsingTikiSetupWithErrorInOutput()
+    public function testInstallComposerDependenciesUsingTikiSetupWithErrorInOutput()
     {
         $commandStub = $this->createMock(Command::class);
         $commandStub->method('run')->willReturn(null);
@@ -267,6 +263,7 @@ Your requirements could not be resolved to an installable set of packages.');
             ->willReturn(true);
 
         $appStub = $this->createMock(Tiki::class);
+        $appStub->method('getBaseVersion')->willReturn('master');
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
@@ -274,16 +271,16 @@ Your requirements could not be resolved to an installable set of packages.');
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
-            ->setMethodsExcept(['runComposer'])
+            ->setMethodsExcept(['installComposerDependencies'])
             ->getMock();
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageRegExp('/^Composer install failed for vendor_bundled\/composer.lock/');
 
-        $tikiStub->runComposer();
+        $tikiStub->installComposerDependencies();
     }
 
-    public function testRunComposerForRootFolderSuccessfully()
+    public function testInstallComposerDependenciesForRootFolderSuccessfully()
     {
         $commandStub = $this->createMock(Command::class);
         $commandStub->method('run')->willReturn(null);
@@ -316,6 +313,7 @@ Your requirements could not be resolved to an installable set of packages.');
             ));
 
         $appStub = $this->createMock(Tiki::class);
+        $appStub->method('getBaseVersion')->willReturn('master');
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
@@ -323,26 +321,22 @@ Your requirements could not be resolved to an installable set of packages.');
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
-            ->setMethodsExcept(['runComposer'])
+            ->setMethodsExcept(['installComposerDependencies'])
             ->getMock();
 
-        $tikiStub->runComposer();
+        $tikiStub->installComposerDependencies();
 
-        // runComposer is void. If no exception is thrown assumes it is OK
+        // installComposerDependencies is void. If no exception is thrown assumes it is OK
         $this->assertTrue(true);
     }
 
-    public function testRunComposerForRootFolderWithErrors()
+    public function testInstallTikiPackagesWithErrors()
     {
         $commandStub = $this->createMock(Command::class);
         $commandStub->method('run')->willReturn(null);
         $commandStub
             ->method('getReturn')
-            ->will($this->onConsecutiveCalls(
-                0, // composer install on vendor_bundled
-                1 // composer install on project root folder
-            )
-            );
+            ->willReturn(0);
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
@@ -351,26 +345,25 @@ Your requirements could not be resolved to an installable set of packages.');
         $accessStub = $this->createMock(Local::class);
         $accessStub
             ->method('createCommand')
-            ->withConsecutive(
-                ['bash', ['setup.sh', 'composer']],
-                [$instanceStub->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']]
+            ->with(
+                $instanceStub->phpexec,
+                ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist', '--no-ansi', '--no-progress']
             )
             ->willReturn($commandStub);
         $accessStub
-            ->expects($this->atLeastOnce())
+            ->expects($this->exactly(2))
             ->method('fileExists')
             ->withConsecutive(
-                ['vendor_bundled/vendor/autoload.php'],
-                ['composer.lock'],
+                ['composer.json'],
                 ['vendor/autoload.php']
             )
             ->will($this->onConsecutiveCalls(
-                true,  //'vendor_bundled/vendor/autoload.php'
-                true, // 'composer.lock'
+                true, // 'composer.json'
                 false  // 'vendor/autoload.php'
             ));
 
         $appStub = $this->createMock(Tiki::class);
+        $appStub->method('getBaseVersion')->willReturn('master');
 
         $instanceStub->method('hasConsole')->willReturn(true);
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
@@ -378,14 +371,14 @@ Your requirements could not be resolved to an installable set of packages.');
 
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
-            ->setMethodsExcept(['runComposer'])
+            ->setMethodsExcept(['installTikiPackages'])
             ->getMock();
 
-        $tikiStub->runComposer();
+        $tikiStub->installTikiPackages();
 
-        // runComposer is void. If no exception is thrown assumes it is OK
+        // installComposerDependencies is void. If no exception is thrown assumes it is OK
         $outputContent = $this->output->fetch();
-        $this->assertStringContainsString('[ERROR] Composer install failed for composer.lock in the root folder',
+        $this->assertStringContainsString('[ERROR] Failed to install Tiki Packages',
             $outputContent);
     }
 
@@ -414,9 +407,18 @@ Your requirements could not be resolved to an installable set of packages.');
             ->method('getBestAccess')
             ->willReturn($accessStub);
 
+        $appStub = $this->createMock(Tiki::class);
+        $appStub
+            ->method('getBaseVersion')
+            ->willReturn('master');
+
+        $instanceStub
+            ->method('getApplication')
+            ->willReturn($appStub);
+
         $tikiMock = $this->createPartialMock(
             Tiki::class,
-            ['runComposer', 'runDatabaseUpdate', 'setDbLock', 'clearCache', 'fixPermissions']
+            ['installComposerDependencies', 'runDatabaseUpdate', 'setDbLock', 'clearCache', 'fixPermissions']
         );
 
         $tikiMock->__construct($instanceStub);
