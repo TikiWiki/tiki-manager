@@ -308,9 +308,6 @@ class Environment
                 $this->io->error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}");
                 die();
             }
-
-            $db->exec('CREATE TABLE info (name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name));');
-            $db->exec("INSERT INTO info (name, value) VALUES('version', '0');");
             $db = null;
 
             $file = $_ENV['DB_FILE'];
@@ -321,6 +318,15 @@ class Environment
         } catch (\PDOException $e) {
             $this->io->error("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}");
             die();
+        }
+
+        // check if info table exist or create it
+        $result = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='info';");
+        $infoTableName = (string)$result->fetchColumn();
+        unset($result);
+        if ($infoTableName !== 'info') {
+            $db->exec('CREATE TABLE info (name VARCHAR(10), value VARCHAR(10), PRIMARY KEY(name));');
+            $db->exec("INSERT INTO info (name, value) VALUES('version', '0');");
         }
 
         $result = $db->query("SELECT value FROM info WHERE name = 'version'");
