@@ -332,7 +332,7 @@ compressed-package:
     - composer install $COMPOSER_FLAGS
     - git log --pretty=fuller 'HEAD^..HEAD' > VERSION
     - git log --pretty="format:%cd.%h" 'HEAD^..HEAD' --date="format:%Y%m%d" > .version
-    - tar czvf tiki-manager.tgz --exclude tiki-manager.tgz .
+    - tar czvf tiki-manager.tgz config data scripts src www .env.dist LICENSE README.md tiki-manager tiki-manager.php VERSION .version
   allow_failure: false
   needs:
     - composer
