@@ -325,3 +325,25 @@ phar:
     refs:
       - master
       - tags
+
+compressed-package:
+  stage: package
+  script:
+    - composer install $COMPOSER_FLAGS
+    - git log --pretty=fuller 'HEAD^..HEAD' > VERSION
+    - git log --pretty="format:%cd.%h" 'HEAD^..HEAD' --date="format:%Y%m%d" > .version
+    - tar czvf tiki-manager.tgz --exclude tiki-manager.tgz .
+  allow_failure: false
+  needs:
+    - composer
+  cache:
+    <<: *composer-cache
+  artifacts:
+    name: tiki-manager.tgz
+    paths:
+      - tiki-manager.tgz
+    when: on_success
+  only:
+    refs:
+      - master
+      - tags
