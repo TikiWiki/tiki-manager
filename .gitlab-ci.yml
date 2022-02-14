@@ -326,7 +326,7 @@ phar:
       - master
       - tags
 
-compressed-package:
+compressed:
   stage: package
   script:
     - composer install $COMPOSER_FLAGS
