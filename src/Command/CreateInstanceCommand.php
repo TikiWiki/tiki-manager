@@ -162,7 +162,7 @@ class CreateInstanceCommand extends TikiManagerCommand
                 'phpexec',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'PHP binary to be used to managed the instance'
+                'PHP binary to be used to manage the instance'
             );
     }
 

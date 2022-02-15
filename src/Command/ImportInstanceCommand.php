@@ -102,6 +102,12 @@ class ImportInstanceCommand extends TikiManagerCommand
                 'bp',
                 InputOption::VALUE_REQUIRED,
                 'Instance backup permission'
+            )
+            ->addOption(
+                'phpexec',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'PHP binary to be used to manage the instance'
             );
 
         self::$nonInteractive = false;
