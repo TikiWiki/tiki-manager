@@ -84,7 +84,7 @@ abstract class Application
 
     abstract public function deleteAllTables();
 
-    abstract public function restoreDatabase(Database $database, $remoteFile);
+    abstract public function restoreDatabase(Database $database, string $remoteFile, bool $clone);
 
     abstract public function backupDatabase(string $targetFile);
 

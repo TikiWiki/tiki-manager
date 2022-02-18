@@ -582,7 +582,7 @@ class Tiki extends Application
         );
     }
 
-    public function restoreDatabase(Database $database, $remoteFile)
+    public function restoreDatabase(Database $database, string $remoteFile, bool $clone)
     {
         $tmp = tempnam($_ENV['TEMP_FOLDER'], 'dblocal');
 
@@ -631,6 +631,12 @@ class Tiki extends Application
 
         if (!empty($errors)) {
             throw new \RuntimeException(implode(PHP_EOL, $errors));
+        }
+
+        if ($clone && $this->getPref('unified_elastic_index_current')) {
+            // Remove current index information as it might match the source instance
+            // And would delete the index upon a successful index rebuild
+            $this->setPref('unified_elastic_index_current', '');
         }
     }
 

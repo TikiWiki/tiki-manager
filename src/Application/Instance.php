@@ -747,7 +747,7 @@ SQL;
         if ($databaseConfig) {
             try {
                 $app = $this->getApplication();
-                $app->restoreDatabase($databaseConfig, $database_dump);
+                $app->restoreDatabase($databaseConfig, $database_dump, $clone);
                 $app->setPref('tmpDir', $this->tempdir);
             } catch (\Exception $e) {
                 $restore->unlock();
