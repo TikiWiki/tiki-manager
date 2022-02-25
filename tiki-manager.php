@@ -10,14 +10,12 @@ try {
     $pharPath = Phar::running(false);
     $isPhar = isset($pharPath) && !empty($pharPath);
 
-    if (!$isPhar
-        && !file_exists(__DIR__ . '/vendor/autoload.php')
-        && file_exists(__DIR__ . '/composer.json')
-    ) {
-        if (!$composer = detectComposer(__DIR__)) {
-            print('Downloading composer.phar...' . PHP_EOL);
-            $composer = installComposer(__DIR__);
-        }
+    if (!$isPhar && !$composer = detectComposer(__DIR__)) {
+        print('Downloading composer.phar...' . PHP_EOL);
+        $composer = installComposer(__DIR__);
+    }
+
+    if (!$isPhar && !file_exists(__DIR__ . '/vendor/autoload.php')) {
         installComposerDependencies(__DIR__, $composer);
     }
 } catch (Exception $e) {
