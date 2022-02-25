@@ -329,12 +329,13 @@ phar:
 compressed:
   stage: package
   script:
-    - composer install $COMPOSER_FLAGS
+    - composer install --no-dev $COMPOSER_FLAGS
     - git log --pretty=fuller 'HEAD^..HEAD' > VERSION
     - git log --pretty="format:TIKI_MANAGER_GIT_DATE=%cd%nTIKI_MANAGER_GIT_HASH=%h" 'HEAD^..HEAD' --date="format:%Y%m%d%H%M%S" > .version
-    - find config data scripts src vendor www .env.dist LICENSE README.md tiki-manager tiki-manager.php VERSION .version -type f exec chmod 664 {} \;
-    - find config data scripts src vendor www .env.dist LICENSE README.md tiki-manager tiki-manager.php VERSION .version -type d exec chmod 775 {} \;
+    - find . -type f exec chmod 664 {} \;
+    - find . -type d exec chmod 775 {} \;
     - chmod 775 tiki-manager
+    - ls -la
     - tar czvf tiki-manager.tgz config data scripts src vendor www .env.dist LICENSE README.md tiki-manager tiki-manager.php VERSION .version
   allow_failure: false
   needs:
