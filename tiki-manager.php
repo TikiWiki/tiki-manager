@@ -48,6 +48,7 @@ try {
 }
 
 $application = new Application();
+$application->setAutoExit(false);
 $banner = <<<TXT
 
 88888888888 8888888 888    d8P  8888888      888b     d888
@@ -149,4 +150,20 @@ $dispatcher->addListener(ConsoleEvents::ERROR, function (ConsoleErrorEvent $even
 });
 $application->setDispatcher($dispatcher);
 
-$application->run();
+$output = new Symfony\Component\Console\Output\ConsoleOutput();
+$input = new Symfony\Component\Console\Input\ArgvInput();
+
+try {
+    $application->run($input, $output);
+} catch (Throwable $e) {
+    $output->writeln('<comment>A error was encountered while running a command</comment>');
+    $application->renderThrowable($e, $output);
+}
+
+$output->writeln('');
+
+if ($input->getFirstArgument() === null) {
+    $output->writeln('<fg=cyan>To run a specific command (with default values) type: php tiki-manager.php instance:list</>');
+    $output->writeln('<fg=cyan>To get more help on a specific command, use the following pattern: php tiki-manager.php instance:list --help</>');
+    $output->writeln('');
+}
