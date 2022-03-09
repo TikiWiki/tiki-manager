@@ -68,7 +68,7 @@ class Svn extends VersionControlSystem
                 continue;
             }
 
-            if (substr($line, -1) == '/' && ctype_digit($line{0})) {
+            if (substr($line, -1) == '/' && ctype_digit($line[0])) {
                 $versionsTemp[] = 'svn:tags/' . substr($line, 0, -1);
             }
         }
@@ -82,7 +82,7 @@ class Svn extends VersionControlSystem
                 continue;
             }
 
-            if (substr($line, -1) == '/' && ctype_digit($line{0})) {
+            if (substr($line, -1) == '/' && ctype_digit($line[0])) {
                 $versionsTemp[] = 'svn:branches/' . substr($line, 0, -1);
             }
         }

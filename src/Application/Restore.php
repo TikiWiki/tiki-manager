@@ -204,7 +204,7 @@ class Restore extends Backup
 
             $windowsAbsolutePaths = (preg_match($windowsAbsolutePathsRegex, $destination, $matches)) ? true : false;
 
-            if ($destination{0} === '/' || $windowsAbsolutePaths) {
+            if ($destination[0] === '/' || $windowsAbsolutePaths) {
                 if ($type === 'app') {
                     $destination = '';
                 } else {

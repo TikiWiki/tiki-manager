@@ -77,7 +77,7 @@ class FTP extends Access implements Mountable
 
     public function fileExists($filename)
     {
-        if ($filename{0} != '/') {
+        if ($filename[0] != '/') {
             $filename = $this->instance->getWebPath($filename);
         }
 
@@ -98,7 +98,7 @@ class FTP extends Access implements Mountable
     public function runPHP($localFile, $args = [])
     {
         foreach ($args as & $potentialPath) {
-            if ($potentialPath{0} == '/') {
+            if ($potentialPath[0] == '/') {
                 $potentialPath = $this->obtainRelativePathTo(
                     $potentialPath,
                     $this->instance->webroot
@@ -123,7 +123,7 @@ class FTP extends Access implements Mountable
 
     public function downloadFile($filename, $target = ''): string
     {
-        if ($filename{0} != '/') {
+        if ($filename[0] != '/') {
             $filename = $this->instance->getWebPath($filename);
         }
 
@@ -144,7 +144,7 @@ class FTP extends Access implements Mountable
     public function uploadFile($filename, $remoteLocation)
     {
         $host = $this->getHost();
-        if ($remoteLocation{0} == '/') {
+        if ($remoteLocation[0] == '/') {
             $host->sendFile($filename, $remoteLocation);
         } else {
             $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
@@ -153,10 +153,10 @@ class FTP extends Access implements Mountable
 
     public function moveFile($remoteSource, $remoteTarget)
     {
-        if ($remoteSource{0} != '/') {
+        if ($remoteSource[0] != '/') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
         }
-        if ($remoteTarget{0} != '/') {
+        if ($remoteTarget[0] != '/') {
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
         }
 
@@ -166,10 +166,10 @@ class FTP extends Access implements Mountable
 
     public function copyFile($remoteSource, $remoteTarget)
     {
-        if ($remoteSource{0} != '/') {
+        if ($remoteSource[0] != '/') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
         }
-        if ($remoteTarget{0} != '/') {
+        if ($remoteTarget[0] != '/') {
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
         }
 
@@ -179,7 +179,7 @@ class FTP extends Access implements Mountable
 
     public function deleteFile($filename)
     {
-        if ($filename{0} != '/') {
+        if ($filename[0] != '/') {
             $filename = $this->instance->getWebPath($filename);
         }
 
@@ -189,7 +189,7 @@ class FTP extends Access implements Mountable
 
     public function localizeFolder($remoteLocation, $localMirror)
     {
-        if ($remoteLocation{0} != '/') {
+        if ($remoteLocation[0] != '/') {
             $remoteLocation = $this->instance->getWebPath($remoteLocation);
         }
 
@@ -295,7 +295,7 @@ class FTP extends Access implements Mountable
 
     public function copyLocalFolder($localFolder, $remoteFolder = '')
     {
-        if ($remoteFolder{0} != '/') {
+        if ($remoteFolder[0] != '/') {
             $remoteFolder = $this->instance->getWebPath($remoteFolder);
         }
 
@@ -328,7 +328,7 @@ class FTP extends Access implements Mountable
 
     public function isEmptyDir($path): bool
     {
-        if ($path{0} != '/') {
+        if ($path[0] != '/') {
             $path = $this->instance->getWebPath($path);
         }
 

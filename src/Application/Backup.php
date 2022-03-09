@@ -451,7 +451,7 @@ class Backup
 
         if ($location == 'external') {
             $filePath = $path;
-            if ($path{0} !== DIRECTORY_SEPARATOR) {
+            if ($path[0] !== DIRECTORY_SEPARATOR) {
                 $webroot = rtrim($this->instance->webroot, DIRECTORY_SEPARATOR);
                 $filePath = $webroot . DIRECTORY_SEPARATOR . $path;
                 $filePath = ApplicationHelper::getAbsolutePath($filePath);

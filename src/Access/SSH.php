@@ -204,7 +204,7 @@ class SSH extends Access implements ShellPrompt
 
     public function fileExists($filename)
     {
-        if ($filename{0} != '/') {
+        if ($filename[0] != '/') {
             $filename = $this->instance->getWebPath($filename);
         }
 
@@ -260,7 +260,7 @@ class SSH extends Access implements ShellPrompt
      */
     public function downloadFile($filename, $target = ''): string
     {
-        if ($filename{0} != '/') {
+        if ($filename[0] != '/') {
             $filename = $this->instance->getWebPath($filename);
         }
 
@@ -284,7 +284,7 @@ class SSH extends Access implements ShellPrompt
     public function uploadFile($filename, $remoteLocation)
     {
         $host = $this->getHost();
-        if ($remoteLocation{0} == '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if ($remoteLocation[0] == '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             $host->sendFile($filename, $remoteLocation);
         } else {
             $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
@@ -293,7 +293,7 @@ class SSH extends Access implements ShellPrompt
 
     public function deleteFile($filename)
     {
-        if ($filename{0} != '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if ($filename[0] != '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             $filename = $this->instance->getWebPath($filename);
         }
 
@@ -305,10 +305,10 @@ class SSH extends Access implements ShellPrompt
 
     public function moveFile($remoteSource, $remoteTarget)
     {
-        if ($remoteSource{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+        if ($remoteSource[0] != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
         }
-        if ($remoteTarget{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+        if ($remoteTarget[0] != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
         }
 
@@ -320,10 +320,10 @@ class SSH extends Access implements ShellPrompt
 
     public function copyFile($remoteSource, $remoteTarget)
     {
-        if ($remoteSource{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+        if ($remoteSource[0] != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
             $remoteSource = $this->instance->getWebPath($remoteSource);
         }
-        if ($remoteTarget{0} != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+        if ($remoteTarget[0] != '/' && strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
         }
 

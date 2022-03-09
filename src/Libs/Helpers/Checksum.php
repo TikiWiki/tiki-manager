@@ -52,9 +52,9 @@ class Checksum
                     "(S)kip"
                 ]);
                 $input = $io->ask('(a0 to add file 0. Or a0-3 to add files 0 to 3)');
-            } while ((strlen($input) == 0) || (stripos('pvdas', $input{0}) === false));
+            } while ((strlen($input) == 0) || (stripos('pvdas', $input[0]) === false));
 
-            $op = strtolower($input{0});
+            $op = strtolower($input[0]);
             $files = getEntries($newFlat, $input);
 
             switch ($op) {
@@ -115,7 +115,7 @@ class Checksum
             $io->newLine(2);
 
             $input = 'z';
-            while (stripos('pvcerus', $input{0}) === false) {
+            while (stripos('pvcerus', $input[0]) === false) {
                 $io->writeln("<comment>What do you want to do about it?</comment>");
                 $io->listing([
                     "(P)rint list again",
@@ -129,7 +129,7 @@ class Checksum
                 $input = $io->ask('(e.g. v0 to view file 0)');
             }
 
-            $op = strtolower($input{0});
+            $op = strtolower($input[0]);
             $files = getEntries($modFlat, $input);
 
             switch ($op) {
@@ -229,7 +229,7 @@ class Checksum
             $io->newLine(2);
 
             $input = 'z';
-            while (stripos('drs', $input{0}) === false) {
+            while (stripos('drs', $input[0]) === false) {
                 $io->writeln("<comment>What do you want to do about it?</comment>");
                 $io->listing([
                     "(R)estore version in repository",
@@ -239,7 +239,7 @@ class Checksum
                 $input = $io->ask('(e.g. r0 to restore file 0)');
             }
 
-            $op = strtolower($input{0});
+            $op = strtolower($input[0]);
             $files = getEntries($delFlat, $input);
 
             switch ($op) {

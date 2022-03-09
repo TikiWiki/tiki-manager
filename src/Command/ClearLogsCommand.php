@@ -22,7 +22,7 @@ class ClearLogsCommand extends TikiManagerCommand
         $helper = $this->getHelper('question');
         $question = CommandHelper::getQuestion('Do you want to clear logs folder? [y,n]');
         $question->setNormalizer(function ($value) {
-            return (strtolower($value{0}) == 'y') ? true : false;
+            return (strtolower($value[0]) == 'y') ? true : false;
         });
         $confirm = $helper->ask($input, $output, $question);
 

@@ -30,7 +30,7 @@ class Local extends Access implements ShellPrompt
 
     private function isLocalPath($pathname)
     {
-        if ($pathname{0} == '/') {
+        if ($pathname[0] == '/') {
             return true;
         }
 
@@ -324,7 +324,7 @@ class Local extends Access implements ShellPrompt
     {
         preg_match('/^([a-zA-Z]\:[\/,\\\\]).{1,}/', $filename, $matches);
 
-        if ($filename{0} != '/' && empty($matches)) {
+        if ($filename[0] != '/' && empty($matches)) {
             $filename = $this->instance->getWebPath($filename);
         }
 
