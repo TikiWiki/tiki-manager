@@ -89,7 +89,7 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 $this->setupDatabase($instance);
                 $instance->database()->setupConnection();
 
-                $errors = $instance->restore($restorableInstance->app, $file, false, $checksumCheck);
+                $errors = $instance->restore($restorableInstance, $file, false, $checksumCheck);
 
                 if (isset($errors)) {
                     return 1;

@@ -226,6 +226,14 @@ IN (
 );
 SQL;
 
+    const SQL_DELETE_PATCH = <<<SQL
+DELETE FROM
+    patch
+WHERE
+    instance_id = :id
+;
+SQL;
+
     private $id;
     public $name;
     public $contact;
@@ -452,6 +460,7 @@ SQL;
         query(self::SQL_DELETE_REPORT_RECEIVER, [ ':id' => $this->id]);
         query(self::SQL_DELETE_VERSION, [':id' => $this->id]);
         query(self::SQL_DELETE_ALL_INSTANCE_PROPERTIES, [':id' => $this->id]);
+        query(self::SQL_DELETE_PATCH, [':id' => $this->id]);
     }
 
     public function registerAccessMethod($type, $host, $user, $password = null, $port = null)
@@ -700,7 +709,7 @@ SQL;
     /**
      * Restore instance
      *
-     * @param $srcApp
+     * @param $srcInstance
      * @param $archive
      * @param bool $clone
      * @param bool $checksumCheck
@@ -708,15 +717,15 @@ SQL;
      * @throws Exception\FolderPermissionException
      * @throws Exception\RestoreErrorException
      */
-    public function restore($srcApp, $archive, $clone = false, $checksumCheck = false, $direct = false)
+    public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false)
     {
         $restore = new Restore($this, $direct);
         $restore->lock();
 
         $message = "Restoring files from '{$archive}' into {$this->name}...";
 
-        if ($direct && $srcApp instanceof Instance) {
-            $message = "Restoring files from '{$srcApp->name}' into {$this->name}...";
+        if ($direct) {
+            $message = "Restoring files from '{$srcInstance->name}' into {$this->name}...";
         }
 
         $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
@@ -726,7 +735,7 @@ SQL;
         if ($direct) {
             $restore->setRestoreRoot(dirname($archive));
             $restore->setRestoreDirname(basename($archive));
-            $restore->setSourceInstance($srcApp);
+            $restore->setSourceInstance($srcInstance);
         }
 
         $restore->restoreFiles($archive);
@@ -734,7 +743,7 @@ SQL;
         // Redetect the VCS type
         $this->vcs_type = $this->getDiscovery()->detectVcsType();
 
-        $this->app = $srcApp->app ?? $srcApp;
+        $this->app = $srcInstance->app;
         $this->save();
 
         $this->io->writeln('Restoring database...');
@@ -791,6 +800,17 @@ SQL;
         }
 
         if ($this->app == 'tiki') {
+            $this->io->writeln("Applying patches to {$this->name}...");
+            foreach (Patch::getPatches($this->getId()) as $patch) {
+                $patch->delete();
+            }
+            foreach (Patch::getPatches($srcInstance->getId()) as $patch) {
+                $patch->id = null;
+                $patch->instance = $this->getId();
+                $patch->save();
+            }
+
+            $this->getApplication()->applyPatches();
             $this->getApplication()->installComposerDependencies();
             $this->getApplication()->installTikiPackages();
 
@@ -1080,5 +1100,14 @@ SQL;
     public function getCronManager(): CrontabManager
     {
         return new CrontabManager($this);
+    }
+
+    public function revert()
+    {
+        if ($this->vcs_type != 'svn' && $this->vcs_type != 'git') {
+            $this->io->error(sprintf("Instance %s is not a version controlled instance and cannot be reverted."));
+            return;
+        }
+        $this->getVersionControlSystem()->revert($this->webroot);
     }
 }

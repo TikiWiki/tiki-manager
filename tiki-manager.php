@@ -78,8 +78,13 @@ $application->add(new \TikiManager\Command\ConsoleInstanceCommand());
 $application->add(new \TikiManager\Command\StatsInstanceCommand());
 $application->add(new \TikiManager\Command\ImportInstanceCommand());
 $application->add(new \TikiManager\Command\SetupSchedulerCronInstanceCommand());
+$application->add(new \TikiManager\Command\RevertInstanceCommand());
 
 $application->add(new \TikiManager\Command\ApplyProfileCommand());
+
+$application->add(new \TikiManager\Command\ListPatchCommand());
+$application->add(new \TikiManager\Command\ApplyPatchCommand());
+$application->add(new \TikiManager\Command\DeletePatchCommand());
 
 $application->add(new \TikiManager\Command\ManagerInfoCommand());
 $application->add(new \TikiManager\Command\ManagerUpdateCommand());

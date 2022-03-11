@@ -439,6 +439,18 @@ class Environment
                     UPDATE info SET value = '9' WHERE name = 'version';
                 ");
             // no break
+            case 9:
+                $db->exec("
+                    CREATE TABLE patch (
+                        patch_id INTEGER PRIMARY KEY,
+                        instance_id INTEGER,
+                        package VARCHAR(100),
+                        url VARCHAR(255),
+                        date VARCHAR(25)
+                    );
+                    UPDATE info SET value = '10' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

@@ -488,6 +488,89 @@ class Tiki extends Application
         $this->io->writeln($output);
     }
 
+    /**
+     * Try to apply all instance defined patches
+     */
+    public function applyPatches()
+    {
+        $patches = Patch::getPatches($this->instance->getId());
+        foreach ($patches as $patch) {
+            try {
+                $this->applyPatch($patch, [
+                    'skip-reindex' => true,
+                    'skip-cache-warmup' => true,
+                    'skip-post-install' => true,
+                ]);
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+    }
+
+    /**
+     * Applies a gitlab/github/maildir formatted patch to an instance
+     * @throws Exception
+     */
+    public function applyPatch(Patch $patch, $options)
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        $vcsType = $this->vcs_instance->getIdentifier();
+        $can_patch = $access->hasExecutable('patch');
+
+        if (! $access instanceof ShellPrompt) {
+            throw new \Exception('Access to this instance does not support execution of shell commands.');
+        }
+
+        if (! $can_patch) {
+            throw new \Exception(sprintf('Patch utility is required to apply local patches.'));
+        }
+
+        $patch_contents = file_get_contents($patch->url);
+        if (empty($patch_contents)) {
+            throw new \Exception(sprintf('Unable to download patch contents from %s', $patch->url));
+        }
+
+        $local = tempnam($_ENV['TEMP_FOLDER'], 'patch');
+        file_put_contents($local, $patch_contents);
+
+        $filename = $this->instance->getWorkPath(basename($local));
+        $access->uploadFile($local, $filename);
+
+        if ($patch->package == 'tiki') {
+            $access->chdir($this->instance->webroot);
+        } else {
+            $access->chdir($this->instance->getWebPath('vendor_bundled/vendor/'.$patch->package));
+        }
+
+        $command = $access->createCommand('patch', ['-R', '-p1', '-s', '-f', '--dry-run'], $patch_contents);
+        $command->run();
+
+        if ($command->getReturn() !== 0) {
+            $command = $access->createCommand('patch', ['-p1', '-r-'], $patch_contents);
+            $command->run();
+
+            if ($info = $command->getStdoutContent()) {
+                $this->io->writeln($info);
+            }
+            if ($error = $command->getStderrContent()) {
+                $this->io->error($error);
+            }
+            $result = $command->getReturn() === 0;
+        } else {
+            $this->io->writeln("Patch already applied, skipping.");
+            $result = false;
+        }
+
+        $access->deleteFile($filename);
+        @unlink($local);
+
+        if ($result && empty($options['skip-post-install'])) {
+            $this->io->writeln('Patch applied. Running post-install hooks...');
+            $this->postInstall(array_merge($options, ['applying-patch' => true]));
+        }
+        return $result;
+    }
+
     public function isInstalled()
     {
         if (! is_null($this->installed)) {
@@ -802,7 +885,8 @@ TXT;
         }
 
         $command->run();
-        $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
+        $commandOutput = $command->getStderrContent() ?: '';
+        $commandOutput .= $command->getStdoutContent();
 
         $bundled =  $this->supportsVendorBundled() ? 'vendor_bundled/' : '';
 
@@ -812,6 +896,10 @@ TXT;
         ) {
             trim_output($commandOutput);
             throw new \Exception("Composer install failed for {$bundled}composer.lock (Tiki bundled packages).\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+        }
+
+        if (preg_match('/Could not apply patch! Skipping./', $commandOutput)) {
+            trim_output($commandOutput);
         }
     }
 
@@ -887,6 +975,10 @@ TXT;
     {
         $access = $this->instance->getBestAccess('scripting');
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
+
+        if (empty($options['applying-patch'])) {
+            $this->applyPatches();
+        }
 
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
             $this->installComposer();
