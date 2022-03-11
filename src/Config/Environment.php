@@ -199,32 +199,13 @@ class Environment
     {
         debug('Running Tiki Manager at ' . $_ENV['TRIM_ROOT']);
 
-        if (! file_exists($_ENV['CACHE_FOLDER'])) {
-            mkdir($_ENV['CACHE_FOLDER'], 0777, true);
-        }
-        if (! file_exists($_ENV['TEMP_FOLDER'])) {
-            mkdir($_ENV['TEMP_FOLDER'], 0777, true);
-        }
-        if (! file_exists($_ENV['RSYNC_FOLDER'])) {
-            mkdir($_ENV['RSYNC_FOLDER'], 0777, true);
-        }
-        if (! file_exists($_ENV['MOUNT_FOLDER'])) {
-            mkdir($_ENV['MOUNT_FOLDER'], 0777, true);
-        }
-        if (! file_exists($_ENV['BACKUP_FOLDER'])) {
-            mkdir($_ENV['BACKUP_FOLDER'], 0777, true);
-        }
-        if (! file_exists($_ENV['ARCHIVE_FOLDER'])) {
-            mkdir($_ENV['ARCHIVE_FOLDER'], 0777, true);
-        }
-        if (! file_exists($_ENV['TRIM_LOGS'])) {
-            mkdir($_ENV['TRIM_LOGS'], 0777, true);
-        }
-        if (! file_exists($_ENV['TRIM_DATA'])) {
-            mkdir($_ENV['TRIM_DATA'], 0777, true);
-        }
-        if (! file_exists($_ENV['TRIM_SRC_FOLDER'])) {
-            mkdir($_ENV['TRIM_SRC_FOLDER'], 0777, true);
+        $writableFolders = ['CACHE_FOLDER', 'TEMP_FOLDER', 'RSYNC_FOLDER', 'MOUNT_FOLDER', 'BACKUP_FOLDER', 'ARCHIVE_FOLDER', 'TRIM_LOGS', 'TRIM_DATA', 'TRIM_SRC_FOLDER'];
+        foreach ($writableFolders as $folder) {
+            if (! file_exists($_ENV[$folder])) {
+                mkdir($_ENV[$folder], 0777, true);
+            } elseif (substr(sprintf('%o', fileperms($_ENV[$folder])), -4) != '0777') {
+                chmod($_ENV[$folder], 0777);
+            }
         }
 
         if (file_exists(getenv('HOME') . '/.ssh/id_dsa') &&
@@ -304,6 +285,7 @@ class Environment
 
             try {
                 $db = new PDOWrapper('sqlite:' . $_ENV['DB_FILE']);
+                chmod($_ENV['DB_FILE'], 0666);
             } catch (\PDOException $e) {
                 $this->io->error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}");
                 die();

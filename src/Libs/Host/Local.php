@@ -194,7 +194,7 @@ class Local
 
         $output = [];
         $command = sprintf(
-            'rsync -aL --delete --exclude=.svn/tmp %s %s %s %s 2>&1',
+            'rsync -aL --delete --exclude=.svn/tmp --exclude=vendor/tikiwiki/tiki-manager/backup %s %s %s %s 2>&1',
             $exclude,
             isset($args['link-dest']) ? '--link-dest=' . $args['link-dest'] : '',
             escapeshellarg($args['src']),
