@@ -30,10 +30,22 @@ use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use TikiManager\Config\App;
 use TikiManager\Config\Environment;
+use TikiManager\Config\Exception\ConfigurationErrorException;
 use TikiManager\Manager\UpdateManager;
 
-Environment::getInstance()->load();
+try {
+    Environment::getInstance()->load();
+} catch(ConfigurationErrorException $e) {
+    $io = App::get('io');
+    if ($io) {
+        $io->error($e->getMessage());
+        die;
+    } else {
+        die($e->getMessage());
+    }
+}
 
 $application = new Application();
 $banner = <<<TXT

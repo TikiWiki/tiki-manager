@@ -202,9 +202,11 @@ class Environment
         $writableFolders = ['CACHE_FOLDER', 'TEMP_FOLDER', 'RSYNC_FOLDER', 'MOUNT_FOLDER', 'BACKUP_FOLDER', 'ARCHIVE_FOLDER', 'TRIM_LOGS', 'TRIM_DATA', 'TRIM_SRC_FOLDER'];
         foreach ($writableFolders as $folder) {
             if (! file_exists($_ENV[$folder])) {
-                mkdir($_ENV[$folder], 0777, true);
+                if (is_writable(dirname($_ENV[$folder]))) {
+                    mkdir($_ENV[$folder], 0777, true);
+                }
             } elseif (substr(sprintf('%o', fileperms($_ENV[$folder])), -4) != '0777') {
-                chmod($_ENV[$folder], 0777);
+                @chmod($_ENV[$folder], 0777);
             }
         }
 
@@ -259,8 +261,7 @@ class Environment
 
         if (! file_exists($_ENV['SSH_KEY']) || ! file_exists($_ENV['SSH_PUBLIC_KEY'])) {
             if (! is_writable(dirname($_ENV['SSH_KEY']))) {
-                $this->io->error('Impossible to generate SSH key. Make sure data folder is writable.');
-                die();
+                throw new ConfigurationErrorException('Impossible to generate SSH key. Make sure data folder is writable.');
             }
 
             $this->io->writeln('If you enter a passphrase, you will need to enter it every time you run ' .
@@ -279,16 +280,14 @@ class Environment
 
         if (! file_exists($_ENV['DB_FILE'])) {
             if (! is_writable(dirname($_ENV['DB_FILE']))) {
-                $this->io->error('Impossible to generate database. Make sure data folder is writable.');
-                die();
+                throw new ConfigurationErrorException('Impossible to generate database. Make sure data folder is writable.');
             }
 
             try {
                 $db = new PDOWrapper('sqlite:' . $_ENV['DB_FILE']);
                 chmod($_ENV['DB_FILE'], 0666);
             } catch (\PDOException $e) {
-                $this->io->error("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}");
-                die();
+                throw new ConfigurationErrorException("Could not create the database for an unknown reason. SQLite said: {$e->getMessage()}");
             }
             $db = null;
 
@@ -298,8 +297,7 @@ class Environment
         try {
             $db = new PDOWrapper('sqlite:' . $_ENV['DB_FILE']);
         } catch (\PDOException $e) {
-            $this->io->error("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}");
-            die();
+            throw new ConfigurationErrorException("Could not connect to the database for an unknown reason. SQLite said: {$e->getMessage()}");
         }
 
         // check if info table exist or create it
