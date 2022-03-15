@@ -99,6 +99,15 @@ class Environment
         $this->isLoaded = true;
     }
 
+    public function setComposerPath($composerPath)
+    {
+        if (file_exists($composerPath)) {
+            $_ENV['COMPOSER_PATH'] = $composerPath;
+        } else {
+            throw new ConfigurationErrorException('Invalid composer path specified: '.$composerPath);
+        }
+    }
+
     /**
      * Load environment variables that contain any kind of logic
      */
@@ -134,12 +143,13 @@ class Environment
             $_ENV['DIFF'] = 'diff';
         }
 
-        $composerPath = detectComposer($this->homeDirectory);
-        if (!$composerPath) {
-            throw new ConfigurationErrorException('Unable to find composer or composer.phar');
+        if (empty($_ENV['COMPOSER_PATH'])) {
+            $composerPath = detectComposer($this->homeDirectory);
+            if (!$composerPath) {
+                throw new ConfigurationErrorException('Unable to find composer or composer.phar');
+            }
+            $_ENV['COMPOSER_PATH'] = $composerPath;
         }
-
-        $_ENV['COMPOSER_PATH'] = $composerPath;
 
         $_ENV['EXECUTABLE_SCRIPT'] = implode(',', [
             'scripts/checkversion.php',
