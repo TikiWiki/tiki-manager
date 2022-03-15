@@ -253,19 +253,16 @@ class Environment
         }
 
         if (! Requirements::getInstance()->check('PHPSqlite')) {
-            $this->io->error(Requirements::getInstance()->getRequirementMessage('PHPSqlite'));
-            exit;
+            throw new ConfigurationErrorException(Requirements::getInstance()->getRequirementMessage('PHPSqlite'));
         }
 
         if (! Requirements::getInstance()->check('ssh')) {
-            $this->io->error(Requirements::getInstance()->getRequirementMessage('ssh'));
-            exit;
+            throw new ConfigurationErrorException(Requirements::getInstance()->getRequirementMessage('ssh'));
         }
 
         if (strtoupper($_ENV['DEFAULT_VCS']) === 'SRC') {
             if (! Requirements::getInstance()->check('fileCompression')) {
-                $this->io->error(Requirements::getInstance()->getRequirementMessage('fileCompression'));
-                exit;
+                throw new ConfigurationErrorException(Requirements::getInstance()->getRequirementMessage('fileCompression'));
             }
         }
 
