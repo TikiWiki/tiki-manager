@@ -3,6 +3,7 @@
 namespace TikiManager\Command\Traits;
 
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
@@ -598,5 +599,94 @@ trait InstanceConfigure
         }
 
         return $path;
+    }
+
+    /**
+     * Check tiki minimum requirements
+     *
+     * @param Instance $instance
+     * @param LoggerInterface $log
+     * @return bool
+     */
+    public function isMissingPHPRequirements(Instance $instance, LoggerInterface $log): bool
+    {
+        $missingRequirements = [];
+        $access = $instance->getBestAccess();
+
+        $checkPHP = function (string $script) use ($instance, $access) {
+            return $access
+                ->createCommand($instance->phpexec, ['-r', $script])
+                ->run()
+                ->getStdoutContent();
+        };
+
+        $functionIniSet = $checkPHP("echo function_exists('ini_set');");
+
+        if (! $functionIniSet) {
+            $missingRequirements[] = 'function ini_set not found';
+        }
+
+        $functionIniGet = $checkPHP("echo function_exists('ini_get');");
+
+        if (! $functionIniGet) {
+            $missingRequirements[] = 'Function ini_get not found';
+        }
+
+        $phpModules = $this->getPHPModules($instance);
+
+        if (! in_array('pdo_mysql', $phpModules) &&
+            ! in_array('mysqli', $phpModules) &&
+            ! in_array('mysql', $phpModules)) {
+            $missingRequirements[] = 'Module pdo_mysql, mysqli or mysql not loaded';
+        }
+
+        $accessMemoryLimit = $functionIniGet ? $checkPHP("echo trim(ini_get('memory_limit'));") : -1;
+        $memoryLimit = (int) $accessMemoryLimit;
+        if ($memoryLimit < 128 * 1024 * 1024 && $memoryLimit != -1) {
+            $missingRequirements[] = 'memory_limit must be set at least 128M';
+        }
+
+        $defaultCharset = $functionIniGet ? $checkPHP("echo strtolower(ini_get('default_charset'));") : '';
+        if ($defaultCharset !== 'utf-8') {
+            $missingRequirements[] = 'default_charset is not UTF-8';
+        }
+
+        // Checking PHP modules
+        $modules = ['intl','mbstring','ctype','libxml','dom','curl','json','iconv'];
+
+        foreach ($modules as $module) {
+            if (! in_array($module, $modules)) {
+                $missingRequirements[] = sprintf('Module %s not loaded', $module);
+            }
+        }
+
+        $mbstringFuncOverload = $functionIniGet ? $checkPHP("echo ini_get('mbstring.func_overload');") : '';
+
+        if ($mbstringFuncOverload && $mbstringFuncOverload != "0") {
+            $missingRequirements[] = 'Function mbstring.func_overload not found';
+        }
+
+        $evalFunctions = $functionIniGet ? $checkPHP("echo eval('return 42;');") : 0;
+        $eval = (int) $evalFunctions;
+        if ($eval !== 42) {
+            $missingRequirements[] = 'Function eval not found';
+        }
+
+        if (!empty($missingRequirements)) {
+            $log->error('Missing PHP requirements:' . PHP_EOL . implode(PHP_EOL, $missingRequirements));
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function getPHPModules(Instance $instance): array
+    {
+        $phpModules = $instance->getBestAccess()
+            ->createCommand($instance->phpexec, ['-m'])
+            ->run()
+            ->getStdoutContent();
+
+        return $phpModules ? explode(PHP_EOL, $phpModules) : [];
     }
 }

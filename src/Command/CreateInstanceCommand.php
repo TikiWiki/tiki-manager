@@ -163,6 +163,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_REQUIRED,
                 'PHP binary to be used to manage the instance'
+            )
+            ->addOption(
+                'skip-phpcheck',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip PHP minimum requirements check'
             );
     }
 
@@ -182,9 +188,15 @@ class CreateInstanceCommand extends TikiManagerCommand
         $instance = new Instance();
 
         try {
-            $instance = new Instance();
             $this->setupAccess($instance);
             $this->setupInstance($instance);
+
+            $skipPhpCheck = $input->getOption('skip-phpcheck');
+            if (! $skipPhpCheck && $this->isMissingPHPRequirements($instance, $this->logger)) {
+                $error = 'Missing minimum requirements. Before installing Tiki, review the documentation in ' .
+                    'https://doc.tiki.org/Requirements and confirm that your system meets the minimum requirements.';
+                throw new \Exception($error);
+            }
 
             if ($duplicated = $instance->hasDuplicate()) {
                 $error = \sprintf(
