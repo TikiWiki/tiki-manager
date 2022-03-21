@@ -98,7 +98,7 @@ class SSHWrapperAdapter
         $commandLine .= escapeshellarg('set -e; ' .$env . $cwd . $command->getFullCommand());
 
         $process = Process::fromShellCommandline($commandLine)
-            ->setTimeout(3600);
+            ->setTimeout($_ENV['COMMAND_EXECUTION_TIMEOUT']);
 
         $stdin = $command->getStdin();
         if ($stdin) {

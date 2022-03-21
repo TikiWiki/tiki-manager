@@ -117,6 +117,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Only on Git: saves your local modifications, and try to apply after update/upgrade'
+            )
+            ->addOption(
+                'timeout',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Modify the default command execution timeout from 3600 seconds to a custom value'
             );
     }
 

@@ -15,6 +15,7 @@ use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
+use TikiManager\Config\Environment;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 
@@ -124,6 +125,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Only on Git: saves your local modifications, and try to apply after update/upgrade'
+            )
+            ->addOption(
+                'timeout',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Modify the default command execution timeout from 3600 seconds to a custom value'
             );
     }
 
@@ -154,6 +161,8 @@ class CloneInstanceCommand extends TikiManagerCommand
         $vcsOptions = [
             'allow_stash' => $input->getOption('stash')
         ];
+        $timeout = $input->getOption('timeout') ?: Environment::get('COMMAND_EXECUTION_TIMEOUT');
+        $_ENV['COMMAND_EXECUTION_TIMEOUT'] = $timeout;
 
         $setupTargetDatabase = (bool) ($input->getOption('db-prefix') || $input->getOption('db-name'));
 
@@ -398,7 +407,8 @@ class CloneInstanceCommand extends TikiManagerCommand
                         'checksum-check' => $checksumCheck,
                         'skip-reindex' => $skipReindex,
                         'skip-cache-warmup' => $skipCache,
-                        'live-reindex' => $liveReindex
+                        'live-reindex' => $liveReindex,
+                        'timeout' => $timeout,
                     ]);
                 } catch (\Exception $e) {
                     CommandHelper::setInstanceSetupError($destinationInstance->id, $e);

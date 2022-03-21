@@ -48,7 +48,7 @@ class Local
         $commandLine = $command->getFullCommand();
 
         $process = Process::fromShellCommandline($commandLine)
-            ->setTimeout(3600)
+            ->setTimeout($_ENV['COMMAND_EXECUTION_TIMEOUT'])
             ->setEnv($env);
 
         if ($stdIn = $command->getStdin()) {
@@ -90,7 +90,7 @@ class Local
             $cmd = $commandPrefix . $cmd . ' 2>&1';
             debug(var_export($this->env, true) . "\n" . $cmd);
 
-            $process = Process::fromShellCommandline($cmd . ' 2>&1', $this->location, $this->env, null, 3600);
+            $process = Process::fromShellCommandline($cmd . ' 2>&1', $this->location, $this->env, null, $_ENV['COMMAND_EXECUTION_TIMEOUT']);
             $process->run();
 
             $result = $process->getOutput();
