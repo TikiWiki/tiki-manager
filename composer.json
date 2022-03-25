@@ -27,7 +27,10 @@
     "swiftmailer/swiftmailer": "^6.2.1"
   },
   "config": {
-    "process-timeout": 5000
+    "process-timeout": 5000,
+    "allow-plugins": {
+      "bamarni/composer-bin-plugin": true
+    }
   },
   "autoload": {
     "psr-4": {
