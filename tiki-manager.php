@@ -37,7 +37,7 @@ use TikiManager\Manager\UpdateManager;
 
 try {
     Environment::getInstance()->load();
-} catch(ConfigurationErrorException $e) {
+} catch (ConfigurationErrorException $e) {
     $io = App::get('io');
     if ($io) {
         $io->error($e->getMessage());
@@ -100,6 +100,7 @@ $application->add(new \TikiManager\Command\DeletePatchCommand());
 
 $application->add(new \TikiManager\Command\ManagerInfoCommand());
 $application->add(new \TikiManager\Command\ManagerUpdateCommand());
+$application->add(new \TikiManager\Command\ManagerTestSendEmailCommand());
 $application->add(new \TikiManager\Command\CheckRequirementsCommand());
 $application->add(new \TikiManager\Command\ResetManagerCommand());
 $application->add(new \TikiManager\Command\ReportManagerCommand());
