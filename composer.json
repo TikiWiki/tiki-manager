@@ -11,6 +11,8 @@
     "composer/semver": "^3.2",
     "dragonmantank/cron-expression": "^3.0",
     "gitonomy/gitlib": "^1.2",
+    "laminas/laminas-mail": "^2.12",
+    "laminas/laminas-servicemanager": "^3.4",
     "monolog/monolog": "^1.26",
     "php": "^7.1",
     "phpseclib/phpseclib": "^2.0",
@@ -23,8 +25,7 @@
     "symfony/finder": "4.4",
     "symfony/filesystem": "^4.1",
     "symfony/process": "^4.3",
-    "symfony/yaml": "^4.3",
-    "swiftmailer/swiftmailer": "^6.2.1"
+    "symfony/yaml": "^4.3"
   },
   "config": {
     "process-timeout": 5000,

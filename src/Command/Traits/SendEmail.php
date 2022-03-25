@@ -7,12 +7,18 @@
 
 namespace TikiManager\Command\Traits;
 
+use Laminas\Mail\Exception\RuntimeException;
+use Laminas\Mail\Message;
+use Laminas\Mail\Transport\Sendmail;
+use Laminas\Mail\Transport\Smtp;
+use Laminas\Mail\Transport\SmtpOptions;
+use Laminas\Mail\Transport\TransportInterface;
 use TikiManager\Config\Environment;
 
 trait SendEmail
 {
     /**
-     * @return \Swift_Mailer
+     * @return TransportInterface
      */
     protected function getMailer()
     {
@@ -20,28 +26,37 @@ trait SendEmail
         $smtpPort = Environment::get('SMTP_PORT', 25);
         $smtpUser = Environment::get('SMTP_USER');
         $smtpPass = Environment::get('SMTP_PASS');
+        $smtpAuth = Environment::get('SMTP_AUTH', 'plain');
+        $smtpName = Environment::get('SMTP_NAME', 'localhost');
 
         // Create the Transport
-        if ($smtpHost && $smtpPort) {
-            $transport = (new \Swift_SmtpTransport($smtpHost, $smtpPort))
-                ->setUsername($smtpUser)
-                ->setPassword($smtpPass);
-        } else {
-            $transport = new \Swift_SendmailTransport();
+        if ($smtpHost && $smtpPort && $smtpAuth) {
+            $transport = new Smtp();
+            $options = new SmtpOptions([
+                'name' => $smtpName,
+                'host' => $smtpHost,
+                'port' => $smtpPort,
+                'connection_class' => strtolower($smtpAuth),
+                'connection_config' => [
+                    'username' => $smtpUser,
+                    'password' => $smtpPass,
+                ]
+            ]);
+            $transport->setOptions($options);
         }
 
-        // Create the Mailer using your created Transport
-        return new \Swift_Mailer($transport);
+        return $transport ?? new Sendmail();
     }
 
     /**
-     * @param $to
-     * @param $subject
-     * @param $message
-     * @param null $from
-     * @return int
+     * @param string|array $to
+     * @param string $subject
+     * @param string $message
+     * @param string|null $from
+     * @throws \RuntimeException
+     * @void
      */
-    protected function sendEmail($to, $subject, $message, $from = null)
+    protected function sendEmail($to, $subject, $message, $from = null): void
     {
         $from = $from ?: Environment::get('FROM_EMAIL_ADDRESS');
 
@@ -53,18 +68,17 @@ trait SendEmail
             $mailer = $this->getMailer();
 
             // Create a message
-            $message = (new \Swift_Message($subject))
-                ->setTo(is_array($to) ? $to : [$to])
+            $mailMsg = new Message();
+            $mailMsg
+                ->setFrom($from)
+                ->setSubject($subject)
+                ->addTo($to)
                 ->setBody($message);
 
-            $message->setFrom($from);
-
             // Send the message
-            return $mailer->send($message);
-        } catch (\Swift_SwiftException $e) {
+            $mailer->send($mailMsg);
+        } catch (RuntimeException $e) {
             throw new \RuntimeException('Unable to send email notification.' . PHP_EOL . $e->getMessage());
         }
     }
-
-
 }
