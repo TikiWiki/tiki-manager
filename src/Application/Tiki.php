@@ -842,7 +842,12 @@ TXT;
         }
 
         $fs = new Filesystem();
-        $cacheFile = Environment::get('CACHE_FOLDER') . '/composer_v1.phar';
+        if (! empty($_ENV['COMPOSER_PATH'])) {
+            $cacheFile = $_ENV['COMPOSER_PATH'];
+            if (!$fs->exists($cacheFile)) {
+                $cacheFile = Environment::get('CACHE_FOLDER') . '/composer_v1.phar';
+            }
+        }
 
         if (!$fs->exists($cacheFile)) {
             $tmp = Environment::get('TEMP_FOLDER');
