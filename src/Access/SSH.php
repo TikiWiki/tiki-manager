@@ -6,6 +6,7 @@
 
 namespace TikiManager\Access;
 
+use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Config\Environment as Env;
 use TikiManager\Libs\Host\SSH as SSHHost;
 use TikiManager\Libs\Host\Command;
@@ -71,13 +72,10 @@ class SSH extends Access implements ShellPrompt
     }
 
     // FIXME: Expect all remote to be Unix-like machines
-    public function getInterpreterPath($instance2 = null)
+    public function getInterpreterPath(TikiRequirements $requirements = null)
     {
-        if ($this->instance->phpexec) {
-            $detectedBinaries = [$this->instance->phpexec];
-        } else {
-            $detectedBinaries = $this->instance->getDiscovery()->detectPHP();
-        }
+        $instance = $this->instance;
+        $detectedBinaries = $instance->phpexec ? [$instance->phpexec] : $instance->getDiscovery()->detectPHP();
 
         $valid = [];
 
@@ -88,8 +86,9 @@ class SSH extends Access implements ShellPrompt
                 continue;
             }
 
-            if ($version && $version >= 50300) {
-                $formattedVersion = CommandHelper::formatPhpVersion($version);
+            $formattedVersion = CommandHelper::formatPhpVersion($version);
+            if (($version >= 50300 && !$requirements) ||
+                $requirements->getPhpVersion()->isValidVersion($formattedVersion)) {
                 $valid[$formattedVersion] = $binary;
             }
         }
@@ -99,13 +98,13 @@ class SSH extends Access implements ShellPrompt
         }
 
         // Instance current PHPExec no longer valid, re-detect again!
-        if ($this->instance->phpexec) {
-            $this->instance->phpexec = null;
-            return $this->getInterpreterPath($instance2);
+        if ($instance->phpexec) {
+            $instance->phpexec = null;
+            return $this->getInterpreterPath($requirements);
         }
 
         if (empty($valid)) {
-            throw new \Exception("No suitable php interpreter was found on {$this->instance->name} instance");
+            throw new \Exception("No suitable php interpreter was found on {$instance->name} instance");
         }
 
         // Assume that the first in the list should be the default one;

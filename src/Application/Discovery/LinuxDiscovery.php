@@ -27,7 +27,7 @@ class LinuxDiscovery extends Discovery
         if ($searchOrder === null) {
             $searchOrder = [
                 ['command', ['-v', 'php']],
-                ['locate', ['-e', '-r', 'bin/php$']],
+                ['locate', ['-e', '-r', 'bin/php[1-9\.]*$']],
             ];
         }
 

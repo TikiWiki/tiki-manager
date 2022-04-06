@@ -6,6 +6,7 @@
 
 namespace TikiManager\Access;
 
+use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Config\App;
 use TikiManager\Application\Instance;
 
@@ -125,7 +126,7 @@ SQL;
 
     abstract public function firstConnect();
 
-    abstract public function getInterpreterPath($instance2 = null);
+    abstract public function getInterpreterPath(TikiRequirements $requirements = null);
 
     abstract public function getInterpreterVersion($interpreter);
 

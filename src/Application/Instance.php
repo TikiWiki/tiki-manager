@@ -11,6 +11,7 @@ namespace TikiManager\Application;
 
 use Exception;
 use TikiManager\Application\Instance\CrontabManager;
+use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
 use TikiManager\Libs\Helpers\Archive;
@@ -557,10 +558,10 @@ SQL;
         return $this->tempdir;
     }
 
-    public function detectPHP()
+    public function detectPHP(TikiRequirements $requirements = null)
     {
         $access = $this->getBestAccess('scripting');
-        $path = $access->getInterpreterPath();
+        $path = $access->getInterpreterPath($requirements);
 
         $path_env = getenv('PATH');
 

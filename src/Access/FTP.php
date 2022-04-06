@@ -6,6 +6,7 @@
 
 namespace TikiManager\Access;
 
+use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Libs\Host\FTP as FTPHost;
 use TikiManager\Application\Instance;
 
@@ -38,12 +39,8 @@ class FTP extends Access implements Mountable
         return $conn->connect();
     }
 
-    public function getInterpreterPath($instance2 = null)
+    public function getInterpreterPath(TikiRequirements $requirements = null)
     {
-        if ($instance2 instanceof Instance) {
-            $this->instance = $instance2;
-        }
-
         $result = $this->runPHP(
             dirname(__FILE__) . '/../../scripts/checkversion.php',
             [$this->instance->webroot]

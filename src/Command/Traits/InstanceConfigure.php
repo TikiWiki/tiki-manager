@@ -11,6 +11,7 @@ use TikiManager\Access\Access;
 use TikiManager\Access\FTP;
 use TikiManager\Access\SSH;
 use TikiManager\Application\Instance;
+use TikiManager\Application\Tiki;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\Environment;
@@ -296,7 +297,16 @@ trait InstanceConfigure
         // PHP SECTION DETECTION
         // If there is a given path, set that, detectPHP will test if valid, if not detect others;
         $instance->phpexec = $this->input->getOption('phpexec');
-        $instance->detectPHP();
+
+        // Detect the PHP that best suits the selected branch
+        if ($branchName = $this->input->getOption('branch')) {
+            $apps = $instance->getApplications();
+            /** @var Tiki $tiki */
+            $tiki = reset($apps);
+            $requirements = $tiki->getTikiRequirementsHelper()->findByBranchName($branchName);
+        }
+
+        $instance->detectPHP($requirements ?? null);
 
         $this->io->info('Instance PHP Version: ' . CommandHelper::formatPhpVersion($instance->phpversion));
         $this->io->info('Instance PHP exec: ' . $instance->phpexec);
