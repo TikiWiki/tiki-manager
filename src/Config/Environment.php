@@ -131,8 +131,8 @@ class Environment
         }
 
         if (!isset($_ENV['SSH_KEY']) && !isset($_ENV['SSH_PUBLIC_KEY'])) {
-            $_ENV['SSH_KEY'] = $_ENV['TRIM_ROOT'] . "/data/id_rsa";
-            $_ENV['SSH_PUBLIC_KEY'] = $_ENV['TRIM_ROOT'] . "/data/id_rsa.pub";
+            $_ENV['SSH_KEY'] = $_ENV['TRIM_DATA'] . "/id_rsa";
+            $_ENV['SSH_PUBLIC_KEY'] = $_ENV['TRIM_DATA'] . "/id_rsa.pub";
         }
 
         if (! isset($_ENV['EDITOR'])) {
@@ -236,8 +236,8 @@ class Environment
             );
         }
 
-        if (file_exists($_ENV['TRIM_ROOT'] . "/data/id_dsa") &&
-            file_exists($_ENV['TRIM_ROOT'] . "/data/id_dsa.pub") &&
+        if (file_exists($_ENV['TRIM_DATA'] . "/id_dsa") &&
+            file_exists($_ENV['TRIM_DATA'] . "/id_dsa.pub") &&
             !isset($_ENV['SSH_KEY']) &&
             !isset($_ENV['SSH_PUBLIC_KEY'])) {
             $this->io->warning(
