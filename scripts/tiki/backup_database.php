@@ -62,7 +62,7 @@ $charset = array_shift($output) ?: 'utf8mb4';
 $args[] = "--default-character-set=" . $charset;
 
 $args = implode(' ', $args);
-$command = "mysqldump --quick --create-options --extended-insert $args >> " . $tempFile;
+$command = "mysqldump --quick --create-options --extended-insert --no-tablespaces $args >> " . $tempFile;
 exec($command);
 
 chmod($outputFile, 0777);
