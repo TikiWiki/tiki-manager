@@ -122,7 +122,7 @@ class SSH
         return $exitCode == 0;
     }
 
-    public function openShell($workingDir = '')
+    public function openShell($workingDir = '', $isWeb)
     {
         $key = $_ENV['SSH_KEY'];
         $port = null;
@@ -134,6 +134,10 @@ class SSH
                 "-t 'cd {$workingDir}; pwd; bash --login'";
         } else {
             $command = "ssh $port -i $key {$this->user}@{$this->host}";
+        }
+
+        if ($isWeb) {
+            return $command;
         }
 
         passthru($command);

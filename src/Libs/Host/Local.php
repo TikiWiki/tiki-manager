@@ -159,8 +159,9 @@ class Local
         $this->runCommands($command);
     }
 
-    public function openShell($workingDir = '')
+    public function openShell($workingDir = '', $isWeb = false)
     {
+        
         if (empty($workingDir)) {
             return;
         }
@@ -171,6 +172,9 @@ class Local
             return;
         }
 
+        if ($isWeb) {
+            return 'cd ' . $workingDir;
+        }
         $command = 'sh -c \'cd ' . $workingDir . '; exec ${SHELL:-sh}\'';
         passthru($command);
     }

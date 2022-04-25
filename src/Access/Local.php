@@ -414,10 +414,10 @@ class Local extends Access implements ShellPrompt
         return $command->run($host, $options);
     }
 
-    public function openShell($workingDir = '')
+    public function openShell($workingDir = '', $isWeb = false)
     {
         $host = $this->getHost();
-        $host->openShell($workingDir);
+        return $host->openShell($workingDir, $isWeb);
     }
 
     public function hasExecutable($command)
