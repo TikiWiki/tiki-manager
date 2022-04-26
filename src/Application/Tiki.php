@@ -825,7 +825,7 @@ TXT;
      * @param bool $withBlank
      * @return array
      */
-    public function getCompatibleVersions($withBlank = true)
+    public function getCompatibleVersions(bool $withBlank = true)
     {
         $versions = $this->getVersions();
         $checkTikiVersionRequirement = $this->getTikiRequirementsHelper();
@@ -847,6 +847,36 @@ TXT;
         }
 
         return $compatible;
+    }
+
+    /**
+     * @param Version $currentVersion
+     * @param bool $onlySupported Display only supported versions
+     * @return array
+     */
+    public function getUpgradableVersions(Version $currentVersion, bool $onlySupported): array
+    {
+        $instance = $this->instance;
+
+        $app = $instance->getApplication();
+        $versions = $onlySupported ? $app->getCompatibleVersions(false) : $app->getVersions();
+        $branchVersion = $currentVersion->getBaseVersion();
+
+        $options = [];
+
+        foreach ($versions as $version) {
+            $baseVersion = $version->getBaseVersion();
+
+            $compatible = $baseVersion >= $branchVersion;
+            $compatible |= $baseVersion === 'trunk';
+            $compatible |= $baseVersion === 'master';
+
+            if ($compatible) {
+                $options[] = $version;
+            }
+        }
+
+        return $options;
     }
 
     public function installComposer()
@@ -1188,7 +1218,7 @@ TXT;
         return $files;
     }
 
-    public function getTikiRequirementsHelper()
+    public function getTikiRequirementsHelper(): TikiRequirementsHelper
     {
         return new TikiRequirementsHelper(new YamlFetcher());
     }

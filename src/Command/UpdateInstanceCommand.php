@@ -9,6 +9,7 @@ namespace TikiManager\Command;
 
 use Monolog\Formatter\LineFormatter;
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -16,12 +17,14 @@ use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Command\Traits\SendEmail;
 use TikiManager\Libs\Helpers\Checksum;
 use TikiManager\Logger\ArrayHandler;
 
 class UpdateInstanceCommand extends TikiManagerCommand
 {
+    use InstanceUpgrade;
     use SendEmail;
 
     protected function configure()
@@ -80,12 +83,18 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 InputOption::VALUE_REQUIRED,
                 'Time delay commits by X number of days. Useful for avoiding newly introduced bugs in automated updates.'
             )
-        ->addOption(
-            'stash',
-            null,
-            InputOption::VALUE_NONE,
-            'Only on Git: saves your local modifications, and try to apply after update/upgrade'
-        );
+            ->addOption(
+                'stash',
+                null,
+                InputOption::VALUE_NONE,
+                'Only on Git: saves your local modifications, and try to apply after update/upgrade'
+            )
+            ->addOption(
+                'ignore-requirements',
+                null,
+                InputOption::VALUE_NONE,
+                'Ignore version requirements. Allows to select non-supported branches, useful for testing.'
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -188,106 +197,21 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $app = $instance->getApplication();
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();
-                $branch_version = $version->getBaseVersion();
+
+                $options = [
+                    'checksum-check' => $checksumCheck,
+                    'skip-reindex' => $skipReindex,
+                    'skip-cache-warmup' => $skipCache,
+                    'live-reindex' => $liveReindex,
+                    'lag' => $lag,
+                ];
 
                 if ($switch) {
-                    $versionSel = [];
-                    $branch = $input->getOption('branch');
-                    $versions = $app->getCompatibleVersions(false);
-
-                    $this->io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
-
-                    $counter = 0;
-                    $found_incompatibilities = false;
-                    foreach ($versions as $key => $version) {
-                        $base_version = $version->getBaseVersion();
-
-                        $compatible = 0;
-                        $compatible |= $base_version >= 13;
-                        $compatible &= $base_version >= $branch_version;
-                        $compatible |= $base_version === 'trunk';
-                        $compatible |= $base_version === 'master';
-                        $compatible &= $instance->phpversion > 50500;
-                        $found_incompatibilities |= !$compatible;
-
-                        if ($compatible) {
-                            $counter++;
-                            if (empty($branch)) {
-                                $output->writeln('[' . $key . '] ' . $version->type . ' : ' . $version->branch);
-                            } elseif (($branch == $version->getBranch()) || ($branch === $base_version)) {
-                                $branch = $key;
-                            }
-                        }
-                    }
-
-                    if ($counter) {
-                        if (! empty($branch)) {
-                            $selectedVersion = $branch;
-                            if (!array_key_exists($selectedVersion, $versions)) {
-                                $output->writeln('Branch ' . $input->getOption('branch') . ' not found');
-                                if ($instance->isLocked()) {
-                                    $instance->unlock();
-                                }
-                                continue;
-                            }
-                            $versionSel = getEntries($versions, $selectedVersion);
-                        } else {
-                            $selectedVersion = $this->io->ask('Which version do you want to upgrade to?', null);
-                            $versionSel = getEntries($versions, $selectedVersion);
-                        }
-
-                        if (empty($versionSel) && !empty($selectedVersion)) {
-                            $target = Version::buildFake('svn', $selectedVersion);
-                        } else {
-                            $target = reset($versionSel);
-                        }
-
-                        if (count($versionSel) > 0) {
-                            try {
-                                $filesToResolve = $app->performUpdate($instance, $target, [
-                                    'checksum-check' => $checksumCheck,
-                                    'skip-reindex' => $skipReindex,
-                                    'skip-cache-warmup' => $skipCache,
-                                    'live-reindex' => $liveReindex
-                                ]);
-                                $version = $instance->getLatestVersion();
-
-                                if ($checksumCheck) {
-                                    Checksum::handleCheckResult($instance, $version, $filesToResolve);
-                                }
-                            } catch (\Exception $e) {
-                                CommandHelper::setInstanceSetupError($instance->id, $e);
-                            }
-                        } else {
-                            $this->io->writeln('<comment>No version selected. Nothing to perform.</comment>');
-                        }
-                    } else {
-                        $this->io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-                        $this->io->writeln('<comment>the latest version permitted by the server.</comment>');
-                    }
+                    $this->runUpgrade($instance, $options, $instanceLogger);
                 } else {
                     $app_branch = $app->getBranch();
                     if ($app_branch == $branch_name) {
-                        try {
-                            $filesToResolve = $app->performUpdate($instance, null, [
-                                'checksum-check' => $checksumCheck,
-                                'skip-reindex' => $skipReindex,
-                                'skip-cache-warmup' => $skipCache,
-                                'live-reindex' => $liveReindex,
-                                'lag' => $lag
-                            ]);
-                            $version = $instance->getLatestVersion();
-
-                            if ($checksumCheck) {
-                                Checksum::handleCheckResult($instance, $version, $filesToResolve);
-                            }
-                        } catch (\Exception $e) {
-                            $instanceLogger->error('Failed to update instance!', [
-                                'instance' => $instance->name,
-                                'exception' => $e,
-                            ]);
-                            CommandHelper::setInstanceSetupError($instance->id, $e);
-                        }
+                        $this->runUpdate($instance, $options, $instanceLogger);
                     } else {
                         $message = 'Tiki Application branch is different than the one stored in the Tiki Manager db.';
                         $instanceLogger->error($message);
@@ -339,5 +263,49 @@ class UpdateInstanceCommand extends TikiManagerCommand
         $formatter->includeStacktraces(true);
 
         return $formatter;
+    }
+
+    protected function runUpdate(Instance $instance, array $options, LoggerInterface $logger)
+    {
+        try {
+            $app = $instance->getApplication();
+            $filesToResolve = $app->performUpdate($instance, null, $options);
+            $version = $instance->getLatestVersion();
+
+            if ($options['checksum-check'] ?? false) {
+                Checksum::handleCheckResult($instance, $version, $filesToResolve);
+            }
+        } catch (\Exception $e) {
+            $logger->error('Failed to update instance!', [
+                'instance' => $instance->name,
+                'exception' => $e,
+            ]);
+            CommandHelper::setInstanceSetupError($instance->id, $e);
+        }
+    }
+
+    protected function runUpgrade(Instance $instance, array $options, LoggerInterface $logger)
+    {
+        $branch = $this->input->getOption('branch');
+        $skipRequirements = $this->input->getOption('ignore-requirements') ?? false;
+        $selectedVersion = $this->getUpgradeVersion($instance, !$skipRequirements, $branch);
+
+        $target = Version::buildFake($instance->vcs_type, $selectedVersion);
+
+        try {
+            $app = $instance->getApplication();
+            $filesToResolve = $app->performUpdate($instance, $target, $options);
+            $version = $instance->getLatestVersion();
+
+            if ($options['checksum-check'] ?? false) {
+                Checksum::handleCheckResult($instance, $version, $filesToResolve);
+            }
+        } catch (\Exception $e) {
+            $logger->error('Failed to upgrade instance!', [
+                'instance' => $instance->name,
+                'exception' => $e,
+            ]);
+            CommandHelper::setInstanceSetupError($instance->id, $e);
+        }
     }
 }

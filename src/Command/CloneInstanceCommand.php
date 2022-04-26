@@ -12,9 +12,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
+use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
+use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
+use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
@@ -22,6 +25,7 @@ use TikiManager\Libs\Helpers\VersionControl;
 class CloneInstanceCommand extends TikiManagerCommand
 {
     use InstanceConfigure;
+    use InstanceUpgrade;
 
     protected function configure()
     {
@@ -131,6 +135,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_OPTIONAL,
                 'Modify the default command execution timeout from 3600 seconds to a custom value'
+            )
+            ->addOption(
+                'ignore-requirements',
+                null,
+                InputOption::VALUE_NONE,
+                'Ignore version requirements. Allows to select non-supported branches, useful for testing.'
             );
     }
 
@@ -168,7 +178,7 @@ class CloneInstanceCommand extends TikiManagerCommand
 
         if ($direct && ($keepBackup || $useLastBackup)) {
             $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
-            exit(-1);
+            return 1;
         }
 
         if (isset($argument) && !empty($argument)) {
@@ -186,9 +196,9 @@ class CloneInstanceCommand extends TikiManagerCommand
 
         $arguments = array_slice($input->getArgument('mode'), $offset);
         if (!empty($arguments[0])) {
-            $selectedSourceInstances = getEntries($instances, $arguments[0]);
+            $sourceInstances = getEntries($instances, $arguments[0]);
         } elseif ($sourceOption = $input->getOption("source")) {
-            $selectedSourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
+            $sourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
         } else {
             $this->io->newLine();
             $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
@@ -201,10 +211,10 @@ class CloneInstanceCommand extends TikiManagerCommand
                 return CommandHelper::validateInstanceSelection($answer, $instances);
             });
 
-            $selectedSourceInstances = $helper->ask($input, $output, $question);
+            $sourceInstances = $helper->ask($input, $output, $question);
         }
 
-        $sourceInstance = $selectedSourceInstances[0];
+        $sourceInstance = $sourceInstances[0];
         $instances = CommandHelper::getInstances('all');
 
         $instances = array_filter($instances, function ($instance) use ($sourceInstance) {
@@ -219,9 +229,9 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         if (!empty($arguments[1])) {
-            $selectedDestinationInstances = getEntries($instances, $arguments[1]);
-        } elseif ($targetOption = implode(',', $input->getOption("target"))) {
-            $selectedDestinationInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
+            $targetInstances = getEntries($instances, $arguments[1]);
+        } elseif ($targetOption = implode(',', $input->getOption('target'))) {
+            $targetInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
         } else {
             $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
@@ -231,24 +241,37 @@ class CloneInstanceCommand extends TikiManagerCommand
                 return CommandHelper::validateInstanceSelection($answer, $instances);
             });
 
-            $selectedDestinationInstances = $helper->ask($input, $output, $question);
+            $targetInstances = $helper->ask($input, $output, $question);
         }
 
-        if ($setupTargetDatabase && count($selectedDestinationInstances) > 1) {
+        if ($setupTargetDatabase && count($targetInstances) > 1) {
             $this->io->error('Database setup options can only be used when a single target instance is passed.');
             return 1;
         }
 
         if ($cloneUpgrade) {
-            if (!empty($arguments[2])) {
-                $input->setOption('branch', $arguments[2]);
-            } else {
-                $branch = $input->getOption('branch');
-                if (empty($branch)) {
-                    $branch = $this->getUpgradeVersion($sourceInstance);
-                    $input->setOption('branch', $branch);
+            $branch = $arguments[2] ?? $input->getOption('branch');
+            $ignoreReq = $input->getOption('ignore-requirements') ?? false;
+
+            // Get current version from Source
+            $curVersion = $sourceInstance->getLatestVersion();
+
+            $upVersion = null;
+
+            foreach ($targetInstances as $key => $targetInstance) {
+                $targetInstance->detectPHP();
+                if (!$upVersion) {
+                    $upVersion = $this->getUpgradeVersion($targetInstance, !$ignoreReq, $branch, $curVersion);
+                    continue;
+                }
+
+                if (!$this->validateUpgradeVersion($targetInstance, !$ignoreReq, $upVersion->branch, $curVersion)) {
+                    $this->io->writeln('Cannot clone&upgrade to %s, as version is not supported by server requirements.');
+                    unset($targetInstances[$key]);
                 }
             }
+
+            $input->setOption('branch', $upVersion->branch);
         }
 
         // PRE-CHECK
@@ -263,7 +286,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         if ($direct) {
-            foreach ($selectedDestinationInstances as $destinationInstance) {
+            foreach ($targetInstances as $destinationInstance) {
                 if ($destinationInstance->type == 'ssh' && $sourceInstance->type == 'ssh') {
                     $directWarnMessage = 'Direct backup cannot be used, instance {source_name} and instance {target_name} are both ssh.';
                     $this->logger->warning(
@@ -298,7 +321,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             return 1;
         }
 
-        foreach ($selectedDestinationInstances as $key => $destinationInstance) {
+        foreach ($targetInstances as $key => $destinationInstance) {
             try {
                 $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
 
@@ -315,7 +338,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                     'instance_id' => $destinationInstance->getId(),
                     'exception_message' => $e->getMessage(),
                 ]);
-                unset($selectedDestinationInstances[$key]);
+                unset($targetInstances[$key]);
                 continue;
             }
 
@@ -324,12 +347,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                     'source_instance_name' => $sourceInstance->name,
                     'target_instance_id' => $destinationInstance->name
                 ]);
-                unset($selectedDestinationInstances[$key]);
+                unset($targetInstances[$key]);
                 continue;
             }
         }
 
-        if (empty($selectedDestinationInstances)) {
+        if (empty($targetInstances)) {
             $this->logger->error('No valid instances to continue the clone process.');
             return 1;
         }
@@ -379,7 +402,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         /** @var Instance $destinationInstance */
-        foreach ($selectedDestinationInstances as $destinationInstance) {
+        foreach ($targetInstances as $destinationInstance) {
             $this->io->newLine();
             $this->io->section('Initiating clone of ' . $sourceInstance->name . ' to ' . $destinationInstance->name);
 
@@ -429,46 +452,6 @@ class CloneInstanceCommand extends TikiManagerCommand
         $this->io->newLine();
         $this->logger->info('Finished');
         return 0;
-    }
-
-    /**
-     * Get version to update instance to
-     *
-     * @param Instance $instance
-     * @return string
-     */
-    private function getUpgradeVersion($instance)
-    {
-        $found_incompatibilities = false;
-        $instance->detectPHP();
-
-        $app = $instance->getApplication();
-        $versions = $app->getVersions();
-        $choices = [];
-
-        foreach ($versions as $key => $version) {
-            preg_match('/(\d+\.|trunk|master)/', $version->branch, $matches);
-            if (array_key_exists(0, $matches)) {
-                if ((($matches[0] >= 13) || ($matches[0] == 'trunk') || ($matches[0] == 'master')) &&
-                    ($instance->phpversion < 50500)) {
-                    // Nothing to do, this match is incompatible...
-                    $found_incompatibilities = true;
-                } else {
-                    $choices[] = $version->type . ' : ' . $version->branch;
-                }
-            }
-        }
-
-        $this->logger->info('Detected PHP release: {php_version}', ['php_version' => CommandHelper::formatPhpVersion($instance->phpversion)]);
-
-        if ($found_incompatibilities) {
-            $this->io->writeln('<comment>If some versions are not offered, it\'s likely because the host</comment>');
-            $this->io->writeln('<comment>server doesn\'t meet the requirements for that version (ex: PHP version is too old)</comment>');
-        }
-
-        $choice = $this->io->choice('Which version do you want to update to', $choices);
-        $choice = explode(':', $choice);
-        return trim($choice[1]);
     }
 
     /**

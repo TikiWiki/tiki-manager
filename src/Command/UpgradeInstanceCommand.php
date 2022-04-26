@@ -10,12 +10,14 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Libs\Helpers\Checksum;
 
 class UpgradeInstanceCommand extends TikiManagerCommand
 {
+    use InstanceUpgrade;
+
     protected function configure()
     {
         $this
@@ -69,16 +71,19 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Only on Git: saves your local modifications, and try to apply after update/upgrade'
+            )
+            ->addOption(
+                'ignore-requirements',
+                null,
+                InputOption::VALUE_NONE,
+                'Ignore version requirements. Allows to select non-supported branches, useful for testing.'
             );
     }
 
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $checksumCheck = false;
-        if ($input->getOption('check')) {
-            $checksumCheck = true;
-        }
+        $checksumCheck = $input->getOption('check') ?? false;
         $instancesOption = $input->getOption('instances');
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -129,92 +134,41 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             $instanceVCS->setLogger($this->logger);
             $instanceVCS->setVCSOptions($vcsOptions);
 
-            $instance->lock();
             $app = $instance->getApplication();
-            $version = $instance->getLatestVersion();
-            $branch_name = $version->getBranch();
-            $branch_version = $version->getBaseVersion();
+            $branchName = $instance->getLatestVersion()->getBranch();
 
-            $versionSel = [];
+            $this->io->writeln('<fg=cyan>You are currently running: ' . $branchName . '</>');
+
             $branch = $input->getOption('branch');
-            $versions = $app->getCompatibleVersions(false);
+            $skipRequirements = $input->getOption('ignore-requirements') ?? false;
+            $selectedVersion = $this->getUpgradeVersion($instance, !$skipRequirements, $branch);
 
-            $this->io->writeln('<fg=cyan>You are currently running: ' . $branch_name . '</>');
-
-            $counter = 0;
-            $found_incompatibilities = false;
-            foreach ($versions as $key => $version) {
-                $base_version = $version->getBaseVersion();
-
-                $compatible = 0;
-                $compatible |= $base_version >= 13;
-                $compatible &= $base_version >= $branch_version;
-                $compatible |= $base_version === 'trunk';
-                $compatible |= $base_version === 'master';
-                $compatible &= $instance->phpversion > 50500;
-                $found_incompatibilities |= !$compatible;
-
-                if ($compatible) {
-                    $counter++;
-                    if (empty($branch)) {
-                        $output->writeln('[' . $key . '] ' . $version->type . ' : ' . $version->branch);
-                    } elseif (($branch == $version->getBranch()) || ($branch === $base_version)) {
-                        $branch = $key;
-                    }
-                }
+            if (!$selectedVersion) {
+                continue;
             }
 
-            if ($counter) {
-                if (!empty($branch)) {
-                    $selectedVersion = $branch;
-                    if (!array_key_exists($selectedVersion, $versions)) {
-                        $output->writeln('Branch ' . $input->getOption('branch') . ' not found');
-                        if ($instance->isLocked()) {
-                            $instance->unlock();
-                        }
-                        continue;
-                    }
-                    $versionSel = getEntries($versions, $selectedVersion);
-                } else {
-                    $selectedVersion = $this->io->ask('Which version do you want to upgrade to?', null);
-                    $versionSel = getEntries($versions, $selectedVersion);
+            try {
+                $instance->lock();
+                $filesToResolve = $app->performUpgrade($instance, $selectedVersion, [
+                    'checksum-check' => $checksumCheck,
+                    'skip-reindex' => $skipReindex,
+                    'skip-cache-warmup' => $skipCache,
+                    'live-reindex' => $liveReindex,
+                    'lag' => $lag
+                ]);
+
+                $version = $instance->getLatestVersion();
+
+                if ($checksumCheck) {
+                    Checksum::handleCheckResult($instance, $version, $filesToResolve);
                 }
-
-                if (empty($versionSel) && !empty($selectedVersion)) {
-                    $target = Version::buildFake($instance->vcs_type, $selectedVersion);
-                } else {
-                    $target = reset($versionSel);
-                }
-
-                if (count($versionSel) > 0) {
-                    try {
-                        $filesToResolve = $app->performUpgrade($instance, $target, [
-                            'checksum-check' => $checksumCheck,
-                            'skip-reindex' => $skipReindex,
-                            'skip-cache-warmup' => $skipCache,
-                            'live-reindex' => $liveReindex,
-                            'lag' => $lag
-                        ]);
-
-                        $version = $instance->getLatestVersion();
-
-                        if ($checksumCheck) {
-                            Checksum::handleCheckResult($instance, $version, $filesToResolve);
-                        }
-                    } catch (\Exception $e) {
-                        $this->logger->error('Failed to upgrade instance!', [
-                            'instance' => $instance->name,
-                            'exception' => $e,
-                        ]);
-                        CommandHelper::setInstanceSetupError($instance->id, $e);
-                        continue;
-                    }
-                } else {
-                    $this->io->writeln('<comment>No version selected. Nothing to perform.</comment>');
-                }
-            } else {
-                $this->io->writeln('<comment>No upgrades are available. This is likely because you are already at</comment>');
-                $this->io->writeln('<comment>the latest version permitted by the server.</comment>');
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to upgrade instance!', [
+                    'instance' => $instance->name,
+                    'exception' => $e,
+                ]);
+                CommandHelper::setInstanceSetupError($instance->id, $e);
+                continue;
             }
 
             if ($instance->isLocked()) {

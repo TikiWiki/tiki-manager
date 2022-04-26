@@ -520,53 +520,7 @@ Your requirements could not be resolved to an installable set of packages.');
         );
 
         $tikiStub->method('getVersions')->willReturn(
-            [
-                (object)[
-                    'type' => 'git',
-                    'branch' => '11.x',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => '20.x',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => '22.x',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => 'tags/12.0RC4',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => 'tags/19.0beta1',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => 'tags/22.1^{}',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => 'tags/26.1^{}',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => 'master',
-                    'date' => '2021-02-20',
-                ],
-                (object)[
-                    'type' => 'git',
-                    'branch' => 'trunk',
-                    'date' => '2021-02-20',
-                ],
-            ]
+            $this->getTestableVersions()
         );
         $instanceStub->phpversion = 70415;
 
@@ -603,6 +557,77 @@ Your requirements could not be resolved to an installable set of packages.');
         $this->assertContains("11.x", $branches);
         $this->assertContains("tags/12.0RC4", $branches);
         $this->assertCount(3, $branches);
+    }
+
+    /**
+     * @covers Tiki::getUpgradableVersions()
+     * @return void
+     */
+    public function testGetUpgradableVersionsEmpty()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->vcs_type = 'git';
+        $curVersion = Version::buildFake('git', '22.x');
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethods(['getCompatibleVersions'])
+            ->getMock();
+
+        $tikiStub
+            ->expects($this->once())
+            ->method('getCompatibleVersions')
+            ->willReturn([]);
+
+        $instanceStub
+            ->expects($this->once())
+            ->method('getApplication')
+            ->willReturn($tikiStub);
+
+        $this->assertEmpty($tikiStub->getUpgradableVersions($curVersion, true));
+    }
+
+    /**
+     * @covers Tiki::getUpgradableVersions()
+     * @return void
+     */
+    public function testGetUpgradableVersions()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->vcs_type = 'git';
+        $curVersion = Version::buildFake('git', '22.x');
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethods(['getCompatibleVersions'])
+            ->getMock();
+
+        $tikiStub
+            ->expects($this->once())
+            ->method('getCompatibleVersions')
+            ->willReturn($this->getTestableVersions());
+
+        $instanceStub
+            ->expects($this->once())
+            ->method('getApplication')
+            ->willReturn($tikiStub);
+
+        $upgradeVersions = $tikiStub->getUpgradableVersions($curVersion, true);
+        $this->assertNotEmpty($upgradeVersions);
+
+        $expectedBranches = [
+            '22.x',
+            'tags/22.1^{}',
+            'tags/26.1^{}',
+            'master',
+            'trunk',
+        ];
+
+        $upgradeVersions = array_map(function(Version $version){
+            return $version->branch;
+        }, $upgradeVersions);
+
+        $this->assertEquals($expectedBranches, $upgradeVersions);
     }
 
     /**
@@ -777,5 +802,23 @@ Your requirements could not be resolved to an installable set of packages.');
             ->willReturn($discoveryMock);
 
         $tikiStub->postHook('restoreDatabase');
+    }
+
+    /**
+     * @return object[]
+     */
+    public function getTestableVersions(): array
+    {
+        return [
+            Version::buildFake('git', '11.x'),
+            Version::buildFake('git', '20.x'),
+            Version::buildFake('git', '22.x'),
+            Version::buildFake('git', 'tags/12.0RC4'),
+            Version::buildFake('git', 'tags/19.0beta1'),
+            Version::buildFake('git', 'tags/22.1^{}'),
+            Version::buildFake('git', 'tags/26.1^{}'),
+            Version::buildFake('git', 'master'),
+            Version::buildFake('git', 'trunk'),
+        ];
     }
 }

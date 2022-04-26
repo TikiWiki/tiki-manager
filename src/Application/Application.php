@@ -56,6 +56,8 @@ abstract class Application
 
     abstract public function getCompatibleVersions();
 
+    abstract public function getUpgradableVersions(Version $currentVersion, bool $onlySupported);
+
     abstract public function isInstalled();
 
     abstract public function install(Version $version, $checksumCheck = false);
