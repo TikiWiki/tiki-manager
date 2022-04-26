@@ -455,6 +455,7 @@ function trim_output($output)
         fprintf($fh, "%s\n", $output);
         fclose($fh);
     }
+    chmod($_ENV['TRIM_OUTPUT'], 0666);
 }
 
 function trim_debug($output)
