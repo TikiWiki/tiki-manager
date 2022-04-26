@@ -230,7 +230,7 @@ trait InstanceConfigure
             return $value;
         });
 
-        $tempDir = $this->input->getOption('tempdir') ?? $webRoot.'/temp';
+        $tempDir = $this->input->getOption('tempdir') ?? $instance->getDiscovery()->detectTmp();
         $tempDir = $this->io->ask('TempDir', $tempDir, function ($value) use ($access) {
             if (empty($value)) {
                 throw new InvalidOptionException('TempDir cannot be empty. Please use --tempDir=<PATH>');
