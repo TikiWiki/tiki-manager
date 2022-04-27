@@ -753,12 +753,13 @@ SQL;
         $version = null;
         $oldVersion = $this->getLatestVersion();
 
+        $discovery = $this->getDiscovery();
+
         $databaseConfig = $this->getDatabaseConfig();
         if ($databaseConfig) {
             try {
                 $app = $this->getApplication();
                 $app->restoreDatabase($databaseConfig, $database_dump, $clone);
-                $app->setPref('tmpDir', $this->tempdir);
             } catch (\Exception $e) {
                 $restore->unlock();
                 throw $e;
@@ -768,7 +769,7 @@ SQL;
         }
 
         // Redetect the VCS type in case of change
-        $this->vcs_type = $this->getDiscovery()->detectVcsType();
+        $this->vcs_type = $discovery->detectVcsType();
 
         if (!$this->findApplication()) { // a version is created in this call
             $restore->unlock();
@@ -891,7 +892,7 @@ SQL;
         $this->io->writeln('Locking website...');
 
         $access = $this->getBestAccess('scripting');
-        $path = $this->phpexec ?? $access->getInterpreterPath($this);
+        $path = $this->phpexec ?? $access->getInterpreterPath();
         $access->uploadFile($_ENV['TRIM_ROOT'] . '/scripts/maintenance.php', 'maintenance.php');
 
         $access->shellExec(sprintf('%s -r "touch(\'maintenance.php\');"', $path));
@@ -1056,7 +1057,6 @@ SQL;
             $this->database()->setupConnection();
             $dbConfig = $this->getDatabaseConfig();
             $app->setupDatabase($dbConfig);
-            $app->setPref('tmpDir', $this->tempdir);
         }
     }
 

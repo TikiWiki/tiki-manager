@@ -10,6 +10,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\FTP;
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
+use TikiManager\Application\Discovery\VirtualminDiscovery;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
 use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
@@ -721,6 +722,8 @@ class Tiki extends Application
             // And would delete the index upon a successful index rebuild
             $this->setPref('unified_elastic_index_current', '');
         }
+
+        $this->postHook(__FUNCTION__);
     }
 
 //----------------------------------------------------------------
@@ -785,6 +788,8 @@ Verify if you have db/local.php file, if you don't put the following content in 
 TXT;
 
         $this->io->writeln($message);
+
+        $this->postHook(__FUNCTION__);
     }
 
     /**
@@ -1240,6 +1245,52 @@ TXT;
         }
 
         return $matches[1];
+    }
+
+    public function hook($hookName): void
+    {
+        if (method_exists($this, $hookName)) {
+            $this->$hookName();
+        }
+    }
+
+    public function postHook($methodName): void
+    {
+        $this->hook('post' . ucfirst($methodName));
+    }
+
+    /**
+     * Hook to perform changes after database setup/install
+     *
+     * @return void
+     */
+    protected function postSetupDatabase(): void
+    {
+        $discovery = $this->instance->getDiscovery();
+
+        if ($discovery instanceof VirtualminDiscovery) {
+            $tikiTmpDir = $discovery->detectTmp();
+            if (preg_match('/^\/home\/.*\/tmp$/', $tikiTmpDir)) {
+                $this->setPref('tmpDir', $tikiTmpDir);
+            }
+        }
+    }
+
+    /**
+     * Hook to perform changes after database restore
+     *
+     * @return void
+     */
+    protected function postRestoreDatabase(): void
+    {
+        $discovery = $this->instance->getDiscovery();
+
+        if ($this->getPref('tmpDir') && $discovery instanceof VirtualminDiscovery) {
+            $tikiTmpDir = $discovery->detectTmp();
+            if (preg_match('/^\/home\/.*\/tmp$/', $tikiTmpDir)) {
+                $this->setPref('tmpDir', $tikiTmpDir);
+            }
+        }
     }
 }
 

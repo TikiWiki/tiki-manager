@@ -88,12 +88,6 @@ class CreateInstanceCommandTest extends TestCase
         $this->assertTrue($access->fileExists(self::$instancePath));
         $this->assertTrue($access->fileExists(self::$dbLocalFile));
 
-        $this->assertEquals(
-            $instance->tempdir,
-            $instance->getApplication()->getPref('tmpDir'),
-        'tmpDir in Tiki does not match with the instance tempdir in TikiManager'
-        );
-
         if (static::$instanceType == 'local') {
             $this->assertTrue(is_link(self::$instancePath . '/.htaccess'));
         }
@@ -170,12 +164,6 @@ class CreateInstanceCommandTest extends TestCase
         $access = $instance->getBestAccess();
         $this->assertTrue($access->fileExists(self::$instancePath));
         $this->assertTrue($access->fileExists(self::$dbLocalFile));
-
-        $this->assertEquals(
-            $instance->tempdir,
-            $instance->getApplication()->getPref('tmpDir'),
-            'tmpDir in Tiki does not match with the instance tempdir in TikiManager'
-        );
 
         static::$instanceId = $instanceId;
     }

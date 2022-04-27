@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use TikiManager\Access\Local;
+use TikiManager\Application\Discovery\VirtualminDiscovery;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
@@ -639,5 +640,142 @@ Your requirements could not be resolved to an installable set of packages.');
         $instanceStub->method('getBestAccess')->willReturn($accessStub);
 
         $this->assertTrue($tikiStub->setPref('tmpDir', '/tmp/random'));
+    }
+
+    /**
+     * @covers Tiki::postSetupDatabase
+     * @return void
+     */
+    public function testPostSetupDatabaseOnVirtualmin()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['postHook', 'hook', 'postSetupDatabase'])
+            ->getMock();
+
+        $tikiStub
+            ->expects($this->once())
+            ->method('setPref')
+            ->with('tmpDir', '/home/tester/tmp');
+
+        $discoveryMock = $this->createMock(VirtualminDiscovery::class);
+        $discoveryMock
+            ->expects($this->once())
+            ->method('detectTmp')
+            ->willReturn('/home/tester/tmp');
+
+        $instanceStub
+            ->expects($this->once())
+            ->method('getDiscovery')
+            ->willReturn($discoveryMock);
+
+        $tikiStub->postHook('setupDatabase');
+    }
+
+    /**
+     * @covers Tiki::postSetupDatabase
+     * @return void
+     */
+    public function testPostSetupDatabaseOnVirtualminWithDifferentPath()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['postHook', 'hook', 'postSetupDatabase'])
+            ->getMock();
+
+        $tikiStub
+            ->expects($this->never())
+            ->method('setPref');
+
+        $discoveryMock = $this->createMock(VirtualminDiscovery::class);
+        $discoveryMock
+            ->expects($this->once())
+            ->method('detectTmp')
+            ->willReturn('/tmp/tiki');
+
+        $instanceStub
+            ->expects($this->once())
+            ->method('getDiscovery')
+            ->willReturn($discoveryMock);
+
+        $tikiStub->postHook('setupDatabase');
+    }
+
+    /**
+     * @covers Tiki::postRestoreDatabase
+     * @return void
+     */
+    public function testPostRestoreDatabaseOnVirtualminWithTmpdirSet()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['postHook', 'hook', 'postSetupDatabase'])
+            ->getMock();
+
+        $tikiStub
+            ->expects($this->once())
+            ->method('getPref')
+            ->with('tmpDir')
+            ->willReturn('/home/tester/domains/custom_domain/tmp');
+
+        $tikiStub
+            ->expects($this->once())
+            ->method('setPref')
+            ->with('tmpDir', '/home/tester/tmp');
+
+        $discoveryMock = $this->createMock(VirtualminDiscovery::class);
+        $discoveryMock
+            ->expects($this->once())
+            ->method('detectTmp')
+            ->willReturn('/home/tester/tmp');
+
+        $instanceStub
+            ->expects($this->once())
+            ->method('getDiscovery')
+            ->willReturn($discoveryMock);
+
+        $tikiStub->postHook('restoreDatabase');
+    }
+
+    /**
+     * @covers Tiki::postRestoreDatabase
+     * @return void
+     */
+    public function testPostRestoreDatabaseOnVirtualminWithoutTmpdirSet()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+
+        $tikiStub = $this->getMockBuilder(Tiki::class)
+            ->setConstructorArgs([$instanceStub])
+            ->setMethodsExcept(['postHook', 'hook', 'postSetupDatabase'])
+            ->getMock();
+
+        $tikiStub
+            ->expects($this->once())
+            ->method('getPref')
+            ->with('tmpDir')
+            ->willReturn('');
+
+        $tikiStub
+            ->expects($this->never())
+            ->method('setPref');
+
+        $discoveryMock = $this->createMock(VirtualminDiscovery::class);
+        $discoveryMock
+            ->expects($this->never())
+            ->method('detectTmp');
+
+        $instanceStub
+            ->expects($this->once())
+            ->method('getDiscovery')
+            ->willReturn($discoveryMock);
+
+        $tikiStub->postHook('restoreDatabase');
     }
 }

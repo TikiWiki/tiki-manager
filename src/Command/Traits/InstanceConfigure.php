@@ -14,7 +14,7 @@ use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\Environment;
+use TikiManager\Config\Environment as Env;
 
 trait InstanceConfigure
 {
@@ -23,7 +23,7 @@ trait InstanceConfigure
     public function printManagerInfo()
     {
         if ($this->io->getVerbosity() != OutputInterface::VERBOSITY_DEBUG &&
-            !Environment::get('TRIM_DEBUG', false)) {
+            !Env::get('TRIM_DEBUG', false)) {
             return;
         }
 
@@ -230,7 +230,7 @@ trait InstanceConfigure
             return $value;
         });
 
-        $tempDir = $this->input->getOption('tempdir') ?? $instance->getDiscovery()->detectTmp();
+        $tempDir = $this->input->getOption('tempdir') ?? $instance->getDiscovery()->detectTmp() . DS . Env::get('INSTANCE_WORKING_TEMP');
         $tempDir = $this->io->ask('TempDir', $tempDir, function ($value) use ($access) {
             if (empty($value)) {
                 throw new InvalidOptionException('TempDir cannot be empty. Please use --tempDir=<PATH>');
@@ -257,7 +257,7 @@ trait InstanceConfigure
         // Backups
         // Backups are stored in Tiki-Manager instance
         //
-        $backupDir = Environment::get('BACKUP_FOLDER');
+        $backupDir = Env::get('BACKUP_FOLDER');
         $mockInstance = new Instance();
         $mockInstance->type = 'local';
         list($backupUser, $backupGroup, $backupPerm) = $mockInstance->getDiscovery()->detectBackupPerm($backupDir);

@@ -21,7 +21,7 @@ $name = ! empty($_POST['name']) ? $_POST['name'] : 'localhost';
 $contact = ! empty($_POST['contact']) ? $_POST['contact'] : '';
 $webroot = ! empty($_POST['webroot']) ? $_POST['webroot'] : '';
 $weburl = ! empty($_POST['weburl']) ? $_POST['weburl'] : "http://$name";
-$tempdir = ! empty($_POST['tempdir']) ? $_POST['tempdir'] : $_ENV['INSTANCE_WORKING_TEMP'];
+$tempdir = ! empty($_POST['tempdir']) ? $_POST['tempdir'] : '';
 $backup_group = ! empty($_POST['backup_group']) ? $_POST['backup_group'] : '';
 $backup_perm = ! empty($_POST['backup_perm']) ? octdec($_POST['backup_perm']) : 0770;
 $branch  = ! empty($_POST['branch']) ? $_POST['branch'] : '';
@@ -42,7 +42,7 @@ $discovery = $instance->getDiscovery();
 // Detect instance defaults
 if ($step == 1) {
     $webroot = $discovery->detectWebroot();
-    $tempdir = $discovery->detectTmp();
+    $tempdir = $discovery->detectTmp() . DIRECTORY_SEPARATOR . Environment::get('INSTANCE_WORKING_TEMP');
 
     $backupDir = Environment::get('BACKUP_FOLDER');
 

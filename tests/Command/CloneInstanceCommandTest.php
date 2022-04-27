@@ -147,12 +147,6 @@ class CloneInstanceCommandTest extends TestCase
         $app = $instance->getApplication();
         $resultBranch = $app->getBranch();
 
-        $this->assertEquals(
-            $instance->tempdir,
-            $instance->getApplication()->getPref('tmpDir'),
-            'tmpDir in Tiki does not match with the instance tempdir in TikiManager'
-        );
-
         if (static::$instanceType == 'local') {
             $diffDbFile = Files::compareFiles(self::$dbLocalFiles['source'], self::$dbLocalFiles['target']);
 

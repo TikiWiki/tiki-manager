@@ -175,16 +175,12 @@ class Environment
      *
      * @return string
      */
-    public static function generateUniqueWorkingDirectoryForInstance()
+    protected static function generateUniqueWorkingDirectoryForInstance(): string
     {
         // to generate a smaller unique suffix, we use the time in seconds since 1st Jan 2020 and 3 random digits at the end
         // since this was added late 2020, all suffix will be unique
         $secondsSinceJan2020 = time() - 1577836800;
-        $uniqueTemporaryDirectoryName = sprintf("tiki_mgr_%d%03d", $secondsSinceJan2020, rand(0, 999));
-
-        $tempFolder = sys_get_temp_dir();
-
-        return  $tempFolder . DIRECTORY_SEPARATOR . $uniqueTemporaryDirectoryName;
+        return sprintf("tiki_mgr_%d%03d", $secondsSinceJan2020, rand(0, 999));
     }
 
     /**

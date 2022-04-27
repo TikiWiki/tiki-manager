@@ -77,7 +77,7 @@ $discovery = $instance->getDiscovery();
 
 $name = 'localhost';
 $weburl = "http://$name";
-$tempdir = $_ENV['INSTANCE_WORKING_TEMP'];
+$tempdir = '';
 
 $access->host = 'localhost';
 $access->user = $discovery->detectUser();

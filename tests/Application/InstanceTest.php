@@ -157,7 +157,6 @@ class InstanceTest extends TestCase
     {
         $instanceMock = $this->getMockBuilder(Instance::class)
             ->setMethodsExcept(['installApplication'])->getMock();
-        $instanceMock->tempdir = '/tmp/dummy';
 
         $appMock = $this->createMock(Tiki::class);
         $versionMock = $this->createMock(Version::class);
@@ -189,7 +188,7 @@ class InstanceTest extends TestCase
             ->with($dbConfig);
 
         $appMock
-            ->expects($this->once())
+            ->expects($this->never())
             ->method('setPref')
             ->with('tmpDir', $instanceMock->tempdir);
 

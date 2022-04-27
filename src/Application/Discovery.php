@@ -255,7 +255,7 @@ abstract class Discovery
         return "tikiwiki";
     }
 
-    public function detectTmp()
+    public function detectTmp(): string
     {
         $folders = $this->detectWebrootOS();
 
@@ -265,7 +265,7 @@ abstract class Discovery
             }
         }
 
-        return Environment::get('INSTANCE_WORKING_TEMP') ?? '';
+        return sys_get_temp_dir();
     }
 
     public function getConf($name)

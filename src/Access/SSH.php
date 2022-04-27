@@ -239,7 +239,7 @@ class SSH extends Access implements ShellPrompt
         $remoteName = md5($localFile);
         $remoteFile = $this->instance->getWorkPath($remoteName);
         $host->runCommands(
-            'mkdir -p ' . (escapeshellarg($this->instance->tempdir) ?: $_ENV['INSTANCE_WORKING_TEMP'])
+            'mkdir -p ' . escapeshellarg($this->instance->tempdir)
         );
 
         $host->sendFile($localFile, $remoteFile);
