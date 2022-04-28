@@ -20,7 +20,7 @@ $type = 'local'; // For now only supports local instances
 $name = ! empty($_POST['name']) ? $_POST['name'] : 'localhost';
 $contact = ! empty($_POST['contact']) ? $_POST['contact'] : '';
 $webroot = ! empty($_POST['webroot']) ? $_POST['webroot'] : '';
-$weburl = ! empty($_POST['weburl']) ? $_POST['weburl'] : "http://$name";
+$weburl = ! empty($_POST['weburl']) ? $_POST['weburl'] : '';
 $tempdir = ! empty($_POST['tempdir']) ? $_POST['tempdir'] : '';
 $backup_group = ! empty($_POST['backup_group']) ? $_POST['backup_group'] : '';
 $backup_perm = ! empty($_POST['backup_perm']) ? octdec($_POST['backup_perm']) : 0770;
@@ -35,9 +35,9 @@ $dbCreated = isset($_POST['db_created']);
 $instance = new Instance;
 $instance->type = 'local';
 $instance->name = $name;
-$instance->weburl = $weburl;
 
 $discovery = $instance->getDiscovery();
+$instance->weburl = $webroot = $weburl ?: $discovery->detectWeburl();
 
 // Detect instance defaults
 if ($step == 1) {
@@ -47,9 +47,7 @@ if ($step == 1) {
     $backupDir = Environment::get('BACKUP_FOLDER');
 
     // Backup folder is located in TikiManager running instance
-    $tmInstance = new Instance();
-    $tmInstance->type = 'local';
-    list($backup_user, $backup_group, $backup_perm) = $tmInstance->getDiscovery()->detectBackupPerm($backupDir);
+    list($backup_user, $backup_group, $backup_perm) = $instance->getDiscovery()->detectBackupPerm($backupDir);
     $backup_perm = octdec($backup_perm);
 }
 
@@ -214,12 +212,11 @@ if ($step == 2) {
                             <th scope="row"><label for="contact">Contact email</label></th>
                             <td width="55%"><input type="text" name="contact" id="contact" class="form-control" value="<?=$contact?>"/></td>
                         </tr>
-                        <tr>
-                            <th scope="row"><label for="weburl">Web URL</label></th>
-                            <td width="55%"><input type="text" name="weburl" id="weburl" class="form-control" value="<?=$weburl?>"/></td>
-                        </tr>
-
                         <?php if ($step != 0) : ?>
+                            <tr>
+                                <th scope="row"><label for="weburl">Web URL</label></th>
+                                <td width="55%"><input type="text" name="weburl" id="weburl" class="form-control" value="<?=$weburl?>"/></td>
+                            </tr>
                             <tr>
                                 <th scope="row"><label for="webroot">Web root</label></th>
                                 <td width="55%"><input type="text" name="webroot" id="webroot" class="form-control" value="<?=$webroot?>"/></td>
