@@ -4,8 +4,10 @@ namespace TikiManager\Tests\Command\Traits;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use TikiManager\Access\Local;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Discovery\LinuxDiscovery;
 use TikiManager\Application\Instance;
@@ -16,6 +18,7 @@ use TikiManager\Command\Traits\InstanceConfigure;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Helpers\PDOWrapper;
 
 /**
  * Class ConfiguratorTest
@@ -24,6 +27,8 @@ use TikiManager\Libs\Database\Database;
  */
 class InstanceConfigureTest extends TestCase
 {
+    static $db;
+
     /** @var Instance  */
     private $instance;
 
@@ -41,6 +46,9 @@ class InstanceConfigureTest extends TestCase
 
     public function setUp()
     {
+        global $db;
+        self::$db = $db;
+
         $this->input = new ArrayInput([], static::$inputDefinition);
         $this->input->setInteractive(false);
         $output = new BufferedOutput();
@@ -69,6 +77,9 @@ class InstanceConfigureTest extends TestCase
     {
         $fs = new \Symfony\Component\Filesystem\Filesystem();
         $fs->remove($_ENV['TESTS_BASE_FOLDER']);
+
+        global $db;
+        $db = self::$db;
     }
 
     /**
@@ -108,7 +119,7 @@ class InstanceConfigureTest extends TestCase
         // Backup information is calculated
 
         $methods = ['save'];
-        $instance = $this->getMockBuilder(Instance::class)->setMethods($methods)->getMock();
+        $instance = $this->createPartialMock(Instance::class, $methods);
         $instance->type = 'local';
 
         $this->traitMock->setupInstance($instance);
@@ -130,6 +141,98 @@ class InstanceConfigureTest extends TestCase
         $this->assertEquals($defaultBackupUser['name'], $instance->backup_user);
         $this->assertEquals($defaultBackupGroup['name'], $instance->backup_group);
         $this->assertEquals(octdec($defaultBackupPerm), $instance->backup_perm);
+    }
+
+    /**
+     * @covers \TikiManager\Application\Instance\Configurator::setupInstance
+     */
+    public function testSetupInstanceWithNameAlreadyInUse()
+    {
+        $this->input->setOption('url', 'http://test.tiki.local');
+        $this->input->setOption('name', 'test.tiki.local');
+
+        $countObj = new \stdClass();
+        $countObj->numInstances = "1";
+
+        $stmtMock = $this->createMock(\PDOStatement::class);
+        $stmtMock
+            ->expects($this->once())
+            ->method('fetchObject')
+            ->willReturn($countObj);
+
+        $stmtMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with([':name' => 'test.tiki.local']);
+
+        global $db;
+
+        $db = $this->createMock(PDOWrapper::class);
+        $db
+            ->expects($this->once())
+            ->method('prepare')
+            ->willReturn($stmtMock);
+
+        $this->expectException(InvalidOptionException::class);
+        $this->expectExceptionMessageRegExp('/^Instance name already in use/');
+
+        $this->traitMock->setupInstance($this->instance);
+    }
+
+    /**
+     * @covers \TikiManager\Application\Instance\Configurator::setupInstance
+     */
+    public function testSetupInstanceWithNonEmptyWebrootFolder()
+    {
+        $methods = [
+            'getApplications',
+            'save',
+            'getBestAccess'
+        ];
+
+        $instance = $this->createPartialMock(Instance::class, $methods);
+        $instance->type = 'local';
+
+        $path = '/tmp/tiki-manager-www';
+        $this->input->setOption('url', 'http://test.tiki.local');
+        $this->input->setOption('name', 'test.tiki.local');
+        $this->input->setOption('webroot', $path);
+
+        $this->input->setInteractive(false);
+
+        $accessMock = $this->createMock(Local::class);
+        $accessMock
+            ->expects($this->once())
+            ->method('fileExists')
+            ->with($path)
+            ->willReturn(true);
+
+        $accessMock
+            ->expects($this->once())
+            ->method('isEmptyDir')
+            ->with($path)
+            ->willReturn(false);
+
+        $instance
+            ->expects($this->once())
+            ->method('getBestAccess')
+            ->willReturn($accessMock);
+
+        $tikiMock = $this->createMock(Tiki::class);
+        $tikiMock
+            ->expects($this->once())
+            ->method('isInstalled')
+            ->willReturn(false);
+
+        $instance
+            ->expects($this->once())
+            ->method('getApplications')
+            ->willReturn([$tikiMock]); // Folder not empty by Tiki not found.
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageRegExp('/Please select an empty webroot folder/');
+
+        $this->traitMock->setupInstance($instance);
     }
 
     /**

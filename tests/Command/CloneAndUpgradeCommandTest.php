@@ -90,11 +90,7 @@ class CloneAndUpgradeCommandTest extends TestCase
         $fs->remove(static::$instancePath);
     }
 
-    /**
-     * @param $direct
-     * @dataProvider successCloneCombinations
-     */
-    public function testCloneUpgradeInstance($direct)
+    public function testCloneUpgradeInstance()
     {
         $vcs = strtoupper($_ENV['DEFAULT_VCS']);
         $upgradeBranch = $vcs === 'SRC' ? $_ENV['LATEST_SRC_RELEASE'] : $_ENV['MASTER_BRANCH'];
@@ -114,11 +110,8 @@ class CloneAndUpgradeCommandTest extends TestCase
             '--db-pass' => $pass,
             '--branch' => VersionControl::formatBranch($upgradeBranch),
             '--skip-cache-warmup' => true,
+            '--direct' => true,
         ];
-
-        if ($direct) {
-            $arguments['--direct'] = true;
-        }
 
         $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
         $this->assertTrue($result['exitCode'] === 0);
@@ -138,14 +131,6 @@ class CloneAndUpgradeCommandTest extends TestCase
         $db = $instance->getDatabaseConfig();
         $numTables = $db->query("SELECT COUNT(*) as num_tables FROM information_schema.tables WHERE table_schema = '{$db->dbname}';");
         $this->assertTrue($numTables > 0);
-    }
-
-    public function successCloneCombinations(): array
-    {
-        return [
-            ['direct' => false],
-            ['direct' => true],
-        ];
     }
 
     public function testCloneSameDatabase()

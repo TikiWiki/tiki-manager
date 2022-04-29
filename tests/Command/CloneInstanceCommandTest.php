@@ -124,21 +124,14 @@ class CloneInstanceCommandTest extends TestCase
         }
     }
 
-    /**
-     * @param $direct
-     * @dataProvider successCloneCombinations
-     */
-    public function testCloneInstance($direct)
+    public function testCloneInstance()
     {
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['target'])],
             '--skip-cache-warmup' => true,
+            '--direct' => true,
         ];
-
-        if ($direct) {
-            $arguments['--direct'] = true;
-        }
 
         $result = InstanceHelper::clone($arguments);
         $this->assertTrue($result['exitCode'] === 0);
@@ -155,14 +148,6 @@ class CloneInstanceCommandTest extends TestCase
 
             $this->compareDB('source', 'target');
         }
-    }
-
-    public function successCloneCombinations(): array
-    {
-        return [
-            ['direct' => false],
-            ['direct' => true],
-        ];
     }
 
     public function testCloneSameDatabase()
@@ -350,7 +335,7 @@ class CloneInstanceCommandTest extends TestCase
         $this->assertContains('Unable to access database', $result['output']);
     }
 
-    public function compareDB($instance1, $instance2)
+    protected function compareDB($instance1, $instance2)
     {
         $fileSystem = new Filesystem();
         if ($fileSystem->exists(self::$dbLocalFiles[$instance1]) &&

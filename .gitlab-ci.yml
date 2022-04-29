@@ -28,6 +28,12 @@ stages:
       - vendor/
       - vendor-bin/
       - .composercache/files
+  artifacts:
+    paths:
+      - vendor/
+      - vendor-bin/
+    when: on_success
+    expire_in: 1h
 
 .install-composer-script: &install-composer-script
   - composer install $COMPOSER_FLAGS
@@ -155,6 +161,7 @@ unit-tests:
       - .composercache/files
 
 .cache-warmup-tiki:
+  image: xorti/tiki-devops:php-7.4-qa
   stage: pre-functional-tests
   before_script:
     - source .env.gitlab-ci
@@ -180,6 +187,7 @@ cache-warmup-tiki-git:
       else
         git -C $TIKI_CACHE pull
       fi;
+    - composer install -d $TIKI_CACHE/vendor_bundled $COMPOSER_FLAGS --no-dev
   except:
     refs:
       - schedules
@@ -199,6 +207,7 @@ cache-warmup-tiki-svn:
       else
         cd $TIKI_CACHE && svn up
       fi;
+    - composer install -d $TIKI_CACHE/vendor_bundled $COMPOSER_FLAGS --no-dev
   only:
     refs:
       - schedules

@@ -4,6 +4,7 @@ namespace TikiManager\Tests\Application;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Access\Access;
 use TikiManager\Access\Local;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
@@ -11,6 +12,7 @@ use TikiManager\Application\Version;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Host\Command;
 use TikiManager\Style\TikiManagerStyle;
 
 /**
@@ -193,5 +195,69 @@ class InstanceTest extends TestCase
             ->with('tmpDir', $instanceMock->tempdir);
 
         $instanceMock->installApplication($appMock, $versionMock);
+    }
+
+    /**
+     * @covers \TikiManager\Application\Instance::reindex
+     */
+    public function testReindexWithSuccess()
+    {
+        $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess']);
+
+        $commandMock = $this->createMock(Command::class);
+        $commandMock
+            ->expects($this->once())
+            ->method('getStdoutContent')
+            ->willReturn('Rebuilding index done');
+
+        $commandMock
+            ->expects($this->once())
+            ->method('getReturn')
+            ->willReturn('0');
+
+        $accessMock = $this->createMock(Local::class);
+        $accessMock
+            ->expects($this->once())
+            ->method('runCommand')
+            ->willReturn($commandMock);
+
+        $instanceMock
+            ->expects($this->once())
+            ->method('getBestAccess')
+            ->willReturn($accessMock);
+
+        $this->assertTrue($instanceMock->reindex());
+    }
+
+    /**
+     * @covers \TikiManager\Application\Instance::reindex
+     */
+    public function testReindexWithFailure()
+    {
+        $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess']);
+
+        $commandMock = $this->createMock(Command::class);
+        $commandMock
+            ->expects($this->once())
+            ->method('getStdoutContent')
+            ->willReturn('Rebuilding index failed');
+
+        $commandMock
+            ->expects($this->never())
+            ->method('getReturn')
+            ->willReturn('0');
+
+        $accessMock = $this->createMock(Local::class);
+        $accessMock
+            ->expects($this->once())
+            ->method('runCommand')
+            ->willReturn($commandMock);
+
+        $instanceMock
+            ->expects($this->once())
+            ->method('getBestAccess')
+            ->willReturn($accessMock);
+
+        $this->assertFalse($instanceMock->reindex());
     }
 }

@@ -7,12 +7,9 @@
 
 namespace TikiManager\Tests\Command;
 
-use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
-use TikiManager\Access\Local;
 use TikiManager\Application\Instance;
-use TikiManager\Libs\Host\Command;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 use TikiManager\Tests\Helpers\VersionControl;
 
@@ -93,57 +90,6 @@ class CreateInstanceCommandTest extends TestCase
         }
 
         static::$instanceId = $instanceId;
-    }
-
-    /**
-     * @depends testLocalInstance
-     */
-    public function testReindex()
-    {
-        $instance = Instance::getInstance(static::$instanceId);
-        $this->assertTrue($instance->reindex());
-
-        $reflection = new ReflectionClass($instance);
-        $reflection_property = $reflection->getProperty('access');
-        $reflection_property->setAccessible(true);
-        $stbAccess = $this->createMock(Local::class);
-        $stbCommand = $this->createMock(Command::class);
-        $stbCommand->method('getReturn')->willReturn(2);
-        $stbCommand->method('getStdoutContent')->willReturn('Rebuilding index failed');
-        $stbAccess->method('runCommand')->willReturn($stbCommand);
-        $reflection_property->setValue($instance, [$stbAccess]);
-        $this->assertFalse($instance->reindex());
-
-        $stbCommand = $this->createMock(Command::class);
-        $stbCommand->method('getReturn')->willReturn(0);
-        $stbCommand->method('getStdoutContent')->willReturn('Rebuilding index done');
-        $stbAccess = $this->createMock(Local::class);
-        $stbAccess->method('runCommand')->willReturn($stbCommand);
-        $reflection_property->setValue($instance, [$stbAccess]);
-        $this->assertTrue($instance->reindex());
-    }
-
-    /**
-     * @depends testLocalInstance
-     */
-    public function testCreateWithSameNameInstance()
-    {
-        $options = self::$instanceSettings[static::$instanceType];
-
-        $instanceId = InstanceHelper::create($options);
-        $this->assertFalse($instanceId);
-    }
-
-    /**
-     * @depends testLocalInstance
-     */
-    public function testCreateWithSameAccessAndWebrootInstance()
-    {
-        $options = self::$instanceSettings[static::$instanceType];
-        $options[InstanceHelper::NAME_OPTION] = 'managertest2.tiki.org'; // Instance name needs to be unique
-
-        $instanceId = InstanceHelper::create($options);
-        $this->assertFalse($instanceId);
     }
 
     /**
