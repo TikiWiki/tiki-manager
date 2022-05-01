@@ -7,6 +7,7 @@
 namespace TikiManager\Application;
 
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Process;
 use TikiManager\Access\FTP;
 use TikiManager\Access\Mountable;
 use TikiManager\Access\ShellPrompt;
@@ -117,6 +118,14 @@ class Tiki extends Application
         } else {
             $this->io->writeln('Cloning cache repository from server... <fg=yellow>[may take a while]</>');
             $this->vcs_instance->clone($version->branch, $folder);
+        }
+
+        $this->io->writeln('Installing composer dependencies on cache repository... <fg=yellow>[may take a while]</>');
+        $composerCmd = Process::fromShellCommandline("composer install -d $folder/vendor_bundled/ --no-interaction --prefer-dist --no-dev --quiet", null, null, null, 1800);
+        $composerCmd->run();
+
+        if ($composerCmd->getExitCode() !== 0) {
+            $this->io->warning($composerCmd->getErrorOutput());
         }
 
         $this->vcs_instance->setRunLocally(false);
