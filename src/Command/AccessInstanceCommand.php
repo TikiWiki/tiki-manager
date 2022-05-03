@@ -57,12 +57,12 @@ class AccessInstanceCommand extends TikiManagerCommand
             }
 
             foreach ($selectedInstances as $instance) {
-                $output->writeln('<fg=cyan>Connecting to ' . $instance->name . ' at ' . $instance->webroot . ' directory... (use "exit" to move to next the instance)</>');
                 $access = $instance->getBestAccess('scripting');
                 $web = $input->getOption('web');
                 if ($isWeb = filter_var($web, FILTER_VALIDATE_BOOLEAN)) {
                     $output->writeln($access->openShell($instance->webroot, $isWeb));
                 } else {
+                    $output->writeln('<fg=cyan>Connecting to ' . $instance->name . ' at ' . $instance->webroot . ' directory... (use "exit" to move to next the instance)</>');
                     $access->openShell($instance->webroot);
                 }
             }
