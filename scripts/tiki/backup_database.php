@@ -61,6 +61,13 @@ exec($command, $output);
 $charset = array_shift($output) ?: 'utf8mb4';
 $args[] = "--default-character-set=" . $charset;
 
+// mysqldump 8 enabled a new flag called column-statistics by default.
+// When you have MySQL client above 8 and try to run mysqldump on older MySQL versions, an error occurs
+$command = "mysqldump --help | grep -i 'column-statistics.*TRUE' | wc -l";
+if (exec($command) == "1") {
+    $args[] = "--column-statistics=0";
+}
+
 $args = implode(' ', $args);
 $command = "mysqldump --quick --create-options --extended-insert --no-tablespaces $args >> " . $tempFile;
 exec($command);
