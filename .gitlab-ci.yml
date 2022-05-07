@@ -2,7 +2,7 @@ include:
   - local: '/.gitlab-ci/stage-functional-tests-local.yml'
   - local: '/.gitlab-ci/stage-functional-tests-ssh.yml'
 
-image: xorti/tiki-devops:7.2-qa-box
+image: xorti/tiki-devops:php-7.1-qa
 
 variables:
   MYSQL_ROOT_PASSWORD: secret
@@ -94,7 +94,7 @@ phpcs-branches:
     - *install-composer-script
     - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git diff --name-status origin/$SBRANCH && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
     - git diff --name-status origin/$SBRANCH
-    - git diff --name-status origin/$SBRANCH | grep -v "^D" | cut -c 3- | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
+    - git diff --name-status origin/$SBRANCH | grep -v "^D" | sed -r 's/^R[0-9]+\t(.*)\t(.*)$/R\t\2/' |  cut -c 3- | xargs php vendor/squizlabs/php_codesniffer/bin/phpcs -s --runtime-set ignore_warnings_on_exit true
   allow_failure: true
   needs:
     - composer
@@ -254,7 +254,7 @@ download-tiki-src-files:
 
 
 .template-tiki-manager-commands:
-  image: xorti/tiki-devops:7.4-qa-box
+  image: xorti/tiki-devops:php-7.4-qa
   stage: functional-tests
   services:
     - name: mysql:5.6
