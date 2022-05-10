@@ -652,6 +652,7 @@ trait InstanceConfigure
 
         $accessMemoryLimit = $functionIniGet ? $checkPHP("echo trim(ini_get('memory_limit'));") : -1;
         $memoryLimit = (int) $accessMemoryLimit;
+
         if ($memoryLimit < 128 * 1024 * 1024 && $memoryLimit != -1) {
             $missingRequirements[] = 'memory_limit must be set at least 128M';
         }
@@ -696,7 +697,12 @@ trait InstanceConfigure
             ->createCommand($instance->phpexec, ['-m'])
             ->run()
             ->getStdoutContent();
+            
+        $phpModules = $phpModules ? explode(PHP_EOL, $phpModules) : [];
 
-        return $phpModules ? explode(PHP_EOL, $phpModules) : [];
+        if(substr(PHP_OS, 0, 3) == 'WIN' && count($phpModules) == 1){
+            $phpModules = explode("\n",$phpModules[0]);
+        }
+        return $phpModules ;
     }
 }

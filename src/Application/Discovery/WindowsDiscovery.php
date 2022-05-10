@@ -48,7 +48,7 @@ class WindowsDiscovery extends Discovery
 
     public function detectUser()
     {
-        if ($this->config['user']) {
+        if (isset($this->config['user'])) {
             return $this->config['user'];
         }
 
