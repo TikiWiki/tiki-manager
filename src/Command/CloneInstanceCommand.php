@@ -379,7 +379,7 @@ class CloneInstanceCommand extends TikiManagerCommand
 
                     if (!$standardProcess) {
                         $this->io->writeln('Clone process aborted.');
-                        exit(-1);
+                        return 1;
                     }
                 }
             }
@@ -398,7 +398,7 @@ class CloneInstanceCommand extends TikiManagerCommand
 
         if (empty($archive)) {
             $this->logger->error('Snapshot creation failed.');
-            exit(-1);
+            return 1;
         }
 
         /** @var Instance $destinationInstance */
