@@ -446,11 +446,16 @@ class Local extends Access implements ShellPrompt
 
             return $result > 8 ? $result : 0;
         } else {
-            return $host->rsync([
-                'src' => $remoteLocation,
-                'dest' => $localMirror,
-                'link-dest' => dirname($remoteLocation)
-            ]);
+            if (! file_exists($remoteLocation)) {
+                // certain storage folders might not exist, so we have nothing to sync
+                return 0;
+            } else {
+                return $host->rsync([
+                    'src' => $remoteLocation,
+                    'dest' => $localMirror,
+                    'link-dest' => dirname($remoteLocation)
+                ]);
+            }
         }
     }
 
