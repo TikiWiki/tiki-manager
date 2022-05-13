@@ -53,6 +53,16 @@ if (substr(PHP_OS, 0, 3) != 'WIN') {
 }
 
 $command = sprintf('echo %s | mysql -f %s', $query, $args);
-echo shell_exec($command);
+$out = shell_exec($command);
+$lines = array();
+foreach (explode("\n", $out) as $line) {
+    if (trim($line) === "") {
+        continue;
+    }
+    if (file_exists($line) || file_exists($root.'/'.$line)) {
+        $lines[] = $line;
+    }
+}
+echo implode("\n", $lines);
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
