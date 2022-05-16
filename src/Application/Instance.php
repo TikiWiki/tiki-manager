@@ -1057,6 +1057,7 @@ SQL;
             $this->database()->setupConnection();
             $dbConfig = $this->getDatabaseConfig();
             $app->setupDatabase($dbConfig);
+            $this->reindex();
         }
     }
 
