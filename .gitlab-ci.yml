@@ -140,13 +140,18 @@ unit-tests:
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
     - *install-composer-script
     - composer build-phar
-    - ./vendor/bin/phpunit tests/ --group unit
+    - XDEBUG_MODE=coverage ./vendor/bin/phpunit tests/ --group unit --coverage-text --colors=never --log-junit report.xml
   needs:
     - composer
   cache:
     <<: *composer-cache
     policy: pull
   allow_failure: false
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 
 #----------------------------------------------------------------------------------------------------------------------#
 # FUNCTIONAL TESTS SECTION

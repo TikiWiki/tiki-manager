@@ -83,7 +83,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupAccess
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupAccess
      */
     public function testSetupLocalAccess()
     {
@@ -104,7 +104,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupInstance
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupInstance
      */
     public function testSetupInstance()
     {
@@ -144,7 +144,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupInstance
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupInstance
      */
     public function testSetupInstanceWithNameAlreadyInUse()
     {
@@ -180,7 +180,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupInstance
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupInstance
      */
     public function testSetupInstanceWithNonEmptyWebrootFolder()
     {
@@ -236,7 +236,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupApplication
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupApplication
      */
     public function testSetupBlankApplication()
     {
@@ -246,7 +246,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupApplication
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupApplication
      */
     public function testSetupApplication()
     {
@@ -273,7 +273,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupApplication
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupApplication
      */
     public function testSetupApplicationInvalidBranch()
     {
@@ -301,7 +301,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupDatabase
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupDatabase
      */
     public function testSetupDatabaseInstanceInvalidAdministrator()
     {
@@ -319,7 +319,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupDatabase
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupDatabase
      */
     public function testSetupDatabaseWithPrefix()
     {
@@ -346,7 +346,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupDatabase
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupDatabase
      */
     public function testSetupDatabaseWithDatabaseName()
     {
@@ -375,7 +375,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupDatabase
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupDatabase
      */
     public function testSetupDatabaseWithDefaults()
     {
@@ -426,7 +426,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::setupDatabase
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::setupDatabase
      */
     public function testSetupDatabaseWithExistingUser()
     {
@@ -463,7 +463,7 @@ class InstanceConfigureTest extends TestCase
     }
 
     /**
-     * @covers \TikiManager\Application\Instance\Configurator::install
+     * @covers \TikiManager\Command\Traits\InstanceConfigure::install
      */
     public function testInstall()
     {

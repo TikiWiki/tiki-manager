@@ -560,7 +560,7 @@ Your requirements could not be resolved to an installable set of packages.');
     }
 
     /**
-     * @covers Tiki::getUpgradableVersions()
+     * @covers \TikiManager\Application\Tiki::getUpgradableVersions()
      * @return void
      */
     public function testGetUpgradableVersionsEmpty()
@@ -588,7 +588,7 @@ Your requirements could not be resolved to an installable set of packages.');
     }
 
     /**
-     * @covers Tiki::getUpgradableVersions()
+     * @covers \TikiManager\Application\Tiki::getUpgradableVersions()
      * @return void
      */
     public function testGetUpgradableVersions()
@@ -631,7 +631,7 @@ Your requirements could not be resolved to an installable set of packages.');
     }
 
     /**
-     * @covers Tiki::setPref
+     * @covers \TikiManager\Application\Tiki::setPref
      */
     public function testSetPref()
     {
@@ -668,7 +668,7 @@ Your requirements could not be resolved to an installable set of packages.');
     }
 
     /**
-     * @covers Tiki::postSetupDatabase
+     * @covers \TikiManager\Application\Tiki::postSetupDatabase
      * @return void
      */
     public function testPostSetupDatabaseOnVirtualmin()
@@ -700,7 +700,7 @@ Your requirements could not be resolved to an installable set of packages.');
     }
 
     /**
-     * @covers Tiki::postSetupDatabase
+     * @covers \TikiManager\Application\Tiki::postSetupDatabase
      * @return void
      */
     public function testPostSetupDatabaseOnVirtualminWithDifferentPath()
@@ -731,7 +731,7 @@ Your requirements could not be resolved to an installable set of packages.');
     }
 
     /**
-     * @covers Tiki::postRestoreDatabase
+     * @covers \TikiManager\Application\Tiki::postRestoreDatabase
      * @return void
      */
     public function testPostRestoreDatabaseOnVirtualminWithTmpdirSet()
@@ -769,7 +769,7 @@ Your requirements could not be resolved to an installable set of packages.');
     }
 
     /**
-     * @covers Tiki::postRestoreDatabase
+     * @covers \TikiManager\Application\Tiki::postRestoreDatabase
      * @return void
      */
     public function testPostRestoreDatabaseOnVirtualminWithoutTmpdirSet()

@@ -5,6 +5,8 @@
  * @licence Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See LICENSE for details.
  */
 
+namespace TikiManager\Tests\Application;
+
 use PHPUnit\Framework\TestCase;
 use TikiManager\Application\Info;
 use TikiManager\Config\App;
@@ -19,14 +21,14 @@ class InfoTest extends TestCase
     protected function setUp()
     {
         parent::setUp();
-        query(Info::SQL_UPDATE_VALUE, [':name' => 'login_attempts', ':value' => 0]);
+        \query(Info::SQL_UPDATE_VALUE, [':name' => 'login_attempts', ':value' => 0]);
     }
 
     public function testGetKeyValue()
     {
         self::assertEquals(0, App::get('info')->get('login_attempts'));
 
-        query(Info::SQL_UPDATE_VALUE, [':name' => 'login_attempts', ':value' => 7]);
+        \query(Info::SQL_UPDATE_VALUE, [':name' => 'login_attempts', ':value' => 7]);
 
         self::assertEquals(7, App::get('info')->get('login_attempts'));
         self::assertNull(App::get('info')->get('non_existant_key'));
@@ -42,7 +44,7 @@ class InfoTest extends TestCase
     {
         self::assertFalse(App::get('info')->isLoginLocked());
 
-        query(Info::SQL_UPDATE_VALUE,
+        \query(Info::SQL_UPDATE_VALUE,
             [':name' => 'login_attempts', ':value' => Environment::get('MAX_FAILED_LOGIN_ATTEMPTS', 10)]);
 
         self::assertTrue(App::get('info')->isLoginLocked());
