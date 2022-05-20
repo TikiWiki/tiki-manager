@@ -396,10 +396,10 @@ class SSH extends Access implements ShellPrompt
         return $command->run($host, $options);
     }
 
-    public function openShell($workingDir = '', $isWeb = false)
+    public function openShell($workingDir = '')
     {
         $host = $this->getHost();
-        return $host->openShell($workingDir, $isWeb);
+        return $host->openShell($workingDir);
     }
 
     public function hasExecutable($command)

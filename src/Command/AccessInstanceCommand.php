@@ -21,12 +21,6 @@ class AccessInstanceCommand extends TikiManagerCommand
                 'i',
                 InputOption::VALUE_OPTIONAL,
                 'List of instance IDs to be checked, separated by comma (,)'
-            )
-            ->addOption(
-                'web',
-                'w',
-                InputOption::VALUE_OPTIONAL,
-                'A boolean value (true or false)'
             );
     }
 
@@ -58,9 +52,8 @@ class AccessInstanceCommand extends TikiManagerCommand
 
             foreach ($selectedInstances as $instance) {
                 $access = $instance->getBestAccess('scripting');
-                $web = $input->getOption('web');
-                if ($isWeb = filter_var($web, FILTER_VALIDATE_BOOLEAN)) {
-                    $output->writeln($access->openShell($instance->webroot, $isWeb));
+                if (! empty($_ENV['RUN_THROUGH_TIKI_WEB'])) {
+                    $output->writeln($access->openShell($instance->webroot));
                 } else {
                     $output->writeln('<fg=cyan>Connecting to ' . $instance->name . ' at ' . $instance->webroot . ' directory... (use "exit" to move to next the instance)</>');
                     $access->openShell($instance->webroot);

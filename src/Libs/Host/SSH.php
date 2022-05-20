@@ -122,7 +122,7 @@ class SSH
         return $exitCode == 0;
     }
 
-    public function openShell($workingDir = '', $isWeb)
+    public function openShell($workingDir = '')
     {
         $key = $_ENV['SSH_KEY'];
         $port = null;
@@ -136,7 +136,7 @@ class SSH
             $command = "ssh $port -i $key {$this->user}@{$this->host}";
         }
 
-        if ($isWeb) {
+        if (! empty($_ENV['RUN_THROUGH_TIKI_WEB'])) {
             return $command;
         }
 
@@ -230,9 +230,16 @@ class SSH
             "IdentitiesOnly yes",
             '-o',
             "PreferredAuthentications publickey",
-            "{$this->user}@{$this->host}",
-            "exit"
         ];
+
+        if (! empty($_ENV['RUN_THROUGH_TIKI_WEB'])) {
+            // Tiki web could use www-data user which fails host key checking
+            $params[] = '-o';
+            $params[] = "StrictHostKeyChecking no";
+        }
+
+        $params[] = "{$this->user}@{$this->host}";
+        $params[] = "exit";
 
         if ($this->port !== '22') {
             array_unshift($params, '-p', $this->port);
@@ -246,6 +253,9 @@ class SSH
 
         if ($returnVar != 0) {
             $message = "Your ssh keys are not properly set up. Please use 'tiki-manager instance:copysshkey' command.";
+            if ($err = $command->getStderrContent()) {
+                $message .= ' ' . $err;
+            }
             $this->io->error($message);
             return false;
         }

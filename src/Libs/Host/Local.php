@@ -159,7 +159,7 @@ class Local
         $this->runCommands($command);
     }
 
-    public function openShell($workingDir = '', $isWeb = false)
+    public function openShell($workingDir = '')
     {
         
         if (empty($workingDir)) {
@@ -172,7 +172,7 @@ class Local
             return;
         }
 
-        if ($isWeb) {
+        if (! empty($_ENV['RUN_THROUGH_TIKI_WEB'])) {
             return 'cd ' . $workingDir;
         }
         $command = 'sh -c \'cd ' . $workingDir . '; exec ${SHELL:-sh}\'';
