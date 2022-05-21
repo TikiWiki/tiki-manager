@@ -6,6 +6,7 @@ namespace TikiManager\Manager\WebInterface;
 use TikiManager\Manager\WebInterface\Config\ClearOS;
 use TikiManager\Manager\WebInterface\Config\Generic;
 use TikiManager\Manager\WebInterface\Config\Linux;
+use TikiManager\Manager\WebInterface\Config\MacOS;
 use TikiManager\Manager\WebInterface\Config\Virtualmin;
 use TikiManager\Style\TikiManagerStyle;
 
@@ -48,6 +49,7 @@ access the files.');
             Virtualmin::class,
             ClearOS::class,
             Linux::class,
+            MacOS::class,
             Generic::class
         ];
 

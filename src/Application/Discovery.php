@@ -11,6 +11,7 @@ use TikiManager\Application\Discovery\ClearOSDiscovery;
 use TikiManager\Application\Discovery\LinuxDiscovery;
 use TikiManager\Application\Discovery\VirtualminDiscovery;
 use TikiManager\Application\Discovery\WindowsDiscovery;
+use TikiManager\Application\Discovery\MacOSDiscovery;
 use TikiManager\Application\Exception\ConfigException;
 use TikiManager\Config\Environment;
 
@@ -151,6 +152,7 @@ abstract class Discovery
             VirtualminDiscovery::class,
             LinuxDiscovery::class,
             WindowsDiscovery::class,
+            MacOSDiscovery::class
         ];
 
         foreach ($discover as $class) {
