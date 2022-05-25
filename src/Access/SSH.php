@@ -208,7 +208,12 @@ class SSH extends Access implements ShellPrompt
         }
 
         $command = $this->createCommand('test', ['-f', $filename]);
-        return $command->run()->getReturn() == 0;
+        $isFile = $command->run()->getReturn() == 0;
+
+        $command = $this->createCommand('test', ['-d', $filename]);
+        $isDir = $command->run()->getReturn() == 0;
+
+        return $isFile || $isDir;
     }
 
     public function fileGetContents($filename)
