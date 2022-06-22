@@ -219,7 +219,7 @@ class Local extends Access implements ShellPrompt
         $command = file_get_contents(
             sprintf('%s/../getlinuxdistro.php', dirname(__FILE__))
         );
-        $linuxName = $host->runCommands("$interpreter -r \"$command\"");
+        $linuxName = $host->runCommands("$interpreter -r '$command'");
 
         return $linuxName;
     }
