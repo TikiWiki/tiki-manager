@@ -273,6 +273,8 @@ class Environment
 
             $key = $_ENV['SSH_KEY'];
             `ssh-keygen -t rsa -f $key`;
+        } else {
+            @chmod($_ENV['SSH_KEY'], 0600);
         }
 
         if ($_ENV['IS_PHAR']) {
