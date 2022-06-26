@@ -4,6 +4,7 @@
     variables:
       - $INSTANCE_TYPE == $INSTANCE_TYPE_SSH
       - $INSTANCE_TYPE == $INSTANCE_TYPE_FTP
+      - $SCHEDULER == "update_vendor"
 
 .local-command-test-svn:
   extends: .template-tiki-manager-commands-svn
@@ -11,6 +12,7 @@
     variables:
       - $INSTANCE_TYPE == $INSTANCE_TYPE_SSH
       - $INSTANCE_TYPE == $INSTANCE_TYPE_FTP
+      - $SCHEDULER == "update_vendor"
 
 .local-command-test-src:
   extends: .template-tiki-manager-commands-src
@@ -18,6 +20,7 @@
     variables:
       - $INSTANCE_TYPE == $INSTANCE_TYPE_SSH
       - $INSTANCE_TYPE == $INSTANCE_TYPE_FTP
+      - $SCHEDULER == "update_vendor"
 
 local-create-instance-git:
   extends: .local-command-test-git

@@ -20,6 +20,7 @@ stages:
   - pre-functional-tests
   - functional-tests
   - package
+  - vendors_update
 
 .composer-cache:
   cache: &composer-cache
@@ -365,3 +366,42 @@ compressed:
     refs:
       - master
       - tags
+  except:
+    variables:
+      - $SCHEDULER == "update_vendor"
+
+#----------------------------------------------------------------------------------------------------------------------#
+# MAINTENANCE SECTION
+#----------------------------------------------------------------------------------------------------------------------#
+update_vendor_dependencies:
+  stage: vendors_update
+  dependencies:
+    - composer
+  needs:
+    - composer
+  variables:
+    BRANCH_NAME: "${CI_COMMIT_REF_NAME}_vendor_update"
+    COMMIT_MESSAGE: "[UPD] Update ${CI_COMMIT_REF_NAME} vendor dependencies"
+    CI_REPOSITORY_URL: "https://${GITLAB_USER_LOGIN}:${GITLAB_USER_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
+    COMPOSER_DISCARD_CHANGES: "true"
+    COMPOSER_NO_INTERACTION: "1"
+  before_script:
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_NAME}"
+  script:
+    - composer -V | grep "version 2" || composer self-update --2
+    - DATE=`date +%Y%m%d`
+    - BRANCH_NAME="${BRANCH_NAME}_${DATE}"
+    - php scripts/manager/update_vendor.php
+    - if git diff --quiet --exit-code composer.lock; then exit 0; fi;
+    - if git rev-parse --verify ${BRANCH_NAME}; then git branch -D ${BRANCH_NAME}; fi;
+    - git checkout -b ${BRANCH_NAME}
+    - git add composer.lock
+    - git commit -m "${COMMIT_MESSAGE}"
+    - git push ${CI_REPOSITORY_URL} HEAD:${BRANCH_NAME} --quiet
+    - |
+      HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} SOURCE_BRANCH=${BRANCH_NAME} TARGET_BRANCH=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${GITLAB_USER_TOKEN} TARGET_PROJECT_ID=${TARGET_PROJECT_ID} SET_MERGE=${SET_MERGE} \
+      /bin/bash .gitlab-ci/auto_merge_request.sh "${COMMIT_MESSAGE} (${DATE})"
+  only:
+    variables:
+      - $SCHEDULER == "update_vendor"
