@@ -99,7 +99,6 @@ class ApplyProfileCommand extends TikiManagerCommand
             $this->io->writeln(sprintf('<fg=cyan>Applying profile to %s ...</>', $instance->name));
             $instance->getApplication()->installProfile($repository, $profile);
             Archive::cleanup($instance->id, $instance->name);
-            $this->io->writeln('<info>Profile applied.</info>');
         }
 
         return 0;

@@ -522,7 +522,7 @@ class Tiki extends Application
             dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php',
             [$this->instance->webroot, $domain, $profile]
         );
-
+                
         $this->io->writeln($output);
     }
 
