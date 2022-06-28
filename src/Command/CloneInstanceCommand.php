@@ -141,6 +141,18 @@ class CloneInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Ignore version requirements. Allows to select non-supported branches, useful for testing.'
+            )
+            ->addOption(
+                'only-db',
+                null,
+                InputOption::VALUE_NONE,
+                'Clone only database and data files. Skip cloning code.'
+            )
+            ->addOption(
+                'only-code',
+                null,
+                InputOption::VALUE_NONE,
+                'Clone only code files. Skip cloning database.'
             );
     }
 
@@ -168,6 +180,8 @@ class CloneInstanceCommand extends TikiManagerCommand
         $keepBackup = $input->getOption('keep-backup');
         $useLastBackup = $input->getOption('use-last-backup');
         $argument = $input->getArgument('mode');
+        $onlyDb = $input->getOption('only-db');
+        $onlyCode = $input->getOption('only-code');
         $vcsOptions = [
             'allow_stash' => $input->getOption('stash')
         ];
@@ -188,6 +202,11 @@ class CloneInstanceCommand extends TikiManagerCommand
             } else {
                 $cloneUpgrade = $input->getArgument('mode') == 'upgrade';
             }
+        }
+
+        if ($cloneUpgrade && ($onlyDb || $onlyCode)) {
+            $this->io->error('The options --only-code and --only-db cannot be used when cloning and upgrading an instance.');
+            return 1;
         }
 
         if ($clone != false || $cloneUpgrade != false) {
@@ -342,7 +361,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 continue;
             }
 
-            if ($this->isSameDatabase($sourceInstance, $destinationInstance)) {
+            if ($this->isSameDatabase($sourceInstance, $destinationInstance) && ! $onlyCode) {
                 $this->logger->error('Database host and name are the same in the source ({source_instance_name}) and destination ({target_instance_id}).', [
                     'source_instance_name' => $sourceInstance->name,
                     'target_instance_id' => $destinationInstance->name
@@ -401,6 +420,14 @@ class CloneInstanceCommand extends TikiManagerCommand
             return 1;
         }
 
+        $options = [
+            'checksum-check' => $checksumCheck,
+            'skip-reindex' => $skipReindex,
+            'skip-cache-warmup' => $skipCache,
+            'live-reindex' => $liveReindex,
+            'timeout' => $timeout,
+        ];
+
         /** @var Instance $destinationInstance */
         foreach ($targetInstances as $destinationInstance) {
             $this->io->newLine();
@@ -411,7 +438,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $instanceVCS->setVCSOptions($vcsOptions);
 
             $destinationInstance->lock();
-            $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct);
+            $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct, $onlyDb, $onlyCode, $options);
 
             if (isset($errors)) {
                 return 1;
@@ -426,13 +453,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 $app = $destinationInstance->getApplication();
 
                 try {
-                    $app->performUpgrade($destinationInstance, $upgrade_version, [
-                        'checksum-check' => $checksumCheck,
-                        'skip-reindex' => $skipReindex,
-                        'skip-cache-warmup' => $skipCache,
-                        'live-reindex' => $liveReindex,
-                        'timeout' => $timeout,
-                    ]);
+                    $app->performUpgrade($destinationInstance, $upgrade_version, $options);
                 } catch (\Exception $e) {
                     CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
                     continue;

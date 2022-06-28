@@ -23,17 +23,20 @@ class Restore extends Backup
     protected $restoreLockFile;
     protected $process;
     protected $source;
+    protected $onlyDb;
     public $iniFilesToExclude = [];
 
     /**
      * Restore constructor.
      * @param Instance $instance
      * @param bool $direct
+      * @param bool $onlyDb
      * @throws Exception\FolderPermissionException
      */
-    public function __construct(Instance $instance, bool $direct = false)
+    public function __construct(Instance $instance, bool $direct = false, bool $onlyDb = false)
     {
         parent::__construct($instance, $direct);
+        $this->onlyDb = $onlyDb;
         $this->restoreRoot = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore';
         $this->restoreDirname = sprintf('%s-%s', $instance->getId(), $instance->name);
         $this->restoreLockFile = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore.lock';
@@ -106,7 +109,7 @@ class Restore extends Backup
      * @return string
      * @throws RestoreErrorException
      */
-    protected function prepareArchiveFolder($srcArchive)
+    public function prepareArchiveFolder($srcArchive)
     {
         $access = $this->access;
         $instance = $this->instance;
@@ -195,6 +198,10 @@ class Restore extends Backup
                 continue;
             }
 
+            if ($this->onlyDb && $type !== 'data') {
+                continue;
+            }
+
             if ($this->direct) {
                 $source = ($type === 'app') ? $destination : $this->getSourceInstance()->getWebPath($destination);
             } else {
@@ -277,8 +284,10 @@ class Restore extends Backup
             $this->restoreFolder($src, $target, $isFull);
         }
 
-        $changes = "{$srcFolder}/changes.txt";
-        $this->applyChanges($changes);
+        if (! $this->onlyDb) {
+            $changes = "{$srcFolder}/changes.txt";
+            $this->applyChanges($changes);
+        }
     }
 
     public function restoreFolder($src, $target, $isFull = false)

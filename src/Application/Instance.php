@@ -718,10 +718,17 @@ SQL;
      * @throws Exception\FolderPermissionException
      * @throws Exception\RestoreErrorException
      */
-    public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false)
+    public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false, $onlyDb = false, $onlyCode = false, $options = [])
     {
-        $restore = new Restore($this, $direct);
+        $restore = new Restore($this, $direct, $onlyDb);
         $restore->lock();
+        $restore->setProcess($clone);
+
+        if ($direct) {
+            $restore->setRestoreRoot(dirname($archive));
+            $restore->setRestoreDirname(basename($archive));
+            $restore->setSourceInstance($srcInstance);
+        }
 
         $message = "Restoring files from '{$archive}' into {$this->name}...";
 
@@ -731,14 +738,6 @@ SQL;
 
         $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
 
-        $restore->setProcess($clone);
-
-        if ($direct) {
-            $restore->setRestoreRoot(dirname($archive));
-            $restore->setRestoreDirname(basename($archive));
-            $restore->setSourceInstance($srcInstance);
-        }
-
         $restore->restoreFiles($archive);
 
         // Redetect the VCS type
@@ -747,26 +746,25 @@ SQL;
         $this->app = $srcInstance->app;
         $this->save();
 
-        $this->io->writeln('Restoring database...');
-        $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
+        if (! $onlyCode) {
+            $this->io->writeln('Restoring database...');
+            $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
 
-        $version = null;
-        $oldVersion = $this->getLatestVersion();
+            $databaseConfig = $this->getDatabaseConfig();
+            if ($databaseConfig) {
+                try {
+                    $app = $this->getApplication();
+                    $app->restoreDatabase($databaseConfig, $database_dump, $clone);
+                } catch (\Exception $e) {
+                    $restore->unlock();
+                    throw $e;
+                }
+            } else {
+                $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
+            }
+        }
 
         $discovery = $this->getDiscovery();
-
-        $databaseConfig = $this->getDatabaseConfig();
-        if ($databaseConfig) {
-            try {
-                $app = $this->getApplication();
-                $app->restoreDatabase($databaseConfig, $database_dump, $clone);
-            } catch (\Exception $e) {
-                $restore->unlock();
-                throw $e;
-            }
-        } else {
-            $this->io->error('Database config not available (db/local.php), so the database can\'t be restored.');
-        }
 
         // Redetect the VCS type in case of change
         $this->vcs_type = $discovery->detectVcsType();
@@ -776,6 +774,9 @@ SQL;
             $this->io->error('Something went wrong with restore. Unable to read application details.');
             return;
         }
+
+        $version = null;
+        $oldVersion = $this->getLatestVersion();
 
         // Pick version created in findApplication
         if (!$oldVersion || $clone) {
@@ -801,7 +802,7 @@ SQL;
             $svn->ensureTempFolder($this->webroot);
         }
 
-        if ($this->app == 'tiki') {
+        if ($this->app == 'tiki' && ! $onlyDb) {
             $this->io->writeln("Applying patches to {$this->name}...");
             foreach (Patch::getPatches($this->getId()) as $patch) {
                 $patch->delete();
@@ -820,9 +821,14 @@ SQL;
             $this->getApplication()->fixPermissions();
         }
 
-        if ($checksumCheck) {
+        if ($checksumCheck && ! $onlyDb) {
             $this->io->writeln('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this);
+        }
+
+        if ($onlyDb) {
+            $options['applying-patch'] = true;
+            $this->getApplication()->postInstall($options);
         }
 
         if (!$direct) {
