@@ -141,6 +141,10 @@ class Git extends VersionControlSystem
             throw new VcsException($error);
         }
 
+        if (empty($output) && ! empty($error)) {
+            $output = $error;
+        }
+
         return rtrim($output, "\n");
     }
 
@@ -521,7 +525,15 @@ class Git extends VersionControlSystem
             return file_exists($targetFolder . '/' . $file);
         }
 
-        return $this->access->fileExists($file);
+        return $this->access->fileExists($targetFolder . '/' . $file);
+    }
+
+    public function unshallow($targetFolder)
+    {
+        if (! $this->isShallow($targetFolder)) {
+            return;
+        }
+        return $this->exec($targetFolder, "fetch --unshallow");
     }
 
     public function getVersion($targetFolder): string

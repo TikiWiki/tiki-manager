@@ -429,6 +429,34 @@ class Tiki extends Application
         return $this->vcs_instance->getAvailableBranches();
     }
 
+    public function getLocalCheckouts()
+    {
+        $access = $this->instance->getBestAccess('scripting');
+        $access->chdir($this->instance->webroot);
+        $command = $access->createCommand('find', ['.', '-type', 'd', '-name', '.git']);
+        $command->run();
+
+        $folders = [];
+        $out = $command->getStdoutContent();
+        foreach (explode("\n", $out) as $line) {
+            if (trim($line) === "") {
+                continue;
+            }
+            if (preg_match('/^\.\/(.*)\.git$/', trim($line), $m)) {
+                if (strstr($m[1], 'vendor/')) {
+                    continue;
+                }
+                if (empty($m[1])) {
+                    $folders[] = 'tiki';
+                } else {
+                    $folders[] = $m[1];
+                }
+            }
+        }
+
+        return $folders;
+    }
+
     /**
      * Install new instance.
      *
