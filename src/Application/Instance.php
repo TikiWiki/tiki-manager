@@ -718,9 +718,9 @@ SQL;
      * @throws Exception\FolderPermissionException
      * @throws Exception\RestoreErrorException
      */
-    public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false, $onlyDb = false, $onlyCode = false, $options = [])
+    public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false, $onlyData = false, $onlyCode = false, $options = [])
     {
-        $restore = new Restore($this, $direct, $onlyDb);
+        $restore = new Restore($this, $direct, $onlyData);
         $restore->lock();
         $restore->setProcess($clone);
 
@@ -802,7 +802,7 @@ SQL;
             $svn->ensureTempFolder($this->webroot);
         }
 
-        if ($this->app == 'tiki' && ! $onlyDb) {
+        if ($this->app == 'tiki' && ! $onlyData) {
             $this->io->writeln("Applying patches to {$this->name}...");
             foreach (Patch::getPatches($this->getId()) as $patch) {
                 $patch->delete();
@@ -821,12 +821,12 @@ SQL;
             $this->getApplication()->fixPermissions();
         }
 
-        if ($checksumCheck && ! $onlyDb) {
+        if ($checksumCheck && ! $onlyData) {
             $this->io->writeln('Collecting files checksum from instance...');
             $version->collectChecksumFromInstance($this);
         }
 
-        if ($onlyDb) {
+        if ($onlyData) {
             $options['applying-patch'] = true;
             $this->getApplication()->postInstall($options);
         }

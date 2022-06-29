@@ -23,20 +23,20 @@ class Restore extends Backup
     protected $restoreLockFile;
     protected $process;
     protected $source;
-    protected $onlyDb;
+    protected $onlyData;
     public $iniFilesToExclude = [];
 
     /**
      * Restore constructor.
      * @param Instance $instance
      * @param bool $direct
-      * @param bool $onlyDb
+     * @param bool $onlyData
      * @throws Exception\FolderPermissionException
      */
-    public function __construct(Instance $instance, bool $direct = false, bool $onlyDb = false)
+    public function __construct(Instance $instance, bool $direct = false, bool $onlyData = false)
     {
         parent::__construct($instance, $direct);
-        $this->onlyDb = $onlyDb;
+        $this->onlyData = $onlyData;
         $this->restoreRoot = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore';
         $this->restoreDirname = sprintf('%s-%s', $instance->getId(), $instance->name);
         $this->restoreLockFile = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore.lock';
@@ -198,7 +198,7 @@ class Restore extends Backup
                 continue;
             }
 
-            if ($this->onlyDb && $type !== 'data') {
+            if ($this->onlyData && $type !== 'data') {
                 continue;
             }
 
@@ -284,7 +284,7 @@ class Restore extends Backup
             $this->restoreFolder($src, $target, $isFull);
         }
 
-        if (! $this->onlyDb) {
+        if (! $this->onlyData) {
             $changes = "{$srcFolder}/changes.txt";
             $this->applyChanges($changes);
         }

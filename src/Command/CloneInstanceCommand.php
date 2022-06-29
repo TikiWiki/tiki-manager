@@ -143,7 +143,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 'Ignore version requirements. Allows to select non-supported branches, useful for testing.'
             )
             ->addOption(
-                'only-db',
+                'only-data',
                 null,
                 InputOption::VALUE_NONE,
                 'Clone only database and data files. Skip cloning code.'
@@ -180,7 +180,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         $keepBackup = $input->getOption('keep-backup');
         $useLastBackup = $input->getOption('use-last-backup');
         $argument = $input->getArgument('mode');
-        $onlyDb = $input->getOption('only-db');
+        $onlyData = $input->getOption('only-data');
         $onlyCode = $input->getOption('only-code');
         $vcsOptions = [
             'allow_stash' => $input->getOption('stash')
@@ -204,8 +204,8 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
         }
 
-        if ($cloneUpgrade && ($onlyDb || $onlyCode)) {
-            $this->io->error('The options --only-code and --only-db cannot be used when cloning and upgrading an instance.');
+        if ($cloneUpgrade && ($onlyData || $onlyCode)) {
+            $this->io->error('The options --only-code and --only-data cannot be used when cloning and upgrading an instance.');
             return 1;
         }
 
@@ -438,7 +438,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $instanceVCS->setVCSOptions($vcsOptions);
 
             $destinationInstance->lock();
-            $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct, $onlyDb, $onlyCode, $options);
+            $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct, $onlyData, $onlyCode, $options);
 
             if (isset($errors)) {
                 return 1;
