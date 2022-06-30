@@ -19,7 +19,7 @@ class CheckoutCommand extends TikiManagerCommand
     {
         $this
             ->setName('instance:checkout')
-            ->setDescription('Checkout a different branch or revision on an underlying GIT controlled source.')
+            ->setDescription('Checkout a different branch or revision on an underlying Git controlled source.')
             ->addOption(
                 'instance',
                 'i',
@@ -30,27 +30,27 @@ class CheckoutCommand extends TikiManagerCommand
                 'folder',
                 'f',
                 InputOption::VALUE_REQUIRED,
-                'Local folder containing a GIT repostitory already checked out or a new folder to checkout. Use \'tiki\' for the main Tiki source or themes/XYZ to manage a version controlled theme, for example.'
+                'Local folder containing a Git repository already checked out or a new folder to checkout. Use \'tiki\' for the main Tiki source or themes/XYZ to manage a version controlled theme, for example.'
             )
             ->addOption(
                 'url',
                 'u',
                 InputOption::VALUE_OPTIONAL,
-                'Url of the GIT repository, e.g. git@gitlab.com:tikiwiki/tiki.git. Only used if you checkout a fresh folder.'
+                'Url of the Git repository, e.g. git@gitlab.com:tikiwiki/tiki.git. Only used if you checkout a fresh folder.'
             )
             ->addOption(
                 'branch',
                 'b',
                 InputOption::VALUE_REQUIRED,
-                'GIT branch to checkout.'
+                'Git branch to checkout.'
             )
             ->addOption(
                 'revision',
                 'r',
                 InputOption::VALUE_OPTIONAL,
-                'GIT commit hash of a specific revision to checkout.'
+                'Git commit hash of a specific revision to checkout.'
             )
-            ->setHelp('This command allows you switch to a specific branch or revision of the main Tiki codebase or any other local checkouts of remote repositories. Only GIT protocol is supported for now!');
+            ->setHelp('This command allows you switch to a specific branch or revision of the main Tiki codebase or any other local checkouts of remote repositories. Only Git is supported.');
     }
 
     protected function interact(InputInterface $input, OutputInterface $output)
@@ -61,7 +61,7 @@ class CheckoutCommand extends TikiManagerCommand
         if (empty($input->getOption('instance'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
             $this->io->newLine();
-            $output->writeln('<comment>Note: Only Tiki instances checked out by GIT can be managed by this command/comment>');
+            $output->writeln('<comment>Note: Only Tiki instances checked out by Git can be managed by this command/comment>');
             $this->io->newLine();
             $answer = $this->io->ask('Which instance do you want to checkout', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
@@ -78,7 +78,7 @@ class CheckoutCommand extends TikiManagerCommand
         $instance = Instance::getInstance($instanceId);
         if ($app = $instance->getApplication()) {
             if ($instance->vcs_type != 'git') {
-                throw new \RuntimeException('Selected Tiki instance is not a GIT checkout.');
+                throw new \RuntimeException('Selected Tiki instance is not a Git checkout.');
             }
         } else {
             throw new \RuntimeException('Unable to initialize Tiki application. Please check if selected instance is a Tiki instance.');
@@ -90,7 +90,7 @@ class CheckoutCommand extends TikiManagerCommand
             $folder = $this->io->choice('Folder', $folders);
 
             if ($folder == 'new') {
-                $folder = $this->io->ask('Type the folder name where you want to checkout a GIT branch. E.g. themes/XYZ', null, function ($answer) {
+                $folder = $this->io->ask('Type the folder name where you want to checkout a Git branch. E.g. themes/XYZ', null, function ($answer) {
                     if (empty($answer)) {
                         throw new \RuntimeException('Folder cannot be empty');
                     }
@@ -98,9 +98,9 @@ class CheckoutCommand extends TikiManagerCommand
                 });
 
                 if (empty($input->getOption('url'))) {
-                    $url = $this->io->ask('What is the URL of the GIT repository?', null, function ($answer) {
+                    $url = $this->io->ask('What is the URL of the Git repository?', null, function ($answer) {
                         if (empty($answer)) {
-                            throw new \RuntimeException('GIT URL cannot be empty');
+                            throw new \RuntimeException('Git URL cannot be empty');
                         }
                         return $answer;
                     });
@@ -139,7 +139,7 @@ class CheckoutCommand extends TikiManagerCommand
 
         if ($app = $instance->getApplication()) {
             if ($instance->vcs_type != 'git') {
-                throw new \RuntimeException('Selected Tiki instance is not a GIT checkout.');
+                throw new \RuntimeException('Selected Tiki instance is not a Git checkout.');
             }
         } else {
             throw new \RuntimeException('Unable to initialize Tiki application. Please check if selected instance is a Tiki instance.');
