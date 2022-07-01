@@ -245,6 +245,11 @@ class Src extends VersionControlSystem
         return false;
     }
 
+    public function getUntrackedFiles()
+    {
+        return [];
+    }
+
     public function hasRemote($targetFolder, $branch)
     {
         // This method is not intended to be used
