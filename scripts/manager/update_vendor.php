@@ -22,7 +22,15 @@ if (! file_exists($composerLock)) {
 $initial_md5 = md5_file($composerLock);
 printf('Getting md5 from %s ...' . PHP_EOL . 'result: %s' . PHP_EOL, $composerLock, $initial_md5);
 printf('Running composer update...' . PHP_EOL);
-exec(sprintf('%s %s update --prefer-dist --working-dir=%s --no-progress --no-interaction', PHP_BINARY, $composerBin, dirname($composerLock)));
+
+$output = null;
+$exitCode = 0;
+
+exec(sprintf('%s %s update --prefer-dist --working-dir=%s --no-progress --no-interaction', PHP_BINARY, $composerBin, dirname($composerLock)), $output, $exitCode);
+if ($exitCode !== 0) {
+    echo PHP_EOL . "Error: Failed to upgrade composer dependencies. Aborting." . PHP_EOL . PHP_EOL;
+    exit($exitCode);
+}
 
 $final_md5 = md5_file($composerLock);
 printf('Getting md5 from %s after composer update...' . PHP_EOL . 'result: %s' . PHP_EOL, $composerLock, $final_md5);
