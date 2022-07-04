@@ -886,17 +886,17 @@
         },
         {
             "name": "symfony/console",
-            "version": "v4.4.43",
+            "version": "v4.4.42",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "8a2628d2d5639f35113dc1b833ecd91e1ed1cf46"
+                "reference": "cce7a9f99e22937a71a16b23afa762558808d587"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-8a2628d2d5639f35113dc1b833ecd91e1ed1cf46-zip-c01939.zip",
-                "reference": "8a2628d2d5639f35113dc1b833ecd91e1ed1cf46",
-                "shasum": "ba615258b6a81ef9fcdacb3f8a615478e866916f"
+                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-cce7a9f99e22937a71a16b23afa762558808d587-zip-d8fe2b.zip",
+                "reference": "cce7a9f99e22937a71a16b23afa762558808d587",
+                "shasum": "eff4eff39e3aaf17ffb2abc94aa22eb7cbab896a"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -955,21 +955,21 @@
             ],
             "description": "Eases the creation of beautiful and testable command line interfaces",
             "homepage": "https://symfony.com",
-            "time": "2022-06-23T12:22:25+00:00"
+            "time": "2022-05-14T12:35:33+00:00"
         },
         {
             "name": "symfony/dependency-injection",
-            "version": "v4.4.43",
+            "version": "v4.4.42",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/dependency-injection.git",
-                "reference": "8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd"
+                "reference": "f6fdbf252765a09c7ac243617f79f1babef792c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/dependency-injection/symfony-dependency-injection-8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd-zip-fdc78b.zip",
-                "reference": "8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd",
-                "shasum": "f5bbda105a0290342c5a99b48a4878bfca201227"
+                "url": "https://composer.tiki.org/dist/symfony/dependency-injection/symfony-dependency-injection-f6fdbf252765a09c7ac243617f79f1babef792c9-zip-4e0f5e.zip",
+                "reference": "f6fdbf252765a09c7ac243617f79f1babef792c9",
+                "shasum": "d196f39c1f944cde8782ac979b22ffb316671ebd"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1024,7 +1024,7 @@
             ],
             "description": "Allows you to standardize and centralize the way objects are constructed in your application",
             "homepage": "https://symfony.com",
-            "time": "2022-06-22T15:01:38+00:00"
+            "time": "2022-05-24T15:15:52+00:00"
         },
         {
             "name": "symfony/dotenv",
@@ -1164,7 +1164,7 @@
         },
         {
             "name": "symfony/event-dispatcher-contracts",
-            "version": "v1.1.13",
+            "version": "v1.1.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/event-dispatcher-contracts.git",
@@ -1384,17 +1384,17 @@
         },
         {
             "name": "symfony/http-client-contracts",
-            "version": "v1.1.13",
+            "version": "v1.1.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client-contracts.git",
-                "reference": "59f37624a82635962f04c98f31aed122e539a89e"
+                "reference": "89e01dc0f8677ee843b7c46f12624cac7fe4292b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/http-client-contracts/symfony-http-client-contracts-59f37624a82635962f04c98f31aed122e539a89e-zip-e3d79c.zip",
-                "reference": "59f37624a82635962f04c98f31aed122e539a89e",
-                "shasum": "a68628a1e0b829049345c4867f937a1bd8a7e787"
+                "url": "https://composer.tiki.org/dist/symfony/http-client-contracts/symfony-http-client-contracts-89e01dc0f8677ee843b7c46f12624cac7fe4292b-zip-c4d311.zip",
+                "reference": "89e01dc0f8677ee843b7c46f12624cac7fe4292b",
+                "shasum": "a899bdcdc993ab87a7d85facaab1abb7201fadda"
             },
             "require": {
                 "php": ">=7.1.3"
@@ -1441,7 +1441,7 @@
                 "interoperability",
                 "standards"
             ],
-            "time": "2022-04-11T14:52:04+00:00"
+            "time": "2022-03-08T18:43:16+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -1749,17 +1749,17 @@
         },
         {
             "name": "symfony/service-contracts",
-            "version": "v1.1.13",
+            "version": "v1.1.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "afa00c500c2d6aea6e3b2f4862355f507bc5ebb4"
+                "reference": "eedb374f02031714a48848758a27812f3eca317a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/service-contracts/symfony-service-contracts-afa00c500c2d6aea6e3b2f4862355f507bc5ebb4-zip-616e71.zip",
-                "reference": "afa00c500c2d6aea6e3b2f4862355f507bc5ebb4",
-                "shasum": "a9b70544fab3c33b6ec80a6e898e8312f7eee17c"
+                "url": "https://composer.tiki.org/dist/symfony/service-contracts/symfony-service-contracts-eedb374f02031714a48848758a27812f3eca317a-zip-332fd1.zip",
+                "reference": "eedb374f02031714a48848758a27812f3eca317a",
+                "shasum": "bde469b31dc2c3c257a50be632ef3507d6a5f3d1"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1807,21 +1807,21 @@
                 "interoperability",
                 "standards"
             ],
-            "time": "2022-05-27T14:01:05+00:00"
+            "time": "2022-03-09T13:39:03+00:00"
         },
         {
             "name": "symfony/yaml",
-            "version": "v4.4.43",
+            "version": "v4.4.37",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "07e392f0ef78376d080d5353c081a5e5704835bd"
+                "reference": "d7f637cc0f0cc14beb0984f2bb50da560b271311"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-07e392f0ef78376d080d5353c081a5e5704835bd-zip-c4f8ce.zip",
-                "reference": "07e392f0ef78376d080d5353c081a5e5704835bd",
-                "shasum": "134dd4369a9601bd2cc09511d6cbc94b8a83b6cf"
+                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-d7f637cc0f0cc14beb0984f2bb50da560b271311-zip-387954.zip",
+                "reference": "d7f637cc0f0cc14beb0984f2bb50da560b271311",
+                "shasum": "347ca2e4da25bd46f88182678dff0b3d4e7a354e"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1861,7 +1861,7 @@
             ],
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
-            "time": "2022-06-20T08:31:17+00:00"
+            "time": "2022-01-24T20:11:01+00:00"
         },
         {
             "name": "true/punycode",
