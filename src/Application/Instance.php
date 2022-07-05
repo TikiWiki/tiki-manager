@@ -1113,7 +1113,7 @@ SQL;
     public function revert()
     {
         if ($this->vcs_type != 'svn' && $this->vcs_type != 'git') {
-            $this->io->error(sprintf("Instance %s is not a version controlled instance and cannot be reverted."));
+            $this->io->error(sprintf("Instance %s is not a version controlled instance and cannot be reverted.", $this->name));
             return;
         }
         $this->getVersionControlSystem()->revert($this->webroot);
