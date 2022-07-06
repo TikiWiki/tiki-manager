@@ -13,7 +13,7 @@ class ViewDatabaseCommand extends TikiManagerCommand
     {
         $this
             ->setName('database:view')
-            ->setDescription('Vew database')
+            ->setDescription('View database')
             ->setHelp('This command allows you to view the database content');
     }
 
