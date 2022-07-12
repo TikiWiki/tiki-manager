@@ -653,7 +653,6 @@ trait InstanceConfigure
         $accessMemoryLimit = $functionIniGet ? $checkPHP("echo trim(ini_get('memory_limit'));") : -1;
         
         if (preg_match('/^(\d+)[GMK]/i', $accessMemoryLimit, $matches)) {
-            // https://www.php.net/manual/en/faq.using.php#faq.using.shorthandbytes
             $shorthandByte = strtoupper($matches[2]);
 
             if ($shorthandByte == 'G') {
