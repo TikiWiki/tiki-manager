@@ -14,12 +14,14 @@ require_once 'lib/core/Tiki/Profile/Installer.php';
 //require_once 'lib/profilelib/profilelib.php';
 //require_once 'lib/profilelib/installlib.php';
 
+$profile = Tiki_Profile::fromNames($_SERVER['argv'][2], $_SERVER['argv'][3]);
+
 if ($profile) {
     $installer = new Tiki_Profile_Installer;
     $installer->install($profile);
-    die('<info>Profile applied.</info>');
+    echo('<info>Profile applied.</info>');
 } else {
-    die('<error>Profile not found.</error>');
+    echo('<error>Profile not found.</error>');
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
