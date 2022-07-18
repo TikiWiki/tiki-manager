@@ -886,17 +886,17 @@
         },
         {
             "name": "symfony/console",
-            "version": "v4.4.42",
+            "version": "v4.4.43",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "cce7a9f99e22937a71a16b23afa762558808d587"
+                "reference": "8a2628d2d5639f35113dc1b833ecd91e1ed1cf46"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-cce7a9f99e22937a71a16b23afa762558808d587-zip-d8fe2b.zip",
-                "reference": "cce7a9f99e22937a71a16b23afa762558808d587",
-                "shasum": "eff4eff39e3aaf17ffb2abc94aa22eb7cbab896a"
+                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-8a2628d2d5639f35113dc1b833ecd91e1ed1cf46-zip-c01939.zip",
+                "reference": "8a2628d2d5639f35113dc1b833ecd91e1ed1cf46",
+                "shasum": "ba615258b6a81ef9fcdacb3f8a615478e866916f"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -955,21 +955,21 @@
             ],
             "description": "Eases the creation of beautiful and testable command line interfaces",
             "homepage": "https://symfony.com",
-            "time": "2022-05-14T12:35:33+00:00"
+            "time": "2022-06-23T12:22:25+00:00"
         },
         {
             "name": "symfony/dependency-injection",
-            "version": "v4.4.42",
+            "version": "v4.4.43",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/dependency-injection.git",
-                "reference": "f6fdbf252765a09c7ac243617f79f1babef792c9"
+                "reference": "8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/dependency-injection/symfony-dependency-injection-f6fdbf252765a09c7ac243617f79f1babef792c9-zip-4e0f5e.zip",
-                "reference": "f6fdbf252765a09c7ac243617f79f1babef792c9",
-                "shasum": "d196f39c1f944cde8782ac979b22ffb316671ebd"
+                "url": "https://composer.tiki.org/dist/symfony/dependency-injection/symfony-dependency-injection-8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd-zip-fdc78b.zip",
+                "reference": "8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd",
+                "shasum": "f5bbda105a0290342c5a99b48a4878bfca201227"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1024,7 +1024,7 @@
             ],
             "description": "Allows you to standardize and centralize the way objects are constructed in your application",
             "homepage": "https://symfony.com",
-            "time": "2022-05-24T15:15:52+00:00"
+            "time": "2022-06-22T15:01:38+00:00"
         },
         {
             "name": "symfony/dotenv",
@@ -1164,7 +1164,7 @@
         },
         {
             "name": "symfony/event-dispatcher-contracts",
-            "version": "v1.1.12",
+            "version": "v1.1.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/event-dispatcher-contracts.git",
@@ -1384,17 +1384,17 @@
         },
         {
             "name": "symfony/http-client-contracts",
-            "version": "v1.1.12",
+            "version": "v1.1.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client-contracts.git",
-                "reference": "89e01dc0f8677ee843b7c46f12624cac7fe4292b"
+                "reference": "59f37624a82635962f04c98f31aed122e539a89e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/http-client-contracts/symfony-http-client-contracts-89e01dc0f8677ee843b7c46f12624cac7fe4292b-zip-c4d311.zip",
-                "reference": "89e01dc0f8677ee843b7c46f12624cac7fe4292b",
-                "shasum": "a899bdcdc993ab87a7d85facaab1abb7201fadda"
+                "url": "https://composer.tiki.org/dist/symfony/http-client-contracts/symfony-http-client-contracts-59f37624a82635962f04c98f31aed122e539a89e-zip-e3d79c.zip",
+                "reference": "59f37624a82635962f04c98f31aed122e539a89e",
+                "shasum": "a68628a1e0b829049345c4867f937a1bd8a7e787"
             },
             "require": {
                 "php": ">=7.1.3"
@@ -1441,7 +1441,7 @@
                 "interoperability",
                 "standards"
             ],
-            "time": "2022-03-08T18:43:16+00:00"
+            "time": "2022-04-11T14:52:04+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -1749,17 +1749,17 @@
         },
         {
             "name": "symfony/service-contracts",
-            "version": "v1.1.12",
+            "version": "v1.1.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "eedb374f02031714a48848758a27812f3eca317a"
+                "reference": "afa00c500c2d6aea6e3b2f4862355f507bc5ebb4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/service-contracts/symfony-service-contracts-eedb374f02031714a48848758a27812f3eca317a-zip-332fd1.zip",
-                "reference": "eedb374f02031714a48848758a27812f3eca317a",
-                "shasum": "bde469b31dc2c3c257a50be632ef3507d6a5f3d1"
+                "url": "https://composer.tiki.org/dist/symfony/service-contracts/symfony-service-contracts-afa00c500c2d6aea6e3b2f4862355f507bc5ebb4-zip-616e71.zip",
+                "reference": "afa00c500c2d6aea6e3b2f4862355f507bc5ebb4",
+                "shasum": "0ac1463e27a16299eb267763c65e3e4be66b7b06"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1807,21 +1807,21 @@
                 "interoperability",
                 "standards"
             ],
-            "time": "2022-03-09T13:39:03+00:00"
+            "time": "2022-05-27T14:01:05+00:00"
         },
         {
             "name": "symfony/yaml",
-            "version": "v4.4.37",
+            "version": "v4.4.43",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "d7f637cc0f0cc14beb0984f2bb50da560b271311"
+                "reference": "07e392f0ef78376d080d5353c081a5e5704835bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-d7f637cc0f0cc14beb0984f2bb50da560b271311-zip-387954.zip",
-                "reference": "d7f637cc0f0cc14beb0984f2bb50da560b271311",
-                "shasum": "347ca2e4da25bd46f88182678dff0b3d4e7a354e"
+                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-07e392f0ef78376d080d5353c081a5e5704835bd-zip-c4f8ce.zip",
+                "reference": "07e392f0ef78376d080d5353c081a5e5704835bd",
+                "shasum": "134dd4369a9601bd2cc09511d6cbc94b8a83b6cf"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1861,7 +1861,7 @@
             ],
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
-            "time": "2022-01-24T20:11:01+00:00"
+            "time": "2022-06-20T08:31:17+00:00"
         },
         {
             "name": "true/punycode",
@@ -1913,21 +1913,21 @@
     "packages-dev": [
         {
             "name": "bamarni/composer-bin-plugin",
-            "version": "v1.5.0",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bamarni/composer-bin-plugin.git",
-                "reference": "49934ffea764864788334c1485fbb08a4b852031"
+                "reference": "46cb272590cc6b7f5947655063a7fd6ea097838b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/bamarni/composer-bin-plugin/bamarni-composer-bin-plugin-49934ffea764864788334c1485fbb08a4b852031-zip-5cb712.zip",
-                "reference": "49934ffea764864788334c1485fbb08a4b852031",
-                "shasum": "b7dbefa6341bf258e83b74df82020a423e0eed6e"
+                "url": "https://composer.tiki.org/dist/bamarni/composer-bin-plugin/bamarni-composer-bin-plugin-46cb272590cc6b7f5947655063a7fd6ea097838b-zip-08ccb9.zip",
+                "reference": "46cb272590cc6b7f5947655063a7fd6ea097838b",
+                "shasum": "f075a5239e1fab1106b8408a019425c50872e96c"
             },
             "require": {
                 "composer-plugin-api": "^1.0 || ^2.0",
-                "php": "^5.5.9 || ^7.0 || ^8.0"
+                "php": "^5.6 || ^7.0 || ^8.0"
             },
             "require-dev": {
                 "composer/composer": "^1.0 || ^2.0",
@@ -1955,7 +1955,7 @@
                 "isolation",
                 "tool"
             ],
-            "time": "2022-02-22T21:01:25+00:00"
+            "time": "2020-04-17T09:33:47+00:00"
         },
         {
             "name": "doctrine/instantiator",
