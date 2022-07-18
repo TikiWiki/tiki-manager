@@ -68,8 +68,6 @@ $application->setName($banner);
 $application->add(new \TikiManager\Command\CreateInstanceCommand());
 $application->add(new \TikiManager\Command\AccessInstanceCommand());
 $application->add(new \TikiManager\Command\DeleteInstanceCommand());
-$application->add(new \TikiManager\Command\EnableWebManagerCommand());
-$application->add(new \TikiManager\Command\BlockWebManagerCommand());
 $application->add(new \TikiManager\Command\CopySshKeyCommand());
 $application->add(new \TikiManager\Command\WatchInstanceCommand());
 $application->add(new \TikiManager\Command\DetectInstanceCommand());
