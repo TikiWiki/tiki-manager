@@ -661,6 +661,8 @@ trait InstanceConfigure
                 $memoryLimit = $matches[1] * 1024 * 1024;
             } else if ($shorthandByte == 'K') {
                 $memoryLimit = $matches[1] * 1024;
+            } else {
+                $memoryLimit = (int) $accessMemoryLimit;
             }
         } else {
             $memoryLimit = (int) $accessMemoryLimit;
