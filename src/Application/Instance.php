@@ -51,6 +51,19 @@ ORDER BY v.version_id DESC
 ;
 SQL;
 
+    const SQL_SELECT_LAST_INSTANCE = <<<SQL
+SELECT
+    instance_id id, app
+FROM
+    instance
+WHERE
+    app IS NOT NULL
+ORDER BY
+    instance_id DESC
+LIMIT 1
+;
+SQL;
+
     const SQL_SELECT_UPDATABLE_INSTANCE = <<<SQL
 SELECT
     i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date
@@ -328,6 +341,13 @@ SQL;
     public static function getInstance($id)
     {
         $result = query(self::SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);
+        $instance = $result->fetchObject('TikiManager\Application\Instance');
+        return $instance;
+    }
+
+    public static function getLastInstance()
+    {
+        $result = query(self::SQL_SELECT_LAST_INSTANCE);
         $instance = $result->fetchObject('TikiManager\Application\Instance');
         return $instance;
     }
