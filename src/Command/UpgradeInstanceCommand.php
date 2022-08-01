@@ -70,7 +70,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 'stash',
                 null,
                 InputOption::VALUE_NONE,
-                'Only on Git: saves your local modifications, and try to apply after update/upgrade'
+                'Saves your local modifications, and try to apply after update/upgrade'
             )
             ->addOption(
                 'ignore-requirements',

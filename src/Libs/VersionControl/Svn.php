@@ -19,6 +19,11 @@ use TikiManager\Libs\Host\Command;
 
 class Svn extends VersionControlSystem
 {
+    /*
+     * @var string
+     */
+    protected static $stashFile;
+
     const SVN_TEMP_FOLDER_PATH = DIRECTORY_SEPARATOR . '.svn' . DIRECTORY_SEPARATOR . 'tmp';
 
     private $globalOptions = [
@@ -178,7 +183,7 @@ class Svn extends VersionControlSystem
         } elseif (is_numeric($branch)) {
             $toAppend .= "--change {$branch}";
         } else {
-            $branch = $this->getBranchUrl($branch);
+            $toAppend = $this->getBranchUrl($branch);
         }
 
         return $this->exec($targetFolder, "merge $toAppend --accept theirs-full --allow-mixed-revisions --dry-run .");
@@ -260,10 +265,20 @@ class Svn extends VersionControlSystem
         return $output;
     }
 
-    public function upgrade($targetFolder, $branch)
+    public function upgrade($targetFolder, $branch): void
     {
-        $this->revert($targetFolder);
-        return $this->checkoutBranch($targetFolder, $branch);
+        $stash = $this->canStash() && count($this->getChangedFiles($targetFolder));
+        if ($stash) {
+            $this->stash($targetFolder);
+        }
+
+        $this->checkoutBranch($targetFolder, $branch);
+
+        if ($stash) {
+            $this->stashPop($targetFolder);
+        }
+
+        $this->cleanup($targetFolder);
     }
 
     public function update(string $targetFolder, string $branch, int $lag = 0)
@@ -307,12 +322,12 @@ class Svn extends VersionControlSystem
 
         if ($this->isUpgrade($url, $branch)) {
             $this->io->writeln("Upgrading to '{$branch}' branch");
-            $this->revert($targetFolder);
             $this->upgrade($targetFolder, $branchUrl);
-        } else {
-            $this->io->writeln("Updating '{$branch}' branch");
-            $this->exec($targetFolder, "update $targetFolder --accept theirs-full --force");
+            return;
         }
+
+        $this->io->writeln("Updating '{$branch}' branch");
+        $this->exec($targetFolder, "update $targetFolder --accept theirs-full --force");
 
         $this->cleanup($targetFolder);
     }
@@ -381,5 +396,48 @@ class Svn extends VersionControlSystem
         \preg_match_all($regex, $allFiles, $matches);
 
         return $matches[1] ?? [];
+    }
+
+    public function stash(string $targetFolder): void
+    {
+        static::$stashFile = 'svn_diff_' . time() . '.patch';
+        $cmd = 'diff -x "-w --ignore-eol-style"> ' . static::$stashFile;
+
+        $this->exec($targetFolder, $cmd);
+        $this->revert($targetFolder);
+    }
+
+    /**
+     * @throws VcsException
+     */
+    public function stashPop(string $targetFolder)
+    {
+        $cmd = 'patch --ignore-whitespace ' . static::$stashFile ;
+
+        try {
+            $output = $this->exec($targetFolder, $cmd);
+
+            if (preg_match('/Summary of conflicts:/i', $output)) {
+                throw new VcsConflictException('Conflicts found: ' . PHP_EOL . $output);
+            }
+
+            // Changes applied, safe to remove patch file
+            $this->access->deleteFile(static::$stashFile);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to apply {file}.' . PHP_EOL . '{message}', [
+                'file' => static::$stashFile,
+                'path' => $targetFolder,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    protected function canStash(): bool
+    {
+        return $this->vcsOptions['allow_stash'] ?? false;
     }
 }
