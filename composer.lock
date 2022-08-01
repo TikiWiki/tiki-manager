@@ -886,17 +886,17 @@
         },
         {
             "name": "symfony/console",
-            "version": "v4.4.43",
+            "version": "v4.4.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "8a2628d2d5639f35113dc1b833ecd91e1ed1cf46"
+                "reference": "c35fafd7f12ebd6f9e29c95a370df7f1fb171a40"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-8a2628d2d5639f35113dc1b833ecd91e1ed1cf46-zip-c01939.zip",
-                "reference": "8a2628d2d5639f35113dc1b833ecd91e1ed1cf46",
-                "shasum": "ba615258b6a81ef9fcdacb3f8a615478e866916f"
+                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-c35fafd7f12ebd6f9e29c95a370df7f1fb171a40-zip-bac453.zip",
+                "reference": "c35fafd7f12ebd6f9e29c95a370df7f1fb171a40",
+                "shasum": "27ecf019dc7a1b247815c88fe38791e461dde3c1"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -955,21 +955,21 @@
             ],
             "description": "Eases the creation of beautiful and testable command line interfaces",
             "homepage": "https://symfony.com",
-            "time": "2022-06-23T12:22:25+00:00"
+            "time": "2022-07-20T09:59:04+00:00"
         },
         {
             "name": "symfony/dependency-injection",
-            "version": "v4.4.43",
+            "version": "v4.4.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/dependency-injection.git",
-                "reference": "8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd"
+                "reference": "25502a57182ba1e15da0afd64c975cae4d0a1471"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/dependency-injection/symfony-dependency-injection-8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd-zip-fdc78b.zip",
-                "reference": "8d0ae6d87ceea5f3a352413f9d1f71ed2234dcbd",
-                "shasum": "f5bbda105a0290342c5a99b48a4878bfca201227"
+                "url": "https://composer.tiki.org/dist/symfony/dependency-injection/symfony-dependency-injection-25502a57182ba1e15da0afd64c975cae4d0a1471-zip-94b8e0.zip",
+                "reference": "25502a57182ba1e15da0afd64c975cae4d0a1471",
+                "shasum": "c5a2ff793b1a7ac35e48c82c10b8add3ee41c317"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1024,7 +1024,7 @@
             ],
             "description": "Allows you to standardize and centralize the way objects are constructed in your application",
             "homepage": "https://symfony.com",
-            "time": "2022-06-22T15:01:38+00:00"
+            "time": "2022-07-20T09:59:04+00:00"
         },
         {
             "name": "symfony/dotenv",
@@ -1097,17 +1097,17 @@
         },
         {
             "name": "symfony/event-dispatcher",
-            "version": "v4.4.42",
+            "version": "v4.4.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/event-dispatcher.git",
-                "reference": "708e761740c16b02c86e3f0c932018a06b895d40"
+                "reference": "1e866e9e5c1b22168e0ce5f0b467f19bba61266a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/event-dispatcher/symfony-event-dispatcher-708e761740c16b02c86e3f0c932018a06b895d40-zip-460e2b.zip",
-                "reference": "708e761740c16b02c86e3f0c932018a06b895d40",
-                "shasum": "348f6b603c62c230a6865f94efc232e6588fecc1"
+                "url": "https://composer.tiki.org/dist/symfony/event-dispatcher/symfony-event-dispatcher-1e866e9e5c1b22168e0ce5f0b467f19bba61266a-zip-3b3a03.zip",
+                "reference": "1e866e9e5c1b22168e0ce5f0b467f19bba61266a",
+                "shasum": "dbaf11b922e1ccfad8cc996e64c7391b76c06025"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1160,7 +1160,7 @@
             ],
             "description": "Provides tools that allow your application components to communicate with each other by dispatching events and listening to them",
             "homepage": "https://symfony.com",
-            "time": "2022-05-05T15:33:49+00:00"
+            "time": "2022-07-20T09:59:04+00:00"
         },
         {
             "name": "symfony/event-dispatcher-contracts",
@@ -1704,17 +1704,17 @@
         },
         {
             "name": "symfony/process",
-            "version": "v4.4.41",
+            "version": "v4.4.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "9eedd60225506d56e42210a70c21bb80ca8456ce"
+                "reference": "5cee9cdc4f7805e2699d9fd66991a0e6df8252a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/process/symfony-process-9eedd60225506d56e42210a70c21bb80ca8456ce-zip-c2956c.zip",
-                "reference": "9eedd60225506d56e42210a70c21bb80ca8456ce",
-                "shasum": "cafb66e60084aaecc03000712911d03a3371f355"
+                "url": "https://composer.tiki.org/dist/symfony/process/symfony-process-5cee9cdc4f7805e2699d9fd66991a0e6df8252a2-zip-885e0c.zip",
+                "reference": "5cee9cdc4f7805e2699d9fd66991a0e6df8252a2",
+                "shasum": "70ae3ad2c33b823afb3033dfaee5517f6d1c25d3"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1745,7 +1745,7 @@
             ],
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
-            "time": "2022-04-04T10:19:07+00:00"
+            "time": "2022-06-27T13:16:42+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -1811,17 +1811,17 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v4.4.43",
+            "version": "v4.4.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "07e392f0ef78376d080d5353c081a5e5704835bd"
+                "reference": "c2b28c10fb3b7ac67bafa7b8f952cd83f35acde2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-07e392f0ef78376d080d5353c081a5e5704835bd-zip-c4f8ce.zip",
-                "reference": "07e392f0ef78376d080d5353c081a5e5704835bd",
-                "shasum": "134dd4369a9601bd2cc09511d6cbc94b8a83b6cf"
+                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-c2b28c10fb3b7ac67bafa7b8f952cd83f35acde2-zip-b90753.zip",
+                "reference": "c2b28c10fb3b7ac67bafa7b8f952cd83f35acde2",
+                "shasum": "183c767f147db78c405f266f6932e1aac3973013"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1861,7 +1861,7 @@
             ],
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
-            "time": "2022-06-20T08:31:17+00:00"
+            "time": "2022-06-27T13:16:42+00:00"
         },
         {
             "name": "true/punycode",
@@ -2011,17 +2011,17 @@
         },
         {
             "name": "mikey179/vfsstream",
-            "version": "v1.6.10",
+            "version": "v1.6.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bovigo/vfsStream.git",
-                "reference": "250c0825537d501e327df879fb3d4cd751933b85"
+                "reference": "17d16a85e6c26ce1f3e2fa9ceeacdc2855db1e9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/mikey179/vfsstream/mikey179-vfsstream-250c0825537d501e327df879fb3d4cd751933b85-zip-aa5ef1.zip",
-                "reference": "250c0825537d501e327df879fb3d4cd751933b85",
-                "shasum": "38bdd0ccfa509a5643da4dbdbf323d6a4dd2d4e9"
+                "url": "https://composer.tiki.org/dist/mikey179/vfsstream/mikey179-vfsstream-17d16a85e6c26ce1f3e2fa9ceeacdc2855db1e9f-zip-cd89e3.zip",
+                "reference": "17d16a85e6c26ce1f3e2fa9ceeacdc2855db1e9f",
+                "shasum": "2770f161e9fd79bf69474bb94e76b884c8074676"
             },
             "require": {
                 "php": ">=5.3.0"
@@ -2053,7 +2053,7 @@
             ],
             "description": "Virtual file system to mock the real file system in unit tests.",
             "homepage": "http://vfs.bovigo.org/",
-            "time": "2021-09-25T08:05:01+00:00"
+            "time": "2022-02-23T02:02:42+00:00"
         },
         {
             "name": "myclabs/deep-copy",
