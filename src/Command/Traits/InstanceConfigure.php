@@ -651,10 +651,25 @@ trait InstanceConfigure
         }
 
         $accessMemoryLimit = $functionIniGet ? $checkPHP("echo trim(ini_get('memory_limit'));") : -1;
-        $memoryLimit = (int) $accessMemoryLimit;
+
+        if (preg_match('/^(\d+)([GMK])/i', $accessMemoryLimit, $matches)) {
+            $shorthandByte = strtoupper($matches[2]);
+
+            if ($shorthandByte == 'G') {
+                $memoryLimit = $matches[1] * 1024 * 1024 * 1024;
+            } else if ($shorthandByte == 'M') {
+                $memoryLimit = $matches[1] * 1024 * 1024;
+            } else if ($shorthandByte == 'K') {
+                $memoryLimit = $matches[1] * 1024;
+            } else {
+                $memoryLimit = (int) $accessMemoryLimit;
+            }
+        } else {
+            $memoryLimit = (int) $accessMemoryLimit;
+        }
 
         if ($memoryLimit < 128 * 1024 * 1024 && $memoryLimit != -1) {
-            $missingRequirements[] = 'memory_limit must be set at least 128M';
+            $missingRequirements[] = 'memory_limit must be set at least 128M, current value: ' . $accessMemoryLimit;
         }
 
         $defaultCharset = $functionIniGet ? $checkPHP("echo strtolower(ini_get('default_charset'));") : '';
