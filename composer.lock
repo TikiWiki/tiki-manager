@@ -150,17 +150,17 @@
         },
         {
             "name": "gitonomy/gitlib",
-            "version": "v1.3.5",
+            "version": "v1.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gitonomy/gitlib.git",
-                "reference": "793ffe5826c30e64ea499ea9e4bb353dd0892bef"
+                "reference": "33ae0a2e469accc19d1a06bed63ed93dbf368ae2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/gitonomy/gitlib/gitonomy-gitlib-793ffe5826c30e64ea499ea9e4bb353dd0892bef-zip-823a9f.zip",
-                "reference": "793ffe5826c30e64ea499ea9e4bb353dd0892bef",
-                "shasum": "d1569a6fde18db8081d2dd2fdf387c6a34bd10db"
+                "url": "https://composer.tiki.org/dist/gitonomy/gitlib/gitonomy-gitlib-33ae0a2e469accc19d1a06bed63ed93dbf368ae2-zip-2743de.zip",
+                "reference": "33ae0a2e469accc19d1a06bed63ed93dbf368ae2",
+                "shasum": "1103ff679b8f885957b748f0be0ad635d82ff5d2"
             },
             "require": {
                 "ext-pcre": "*",
@@ -210,7 +210,7 @@
                 }
             ],
             "description": "Library for accessing git",
-            "time": "2022-03-01T10:56:00+00:00"
+            "time": "2022-08-05T09:17:13+00:00"
         },
         {
             "name": "laminas/laminas-loader",
