@@ -140,8 +140,12 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             $argumentToAdd = '';
         }
 
+        if($input->getOption('upgrade')){
+            $instances = CommandHelper::getInstances('upgrade');
+        }else{
+            $instances = CommandHelper::getInstances('all', true);
+        }
         // check for availability of instance
-        $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No instances available to clone/clone and upgrade.</comment>');
@@ -149,11 +153,17 @@ class SetupCloneManagerCommand extends TikiManagerCommand
         }
         $helper = $this->getHelper('question');
 
+        $selectedSourceInstances = array_filter($instances, function ($instance) use ($input) {
+            return $instance->getId() == $input->getOption('source');
+        });
         // select source instance
         if (empty($input->getOption('source'))) {
             $this->io->newLine();
             $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
-
+            if ($input->getOption('upgrade') && $instancesInfo) {
+                $output->writeln('<comment>Some instances are not upgradeable and thus, they are not listed here.</comment>');
+            }
+            
             $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
 
@@ -164,7 +174,8 @@ class SetupCloneManagerCommand extends TikiManagerCommand
 
             $selectedSourceInstances = $helper->ask($input, $output, $question);
         }
-        $sourceInstance = $selectedSourceInstances[0];
+
+        $sourceInstance = $selectedSourceInstances[0];        
         $input->setOption('source', implode(',', CommandHelper::getInstanceIds($selectedSourceInstances)));
 
         // select target instance
@@ -177,6 +188,10 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             $output->writeln('<comment>No instances available as destination.</comment>');
             return 0;
         }
+
+        $selectedDestinationInstances = array_filter($instances, function ($instance) use ($input) {
+            return $instance->getId() == $input->getOption('target');
+        });
         if (empty($input->getOption('target'))) {
             $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);

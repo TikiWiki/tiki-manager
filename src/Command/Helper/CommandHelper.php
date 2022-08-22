@@ -197,6 +197,9 @@ class CommandHelper
             case 'update':
                 $result = Instance::getUpdatableInstances();
                 break;
+            case 'upgrade':
+                $result = Instance::getUpgradableInstances();
+                break;
             case 'restore':
                 $result = Instance::getRestorableInstances();
                 break;

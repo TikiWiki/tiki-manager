@@ -85,6 +85,27 @@ WHERE
     LOWER(v.type) in('svn', 'tarball', 'git', 'src')
 ;
 SQL;
+    const SQL_SELECT_UPGRADABLE_INSTANCE = <<<SQL
+SELECT
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date
+FROM
+    instance i
+INNER JOIN access a
+    ON i.instance_id=a.instance_id
+INNER JOIN
+    version v ON i.instance_id = v.instance_id
+INNER JOIN (
+    SELECT
+        MAX(version_id) version
+    FROM
+        version
+    GROUP BY
+        instance_id
+    ) t ON t.version = v.version_id
+WHERE
+    LOWER(v.type) in('svn', 'tarball', 'git', 'src') AND v.revision <> ''
+;
+SQL;
 
     const SQL_DUPLICATED_INSTANCE = <<<SQL
 SELECT
@@ -352,9 +373,13 @@ SQL;
         return $instance;
     }
 
-    public static function getUpdatableInstances()
+    public static function getUpdatableInstances($upgrade=null)
     {
         $result = query(self::SQL_SELECT_UPDATABLE_INSTANCE);
+        
+        if($upgrade == "upgrade"){
+            $result = query(self::SQL_SELECT_UPGRADABLE_INSTANCE);
+        }
 
         $instances = [];
         while ($instance = $result->fetchObject('TikiManager\Application\Instance')) {
@@ -362,6 +387,10 @@ SQL;
         }
 
         return $instances;
+    }
+    public static function getUpgradableInstances()
+    {        
+        return self::getUpdatableInstances("upgrade");
     }
 
     public static function getRestorableInstances()
