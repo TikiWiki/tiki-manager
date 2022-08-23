@@ -3,9 +3,9 @@
   php:
     min: 7.4
     max: 7.4
-  mysql:
-    min: 5.5
   mariadb:
+    min: 5.5
+  mysql:
     min: 5.7
 
 - name: Tiki23
@@ -13,9 +13,9 @@
   php:
     min: 7.4
     max: 7.4
-  mysql:
-    min: 5.5
   mariadb:
+    min: 5.5
+  mysql:
     min: 5.7
 
 - name: Tiki22
@@ -23,9 +23,9 @@
   php:
     min: 7.4
     max: 7.4   
-  mysql:
-    min: 5.5
   mariadb:
+    min: 5.5
+  mysql:
     min: 5.7
 
 - name: Tiki21 LTS
@@ -33,9 +33,9 @@
   php:
     min: 7.2
     max: 7.3    
-  mysql:
-    min: 5.5
   mariadb:
+    min: 5.5
+  mysql:
     min: 5.7
 
 - name: Tiki20
@@ -43,10 +43,10 @@
   php:
     min: 7.1
     max: 7.2
-  mysql:
+  mariadb:
     min: 5.5
     max: 10.4
-  mariadb:
+  mysql:
     min: 5.5.3
     max: 5.7
 
@@ -55,10 +55,10 @@
   php:
     min: 7.1
     max: 7.2
-  mysql:
+  mariadb:
     min: 5.5
     max: 10.4
-  mariadb:
+  mysql:
     min: 5.5.3
     max: 5.7
 
@@ -67,10 +67,10 @@
   php:
     min: 5.6
     max: 7.2
-  mysql:
+  mariadb:
     min: 5.1
     max: 10.4
-  mariadb:
+  mysql:
     min: 5.0
     max: 5.7
 
@@ -79,10 +79,10 @@
   php:
     min: 5.5
     max: 5.6
-  mysql:
+  mariadb:
     min: 5.0
     max: 10.1
-  mariadb:
+  mysql:
     min: 5.0
     max: 5.6
 
@@ -91,9 +91,9 @@
   php:
     min: 5.3
     max: 5.6
-  mysql:
+  mariadb:
     min: 5.1
     max: 5.5
-  mariadb:
+  mysql:
     min: 5.0
     max: 5.5
