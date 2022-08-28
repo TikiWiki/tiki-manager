@@ -104,6 +104,12 @@ class ImportInstanceCommand extends TikiManagerCommand
                 'Instance backup permission'
             )
             ->addOption(
+                'branch',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'Instance branch'
+            )
+            ->addOption(
                 'phpexec',
                 null,
                 InputOption::VALUE_REQUIRED,

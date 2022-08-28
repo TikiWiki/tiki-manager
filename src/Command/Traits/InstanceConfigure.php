@@ -335,7 +335,7 @@ trait InstanceConfigure
     public function importApplication(Instance $instance): void
     {
         if (!$this->detectApplication($instance)) {
-            throw new Exception('Unable to import. An application was not detected in this instance.');
+            throw new \Exception('Unable to import. An application was not detected in this instance.');
         };
 
         $instance->app = 'tiki';
