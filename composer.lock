@@ -960,17 +960,17 @@
         },
         {
             "name": "symfony/console",
-            "version": "v4.4.44",
+            "version": "v4.4.45",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "c35fafd7f12ebd6f9e29c95a370df7f1fb171a40"
+                "reference": "28b77970939500fb04180166a1f716e75a871ef8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-c35fafd7f12ebd6f9e29c95a370df7f1fb171a40-zip-bac453.zip",
-                "reference": "c35fafd7f12ebd6f9e29c95a370df7f1fb171a40",
-                "shasum": "27ecf019dc7a1b247815c88fe38791e461dde3c1"
+                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-28b77970939500fb04180166a1f716e75a871ef8-zip-696d6c.zip",
+                "reference": "28b77970939500fb04180166a1f716e75a871ef8",
+                "shasum": "dd30f3fd4764cee1140106632d7e4445be51fa63"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1043,7 +1043,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-07-20T09:59:04+00:00"
+            "time": "2022-08-17T14:50:19+00:00"
         },
         {
             "name": "symfony/dependency-injection",
@@ -2067,17 +2067,17 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v4.4.44",
+            "version": "v4.4.45",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "c2b28c10fb3b7ac67bafa7b8f952cd83f35acde2"
+                "reference": "aeccc4dc52a9e634f1d1eebeb21eacfdcff1053d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-c2b28c10fb3b7ac67bafa7b8f952cd83f35acde2-zip-b90753.zip",
-                "reference": "c2b28c10fb3b7ac67bafa7b8f952cd83f35acde2",
-                "shasum": "183c767f147db78c405f266f6932e1aac3973013"
+                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-aeccc4dc52a9e634f1d1eebeb21eacfdcff1053d-zip-7ab2ed.zip",
+                "reference": "aeccc4dc52a9e634f1d1eebeb21eacfdcff1053d",
+                "shasum": "eb4598aa699282fa4e21bf39ce4e8fece5955602"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -2131,7 +2131,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-06-27T13:16:42+00:00"
+            "time": "2022-08-02T15:47:23+00:00"
         },
         {
             "name": "true/punycode",
