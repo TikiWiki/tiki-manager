@@ -273,7 +273,10 @@ class Backup
         $sqlpath = $backupDir . DIRECTORY_SEPARATOR . 'database_dump.sql';
 
         file_exists($sqlpath) && unlink($sqlpath);
-        $app->backupDatabase($sqlpath);
+
+        if (!$app->backupDatabase($sqlpath)) {
+            throw new \RuntimeException('Unsuccessful database backup. Aborting.');
+        }
 
         if (file_exists($sqlpath)) {
             $this->fixPermissions($sqlpath);
@@ -291,8 +294,15 @@ class Backup
         $lineTemplate = !$this->direct ? '%s    %s    %s    %s' : '%s    %s';
 
         foreach ($data as $location) {
-            $line = vsprintf($lineTemplate . PHP_EOL, $location);
-            fwrite($file, $line);
+            if ($line = @vsprintf($lineTemplate . PHP_EOL, $location)) {
+                fwrite($file, $line);
+            } else {
+                $this->io->warning("Failed to generate manifest entry line");
+                $error = "Invalid/insufficient data to generate the manifest:\n" .
+                    "Received " . count($data) . " arguments instead of " . (!$this->direct ? 4 : 2) . "\n" .
+                    var_export($data, true);
+                debug($error, null, "\n\n");
+            }
         }
 
         fclose($file);
