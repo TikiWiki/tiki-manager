@@ -96,16 +96,16 @@ class CheckoutCommand extends TikiManagerCommand
                     }
                     return $answer;
                 });
+            }
 
-                if (empty($input->getOption('url'))) {
-                    $url = $this->io->ask('What is the URL of the Git repository?', null, function ($answer) {
-                        if (empty($answer)) {
-                            throw new \RuntimeException('Git URL cannot be empty');
-                        }
-                        return $answer;
-                    });
-                    $input->setOption('url', $url);
-                }
+            if (empty($input->getOption('url'))) {
+                $url = $this->io->ask('What is the URL of the Git repository?', null, function ($answer) {
+                    if (empty($answer)) {
+                        throw new \RuntimeException('Git URL cannot be empty');
+                    }
+                    return $answer;
+                });
+                $input->setOption('url', $url);
             }
             $input->setOption('folder', $folder);
         }

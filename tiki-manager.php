@@ -117,6 +117,8 @@ $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
 
+$application->add(new \TikiManager\Command\CheckoutCommand());
+
 if (extension_loaded('posix')) {
     $userInfo = posix_getpwuid(posix_geteuid());
     if ($userInfo['name'] === 'root') {
