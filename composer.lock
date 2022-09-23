@@ -3117,17 +3117,17 @@
         },
         {
             "name": "sebastian/comparator",
-            "version": "3.0.3",
+            "version": "3.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "1071dfcef776a57013124ff35e1fc41ccd294758"
+                "reference": "1dc7ceb4a24aede938c7af2a9ed1de09609ca770"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/sebastian/comparator/sebastian-comparator-1071dfcef776a57013124ff35e1fc41ccd294758-zip-bb528e.zip",
-                "reference": "1071dfcef776a57013124ff35e1fc41ccd294758",
-                "shasum": "12810a04e1e8d2e80a00846c58be4b7553f38c11"
+                "url": "https://composer.tiki.org/dist/sebastian/comparator/sebastian-comparator-1dc7ceb4a24aede938c7af2a9ed1de09609ca770-zip-b82f65.zip",
+                "reference": "1dc7ceb4a24aede938c7af2a9ed1de09609ca770",
+                "shasum": "e5b718b09590d6f0e968e74ea2e48745ff5f9ea4"
             },
             "require": {
                 "php": ">=7.1",
@@ -3183,7 +3183,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-11-30T08:04:30+00:00"
+            "time": "2022-09-14T12:31:48+00:00"
         },
         {
             "name": "sebastian/diff",
@@ -3308,17 +3308,17 @@
         },
         {
             "name": "sebastian/exporter",
-            "version": "3.1.4",
+            "version": "3.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/exporter.git",
-                "reference": "0c32ea2e40dbf59de29f3b49bf375176ce7dd8db"
+                "reference": "73a9676f2833b9a7c36968f9d882589cd75511e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/sebastian/exporter/sebastian-exporter-0c32ea2e40dbf59de29f3b49bf375176ce7dd8db-zip-d1fd63.zip",
-                "reference": "0c32ea2e40dbf59de29f3b49bf375176ce7dd8db",
-                "shasum": "070452748d0d1cb09a0ec624750345e67306e1a1"
+                "url": "https://composer.tiki.org/dist/sebastian/exporter/sebastian-exporter-73a9676f2833b9a7c36968f9d882589cd75511e6-zip-4b2745.zip",
+                "reference": "73a9676f2833b9a7c36968f9d882589cd75511e6",
+                "shasum": "69cabf82985e352ea3050d99b3049fbbe234373e"
             },
             "require": {
                 "php": ">=7.0",
@@ -3377,7 +3377,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-11-11T13:51:24+00:00"
+            "time": "2022-09-14T06:00:17+00:00"
         },
         {
             "name": "sebastian/global-state",
