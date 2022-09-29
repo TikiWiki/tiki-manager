@@ -577,7 +577,13 @@ class Tiki extends Application
         if ($patch->package == 'tiki') {
             $access->chdir($this->instance->webroot);
         } else {
-            $access->chdir($this->instance->getWebPath('vendor_bundled/vendor/'.$patch->package));
+            // For packages installed via Tiki Package Manager
+            $folder = 'vendor/';
+            if (substr($patch->package, 0, strlen($folder)) === $folder) {
+                $access->chdir($this->instance->getWebPath($patch->package));
+            } else {
+                $access->chdir($this->instance->getWebPath('vendor_bundled/vendor/'.$patch->package));
+            }
         }
 
         $command = $access->createCommand('patch', ['-R', '-p1', '-s', '-f', '--dry-run'], $patch_contents);
