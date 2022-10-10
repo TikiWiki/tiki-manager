@@ -250,7 +250,7 @@ class Git extends VersionControlSystem
      */
     public function getRevision($targetFolder)
     {
-        $gitCmd = 'rev-parse --short HEAD' . ($this->quiet ? ' --quiet' : '');
+        $gitCmd = 'rev-parse --short=8 --verify HEAD' . ($this->quiet ? ' --quiet' : '');
         return $this->exec($targetFolder, $gitCmd);
     }
 
