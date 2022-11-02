@@ -17,14 +17,14 @@
     "php": "^7.1",
     "phpseclib/phpseclib": "^2.0",
     "psr/log": "^1.1",
-    "symfony/console": "^3.4 || ^4.1",
+    "symfony/console": "^4.1",
     "symfony/dependency-injection": "^4.4",
     "symfony/event-dispatcher": "^4.1",
     "symfony/http-client": "^4.1",
     "symfony/dotenv": "^4.3",
     "symfony/finder": "4.4",
     "symfony/filesystem": "^4.1",
-    "symfony/process": "^4.3",
+    "symfony/process": "^3.4 || ^4.3",
     "symfony/yaml": "^4.3"
   },
   "config": {
