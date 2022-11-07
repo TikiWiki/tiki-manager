@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "88863ab450f2735f64ba6a5525844ae5",
+    "content-hash": "aac30ce04661df7ab78f04a8e4e518f4",
     "packages": [
         {
             "name": "composer/semver",
@@ -170,17 +170,17 @@
         },
         {
             "name": "gitonomy/gitlib",
-            "version": "v1.3.6",
+            "version": "v1.3.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gitonomy/gitlib.git",
-                "reference": "33ae0a2e469accc19d1a06bed63ed93dbf368ae2"
+                "reference": "00b57b79f02396aa4c7c163f76fe2bc48faebbb7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/gitonomy/gitlib/gitonomy-gitlib-33ae0a2e469accc19d1a06bed63ed93dbf368ae2-zip-2743de.zip",
-                "reference": "33ae0a2e469accc19d1a06bed63ed93dbf368ae2",
-                "shasum": "1103ff679b8f885957b748f0be0ad635d82ff5d2"
+                "url": "https://composer.tiki.org/dist/gitonomy/gitlib/gitonomy-gitlib-00b57b79f02396aa4c7c163f76fe2bc48faebbb7-zip-9e4079.zip",
+                "reference": "00b57b79f02396aa4c7c163f76fe2bc48faebbb7",
+                "shasum": "803b9ca600e71a1f181c64b1f4a43a121f91ce66"
             },
             "require": {
                 "ext-pcre": "*",
@@ -190,6 +190,7 @@
             },
             "require-dev": {
                 "ext-fileinfo": "*",
+                "phpspec/prophecy": "^1.10.2",
                 "phpunit/phpunit": "^5.7.27 || ^6.5.14 || ^7.5.20 || ^8.5.20 || ^9.5.9",
                 "psr/log": "^1.0"
             },
@@ -236,7 +237,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-05T09:17:13+00:00"
+            "time": "2022-10-04T14:20:15+00:00"
         },
         {
             "name": "laminas/laminas-loader",
@@ -759,17 +760,17 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "2.0.38",
+            "version": "2.0.39",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "b03536539f43a4f9aa33c4f0b2f3a1c752088fcd"
+                "reference": "f3a0e2b715c40cf1fd270d444901b63311725d63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpseclib/phpseclib/phpseclib-phpseclib-b03536539f43a4f9aa33c4f0b2f3a1c752088fcd-zip-325d62.zip",
-                "reference": "b03536539f43a4f9aa33c4f0b2f3a1c752088fcd",
-                "shasum": "44dd72366cc602592d0cc848a5d64c2bd1ae50b5"
+                "url": "https://composer.tiki.org/dist/phpseclib/phpseclib/phpseclib-phpseclib-f3a0e2b715c40cf1fd270d444901b63311725d63-zip-ece8d6.zip",
+                "reference": "f3a0e2b715c40cf1fd270d444901b63311725d63",
+                "shasum": "090ef8c3570add49b5e5c292cc98c94aaa98f82d"
             },
             "require": {
                 "php": ">=5.3.3"
@@ -861,7 +862,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-09-02T17:04:26+00:00"
+            "time": "2022-10-24T10:49:03+00:00"
         },
         {
             "name": "psr/container",
@@ -961,17 +962,17 @@
         },
         {
             "name": "symfony/console",
-            "version": "v4.4.45",
+            "version": "v4.4.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "28b77970939500fb04180166a1f716e75a871ef8"
+                "reference": "8e70c1cab07ac641b885ce80385b9824a293c623"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-28b77970939500fb04180166a1f716e75a871ef8-zip-696d6c.zip",
-                "reference": "28b77970939500fb04180166a1f716e75a871ef8",
-                "shasum": "dd30f3fd4764cee1140106632d7e4445be51fa63"
+                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-8e70c1cab07ac641b885ce80385b9824a293c623-zip-8b17e3.zip",
+                "reference": "8e70c1cab07ac641b885ce80385b9824a293c623",
+                "shasum": "700469a72b502e924bb8fc1fbc66bba37a492140"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -1044,7 +1045,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-17T14:50:19+00:00"
+            "time": "2022-10-26T16:02:45+00:00"
         },
         {
             "name": "symfony/dependency-injection",
