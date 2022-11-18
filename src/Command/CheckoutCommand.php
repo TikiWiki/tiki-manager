@@ -56,12 +56,19 @@ class CheckoutCommand extends TikiManagerCommand
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         $instances = CommandHelper::getInstances('tiki');
+        $instances = array_filter($instances, function ($instance) {
+            return $instance->vcs_type == 'git';
+        });
+
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
         if (empty($input->getOption('instance'))) {
             CommandHelper::renderInstancesTable($output, $instancesInfo);
             $this->io->newLine();
-            $output->writeln('<comment>Note: Only Tiki instances checked out by Git can be managed by this command/comment>');
+            $output->writeln('<comment>Note: Only Tiki instances checked out by Git can be managed by this command</comment>');
+            if (count($instances)==0) {
+                throw new \RuntimeException('No instance available.');
+            }
             $this->io->newLine();
             $answer = $this->io->ask('Which instance do you want to checkout', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
