@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Application\Patch;
+use TikiManager\Command\Helper\CommandHelper;
 
 class DeletePatchCommand extends TikiManagerCommand
 {
@@ -31,7 +32,35 @@ class DeletePatchCommand extends TikiManagerCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
+        $instances = CommandHelper::getInstances('tiki');
+
         if (empty($input->getOption('patch'))) {
+            $rows = [];
+
+            foreach ($instances as $instance) {
+                $patches = Patch::getPatches($instance->getId());
+                foreach ($patches as $patch) {
+                    $rows[] = [
+                        'id' => $patch->id,
+                        'instance' => $instance->name,
+                        'package' => $patch->package,
+                        'url' => $patch->url
+                    ];
+                }
+            }
+            if ($rows) {
+                $table = new Table($output);
+                $headers = array_map(function ($headerValue) {
+                    return ucwords($headerValue);
+                }, array_keys($rows[0]));
+                $table
+                    ->setHeaders($headers)
+                    ->setRows($rows);
+                $table->render();
+            } else {
+                $this->io->writeln('<comment>No patches applied yet.</comment>');
+            }
+            
             $patch = $this->io->ask('What is the patch ID?', null, function ($answer) {
                 if (empty($answer)) {
                     throw new \RuntimeException('Patch ID cannot be empty');
