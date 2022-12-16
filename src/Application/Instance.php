@@ -745,9 +745,9 @@ SQL;
      * @return bool|string
      * @throws Exception\FolderPermissionException
      */
-    public function backup($direct = false, $full = true)
+    public function backup($direct = false, $onlyCode = false, $full = true)
     {
-        $backup = new Backup($this, $direct, $full);
+        $backup = new Backup($this, $direct, $onlyCode, $full);
 
         if ($this->type === 'local' && $this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');

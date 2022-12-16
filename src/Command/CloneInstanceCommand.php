@@ -296,6 +296,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         // PRE-CHECK
         $this->io->newLine();
         $this->io->section('Pre-check');
+        $this->io->writeln('Executing pre-check operations...');
 
         $directWarnMessage = 'Direct backup cannot be used, instance {instance_name} is ftp.';
         // Check if direct flag can be used
@@ -324,50 +325,54 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
         }
 
-        $dbConfigErrorMessage = 'Unable to load/set database configuration for instance {instance_name} (id: {instance_id}). {exception_message}';
+        if (! $onlyCode) {
+            $dbConfigErrorMessage = 'Unable to load/set database configuration for instance {instance_name} (id: {instance_id}). {exception_message}';
 
-        try {
-            // The source instance needs to be well configured by default
-            if (!$this->testExistingDbConnection($sourceInstance)) {
-                throw new \Exception('Existing database configuration failed to connect.');
-            }
-        } catch (\Exception $e) {
-            $this->logger->error($dbConfigErrorMessage, [
-                'instance_name' => $sourceInstance->name,
-                'instance_id' => $sourceInstance->getId(),
-                'exception_message' => $e->getMessage(),
-            ]);
-            return 1;
-        }
-
-        foreach ($targetInstances as $key => $destinationInstance) {
             try {
-                $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
-
-                if (!$setupTargetDatabase && !$this->input->isInteractive() &&
-                    !$this->testExistingDbConnection($destinationInstance)) {
+                // The source instance needs to be well configured by default
+                if (!$this->testExistingDbConnection($sourceInstance)) {
                     throw new \Exception('Existing database configuration failed to connect.');
                 }
-
-                $this->setupDatabase($destinationInstance, $setupTargetDatabase);
-                $destinationInstance->database()->setupConnection();
             } catch (\Exception $e) {
                 $this->logger->error($dbConfigErrorMessage, [
-                    'instance_name' => $destinationInstance->name,
-                    'instance_id' => $destinationInstance->getId(),
+                    'instance_name' => $sourceInstance->name,
+                    'instance_id' => $sourceInstance->getId(),
                     'exception_message' => $e->getMessage(),
                 ]);
-                unset($targetInstances[$key]);
-                continue;
+                return 1;
             }
 
-            if ($this->isSameDatabase($sourceInstance, $destinationInstance) && ! $onlyCode) {
-                $this->logger->error('Database host and name are the same in the source ({source_instance_name}) and destination ({target_instance_id}).', [
-                    'source_instance_name' => $sourceInstance->name,
-                    'target_instance_id' => $destinationInstance->name
-                ]);
-                unset($targetInstances[$key]);
-                continue;
+            foreach ($targetInstances as $key => $destinationInstance) {
+                try {
+                    $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
+
+                    if (
+                        !$setupTargetDatabase && !$this->input->isInteractive() &&
+                        !$this->testExistingDbConnection($destinationInstance)
+                    ) {
+                        throw new \Exception('Existing database configuration failed to connect.');
+                    }
+
+                    $this->setupDatabase($destinationInstance, $setupTargetDatabase);
+                    $destinationInstance->database()->setupConnection();
+                } catch (\Exception $e) {
+                    $this->logger->error($dbConfigErrorMessage, [
+                        'instance_name' => $destinationInstance->name,
+                        'instance_id' => $destinationInstance->getId(),
+                        'exception_message' => $e->getMessage(),
+                    ]);
+                    unset($targetInstances[$key]);
+                    continue;
+                }
+
+                if ($this->isSameDatabase($sourceInstance, $destinationInstance)) {
+                    $this->logger->error('Database host and name are the same in the source ({source_instance_name}) and destination ({target_instance_id}).', [
+                        'source_instance_name' => $sourceInstance->name,
+                        'target_instance_id' => $destinationInstance->name
+                    ]);
+                    unset($targetInstances[$key]);
+                    continue;
+                }
             }
         }
 
@@ -409,7 +414,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $this->io->newLine();
             $this->io->section('Creating snapshot of: ' . $sourceInstance->name);
             try {
-                $archive = $sourceInstance->backup($direct);
+                $archive = $sourceInstance->backup($direct, $onlyCode);
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
             }

@@ -38,16 +38,18 @@ class Backup
     protected $instance;
     protected $workpath;
     protected $direct;
+    protected $onlyCode;
     protected $full;
 
     /**
      * Backup constructor.
      * @param $instance
      * @param bool $direct
+     * @param bool $onlyCode
      * @param bool $full
      * @throws FolderPermissionException
      */
-    public function __construct($instance, $direct = false, $full = true)
+    public function __construct($instance, $direct = false, $onlyCode = false, $full = true)
     {
         $this->setIO(App::get('io'));
 
@@ -61,6 +63,7 @@ class Backup
         $this->backupDir = $this->backupRoot . DIRECTORY_SEPARATOR . $this->backupDirname;
         $this->archiveDir = $this->archiveRoot . DIRECTORY_SEPARATOR . $this->backupDirname;
         $this->direct = $direct;
+        $this->onlyCode = $onlyCode;
         $this->errors = [];
         $this->full = !in_array($instance->vcs_type, ['git', 'svn']) ? true : $full;
 
@@ -160,8 +163,10 @@ class Backup
         $this->io->writeln('Creating manifest...');
         $this->createManifest($copyResult, $backupDir);
 
-        $this->io->writeln('Creating database dump...');
-        $this->createDatabaseDump($this->app, $backupDir);
+        if (! $this->onlyCode) {
+            $this->io->writeln('Creating database dump...');
+            $this->createDatabaseDump($this->app, $backupDir);
+        }
 
         $result = $backupDir;
         if (!$skipArchive || !$this->direct) {
