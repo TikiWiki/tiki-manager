@@ -101,6 +101,11 @@ class ApplyPatchCommand extends TikiManagerCommand
             });
             $input->setOption('url', $url);
         }
+
+        if (empty($input->getOption('skip-reindex'))) {
+            $skipReindex = $this->io->confirm('Skip rebuilding index?', false);
+            $input->setOption('skip-reindex', $skipReindex);
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
