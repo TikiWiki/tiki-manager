@@ -91,5 +91,10 @@ $timeElapsed = $interval->format('%hh:%im:%ss');
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    setTimeout(function() {
+        document.location.reload();
+    }, 60000);
+</script>
 </body>
 </html>
