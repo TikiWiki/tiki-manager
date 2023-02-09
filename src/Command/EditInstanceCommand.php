@@ -73,6 +73,12 @@ class EditInstanceCommand extends TikiManagerCommand
                 'bp',
                 InputOption::VALUE_REQUIRED,
                 'Instance backup permission'
+            )
+            ->addOption(
+                'phpexec',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'PHP binary to be used to manage the instance'
             );
     }
 
@@ -80,7 +86,7 @@ class EditInstanceCommand extends TikiManagerCommand
     {
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
-        
+
         if (isset($instancesInfo)) {
             $this->io->newLine();
             $output->writeln('<comment>Instances list</comment>');
@@ -96,10 +102,10 @@ class EditInstanceCommand extends TikiManagerCommand
                     return CommandHelper::validateInstanceSelection($answer, $instances);
                 });
                 $selectedInstances = $helper->ask($input, $output, $question);
-            }else{
+            } else {
                 $selectedInstances = CommandHelper::validateInstanceSelection($input->getOption('instances'), $instances);
             }
-            
+
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Edit data for ' . $instance->name . '</>');
 
@@ -111,7 +117,7 @@ class EditInstanceCommand extends TikiManagerCommand
                         $question = CommandHelper::getQuestion('Instance name', $instance->name);
                     }
                     $name = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $name = $input->getOption('name');
                 }
 
@@ -119,7 +125,7 @@ class EditInstanceCommand extends TikiManagerCommand
                 if (empty($input->getOption('email'))) {
                     $question = CommandHelper::getQuestion('Contact email', $instance->contact);
                     $contact = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $contact = $input->getOption('email');
                 }
 
@@ -127,7 +133,7 @@ class EditInstanceCommand extends TikiManagerCommand
                 if (empty($input->getOption('webroot'))) {
                     $question = CommandHelper::getQuestion('Web root', $instance->webroot);
                     $webroot = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $webroot = $input->getOption('webroot');
                 }
 
@@ -135,7 +141,7 @@ class EditInstanceCommand extends TikiManagerCommand
                 if (empty($input->getOption('url'))) {
                     $question = CommandHelper::getQuestion('Web URL', $instance->weburl);
                     $weburl = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $weburl = $input->getOption('url');
                 }
 
@@ -143,15 +149,24 @@ class EditInstanceCommand extends TikiManagerCommand
                 if (empty($input->getOption('tempdir'))) {
                     $question = CommandHelper::getQuestion('Working directory', $instance->tempdir);
                     $tempdir = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $tempdir = $input->getOption('tempdir');
                 }
+
+                //PHP executable path
+                if (empty($input->getOption('phpexec'))) {
+                    $question = CommandHelper::getQuestion('PHP executable path', $instance->phpexec);
+                    $phpexec = $helper->ask($input, $output, $question);
+                } else {
+                    $phpexec = $input->getOption('phpexec');
+                }
+                $instance->getDiscovery()->detectPHPVersion($phpexec);
 
                 //Instance Backup user
                 if (empty($input->getOption('backup-user'))) {
                     $question = CommandHelper::getQuestion('Backup owner', $instance->getProp('backup_user'));
                     $backup_user = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $backup_user = $input->getOption('backup-user');
                 }
 
@@ -159,7 +174,7 @@ class EditInstanceCommand extends TikiManagerCommand
                 if (empty($input->getOption('backup-group'))) {
                     $question = CommandHelper::getQuestion('Backup group', $instance->getProp('backup_group'));
                     $backup_group = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $backup_group = $input->getOption('backup-group');
                 }
 
@@ -168,7 +183,7 @@ class EditInstanceCommand extends TikiManagerCommand
                     $backup_perm = intval($instance->getProp('backup_perm') ?: 0775);
                     $question = CommandHelper::getQuestion('Backup file permissions', decoct($backup_perm));
                     $backup_perm = $helper->ask($input, $output, $question);
-                }else{
+                } else {
                     $backup_perm = $input->getOption('backup-permission');
                 }
 
@@ -177,11 +192,12 @@ class EditInstanceCommand extends TikiManagerCommand
                 $instance->webroot = rtrim($webroot, '/');
                 $instance->weburl = rtrim($weburl, '/');
                 $instance->tempdir = rtrim($tempdir, '/');
+                $instance->phpexec = $phpexec;
                 $instance->backup_user = $backup_user;
                 $instance->backup_group = $backup_group;
                 $instance->backup_perm = octdec($backup_perm);
                 $instance->save();
-                
+
                 $this->io->newLine();
                 $output->writeln('<comment>'. $instance->name .' instance information has been modified successfully.</comment>');
                 $this->io->newLine();
