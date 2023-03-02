@@ -481,6 +481,10 @@ class Backup
 
     public function setArchiveSymlink($symlinkPath = null, $archiveDir = null, $instance = null)
     {
+        if (file_exists($symlinkPath)) { // if destination path exists, skip
+            return true;
+        }
+
         $archiveDir = $archiveDir ?: $this->archiveDir;
         $instance = $instance ?: $this->instance;
         $symlinkPath = $symlinkPath ?: dirname($instance->webroot) . DIRECTORY_SEPARATOR . 'backup';
