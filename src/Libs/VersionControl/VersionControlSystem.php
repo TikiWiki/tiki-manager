@@ -186,6 +186,14 @@ abstract class VersionControlSystem implements LoggerAwareInterface
     abstract public function getRevision($targetFolder);
 
     /**
+     * Get date revision from the current revision
+     * @param $targetFolder
+     * @param $commitId
+     * @return mixed
+     */
+    abstract public function getDateRevision($targetFolder, $commitId);
+
+    /**
      * Checkout a branch given a branch name
      * @param $targetFolder
      * @param $branch

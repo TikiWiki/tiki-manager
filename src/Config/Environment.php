@@ -454,6 +454,12 @@ class Environment
                     UPDATE info SET value = '10' WHERE name = 'version';
                 ");
             // no break
+            case 10:
+                $db->exec("
+                    ALTER TABLE version ADD COLUMN date_revision VARCHAR(25);
+                    UPDATE info SET value = '11' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

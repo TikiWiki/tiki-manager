@@ -248,6 +248,18 @@ class Svn extends VersionControlSystem
         return 0;
     }
 
+    public function getDateRevision($targetFolder, $commitId)
+    {
+        $info = $this->info($targetFolder, true);
+
+        if (! empty($info)) {
+            preg_match('/(.*Date:\s+)(.*)/', $info, $matches);
+            $date_parse = date_parse($matches[2]);
+            return $date_parse['year'] . '-' . $date_parse['month'] . '-' . $date_parse['day'];
+        }
+        return '';
+    }
+
     /**
      * @param $targetFolder
      * @param $branch

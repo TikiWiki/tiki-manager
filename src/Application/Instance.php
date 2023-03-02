@@ -26,7 +26,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -38,7 +38,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -66,7 +66,7 @@ SQL;
 
     const SQL_SELECT_UPDATABLE_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -87,7 +87,7 @@ WHERE
 SQL;
     const SQL_SELECT_UPGRADABLE_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -122,7 +122,7 @@ SQL;
 
     const SQL_SELECT_LATEST_VERSION = <<<SQL
 SELECT
-    version_id id, instance_id, type, branch, date, revision, action
+    version_id id, instance_id, type, branch, date, revision, action,date_revision
 FROM
     version
 WHERE
@@ -287,6 +287,7 @@ SQL;
     public $selection;
     public $last_action;
     public $last_action_date;
+    public $last_revision_date;
     public $revision;
 
     protected $databaseConfig;
@@ -373,11 +374,11 @@ SQL;
         return $instance;
     }
 
-    public static function getUpdatableInstances($upgrade=null)
+    public static function getUpdatableInstances($upgrade = null)
     {
         $result = query(self::SQL_SELECT_UPDATABLE_INSTANCE);
-        
-        if($upgrade == "upgrade"){
+
+        if ($upgrade == "upgrade") {
             $result = query(self::SQL_SELECT_UPGRADABLE_INSTANCE);
         }
 
@@ -389,7 +390,7 @@ SQL;
         return $instances;
     }
     public static function getUpgradableInstances()
-    {        
+    {
         return self::getUpdatableInstances("upgrade");
     }
 
@@ -697,6 +698,7 @@ SQL;
         $version->branch = $app->getBranch(true);
         $version->date = $app->getUpdateDate();
         $version->revision = $app->getRevision($this->webroot);
+        $version->date_revision = $app->getDateRevision($this->webroot);
         $version->save();
 
         return $version;
@@ -1027,6 +1029,18 @@ SQL;
         return null;
     }
 
+    /**
+     * Get instance application date revision
+     * @return mixed|string|null
+     */
+    public function getDateRevision()
+    {
+        if ($this->app == 'tiki') {
+            return $this->getApplication()->getDateRevision();
+        }
+
+        return null;
+    }
     /**
      * @param Database|array $config
      */

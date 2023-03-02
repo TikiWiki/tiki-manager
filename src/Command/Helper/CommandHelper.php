@@ -44,7 +44,8 @@ class CommandHelper
                 'branch' => $instance->branch,
                 'revision' => $instance->revision,
                 'last_action' => $instance->last_action,
-                'last_action_date' => $instance->last_action_date
+                'last_action_date' => $instance->last_action_date,
+                'last_revision_date' => $instance->last_revision_date
             ];
         }
 
@@ -73,7 +74,8 @@ class CommandHelper
             'Branch',
             'Revision',
             'Last Action',
-            'Action Date'
+            'Action Date',
+            'Revision Date'
         ];
 
         $table = new Table($output);
@@ -223,15 +225,13 @@ class CommandHelper
             throw new \RuntimeException(
                 'You must select an instance #ID'
             );
-        } 
-        else if(strtolower($answer) == "all"){
+        } elseif (strtolower($answer) == "all") {
             $selectedInstances = array();
             foreach ($instances as $id => $instance) {
                 $selectedInstances[ $id ] = $instance;
                 $selectedInstances[ $instance->name ] = $instance;
             }
-        }
-        else {
+        } else {
             $reindexedInstances = array();
             foreach ($instances as $id => $instance) {
                 $reindexedInstances[ $id ] = $instance;

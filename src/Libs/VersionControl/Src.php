@@ -140,6 +140,18 @@ class Src extends VersionControlSystem
     }
 
     /**
+     * Get date revision from the current revision
+     * @param $targetFolder
+     * @param $commitId
+     * @return mixed|void
+     */
+    public function getDateRevision($targetFolder, $commitId)
+    {
+        // Left blank on purpose;
+        return;
+    }
+
+    /**
      * Checkout a branch given a branch name
      * @param $targetFolder
      * @param $branch

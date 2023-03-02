@@ -256,6 +256,18 @@ class Git extends VersionControlSystem
 
     /**
      * @param $targetFolder
+     * @param $commitId
+     * @return mixed|string
+     *
+     * @throws VcsException
+     */
+    public function getDateRevision($targetFolder, $commitId)
+    {
+        $gitCmd = 'show -s --format=%cd --date=format:\'%Y-%m-%d\' '. $commitId;
+        return $this->exec($targetFolder, $gitCmd);
+    }
+    /**
+     * @param $targetFolder
      * @param $branch
      * @param null $commitSHA
      * @return mixed|string

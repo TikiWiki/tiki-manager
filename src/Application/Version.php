@@ -13,9 +13,9 @@ class Version
     const SQL_INSERT_VERSION = <<<SQL
         INSERT OR REPLACE INTO
             version
-            (version_id, instance_id, type, branch, revision, date, action)
+            (version_id, instance_id, type, branch, revision, date, action,date_revision)
         VALUES
-            (:id, :instance, :type, :branch, :revision, :date, :action)
+            (:id, :instance, :type, :branch, :revision, :date, :action,:revdate)
         ;
 SQL;
 
@@ -26,6 +26,7 @@ SQL;
     public $revision;
     public $date;
     public $action;
+    public $date_revision;
 
     public function __construct($instance = null)
     {
@@ -56,6 +57,7 @@ SQL;
             ':revision' => $this->revision,
             ':date' => $this->date,
             ':action' => $this->action ?: 'create',
+            ':revdate' => $this->date_revision,
         ];
 
         query(self::SQL_INSERT_VERSION, $params);
@@ -82,6 +84,10 @@ SQL;
         return $this->branch;
     }
 
+    public function getDateRevision()
+    {
+        return $this->date_revision;
+    }
     public function getBaseVersion()
     {
         $branch = $this->getBranch();
@@ -121,6 +127,7 @@ SQL;
         // Update revision information (requires cache folder created and populated in checksumSource)
         $folder = cache_folder($app, $this);
         $this->revision = $app->getRevision($folder);
+        $this->date_revision = $app->getDateRevision($folder);
         $this->save();
 
         return Checksum::saveChecksums($this->id, $result);
@@ -130,6 +137,7 @@ SQL;
     {
         // Update revision information
         $this->revision = $instance->getRevision();
+        $this->date_revision = $instance->getDateRevision();
         $this->save();
 
         $access = $instance->getBestAccess('scripting');

@@ -142,6 +142,9 @@ abstract class Application
 
         //Update new version with revision
         $new->revision = $this->getRevision();
+        //Update date revision
+        $new->date_revision = $this->getDateRevision();
+
         $new->save();
 
         if (! $checksumCheck) {
@@ -200,6 +203,7 @@ abstract class Application
         $new->branch = $version->branch;
         $new->date = $version->date;
         $new->revision = $instance->getRevision();
+        $new->date_revision = $instance->getDateRevision();
         $new->action = 'upgrade';
         $new->save();
 

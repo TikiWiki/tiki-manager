@@ -152,6 +152,30 @@ class Tiki extends Application
     }
 
     /**
+     * Get repository last revision date information
+     *
+     * @param $folder
+     * @return mixed|string
+     * @throws VcsException
+     */
+    public function getDateRevision($folder = null)
+    {
+        $date_revision = '';
+        $commit_id = $this->getRevision($folder);
+
+        if (strlen(trim($commit_id))>0) {
+            $access = $this->instance->getBestAccess('scripting');
+            $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
+            $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
+
+            if ($access instanceof ShellPrompt && ($can_git || $can_svn)) {
+                $date_revision = $this->vcs_instance->getDateRevision($folder, $commit_id);
+            }
+        }
+
+        return $date_revision;
+    }
+    /**
      * Fixing files read/write permissions and run composer install
      * @throws \Exception
      */
@@ -522,7 +546,7 @@ class Tiki extends Application
             dirname(__FILE__) . '/../../scripts/tiki/remote_install_profile.php',
             [$this->instance->webroot, $domain, $profile]
         );
-                
+
         $this->io->writeln($output);
     }
 
