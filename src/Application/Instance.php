@@ -742,12 +742,13 @@ SQL;
     /**
      * @param bool $direct ()
      * @param bool $full Full backup or partial (backing up only changes against VCS system)
+     * @param bool $onlyCode
      * @return bool|string
      * @throws Exception\FolderPermissionException
      */
-    public function backup($direct = false, $onlyCode = false, $full = true)
+    public function backup($direct = false, $full = true, $onlyCode = false)
     {
-        $backup = new Backup($this, $direct, $onlyCode, $full);
+        $backup = new Backup($this, $direct, $full, $onlyCode);
 
         if ($this->type === 'local' && $this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');

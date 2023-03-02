@@ -45,11 +45,11 @@ class Backup
      * Backup constructor.
      * @param $instance
      * @param bool $direct
-     * @param bool $onlyCode
      * @param bool $full
+     * @param bool $onlyCode
      * @throws FolderPermissionException
      */
-    public function __construct($instance, $direct = false, $onlyCode = false, $full = true)
+    public function __construct($instance, $direct = false, $full = true, $onlyCode = false)
     {
         $this->setIO(App::get('io'));
 
