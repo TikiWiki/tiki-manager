@@ -610,23 +610,43 @@ class Tiki extends Application
             }
         }
 
-        $command = $access->createCommand('patch', ['-R', '-p1', '-s', '-f', '--dry-run'], $patch_contents);
+        $command = $access->createCommand('git apply', ['--stat'], $patch_contents);
         $command->run();
+        $stat = $command->getReturn();
 
-        if ($command->getReturn() !== 0) {
-            $command = $access->createCommand('patch', ['-p1', '-r-'], $patch_contents);
+        $command = $access->createCommand('git apply', ['--check'], $patch_contents);
+        $command->run();
+        $check = $command->getReturn();
+        $errorCheck = $command->getStderrContent();
+
+        if ($stat !== 0 || $check !== 0) {
+            $this->io->writeln("The patch cannot be applied, an error has been found.");
+            if ($errorCheck) {
+                $this->io->error($errorCheck);
+            }
+            if ($command->getReturn() === 128) {
+                $this->io->writeln("Please provide a valid URL for the patch. (e.g. https://gitlab.com/tikiwiki/tiki/-/merge_requests/1374.patch)");
+            }
+            $result = false;
+        } else {
+            $command = $access->createCommand('patch', ['-R', '-p1', '-s', '-f', '--dry-run'], $patch_contents);
             $command->run();
 
-            if ($info = $command->getStdoutContent()) {
-                $this->io->writeln($info);
+            if ($command->getReturn() !== 0) {
+                $command = $access->createCommand('patch', ['-p1', '-r-'], $patch_contents);
+                $command->run();
+
+                if ($info = $command->getStdoutContent()) {
+                    $this->io->writeln($info);
+                }
+                if ($error = $command->getStderrContent()) {
+                    $this->io->error($error);
+                }
+                $result = $command->getReturn() === 0;
+            } else {
+                $this->io->writeln("Patch already applied, skipping.");
+                $result = false;
             }
-            if ($error = $command->getStderrContent()) {
-                $this->io->error($error);
-            }
-            $result = $command->getReturn() === 0;
-        } else {
-            $this->io->writeln("Patch already applied, skipping.");
-            $result = false;
         }
 
         $access->deleteFile($filename);
