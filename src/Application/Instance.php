@@ -51,6 +51,21 @@ ORDER BY v.version_id DESC
 ;
 SQL;
 
+    const SQL_SELECT_INSTANCE_BY_NAME = <<<SQL
+SELECT
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
+FROM
+    instance i
+INNER JOIN access a
+    ON i.instance_id=a.instance_id
+LEFT JOIN
+    version v ON i.instance_id = v.instance_id
+WHERE
+    i.name = :name
+ORDER BY v.version_id DESC
+;
+SQL;
+
     const SQL_SELECT_LAST_INSTANCE = <<<SQL
 SELECT
     instance_id id, app
@@ -363,6 +378,17 @@ SQL;
     public static function getInstance($id)
     {
         $result = query(self::SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);
+        $instance = $result->fetchObject('TikiManager\Application\Instance');
+        return $instance;
+    }
+
+    /**
+     * @param $name
+     * @return Instance
+     */
+    public static function getInstanceByName($name)
+    {
+        $result = query(self::SQL_SELECT_INSTANCE_BY_NAME, [':name' => $name]);
         $instance = $result->fetchObject('TikiManager\Application\Instance');
         return $instance;
     }
