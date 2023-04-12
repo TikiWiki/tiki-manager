@@ -1,3 +1,13 @@
+- name: Tiki25
+  version: 25
+  php:
+    min: 7.4
+    max: 7.4
+  mariadb:
+    min: 5.5
+  mysql:
+    min: 5.7
+
 - name: Tiki24 LTS
   version: 24
   php:
