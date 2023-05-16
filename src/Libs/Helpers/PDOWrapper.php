@@ -2,6 +2,7 @@
 
 namespace TikiManager\Libs\Helpers;
 
+use PDOStatement;
 use TikiManager\Config\App;
 
 /**
@@ -51,12 +52,14 @@ class PDOWrapper extends \PDO
     /**
      * DB query function wrapper
      * @param string $statement
-     * @return int|void
+     * @param int $fetchMode
+     * @param mixed $fetchModeArgs
+     * @return bool|PDOStatement
      */
-    public function query($statement)
+    public function query(string $statement, ?int $fetchMode = null, mixed ...$fetchModeArgs)
     {
         try {
-            return parent::query($statement);
+            return parent::query($statement, $fetchMode, $fetchModeArgs);
         } catch (\PDOException $e) {
             $this->showError($e, $statement);
         }
