@@ -51,15 +51,16 @@ class PDOWrapper extends \PDO
 
     /**
      * DB query function wrapper
-     * @param string $statement
+     * @param string $query
      * @param int $fetchMode
      * @param mixed $fetchModeArgs
      * @return bool|PDOStatement
      */
-    public function query(string $statement, ?int $fetchMode = null, mixed ...$fetchModeArgs)
+    public function query(string $query, ?int $fetchMode = null, mixed ...$fetchModeArgs)
     {
         try {
-            return parent::query($statement, $fetchMode, $fetchModeArgs);
+            $args = func_get_args();
+            return parent::query(...$args);
         } catch (\PDOException $e) {
             $this->showError($e, $statement);
         }
