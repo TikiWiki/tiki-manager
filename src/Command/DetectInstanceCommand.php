@@ -78,6 +78,11 @@ class DetectInstanceCommand extends TikiManagerCommand
         /** @var Instance $instance */
         foreach ($selectedInstances as $instance) {
             $this->io->section($instance->name);
+
+            $originalExec = $instance->phpexec;
+
+            $instance->phpexec = null;
+            $instance->phpversion = null;
             if (! $instance->detectPHP()) {
                 if ($instance->phpversion < 50300) {
                     $this->io->error('PHP Interpreter version is less than 5.3.');
@@ -86,6 +91,10 @@ class DetectInstanceCommand extends TikiManagerCommand
                     $this->io->error('PHP Interpreter could not be found on remote host.');
                     continue;
                 }
+            }
+
+            if ($originalExec && $instance->phpexec && $originalExec != $instance->phpexec) {
+                $instance->save();
             }
 
             $phpVersion = CommandHelper::formatPhpVersion($instance->phpversion);
