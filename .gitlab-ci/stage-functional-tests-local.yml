@@ -60,7 +60,6 @@ local-update-instance-src:
 
 local-upgrade-instance-git:
   extends: .local-command-test-git
-  image: xorti/tiki-devops:php-8.1-qa
   variables:
     VCS: git
     TEST_FILE: UpgradeInstanceCommandTest.php
@@ -133,7 +132,6 @@ local-clone-instance-src:
 
 local-clone-upgrade-instance-git:
   extends: .local-command-test-git
-  image: xorti/tiki-devops:php-8.1-qa
   variables:
     VCS: git
     TEST_FILE: CloneAndUpgradeCommandTest.php
