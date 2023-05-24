@@ -233,14 +233,28 @@ class Git extends VersionControlSystem
 
     /**
      * @param $targetFolder
-     * @param $branch
+     * @param $url
      * @param string $remote
+     * @return mixed|string
      * @throws VcsException
      */
-    public function remoteSetBranch($targetFolder, $branch, $remote = 'origin'): void
+    public function remoteSetUrl($targetFolder, $url, $remote = 'origin')
+    {
+        $gitCmd = sprintf('remote set-url %s %s', $remote, $url);
+        return $this->exec($targetFolder, $gitCmd);
+    }
+
+    /**
+     * @param $targetFolder
+     * @param $branch
+     * @param string $remote
+     * @return mixed|string
+     * @throws VcsException
+     */
+    public function remoteSetBranch($targetFolder, $branch, $remote = 'origin')
     {
         $gitCmd = sprintf('remote set-branches %s %s', $remote, $branch);
-        $this->exec($targetFolder, $gitCmd);
+        return $this->exec($targetFolder, $gitCmd);
     }
 
     /**

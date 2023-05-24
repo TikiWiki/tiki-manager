@@ -171,13 +171,19 @@ class CheckoutCommand extends TikiManagerCommand
             $this->io->writeln(sprintf('Checking out %s into %s...', $branch, $folder));
         }
 
+        if ($folder == 'tiki') {
+            $folder = '.';
+        }
+
         try {
             $vcs = $app->getVcsInstance();
             $access = $instance->getBestAccess('scripting');
             if ($access->fileExists($folder)) {
                 $this->io->writeln('Folder exists, setting remote branch...');
-                $isShallow = $vcs->isShallow($folder);
+                $vcs->setRepositoryUrl($url);
+                $this->io->writeln($vcs->remoteSetUrl($folder, $url));
                 $this->io->writeln($vcs->remoteSetBranch($folder, $branch));
+                $isShallow = $vcs->isShallow($folder);
                 $options = [];
                 if ($isShallow && !$revision) {
                     $options['--depth'] = 1;
