@@ -249,7 +249,7 @@ class CloneInstanceCommandTest extends TestCase
         ];
 
         $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
-        $this->assertEquals(0, $result['exitCode']);
+        $this->assertEquals(0, $result['exitCode'], $result['output']);
 
         $instance = (new Instance())->getInstance(self::$instanceIds['blank']);
         $app = $instance->getApplication();
