@@ -263,7 +263,7 @@ TXT;
             ->method('getReturn')
             ->willReturn(0);
         $commandMock
-            ->method('getStdout')
+            ->method('getStdoutContent')
             ->willReturn('/home/tiki/bin/php');
 
         $accessMock = $this->createMock(Local::class);
