@@ -62,7 +62,7 @@ class PDOWrapper extends \PDO
             $args = func_get_args();
             return parent::query(...$args);
         } catch (\PDOException $e) {
-            $this->showError($e, $statement);
+            $this->showError($e, $query);
         }
     }
 
