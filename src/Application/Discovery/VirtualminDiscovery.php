@@ -19,7 +19,7 @@ class VirtualminDiscovery extends LinuxDiscovery
             $command = $this->access->createCommand('realpath', [$webroot . '/../bin/php']);
             $command->run();
             if ($command->getReturn() === 0) {
-                $path = $command->getStdout();
+                $path = $command->getStdoutContent();
                 $searchOrder = [
                     ['command', ['-v', $path]],
                 ];
