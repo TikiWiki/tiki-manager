@@ -42,7 +42,8 @@ class SSHTest extends TestCase
     /**
      * @covers \TikiManager\Access\SSH::isEmptyDir()
      */
-    public function testIsNotEmptyDir() {
+    public function testIsNotEmptyDir()
+    {
 
         $commandStub = $this->createMock(Command::class);
         $commandStub->method('run')->willReturn($commandStub);

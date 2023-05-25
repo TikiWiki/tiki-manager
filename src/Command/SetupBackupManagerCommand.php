@@ -146,5 +146,7 @@ class SetupBackupManagerCommand extends TikiManagerCommand
         $this->io->text($entry);
 
         `crontab $file`;
+
+        return 0;
     }
 }

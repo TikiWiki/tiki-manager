@@ -59,7 +59,7 @@ trait FileArchive
 
     protected function extractZip($file, $target)
     {
-        $command = sprintf('unzip -d "%s" "%s" 2>&1 > /dev/null ', $target, $file);
+        $command = sprintf('unzip -d "%s" -o "%s" 2>&1 > /dev/null ', $target, $file);
 
         if (!$this->runCommand($command)) {
             return false;

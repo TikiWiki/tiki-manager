@@ -33,7 +33,7 @@ class RestoreInstanceCommandTest extends TestCase
     private static $instance2Path;
     protected static $instanceSettings;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
         self::$instanceBasePath = $_ENV['TESTS_BASE_FOLDER'] . '/restore';
@@ -79,7 +79,7 @@ class RestoreInstanceCommandTest extends TestCase
         $instance->backup();
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         foreach (self::$instanceIds as $instanceId) {
             $instance = Instance::getInstance($instanceId);
@@ -126,7 +126,7 @@ class RestoreInstanceCommandTest extends TestCase
         ]);
 
         $output = $commandTester->getDisplay();
-        $this->assertContains('It is now time to test your site: blank.tiki.org', $output);
+        $this->assertStringContainsString('It is now time to test your site: blank.tiki.org', $output);
         $this->assertEquals(0, $commandTester->getStatusCode());
 
         $restoredInstance = Instance::getInstance(self::$instanceIds['instance2']);
@@ -141,6 +141,10 @@ class RestoreInstanceCommandTest extends TestCase
         //This only works on Local instances
         if (static::$instanceType != 'local') {
             $this->markTestSkipped('Instance types not supported');
+        }
+
+        if (version_compare(PHP_VERSION, '8.1.0', '>=')) {
+            $this->markTestSkipped('dbdiff tool does not support PHP8.1');
         }
 
         $sourceInstance = Instance::getInstance(self::$instanceIds['instance1']);
@@ -180,7 +184,7 @@ class RestoreInstanceCommandTest extends TestCase
         // For debugging purposes
         echo $output;
 
-        $this->assertContains('Identical resources', $output);
-        $this->assertContains('Completed', $output);
+        $this->assertStringContainsString('Identical resources', $output);
+        $this->assertStringContainsString('Completed', $output);
     }
 }

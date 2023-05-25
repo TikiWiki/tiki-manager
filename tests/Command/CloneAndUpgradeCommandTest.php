@@ -29,7 +29,7 @@ class CloneAndUpgradeCommandTest extends TestCase
     protected static $dbTargetFile;
     protected static $instanceIds = [];
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
         $basePath = $_ENV['TESTS_BASE_FOLDER'];
@@ -77,7 +77,7 @@ class CloneAndUpgradeCommandTest extends TestCase
         static::$instanceIds['target'] = $targetInstanceId;
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         foreach (static::$instanceIds as $instanceId) {
             $instance = Instance::getInstance($instanceId);
@@ -157,7 +157,7 @@ class CloneAndUpgradeCommandTest extends TestCase
 
         $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
         $this->assertTrue($result['exitCode'] !== 0);
-        $this->assertContains('Database host and name are the same', $result['output']);
+        $this->assertStringContainsString('Database host and name are the same', $result['output']);
     }
 
     /**
@@ -204,7 +204,7 @@ class CloneAndUpgradeCommandTest extends TestCase
         }
 
         static::assertEquals($arguments['--db-host'], $dbCnf->host);
-        static::assertContains($arguments['--db-prefix'], $dbCnf->user);
-        static::assertContains($arguments['--db-prefix'], $dbCnf->dbname);
+        static::assertStringContainsString($arguments['--db-prefix'], $dbCnf->user);
+        static::assertStringContainsString($arguments['--db-prefix'], $dbCnf->dbname);
     }
 }

@@ -25,7 +25,8 @@ class RestoreTest extends TestCase
     public function testGetFolderNameFromArchive()
     {
         $archivePath = $this->getBackupPath();
-        $result = Restore::getFolderNameFromArchive($archivePath);
+        $mock = $this->createPartialMock(Restore::class, []);
+        $result = $mock->getFolderNameFromArchive($archivePath);
         $this->assertEquals('1-tikiwiki', $result);
     }
 

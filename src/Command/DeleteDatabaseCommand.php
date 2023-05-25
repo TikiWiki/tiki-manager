@@ -41,5 +41,6 @@ class DeleteDatabaseCommand extends TikiManagerCommand
         }
 
         $output->writeln('<info>Database file deleted</info>');
+        return 0;
     }
 }

@@ -1,5 +1,10 @@
 {
     "require-dev": {
         "dbdiff/dbdiff": "dev-master"
+    },
+    "config": {
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     }
 }

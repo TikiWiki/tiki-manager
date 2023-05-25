@@ -151,7 +151,7 @@ class StatsInstanceCommand extends TikiManagerCommand
             $toInstance->getBestAccess('scripting')->uploadFile($tmpFile, $targetFile);
             if (!$toInstance->getBestAccess('scripting')->fileExists($targetFile)) {
                 $this->io->writeln(sprintf(
-                    '<error>Failed to upload stats file %s into instance %</error>',
+                    '<error>Failed to upload stats file %s into instance %s</error>',
                     $targetFile,
                     $toInstance->id
                 ));

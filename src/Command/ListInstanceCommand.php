@@ -30,7 +30,7 @@ class ListInstanceCommand extends TikiManagerCommand
 
         if ($input->getOption('json')) {
             $output->write(json_encode($instancesInfo));
-            return;
+            return 0;
         }
 
         if (!empty($instancesInfo)) {
@@ -39,5 +39,7 @@ class ListInstanceCommand extends TikiManagerCommand
         } else {
             $output->writeln('<comment>No instances available to list.</comment>');
         }
+
+        return 0;
     }
 }

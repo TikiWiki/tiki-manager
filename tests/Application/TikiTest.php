@@ -36,7 +36,7 @@ class TikiTest extends TestCase
     /** @var TikiManagerStyle */
     protected $io;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $input = new ArrayInput([]);
         $this->output = $output = new BufferedOutput();
@@ -46,7 +46,8 @@ class TikiTest extends TestCase
     /**
      * @covers \TikiManager\Application\Tiki::extractTo
      */
-    public function testExtractToFailedToUpdate() {
+    public function testExtractToFailedToUpdate()
+    {
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
@@ -85,7 +86,8 @@ class TikiTest extends TestCase
     /**
      * @covers \TikiManager\Application\Tiki::extractTo
      */
-    public function testExtractToFolderDoesNotExist() {
+    public function testExtractToFolderDoesNotExist()
+    {
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
@@ -119,7 +121,8 @@ class TikiTest extends TestCase
     /**
      * @covers \TikiManager\Application\Tiki::extractTo
      */
-    public function testExtractToFolderExist() {
+    public function testExtractToFolderExist()
+    {
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
@@ -163,11 +166,12 @@ class TikiTest extends TestCase
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
+        $instanceStub->phpexec = '/usr/bin/php';
 
         $accessStub = $this->createMock(Local::class);
         $accessStub
             ->method('createCommand')
-            ->with('bash', ['setup.sh', 'composer'])
+            ->with('bash', ['setup.sh', '-p', $instanceStub->phpexec, 'composer'])
             ->willReturn($commandStub);
         $accessStub
             ->expects($this->once())
@@ -205,11 +209,12 @@ class TikiTest extends TestCase
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
+        $instanceStub->phpexec = '/usr/bin/php';
 
         $accessStub = $this->createMock(Local::class);
         $accessStub
             ->method('createCommand')
-            ->with('bash', ['setup.sh', 'composer'])
+            ->with('bash', ['setup.sh', '-p', $instanceStub->phpexec, 'composer'])
             ->willReturn($commandStub);
         $accessStub
             ->expects($this->once())
@@ -230,7 +235,7 @@ class TikiTest extends TestCase
             ->getMock();
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^Composer install failed for vendor_bundled\/composer.lock/');
+        $this->expectExceptionMessageMatches('/^Composer install failed for vendor_bundled\/composer.lock/');
 
         $tikiStub->installComposerDependencies();
     }
@@ -251,11 +256,12 @@ Your requirements could not be resolved to an installable set of packages.');
 
         $instanceStub = $this->createMock(Instance::class);
         $instanceStub->type = 'local';
+        $instanceStub->phpexec = '/usr/bin/php';
 
         $accessStub = $this->createMock(Local::class);
         $accessStub
             ->method('createCommand')
-            ->with('bash', ['setup.sh', 'composer'])
+            ->with('bash', ['setup.sh', '-p', $instanceStub->phpexec, 'composer'])
             ->willReturn($commandStub);
         $accessStub
             ->expects($this->once())
@@ -276,7 +282,7 @@ Your requirements could not be resolved to an installable set of packages.');
             ->getMock();
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^Composer install failed for vendor_bundled\/composer.lock/');
+        $this->expectExceptionMessageMatches('/^Composer install failed for vendor_bundled\/composer.lock/');
 
         $tikiStub->installComposerDependencies();
     }
@@ -295,7 +301,7 @@ Your requirements could not be resolved to an installable set of packages.');
         $accessStub
             ->method('createCommand')
             ->withConsecutive(
-                ['bash', ['setup.sh', 'composer']],
+                ['bash', ['setup.sh', '-p', $instanceStub->phpexec, 'composer']],
                 [$instanceStub->phpexec, ['temp/composer.phar', 'install', '--no-interaction', '--prefer-dist']]
             )
             ->willReturn($commandStub);
@@ -379,8 +385,10 @@ Your requirements could not be resolved to an installable set of packages.');
 
         // installComposerDependencies is void. If no exception is thrown assumes it is OK
         $outputContent = $this->output->fetch();
-        $this->assertStringContainsString('[ERROR] Failed to install Tiki Packages',
-            $outputContent);
+        $this->assertStringContainsString(
+            '[ERROR] Failed to install Tiki Packages',
+            $outputContent
+        );
     }
 
     /**
@@ -454,14 +462,15 @@ Your requirements could not be resolved to an installable set of packages.');
 
         $fetcher = $this->createMock(RequirementsFetcher::class);
         $fetcher->method('getRequirements')->willReturn(
-            array_map(function($req){
+            array_map(function ($req) {
                     return new TikiRequirements(
                         $req['name'],
                         $req['version'],
                         new SoftwareRequirement($req['php']['min'] ?? '', $req['php']['max'] ?? ''),
                         new SoftwareRequirement($req['mysql']['min'] ?? '', $req['mysql']['max'] ?? ''),
-                        new SoftwareRequirement($req['mariadb']['min'] ?? '', $req['mariadb']['max'] ?? ''));
-            },[
+                        new SoftwareRequirement($req['mariadb']['min'] ?? '', $req['mariadb']['max'] ?? '')
+                    );
+            }, [
                 0 => [
                     'name' => 'Tiki22',
                     'version' => 22,
@@ -623,7 +632,7 @@ Your requirements could not be resolved to an installable set of packages.');
             'trunk',
         ];
 
-        $upgradeVersions = array_map(function(Version $version){
+        $upgradeVersions = array_map(function (Version $version) {
             return $version->branch;
         }, $upgradeVersions);
 

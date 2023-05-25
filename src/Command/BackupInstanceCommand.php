@@ -124,7 +124,7 @@ class BackupInstanceCommand extends TikiManagerCommand
 
         if ($instancesOption = $input->getOption('instances')) {
             if ($instancesOption == 'all') {
-                $exclude = explode(',', $input->getOption('exclude'));
+                $exclude = explode(',', $input->getOption('exclude') ?? '');
                 foreach ($instances as $key => $instance) {
                     if (in_array($instance->id, $exclude)) {
                         unset($instances[$key]);
@@ -175,7 +175,7 @@ class BackupInstanceCommand extends TikiManagerCommand
             }
         }
 
-        $emails = $input->getOption('email');
+        $emails = $input->getOption('email') ?? '';
         $emails = array_filter(explode(',', $emails), function ($email) {
             return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
         });

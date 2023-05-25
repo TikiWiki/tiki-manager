@@ -60,7 +60,7 @@ class DeleteInstanceCommand extends TikiManagerCommand
 
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No instances available to delete.</comment>');
-            return;
+            return 0;
         }
 
         $instancesOption = $input->getOption('instances');
@@ -74,5 +74,7 @@ class DeleteInstanceCommand extends TikiManagerCommand
             $instance->delete();
             $this->io->writeln(sprintf('<info>Deleted instance %s</info>', $instance->name));
         }
+
+        return 0;
     }
 }

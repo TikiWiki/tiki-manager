@@ -4,9 +4,6 @@ namespace TikiManager\Tests\Libs\VersionControl;
 
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\NullOutput;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Access\Local;
 use TikiManager\Application\Exception\VcsException;
@@ -21,23 +18,20 @@ use TikiManager\Style\TikiManagerStyle;
  */
 class GitTest extends TestCase
 {
-    static $workingDir;
+    protected static $workingDir;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $testsPath = Environment::get('TESTS_BASE_FOLDER', '/tmp');
         static::$workingDir = $testsPath . '/'. md5(random_bytes(10));
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $fs = new Filesystem();
         $fs->remove(static::$workingDir);
     }
 
-    /**
-     * @expectedException \TikiManager\Application\Exception\VcsException
-     */
     public function testConflictsDetectionOnUpdate()
     {
         $instance = $this->createMock(Instance::class);
@@ -72,12 +66,10 @@ TXT;
             ->getMock();
 
         $git->method('cleanup')->willReturn(true);
+        $this->expectException(VcsException::class);
         $git->pull($instance->webroot);
     }
 
-    /**
-     * @expectedException \TikiManager\Application\Exception\VcsException
-     */
     public function testConflictsDetectionOnUpgrade()
     {
         $instance = $this->createMock(Instance::class);
@@ -112,6 +104,7 @@ TXT;
             ->getMock();
 
         $git->method('revert')->willReturn(true);
+        $this->expectException(VcsException::class);
         $git->upgrade($instance->webroot, 'master');
     }
 
@@ -131,8 +124,11 @@ TXT;
         $timestamp = strtotime('10 days ago');
         $lagDate = date('Y-m-d H:i', $timestamp);
 
-        $git->expects(self::once())->method('log')->with('/root/tmp', 'origin/master',
-            ['-1', '--before=' . escapeshellarg($lagDate)])->willReturn($gitLogOutput);
+        $git->expects(self::once())->method('log')->with(
+            '/root/tmp',
+            'origin/master',
+            ['-1', '--before=' . escapeshellarg($lagDate)]
+        )->willReturn($gitLogOutput);
         $lastCommit = $git->getLastCommit('/root/tmp', 'master', $timestamp);
 
         $this->assertEquals('23e88c718205a34f77ed5a6d1c440ab6681d61d2', $lastCommit['commit']);

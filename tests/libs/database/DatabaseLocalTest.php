@@ -1,4 +1,7 @@
 <?php
+namespace TikiManager\Tests\libs\database;
+
+use PDO;
 use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Database\Exception\DatabaseErrorException;
@@ -58,11 +61,43 @@ class DatabaseLocalTest extends TestCase
             . sprintf('$dbs_tiki = "%s";', $db);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $pdo = $this->getConnection();
-        $pdo->query(sprintf('DROP USER "%s"@"%s"', self::TEST_USER, '%'));
-        $pdo->query(sprintf('DROP DATABASE `%s`', self::TEST_DB));
+
+        // Since MySQL 5.7 IF EXISTS can be used
+        // Keeping compatible with 5.6 at least
+
+        if ($this->userExists(self::TEST_USER, '%')) {
+            $pdo->query(sprintf('DROP USER "%s"@"%s"', self::TEST_USER, '%'));
+        }
+
+        if ($this->dbExists(self::TEST_DB)) {
+            $pdo->query(sprintf('DROP DATABASE `%s`', self::TEST_DB));
+        }
+    }
+
+    protected function userExists($user, $host)
+    {
+        $pdo = $this->getConnection();
+        $result = $pdo->query(sprintf(
+            'SELECT * FROM mysql.user WHERE user="%s" and host="%s"',
+            $user,
+            $host
+        ));
+
+        return (bool) $result->rowCount();
+    }
+
+    protected function dbExists($dbName)
+    {
+        $pdo = $this->getConnection();
+        $result = $pdo->query(sprintf(
+            'SHOW DATABASES LIKE "%s"',
+            $dbName
+        ));
+
+        return (bool) $result->rowCount();
     }
 
     public function testCreateInstanceTikiConfig()
@@ -118,16 +153,11 @@ class DatabaseLocalTest extends TestCase
         $db->host = null;
         $db->user = null;
         $db->pass = null;
-        $hasError = false;
 
-        try {
-            $db->connect();
-        } catch (Exception $e) {
-            $hasError = true;
-            $this->assertInstanceOf(DatabaseErrorException::class, $e);
-        }
+        $this->expectException(DatabaseErrorException::class);
+        $this->expectExceptionMessage('Invalid credentials');
 
-        $this->assertTrue($hasError);
+        $db->connect();
     }
 
     public function testCreateDatabase()
@@ -152,13 +182,23 @@ class DatabaseLocalTest extends TestCase
 
         $db->createUser(self::TEST_USER, self::TEST_PASS);
 
-        $result = $pdo->query(sprintf(
-            'SELECT * FROM mysql.user WHERE user="%s" AND password=PASSWORD("%s")',
-            self::TEST_USER,
-            self::TEST_PASS
-        ));
-        $result = $result->rowCount();
-        $this->assertEquals(1, $result);
+        try {
+            // MySQL 5.6 compatibility
+            $result = $pdo->query(sprintf(
+                'SELECT * FROM mysql.user WHERE user="%s" AND password=PASSWORD("%s")',
+                self::TEST_USER,
+                self::TEST_PASS
+            ));
+        } catch (\PDOException $e) {
+            // MySQL 5.7+ compatibility
+            $result = $pdo->query(sprintf(
+                'SELECT * FROM mysql.user WHERE user="%s" AND authentication_string=PASSWORD("%s")',
+                self::TEST_USER,
+                self::TEST_PASS
+            ));
+        } finally {
+            $this->assertEquals(1, $result->rowCount());
+        }
     }
 
     public function testGrantRights()
@@ -170,14 +210,16 @@ class DatabaseLocalTest extends TestCase
         $db->createDatabase(self::TEST_DB);
         $db->grantRights(self::TEST_USER, self::TEST_DB);
 
-        $host = $db->host === 'localhost' ? $this->host : '%';
+        $host = $db->host === 'localhost' ? $db->host : '%';
         $result = $pdo->query(sprintf(
             'SHOW GRANTS FOR "%s"@"%s"',
             self::TEST_USER,
             $host
         ));
         $this->assertNotEmpty($result);
-        $result = array_map('end', $result->fetchAll());
+        $result = array_map(function ($elem) {
+            return end($elem);
+        }, $result->fetchAll());
         $result = join("\n", $result);
 
         $expected = sprintf(
@@ -187,7 +229,7 @@ class DatabaseLocalTest extends TestCase
             $host
         );
 
-        $this->assertRegExp($expected, $result);
+        $this->assertMatchesRegularExpression($expected, $result);
     }
 
     public function testCreateAccess()

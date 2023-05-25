@@ -62,5 +62,6 @@ class AccessInstanceCommand extends TikiManagerCommand
         } else {
             $output->writeln('<comment>No instances available to access.</comment>');
         }
+        return 0;
     }
 }

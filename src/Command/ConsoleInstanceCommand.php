@@ -103,5 +103,7 @@ class ConsoleInstanceCommand extends TikiManagerCommand
                 $output->writeln($new);
             }
         }
+
+        return 0;
     }
 }

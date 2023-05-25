@@ -21,9 +21,9 @@ class Git extends UpdateManager
     protected $repository;
 
     /**
-     * @param mixed $targetFolder 
-     * @param LoggerInterface|null $logger 
-     * @return void 
+     * @param mixed $targetFolder
+     * @param LoggerInterface|null $logger
+     * @return void
      */
     public function __construct($targetFolder, LoggerInterface $logger = null)
     {
@@ -142,7 +142,6 @@ class Git extends UpdateManager
                 'date' => $commit->getCommitterDate()->format(DATE_RFC3339_EXTENDED)
             ];
         } catch (ReferenceNotFoundException $e) {
-
         }
 
         return false;
@@ -151,7 +150,8 @@ class Git extends UpdateManager
     /**
      * @return bool
      */
-    public function isHeadDetached() {
+    public function isHeadDetached()
+    {
         return $this->repository->isHeadDetached();
     }
 

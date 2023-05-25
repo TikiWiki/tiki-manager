@@ -1,4 +1,6 @@
 <?php
+namespace TikiManager\Tests\Helpers;
+
 use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 

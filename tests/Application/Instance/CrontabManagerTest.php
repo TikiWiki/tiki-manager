@@ -92,7 +92,7 @@ class CrontabManagerTest extends TestCase
             ->willReturn($accessMock);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^Operation not supported/');
+        $this->expectExceptionMessageMatches('/^Operation not supported/');
 
         $mock = $this->getMockBuilder(CrontabManager::class)
             ->setConstructorArgs([$instanceMock])
@@ -187,7 +187,7 @@ class CrontabManagerTest extends TestCase
             ->getMock();
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^Error when trying to read crontab/');
+        $this->expectExceptionMessageMatches('/^Error when trying to read crontab/');
 
         $mock->readCrontab();
     }

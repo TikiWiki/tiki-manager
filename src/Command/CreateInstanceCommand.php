@@ -176,7 +176,7 @@ class CreateInstanceCommand extends TikiManagerCommand
      * Execute command
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return int|void|null
+     * @return int
      * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -232,6 +232,8 @@ class CreateInstanceCommand extends TikiManagerCommand
             }
 
             $this->install($instance);
+
+            return 0;
         } catch (\Exception $e) {
             $instance->delete();
 

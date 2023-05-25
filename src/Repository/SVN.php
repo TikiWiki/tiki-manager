@@ -228,7 +228,7 @@ class SVN
 
                 if (empty($node_children)) {
                     $value = sprintf('%s', $cur_node);
-                    $value = is_numeric($value) ? float($value) : $value;
+                    $value = is_numeric($value) ? floatval($value) : $value;
                     $output[ $node_name ] = $value;
                     continue;
                 } else {

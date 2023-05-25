@@ -49,11 +49,11 @@ class LinuxDiscovery extends Discovery
             $out = $command->getStdout();
             $line = fgets($out);
 
-            while ($line !== false) {
+            while ($line) {
                 $line = trim($line);
 
                 if (!in_array($line, $result)) {
-                    $result[] = trim($line);
+                    $result[] = $line;
                 }
                 $line = fgets($out);
             }
@@ -79,13 +79,13 @@ class LinuxDiscovery extends Discovery
         $command->run();
 
         if ($command->getReturn() === 0) {
-            $out = $command->getStdoutContent();
+            $out = $command->getStdoutContent() ?? '';
             $out = trim($out);
             $this->config['user'] = $out;
             return $out;
         }
 
-        $out = $command->getStderrContent();
+        $out = $command->getStderrContent() ?? '';
         $out = trim($out);
 
         throw new ConfigException(

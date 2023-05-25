@@ -1,0 +1,132 @@
+.local-command-test-svn: &local-command-test-svn
+  extends: .template-tiki-manager-commands-svn
+  except:
+    variables:
+      - $INSTANCE_TYPE == $INSTANCE_TYPE_SSH
+      - $INSTANCE_TYPE == $INSTANCE_TYPE_FTP
+
+local-create-instance-svn-php71: 
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CreateInstanceCommandTest.php
+    PHP_VERSION: "7.1"
+
+local-create-instance-svn-php74: 
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CreateInstanceCommandTest.php
+    PHP_VERSION: "7.4"
+
+local-create-instance-svn-php81: 
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CreateInstanceCommandTest.php
+    PHP_VERSION: "8.1"
+
+local-update-instance-svn-php71: 
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: UpdateInstanceCommandTest.php
+    PHP_VERSION: "7.1"
+
+local-update-instance-svn-php74: 
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: UpdateInstanceCommandTest.php
+    PHP_VERSION: "7.4"
+
+local-update-instance-svn-php81: 
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: UpdateInstanceCommandTest.php
+    PHP_VERSION: "8.1"
+
+local-upgrade-instance-svn-php71:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: UpgradeInstanceCommandTest.php
+    PHP_VERSION: "7.1"
+
+local-upgrade-instance-svn-php74:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: UpgradeInstanceCommandTest.php
+    PHP_VERSION: "7.4"
+
+local-upgrade-instance-svn-php81:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: UpgradeInstanceCommandTest.php
+    PHP_VERSION: "8.1"
+
+local-backup-instance-svn-php71:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: BackupInstanceCommandTest.php
+    PHP_VERSION: "7.1"
+
+local-backup-instance-svn-php74:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: BackupInstanceCommandTest.php
+    PHP_VERSION: "7.4"
+
+local-backup-instance-svn-php81:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: BackupInstanceCommandTest.php
+    PHP_VERSION: "8.1"
+
+local-restore-instance-svn-php71:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: RestoreInstanceCommandTest.php
+    PHP_VERSION: "7.1"
+
+local-restore-instance-svn-php74:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: RestoreInstanceCommandTest.php
+    PHP_VERSION: "7.4"
+
+local-restore-instance-svn-php81:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: RestoreInstanceCommandTest.php
+    PHP_VERSION: "8.1"
+
+local-clone-instance-svn-php71:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CloneInstanceCommandTest.php
+    PHP_VERSION: "7.1"
+
+local-clone-instance-svn-php74:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CloneInstanceCommandTest.php
+    PHP_VERSION: "7.4"
+
+local-clone-instance-svn-php81:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CloneInstanceCommandTest.php
+    PHP_VERSION: "8.1"
+
+local-clone-upgrade-instance-svn-php71:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CloneAndUpgradeCommandTest.php
+    PHP_VERSION: "7.1"
+
+local-clone-upgrade-instance-svn-php74:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CloneAndUpgradeCommandTest.php
+    PHP_VERSION: "7.4"
+
+local-clone-upgrade-instance-svn-php81:
+  <<: *local-command-test-svn
+  variables:
+    TEST_FILE: CloneAndUpgradeCommandTest.php
+    PHP_VERSION: "8.1"

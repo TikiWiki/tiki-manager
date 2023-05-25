@@ -1,4 +1,6 @@
 <?php
+namespace TikiManager\Tests\libs;
+
 use PHPUnit\Framework\TestCase;
 use TikiManager\Access\Local;
 use TikiManager\Application\Instance;

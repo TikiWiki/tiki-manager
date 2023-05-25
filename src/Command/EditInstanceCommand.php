@@ -10,8 +10,6 @@ use TikiManager\Config\App;
 use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
 
-use function GuzzleHttp\json_decode;
-
 class EditInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
@@ -205,5 +203,6 @@ class EditInstanceCommand extends TikiManagerCommand
         } else {
             $output->writeln('<comment>No Tiki instances available to edit.</comment>');
         }
+        return 0;
     }
 }

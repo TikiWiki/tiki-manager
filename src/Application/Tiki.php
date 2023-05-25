@@ -209,6 +209,10 @@ class Tiki extends Application
                         $extraParameters = ['-u', $matches[1], '-g', $group ?: $matches[1]];
                     }
 
+                    // Define the php cli path to use
+                    $extraParameters[] = '-p';
+                    $extraParameters[] = $instance->phpexec;
+
                     $command = $access->createCommand('bash', array_merge(['setup.sh'], $extraParameters, ['fix'])); // does composer as well
                 }
             } else {
@@ -1006,7 +1010,7 @@ TXT;
 
         $access->chdir($instance->webroot);
 
-        $command = $access->createCommand('bash', ['setup.sh', 'composer']);
+        $command = $access->createCommand('bash', ['setup.sh', '-p', $instance->phpexec, 'composer']);
         if ($instance->type == 'local' && ApplicationHelper::isWindows()) {
             $command = $access->createCommand('composer', ['install', '-d vendor_bundled', '--no-interaction', '--prefer-dist', '--no-dev']);
         }

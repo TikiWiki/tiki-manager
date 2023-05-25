@@ -19,18 +19,17 @@ use TikiManager\Tests\Helpers\Tests;
  */
 class GitTest extends TestCase
 {
-
     /**
      * @var string
      */
-    static $testRepoDir;
+    protected static $testRepoDir;
 
     /**
      * @var Git
      */
-    static $updater;
+    protected static $updater;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         $filesystem = new Filesystem();
 
@@ -49,7 +48,7 @@ class GitTest extends TestCase
         static::$updater = new Git($testRepoDir);
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         $filesystem = new Filesystem();
         $filesystem->remove(static::$testRepoDir);
@@ -218,10 +217,10 @@ class GitTest extends TestCase
             ->willReturn($version);
         $info = $mock->info();
 
-        $this->assertContains('Git detected', $info);
-        $this->assertContains('Version: ' . $version['version'], $info);
-        $this->assertContains('Date: ' . date(\DateTime::COOKIE, strtotime($version['date'])), $info);
-        $this->assertContains('Branch: master', $info);
+        $this->assertStringContainsString('Git detected', $info);
+        $this->assertStringContainsString('Version: ' . $version['version'], $info);
+        $this->assertStringContainsString('Date: ' . date(\DateTime::COOKIE, strtotime($version['date'])), $info);
+        $this->assertStringContainsString('Branch: master', $info);
     }
 
     public function testGetUpdater()

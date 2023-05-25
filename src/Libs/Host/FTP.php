@@ -9,6 +9,7 @@ namespace TikiManager\Libs\Host;
 class FTP
 {
     private $host;
+    private $port;
     private $user;
     private $pass;
     private $conn;

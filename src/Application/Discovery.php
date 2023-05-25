@@ -178,7 +178,7 @@ abstract class Discovery
         }
 
         $out = $command->getStderrContent();
-        $out = trim($out);
+        $out = trim((string)$out);
 
         throw new ConfigException(
             sprintf('Failed to detect PHP Version: %s', $out),

@@ -143,6 +143,8 @@ class Password
             case 'ascii_rotx--':
                 return Password::asciiRotxmm($login, $key);
         }
+
+        return '';
     }
 
     /**

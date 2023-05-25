@@ -151,10 +151,7 @@ class WatchInstanceCommand extends TikiManagerCommand
         }
 
         try {
-            if (!$this->sendEmail($email, '[Tiki-Manager] Potential intrusions detected', $log)) {
-                $this->io->error('Something went wrong when sending email, please check email configurations.');
-                return 1;
-            }
+            $this->sendEmail($email, '[Tiki-Manager] Potential intrusions detected', $log);
         } catch (\RuntimeException $e) {
             debug($e->getMessage());
             $this->io->error($e->getMessage());

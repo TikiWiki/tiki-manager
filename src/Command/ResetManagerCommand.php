@@ -56,5 +56,6 @@ class ResetManagerCommand extends TikiManagerCommand
         }
 
         $output->writeln('<info>Tiki Manager has been reset.</info>');
+        return 0;
     }
 }

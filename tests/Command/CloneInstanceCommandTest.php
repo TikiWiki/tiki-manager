@@ -34,7 +34,7 @@ class CloneInstanceCommandTest extends TestCase
 
     protected static $prevVersionBranch;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
 
@@ -88,12 +88,12 @@ class CloneInstanceCommandTest extends TestCase
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $this->restoreDBConfigFiles();
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         foreach (self::$instanceIds as $instanceId) {
             $instance = Instance::getInstance($instanceId);
@@ -173,7 +173,7 @@ class CloneInstanceCommandTest extends TestCase
 
         $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
         $this->assertTrue($result['exitCode'] !== 0);
-        $this->assertContains('Database host and name are the same', $result['output']);
+        $this->assertStringContainsString('Database host and name are the same', $result['output']);
     }
 
     public function testCloneDatabaseWithTargetMissingDbFile()
@@ -198,8 +198,8 @@ class CloneInstanceCommandTest extends TestCase
         $this->assertTrue($result['exitCode'] !== 0);
         $output = $result['output'];
 
-        $this->assertContains('Database configuration file not found', $output);
-        $this->assertContains('Unable to load/set database configuration for instance', $output);
+        $this->assertStringContainsString('Database configuration file not found', $output);
+        $this->assertStringContainsString('Unable to load/set database configuration for instance', $output);
     }
 
     public function testCloneDatabaseTargetManyInstances()
@@ -224,8 +224,10 @@ class CloneInstanceCommandTest extends TestCase
 
         $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
         $this->assertEquals(1, $result['exitCode']);
-        $this->assertContains('Database setup options can only be used when a single target instance',
-            $result['output']);
+        $this->assertStringContainsString(
+            'Database setup options can only be used when a single target instance',
+            $result['output']
+        );
     }
 
     public function testCloneDatabaseTargetBlank()
@@ -236,7 +238,7 @@ class CloneInstanceCommandTest extends TestCase
         $user = getenv($varPrefix . 'DB_USER'); // DB Root User
         $pass = getenv($varPrefix . 'DB_PASS'); // DB Root Password
 
-        $targetDBName = InstanceHelper::getRandomDbName();
+        $targetDBName = substr(md5(random_bytes(5)), 0, 8);
         $arguments = [
             '--source' => strval(self::$instanceIds['source']),
             '--target' => [strval(self::$instanceIds['blank'])],
@@ -262,8 +264,8 @@ class CloneInstanceCommandTest extends TestCase
             $this->assertNotEquals([], $diffDbFile);
             $dbCnf = $instance->getDatabaseConfig();
             $this->assertEquals($arguments['--db-host'], $dbCnf->host);
-            $this->assertContains($arguments['--db-prefix'], $dbCnf->user);
-            $this->assertContains($arguments['--db-prefix'], $dbCnf->dbname);
+            $this->assertStringContainsString($arguments['--db-prefix'], $dbCnf->user);
+            $this->assertStringContainsString($arguments['--db-prefix'], $dbCnf->dbname);
 
             $this->compareDB('source', 'blank');
         }
@@ -332,11 +334,16 @@ class CloneInstanceCommandTest extends TestCase
 
         $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
         $this->assertEquals(1, $result['exitCode']);
-        $this->assertContains('Unable to access database', $result['output']);
+        $this->assertStringContainsString('Unable to access database', $result['output']);
     }
 
     protected function compareDB($instance1, $instance2)
     {
+        if (version_compare(PHP_VERSION, '8.1.0', '>=')) {
+            // dbdiff tool does not support PHP8.1
+            return;
+        }
+
         $fileSystem = new Filesystem();
         if ($fileSystem->exists(self::$dbLocalFiles[$instance1]) &&
             $fileSystem->exists(self::$dbLocalFiles[$instance2])) {
@@ -367,8 +374,8 @@ class CloneInstanceCommandTest extends TestCase
 
             $this->assertEquals(0, $process->getExitCode());
             $output = $process->getOutput();
-            $this->assertContains('Identical resources', $output);
-            $this->assertContains('Completed', $output);
+            $this->assertStringContainsString('Identical resources', $output);
+            $this->assertStringContainsString('Completed', $output);
         }
     }
 }

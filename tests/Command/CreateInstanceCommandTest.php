@@ -27,7 +27,7 @@ class CreateInstanceCommandTest extends TestCase
     protected static $dbLocalFile;
     protected static $instanceId;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
         $basePath = $_ENV['TESTS_BASE_FOLDER'] . '/create';
@@ -54,7 +54,7 @@ class CreateInstanceCommandTest extends TestCase
         ];
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         static::deleteInstances();
 

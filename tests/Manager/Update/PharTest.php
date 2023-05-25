@@ -10,36 +10,34 @@ use TikiManager\Manager\Update\Phar;
 use TikiManager\Manager\UpdateManager;
 use TikiManager\Tests\Helpers\Tests;
 use ZipArchive;
-use function TikiManager\Tests\Helpers\Tests;
 
 /**
  * @group unit
  */
 class PharTest extends TestCase
 {
+    protected static $phar;
+    protected static $testPath;
 
-    static $phar;
-    static $testPath;
-
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$testPath = Environment::get('TEMP_FOLDER') . '/tests/pharupdate/';
     }
 
-    public function setUp()
+    protected function setUp(): void
     {
         $fs = new Filesystem();
         $fs->mkdir(static::$testPath);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $fs = new Filesystem();
         $fs->remove(static::$testPath);
         $fs->remove(Environment::get('TEMP_FOLDER') . '/tiki-manager.phar');
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         if (static::$phar) {
             $fs = new Filesystem();
@@ -76,8 +74,6 @@ class PharTest extends TestCase
 
     /**
      * @covers \TikiManager\Manager\Update\Phar::update
-     * @expectedException \Exception
-     * @expectedExceptionMessage Failed to retrieve phar file
      */
     public function testFailedDownloadWhileUpdating()
     {
@@ -94,13 +90,13 @@ class PharTest extends TestCase
             ->method('downloadPhar')
             ->willReturn('');
 
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to retrieve phar file');
         $updater->update();
     }
 
     /**
      * @covers \TikiManager\Manager\Update\Phar::update
-     * @expectedException \Exception
-     * @expectedExceptionMessage Failed to update tiki-manager.phar with the new version
      */
     public function testFailReplacePharWhileUpdating()
     {
@@ -116,6 +112,9 @@ class PharTest extends TestCase
         $updater->expects($this->any())
             ->method('downloadPhar')
             ->willReturn($currentPhar);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to update tiki-manager.phar with the new version');
 
         $updater->update();
     }
@@ -138,21 +137,22 @@ class PharTest extends TestCase
         $expectedInfo = json_decode($expectedInfo, true);
         $expectedDate = date(\DateTime::COOKIE, strtotime($expectedInfo['date']));
 
-        $this->assertContains('Phar detected', $info);
-        $this->assertContains('Version: ' . $expectedInfo['version'], $info);
-        $this->assertContains('Date: ' . $expectedDate, $info);
+        $this->assertStringContainsString('Phar detected', $info);
+        $this->assertStringContainsString('Version: ' . $expectedInfo['version'], $info);
+        $this->assertStringContainsString('Date: ' . $expectedDate, $info);
     }
 
     /**
      * @covers \TikiManager\Manager\Update\Phar::downloadPhar
-     * @expectedException \Exception
-     * @expectedExceptionMessage Failed to download file at
      */
     public function testFailDownload()
     {
         $fs = new Filesystem();
         $currentPhar = static::$testPath . '/tiki-manager.phar';
         $fs->appendToFile($currentPhar, random_bytes(10));
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to download file at');
 
         $updated = new Phar($currentPhar, '/invalid/path');
         $updated->downloadPhar();
@@ -191,8 +191,7 @@ class PharTest extends TestCase
 
         // The artifact contains a folder build.
         $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE)
-        {
+        if ($zip->open($zipPath, ZipArchive::CREATE) === true) {
             $zip->addFile($currentPhar, 'build/tiki-manager.phar');
             $zip->close();
         }
@@ -210,14 +209,15 @@ class PharTest extends TestCase
      * @covers \TikiManager\Manager\Update\Phar::downloadPhar
      * @covers \TikiManager\Manager\Update\Phar::isValidPhar
      * @covers \TikiManager\Manager\Update\Phar::extractZip
-     * @expectedException \Exception
-     * @expectedExceptionMessage Error extracting files
      */
     public function testDownloadFailZipExtraction()
     {
         $fs = new Filesystem();
         $currentPhar = static::$testPath . '/tiki-manager.phar';
         $fs->appendToFile($currentPhar, md5(random_bytes(10)));
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Error extracting files');
 
         $updated = new Phar($currentPhar, $currentPhar);
         $updated->downloadPhar();

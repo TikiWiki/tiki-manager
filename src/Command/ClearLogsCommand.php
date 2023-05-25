@@ -40,5 +40,6 @@ class ClearLogsCommand extends TikiManagerCommand
         }
 
         $output->writeln('<info>Logs cleared</info>');
+        return 0;
     }
 }

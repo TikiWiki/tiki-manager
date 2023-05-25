@@ -2,7 +2,8 @@
 
 namespace TikiManager\Tests\Helpers;
 
-class Tests {
+class Tests
+{
 
     /**
      * Call protected/private method of a class.
@@ -21,5 +22,4 @@ class Tests {
 
         return $method->invokeArgs($object, $parameters);
     }
-
 }

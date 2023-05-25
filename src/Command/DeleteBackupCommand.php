@@ -43,5 +43,6 @@ class DeleteBackupCommand extends TikiManagerCommand
         }
 
         $output->writeln('<info>Backups deleted</info>');
+        return 0;
     }
 }

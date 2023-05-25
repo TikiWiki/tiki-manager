@@ -43,5 +43,7 @@ class TikiVersionCommand extends TikiManagerCommand
         } else {
             $output->writeln('<comment>No versions available to list.</comment>');
         }
+
+        return 0;
     }
 }

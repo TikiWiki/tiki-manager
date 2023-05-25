@@ -44,5 +44,6 @@ class FixPermissionsInstanceCommand extends TikiManagerCommand
         } else {
             $output->writeln('<comment>No Tiki instances available to fix permissions.</comment>');
         }
+        return 0;
     }
 }

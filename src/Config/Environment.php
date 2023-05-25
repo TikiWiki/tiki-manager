@@ -84,6 +84,9 @@ class Environment
         $this->setRequiredEnvironmentVariables();
 
         $dotenvLoader = new Dotenv();
+        if (method_exists($dotenvLoader, 'usePutenv')) {
+            $dotenvLoader->usePutenv(true);
+        }
         $envDistFile = $this->homeDirectory . '/.env.dist';
 
         if (!file_exists($envDistFile)) {

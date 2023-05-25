@@ -1,6 +1,6 @@
 include:
-  - local: '/.gitlab-ci/stage-functional-tests-local.yml'
-  - local: '/.gitlab-ci/stage-functional-tests-ssh.yml'
+  - local: '/.gitlab-ci/stage-functional-tests-local-git.yml'
+  - template: Code-Quality.gitlab-ci.yml
 
 image: xorti/tiki-devops:php-7.1-qa
 
@@ -40,6 +40,11 @@ stages:
   - composer install $COMPOSER_FLAGS
   - composer bin all install $COMPOSER_FLAGS
 
+.git-config: &git-config
+  - git config --global user.email "${GITLAB_USER_EMAIL}"
+  - git config --global user.name "${GITLAB_USER_NAME}"
+  - git config --global --add safe.directory "*"
+
 composer:
   stage: build
   script:
@@ -51,25 +56,62 @@ composer:
 # Lint
 #
 
-php-53-scripts:
-  image: helder/php-5.3:latest
+.lint-scripts: &lint-scripts
   stage: quality
   script:
-    - php -l scripts/checkversion.php
-    - php -l scripts/package_tar.php
-    - php -l scripts/extract_tar.php
-    - php -l scripts/get_extensions.php
-    - php -l scripts/tiki/backup_database.php
-    - php -l scripts/tiki/get_directory_list.php
-    - php -l scripts/tiki/get_system_config_ini_file.php
-    - php -l scripts/tiki/remote_install_profile.php
-    - php -l scripts/tiki/sqlupgrade.php
-    - php -l scripts/tiki/run_sql_file.php
-    - php -l scripts/tiki/tiki_dbinstall_ftp.php
-    - php -l scripts/tiki/remote_setup_channels.php
-    - php -l scripts/tiki/mysqldump.php
-  needs: []
+    - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git log -m -1 --name-only && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
+    - git log -m -1 --name-only
+    - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | xargs -L 1 php -l
+  needs: [ ]
   allow_failure: false
+
+lint-scripts-php54:
+  image: php:5.4-cli
+  <<: *lint-scripts
+  script:
+    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
+
+lint-scripts-php55:
+  image: php:5.5-cli
+  <<: *lint-scripts
+  script:
+    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
+
+lint-scripts-php56:
+  image: php:5.6-cli
+  <<: *lint-scripts
+  script:
+    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
+
+lint-scripts-php70:
+  image: php:7.0-cli
+  <<: *lint-scripts
+  script:
+    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
+
+lint-scripts-php71:
+  image: xorti/tiki-devops:php-7.1-qa
+  <<: *lint-scripts
+
+lint-scripts-php72:
+  image: xorti/tiki-devops:php-7.2-qa
+  <<: *lint-scripts
+
+lint-scripts-php73:
+  image: xorti/tiki-devops:php-7.3-qa
+  <<: *lint-scripts
+
+lint-scripts-php74:
+  image: xorti/tiki-devops:php-7.4-qa
+  <<: *lint-scripts
+
+lint-scripts-php80:
+  image: xorti/tiki-devops:php-8.0-qa
+  <<: *lint-scripts
+
+lint-scripts-php81:
+  image: xorti/tiki-devops:php-8.1-qa
+  <<: *lint-scripts
 
 phpcs:
   stage: quality
@@ -105,43 +147,27 @@ phpcs-branches:
   except:
     - master
 
-.code_quality:
-  image: docker:stable
+code_quality:
   stage: quality
-  variables:
-    DOCKER_DRIVER: overlay2
-    SP_VERSION: 0.85.6
-  allow_failure: true
-  services:
-    - docker:stable-dind
-  script:
-    - docker run
-      --env SOURCE_CODE="$PWD"
-      --volume "$PWD":/code
-      --volume /var/run/docker.sock:/var/run/docker.sock
-      "registry.gitlab.com/gitlab-org/security-products/codequality:$SP_VERSION" /code
-  needs: []
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
-  tags:
-    - docker
 
 #----------------------------------------------------------------------------------------------------------------------#
 # UNIT TESTS SECTION
 #----------------------------------------------------------------------------------------------------------------------#
-unit-tests:
-
+.unit-tests: &unit-tests
   stage: unit-tests
   services:
     - name: mysql:5.6
       alias: mysql
-  script:
+  before_script:
     - echo 'APP_ENV=gitlab-ci' >> .env
     - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
     - *install-composer-script
     - composer build-phar
-    - XDEBUG_MODE=coverage ./vendor/bin/phpunit tests/ --group unit --coverage-text --colors=never --log-junit report.xml
+  script:
+    - XDEBUG_MODE=coverage ./vendor/bin/simple-phpunit tests/ --group unit --coverage-text --colors=never --log-junit report.xml
   needs:
     - composer
   cache:
@@ -154,6 +180,30 @@ unit-tests:
     reports:
       junit: report.xml
 
+unit-tests-php71:
+  image: xorti/tiki-devops:php-7.1-qa
+  <<: *unit-tests
+
+unit-tests-php72:
+  image: xorti/tiki-devops:php-7.2-qa
+  <<: *unit-tests
+
+unit-tests-php73:
+  image: xorti/tiki-devops:php-7.3-qa
+  <<: *unit-tests
+
+unit-tests-php74:
+  image: xorti/tiki-devops:php-7.4-qa
+  <<: *unit-tests
+
+unit-tests-php80:
+  image: xorti/tiki-devops:php-8.0-qa
+  <<: *unit-tests
+
+unit-tests-php81:
+  image: xorti/tiki-devops:php-8.1-qa
+  <<: *unit-tests
+
 #----------------------------------------------------------------------------------------------------------------------#
 # FUNCTIONAL TESTS SECTION
 #----------------------------------------------------------------------------------------------------------------------#
@@ -164,7 +214,7 @@ unit-tests:
       - cache/
       - vendor/
       - vendor-bin/
-      - .composercache/files
+      - ${COMPOSER_CACHE_DIR}/files
 
 .cache-warmup-tiki:
   image: xorti/tiki-devops:php-7.4-qa
@@ -184,8 +234,7 @@ cache-warmup-tiki-git:
   variables:
     VCS: git
   script:
-    - git config --global user.email "${GITLAB_USER_EMAIL}"
-    - git config --global user.name "${GITLAB_USER_NAME}"
+    - *git-config
     - TIKI_CACHE=cache/tiki-git-$PREV_VERSION_BRANCH
     - |
       if [ ! -d "$TIKI_CACHE" ]; then
@@ -251,6 +300,7 @@ download-tiki-src-files:
 #----------------------------------------------------------------------------------------------------------------------#
 
 .setup-env: &setup-env
+  - VCS=${VCS:-$DEFAULT_PHP_VERSION}
   - echo APP_ENV=gitlab-ci >> .env
   - echo DEFAULT_VCS=$VCS >> .env
   - cat .env
@@ -259,8 +309,8 @@ download-tiki-src-files:
   - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
 
 
-.template-tiki-manager-commands:
-  image: xorti/tiki-devops:php-7.4-qa
+.template-tiki-manager-commands: &template-tiki-manager-commands
+  image: xorti/tiki-devops:php-all-qa
   stage: functional-tests
   services:
     - name: mysql:5.6
@@ -268,34 +318,37 @@ download-tiki-src-files:
   before_script:
     - *setup-env
     - *setup-keys
+    - source .env.gitlab-ci
+    # Use PHP_VERSION variable to use a different version
+    - PHP_VERSION=${PHP_VERSION:-$DEFAULT_PHP_VERSION}
+    - rm /etc/alternatives/php && ln -s /usr/bin/php${PHP_VERSION} /etc/alternatives/php
+    - php -v
     - *install-composer-script
   script:
-    - ./vendor/bin/phpunit tests/Command/$TEST_FILE
+    - ./vendor/bin/simple-phpunit tests/Command/$TEST_FILE
   cache:
     <<: *tiki-manager-cache
     policy: pull
   allow_failure: false
 
 .template-tiki-manager-commands-git: &template-tiki-manager-commands-git
-  extends: .template-tiki-manager-commands
+  <<: *template-tiki-manager-commands
+  variables:
+    VCS: git
   dependencies:
     - cache-warmup-tiki-git
   needs:
     - cache-warmup-tiki-git
   before_script:
-    - *setup-env
-    - *setup-keys
-    - *install-composer-script
-    - git config --global user.email "${GITLAB_USER_EMAIL}"
-    - git config --global user.name "${GITLAB_USER_NAME}"
-    - git config --global --add safe.directory "*"
+    - !reference [ .template-tiki-manager-commands, before_script ]
+    - *git-config
   except:
     variables:
       - $SCHEDULER == $SVN_SCHEDULER_NAME
       - $SCHEDULER == $SRC_SCHEDULER_NAME
 
 .template-tiki-manager-commands-svn: &template-tiki-manager-commands-svn
-  extends: .template-tiki-manager-commands
+  <<: *template-tiki-manager-commands
   dependencies:
     - cache-warmup-tiki-svn
   needs:
@@ -307,7 +360,7 @@ download-tiki-src-files:
       - $SCHEDULER == $SVN_SCHEDULER_NAME
 
 .template-tiki-manager-commands-src: &template-tiki-manager-commands-src
-  extends: .template-tiki-manager-commands
+  <<: *template-tiki-manager-commands
   dependencies:
     - download-tiki-src-files
   needs:

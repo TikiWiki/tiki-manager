@@ -17,6 +17,7 @@ class Database
 {
     /** @var Instance */
     private $instance;
+    private $access;
     private $extensions = array();
     private $mysqlArgs = array();
 

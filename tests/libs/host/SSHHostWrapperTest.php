@@ -1,14 +1,14 @@
 <?php
 
-use TikiManager\Libs\Host\SSH;
+namespace TikiManager\Tests\Host;
 
-require_once(__DIR__) . '/SSHHostCommonTest.php';
+use TikiManager\Libs\Host\SSH;
 
 /**
  * Class SSH_HostWrapperTest
  * @group unit-ssh
  */
-class SSH_HostWrapperTest extends SSH_HostCommonTest
+class SSHHostWrapperTest extends SSHHostCommonTest
 {
     public function getInstance()
     {

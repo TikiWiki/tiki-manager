@@ -155,5 +155,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
             $redactInput = new ArrayInput($arguments);
             return $command->run($redactInput, $output);
         }
+
+        return 0;
     }
 }

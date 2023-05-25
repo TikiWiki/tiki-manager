@@ -43,5 +43,6 @@ class CopySshKeyCommand extends TikiManagerCommand
         } else {
             $output->writeln('<comment>No instances available to copy the SSH key.</comment>');
         }
+        return 0;
     }
 }

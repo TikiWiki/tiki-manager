@@ -14,36 +14,33 @@ use TikiManager\Tests\Helpers\Tests;
  */
 class UpdateManagerTest extends TestCase
 {
-
     /**
      * @var string
      */
-    static $testPath;
+    protected static $testPath;
 
-
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$testPath = Environment::get('TEMP_FOLDER') . '/test-update-manager';
     }
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $fs = new Filesystem();
         $fs->mkdir(static::$testPath);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $fs = new Filesystem();
         $fs->remove(static::$testPath);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Unable to install composer dependencies
-     */
     public function testRunComposerInstallShouldFail()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Unable to install composer dependencies');
+
         $updater = UpdateManager::getUpdater(static::$testPath);
         Tests::invokeMethod($updater, 'runComposerInstall');
     }

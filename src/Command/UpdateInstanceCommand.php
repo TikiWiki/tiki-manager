@@ -228,7 +228,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 }
             }
 
-            $emails = $input->getOption('email');
+            $emails = $input->getOption('email') ?? '';
             $emails = array_filter(explode(',', $emails), function ($email) {
                 return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
             });
@@ -253,6 +253,8 @@ class UpdateInstanceCommand extends TikiManagerCommand
         } else {
             $this->io->writeln('<comment>No instances available to update/upgrade.</comment>');
         }
+
+        return 0;
     }
 
     private function getFormatter()

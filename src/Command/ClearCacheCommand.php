@@ -28,5 +28,6 @@ class ClearCacheCommand extends TikiManagerCommand
         }
 
         $output->writeln('<info>Cache cleared successfully.</info>');
+        return 0;
     }
 }

@@ -19,5 +19,4 @@ If you wish to set tracking information for this branch you can do so with:
 TXT;
         parent::__construct($message);
     }
-
 }

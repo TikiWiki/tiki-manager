@@ -24,14 +24,14 @@ use TikiManager\Libs\Host\Command;
 class WindowsDiscoveryTest extends TestCase
 {
     protected static $prevSystemDrive;
-    
-    public static function setUpBeforeClass()
+
+    public static function setUpBeforeClass(): void
     {
         static::$prevSystemDrive = getenv('systemdrive');
         putenv('systemdrive=C:');
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         putenv('systemdrive=' . static::$prevSystemDrive);
     }

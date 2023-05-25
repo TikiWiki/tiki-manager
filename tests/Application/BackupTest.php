@@ -27,7 +27,7 @@ class BackupTest extends TestCase
     /** @var TikiManagerStyle */
     protected $io;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $input = new ArrayInput([]);
         $this->output = $ouput = new BufferedOutput();
@@ -55,9 +55,9 @@ class BackupTest extends TestCase
         $this->assertTrue($path->isOwnedByGroup(vfsStream::GROUP_USER_1));
 
         $outputContent = $this->output->fetch();
-        $this->assertNotContains('Failed to chmod file', $outputContent);
-        $this->assertNotContains('Failed to chown file', $outputContent);
-        $this->assertNotContains('Failed to chgrp file', $outputContent);
+        $this->assertStringNotContainsString('Failed to chmod file', $outputContent);
+        $this->assertStringNotContainsString('Failed to chown file', $outputContent);
+        $this->assertStringNotContainsString('Failed to chgrp file', $outputContent);
     }
 
     /**
@@ -86,8 +86,8 @@ class BackupTest extends TestCase
         $this->assertTrue($path->isOwnedByGroup($origGroup));
 
         $outputContent = $this->output->fetch();
-        $this->assertNotContains('Failed to chmod file', $outputContent);
-        $this->assertContains('Failed to chown file', $outputContent);
-        $this->assertContains('Failed to chgrp file', $outputContent);
+        $this->assertStringNotContainsString('Failed to chmod file', $outputContent);
+        $this->assertStringContainsString('Failed to chown file', $outputContent);
+        $this->assertStringContainsString('Failed to chgrp file', $outputContent);
     }
 }

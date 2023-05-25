@@ -149,7 +149,7 @@ class ApplyPatchCommand extends TikiManagerCommand
                     $patch->save();
                     $this->io->writeln('Done.');
                 }
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 $this->io->error($e->getMessage());
                 continue;
             }

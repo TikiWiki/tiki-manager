@@ -118,5 +118,7 @@ class DetectInstanceCommand extends TikiManagerCommand
 
             $this->io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');
         }
+
+        return 0;
     }
 }

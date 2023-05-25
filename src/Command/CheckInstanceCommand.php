@@ -152,5 +152,6 @@ class CheckInstanceCommand extends TikiManagerCommand
         } else {
             $this->io->writeln('<comment>No instances available to check.</comment>');
         }
+        return 0;
     }
 }

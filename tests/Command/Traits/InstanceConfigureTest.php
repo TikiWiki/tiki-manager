@@ -27,7 +27,7 @@ use TikiManager\Libs\Helpers\PDOWrapper;
  */
 class InstanceConfigureTest extends TestCase
 {
-    static $db;
+    protected static $db;
 
     /** @var Instance  */
     private $instance;
@@ -38,13 +38,13 @@ class InstanceConfigureTest extends TestCase
 
     private $traitMock;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         $command = new CreateInstanceCommand();
         static::$inputDefinition = $command->getDefinition();
     }
 
-    public function setUp()
+    protected function setUp(): void
     {
         global $db;
         self::$db = $db;
@@ -62,7 +62,7 @@ class InstanceConfigureTest extends TestCase
             'save'
         ];
 
-        $this->instance = $this->getMockBuilder(Instance::class)->setMethods($methods)->getMock();
+        $this->instance = $this->createPartialMock(Instance::class, $methods);
         $this->instance->type = 'local';
 
         App::getContainer()->set('instance', $this->instance);
@@ -73,7 +73,7 @@ class InstanceConfigureTest extends TestCase
         $this->traitMock->setLogger(new NullLogger());
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $fs = new \Symfony\Component\Filesystem\Filesystem();
         $fs->remove($_ENV['TESTS_BASE_FOLDER']);
@@ -118,8 +118,7 @@ class InstanceConfigureTest extends TestCase
         $this->input->setOption('tempdir', $instanceTempDir);
         // Backup information is calculated
 
-        $methods = ['save'];
-        $instance = $this->createPartialMock(Instance::class, $methods);
+        $instance = $this->createPartialMock(Instance::class, ['save']);
         $instance->type = 'local';
 
         $this->traitMock->setupInstance($instance);
@@ -170,11 +169,12 @@ class InstanceConfigureTest extends TestCase
         $db = $this->createMock(PDOWrapper::class);
         $db
             ->expects($this->once())
-            ->method('prepare')
+            ->method('__call')
+            ->with('prepare')
             ->willReturn($stmtMock);
 
         $this->expectException(InvalidOptionException::class);
-        $this->expectExceptionMessageRegExp('/^Instance name already in use/');
+        $this->expectExceptionMessageMatches('/^Instance name already in use/');
 
         $this->traitMock->setupInstance($this->instance);
     }
@@ -230,7 +230,7 @@ class InstanceConfigureTest extends TestCase
             ->willReturn([$tikiMock]); // Folder not empty by Tiki not found.
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/Please select an empty webroot folder/');
+        $this->expectExceptionMessageMatches('/Please select an empty webroot folder/');
 
         $this->traitMock->setupInstance($instance);
     }
@@ -242,7 +242,7 @@ class InstanceConfigureTest extends TestCase
     {
         $this->input->setOption('blank', true);
         $this->traitMock->setupApplication($this->instance);
-        $this->assertEquals( 'blank : none', $this->instance->selection);
+        $this->assertEquals('blank : none', $this->instance->selection);
     }
 
     /**
@@ -257,9 +257,7 @@ class InstanceConfigureTest extends TestCase
             Version::buildFake('git', 'master'),
         ];
 
-        $instance = $this->getMockBuilder(Instance::class)
-            ->setMethods(['getCompatibleVersions'])
-            ->getMock();
+        $instance = $this->createPartialMock(Instance::class, ['getCompatibleVersions']);
         $instance
             ->expects($this->once())
             ->method('getCompatibleVersions')
@@ -287,9 +285,7 @@ class InstanceConfigureTest extends TestCase
             Version::buildFake('git', 'master'),
         ];
 
-        $instance = $this->getMockBuilder(Instance::class)
-            ->setMethods(['getCompatibleVersions'])
-            ->getMock();
+        $instance = $this->createPartialMock(Instance::class, ['getCompatibleVersions']);
         $instance
             ->expects($this->once())
             ->method('getCompatibleVersions')

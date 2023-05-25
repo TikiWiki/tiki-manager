@@ -26,5 +26,7 @@ class VerifyInstanceCommand extends TikiManagerCommand
 
         $verifyInstanceInput = new ArrayInput($arguments);
         $returnCode = $command->run($verifyInstanceInput, $output);
+
+        return $returnCode;
     }
 }

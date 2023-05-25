@@ -1,5 +1,7 @@
 <?php
 
+namespace TikiManager\Tests\Host;
+
 use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\Host\Exception\CommandException;

@@ -27,5 +27,7 @@ class ViewDatabaseCommand extends TikiManagerCommand
         } else {
             $output->writeln('<error>' . self::SQLITE . ' is not available, please install and try again.</error>');
         }
+
+        return 0;
     }
 }

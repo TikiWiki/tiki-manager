@@ -179,11 +179,6 @@ SQL;
         return Checksum::getChecksums($this->id);
     }
 
-    private function saveHashDump($output, Application $app)
-    {
-        return Checksum::saveChecksums($this->id);
-    }
-
     public function __toString()
     {
         return $this->type . ' : ' . $this->branch;

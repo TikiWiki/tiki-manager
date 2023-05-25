@@ -175,5 +175,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 $instance->unlock();
             }
         }
+
+        return 0;
     }
 }

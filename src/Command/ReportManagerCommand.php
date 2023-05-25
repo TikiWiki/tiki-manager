@@ -38,18 +38,20 @@ class ReportManagerCommand extends TikiManagerCommand
 
         switch ($option) {
             case 'add':
-                $this->add($helper, $input, $io, $output);
+                $this->add($helper, $input, $output);
                 break;
             case 'modify':
-                $this->modify($helper, $input, $io, $output);
+                $this->modify($helper, $input, $output);
                 break;
             case 'remove':
-                $this->remove($helper, $input, $io, $output);
+                $this->remove($helper, $input, $output);
                 break;
             case 'send':
                 $this->send();
                 break;
         }
+
+        return 0;
     }
 
     /**
@@ -57,10 +59,9 @@ class ReportManagerCommand extends TikiManagerCommand
      *
      * @param $helper
      * @param $input
-     * @param $io
      * @param $output
      */
-    private function add($helper, $input, $io, $output)
+    private function add($helper, $input, $output)
     {
         $report = new ReportManager;
         $instances = $report->getAvailableInstances();
@@ -103,10 +104,9 @@ class ReportManagerCommand extends TikiManagerCommand
      *
      * @param $helper
      * @param $input
-     * @param $io
      * @param $output
      */
-    private function modify($helper, $input, $io, $output)
+    private function modify($helper, $input, $output)
     {
         $report = new ReportManager;
         $instances = $report->getReportInstances();
@@ -149,10 +149,9 @@ class ReportManagerCommand extends TikiManagerCommand
      *
      * @param $helper
      * @param $input
-     * @param $io
      * @param $output
      */
-    private function remove($helper, $input, $io, $output)
+    private function remove($helper, $input, $output)
     {
         $report = new ReportManager;
         $instances = $report->getReportInstances();

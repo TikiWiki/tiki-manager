@@ -1,5 +1,7 @@
 <?php
 
+namespace TikiManager\Tests\Host;
+
 use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\Host\SSH;
@@ -8,14 +10,14 @@ use TikiManager\Libs\Host\SSH;
  * Class SSH_HostCommonTest
  * @group unit-ssh
  */
-abstract class SSH_HostCommonTest extends TestCase
+abstract class SSHHostCommonTest extends TestCase
 {
     protected static $sshHost;
     protected static $sshUser;
     protected static $sshPass;
     protected static $sshPort;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         self::$sshHost = $_ENV['TEST_SSH_HOST'];
         self::$sshUser = $_ENV['TEST_SSH_USER'];

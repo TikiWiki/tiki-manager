@@ -31,7 +31,8 @@ class LocalTest extends TestCase
     /**
      * @covers \TikiManager\Access\Local::isEmptyDir
      */
-    public function testIsNotEmptyDir() {
+    public function testIsNotEmptyDir()
+    {
 
         $vsfStream = vfsStream::setup('exampleDir');
         $vsfStream->addChild(new vfsStreamDirectory('demo'));

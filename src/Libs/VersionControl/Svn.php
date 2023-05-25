@@ -220,7 +220,7 @@ class Svn extends VersionControlSystem
 
             if (empty($node_children)) {
                 $value = sprintf('%s', $curNode);
-                $value = is_numeric($value) ? float($value) : $value;
+                $value = is_numeric($value) ? floatval($value) : $value;
                 $output[ $nodeName ] = $value;
                 continue;
             } else {

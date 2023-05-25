@@ -10,13 +10,18 @@ use TikiManager\Application\Exception\ConfigException;
 use TikiManager\Application\Instance;
 use TikiManager\Libs\Host\Command;
 
+/**
+ * Class DiscoveryTest
+ * @package TikiManager\Tests\Application
+ * @group unit
+ */
 class DiscoveryTest extends TestCase
 {
     protected $instanceMock;
     protected $accessMock;
     protected $discoveryMock;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->getDiscoveryMock();
     }

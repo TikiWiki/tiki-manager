@@ -37,5 +37,7 @@ class CheckRequirementsCommand extends TikiManagerCommand
                 $this->io->block($errorMessage, 'NOT OK', !$required ? 'fg=black;bg=yellow' : 'error');
             }
         }
+
+        return 0;
     }
 }

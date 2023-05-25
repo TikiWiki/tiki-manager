@@ -30,7 +30,7 @@ class BackupInstanceCommandTest extends TestCase
     protected static $instanceIds;
     private static $archiveDir;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$instanceType = getenv('TEST_INSTANCE_TYPE') ?: 'local';
         $basePath = $_ENV['TESTS_BASE_FOLDER'] . '/backup';
@@ -65,7 +65,7 @@ class BackupInstanceCommandTest extends TestCase
         self::$instanceIds['instance'] = InstanceHelper::create(self::$instanceSettings[static::$instanceType]);
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         foreach (self::$instanceIds as $instanceId) {
             $instance = Instance::getInstance($instanceId);

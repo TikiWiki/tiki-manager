@@ -48,5 +48,7 @@ class ManagerTestSendEmailCommand extends TikiManagerCommand
         $this->sendEmail($emailTo, $subject, $body);
 
         $this->io->success('Email sent. Check your mailbox.');
+
+        return 0;
     }
 }

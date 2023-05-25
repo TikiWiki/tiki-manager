@@ -118,7 +118,7 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
 
         if (!isset($instancesInfo)) {
             $output->writeln('<comment>No instances available to configure.</comment>');
-            return;
+            return 0;
         }
 
         $instancesOption = $input->getOption('instances');
@@ -140,6 +140,8 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
 
             $this->io->newLine();
         }
+
+        return 0;
     }
 
     protected function handleInstance(Instance $instance, InputInterface $input): Instance\CronJob

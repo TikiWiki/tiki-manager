@@ -378,7 +378,8 @@ SQL;
     public static function getInstance($id)
     {
         $result = query(self::SQL_SELECT_INSTANCE_BY_ID, [':id' => $id]);
-        $instance = $result->fetchObject('TikiManager\Application\Instance');
+        $instance = $result->fetchObject(Instance::class);
+
         return $instance;
     }
 

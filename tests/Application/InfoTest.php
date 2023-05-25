@@ -18,7 +18,7 @@ use TikiManager\Config\Environment;
  */
 class InfoTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         \query(Info::SQL_UPDATE_VALUE, [':name' => 'login_attempts', ':value' => 0]);
@@ -44,8 +44,10 @@ class InfoTest extends TestCase
     {
         self::assertFalse(App::get('info')->isLoginLocked());
 
-        \query(Info::SQL_UPDATE_VALUE,
-            [':name' => 'login_attempts', ':value' => Environment::get('MAX_FAILED_LOGIN_ATTEMPTS', 10)]);
+        \query(
+            Info::SQL_UPDATE_VALUE,
+            [':name' => 'login_attempts', ':value' => Environment::get('MAX_FAILED_LOGIN_ATTEMPTS', 10)]
+        );
 
         self::assertTrue(App::get('info')->isLoginLocked());
     }

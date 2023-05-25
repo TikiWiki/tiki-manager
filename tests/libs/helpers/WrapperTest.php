@@ -1,4 +1,8 @@
 <?php
+
+namespace TikiManager\Tests\Helpers;
+
+use stdClass;
 use PHPUnit\Framework\TestCase;
 use TikiManager\Libs\Helpers\Wrapper;
 use TikiManager\Libs\Host\Command;

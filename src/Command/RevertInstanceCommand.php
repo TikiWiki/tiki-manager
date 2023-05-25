@@ -60,7 +60,7 @@ class RevertInstanceCommand extends TikiManagerCommand
 
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No instances available to revert.</comment>');
-            return;
+            return 0;
         }
 
         $instancesOption = $input->getOption('instances');
@@ -73,5 +73,6 @@ class RevertInstanceCommand extends TikiManagerCommand
             $this->io->writeln(sprintf('<fg=cyan>Reverting instance %s...</>', $instance->name));
             $instance->revert();
         }
+        return 0;
     }
 }

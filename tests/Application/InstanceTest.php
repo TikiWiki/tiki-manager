@@ -27,21 +27,21 @@ class InstanceTest extends TestCase
 
     private $testDir;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         /** @var TikiManagerStyle $io */
         $io = App::get('io');
         $io->setVerbosity(0); // Do not write to console while running tests
     }
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->fs = new Filesystem();
         $this->testDir = Environment::get('TEMP_FOLDER') . '/tests';
         $this->fs->mkdir($this->testDir);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $this->fs->remove($this->testDir);
     }

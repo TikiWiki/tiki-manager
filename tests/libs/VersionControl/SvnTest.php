@@ -5,9 +5,9 @@ namespace TikiManager\Tests\Libs\VersionControl;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use TikiManager\Access\Local;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Libs\Host\Command;
-use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Svn;
 
 /**
@@ -16,9 +16,6 @@ use TikiManager\Libs\VersionControl\Svn;
 class SvnTest extends TestCase
 {
 
-    /**
-     * @expectedException \TikiManager\Application\Exception\VcsConflictException
-     */
     public function testConflictsDetectionOnUpdate()
     {
         $instance = $this->createMock(Instance::class);
@@ -54,15 +51,13 @@ TXT;
         $stub->expects($this->once())->method('merge')
             ->will($this->returnValue($conflictMessage));
 
+        $this->expectException(VcsException::class);
         $stub->update($instance->webroot, 'trunk');
     }
 
-    /**
-     * @expectedException \TikiManager\Application\Exception\VcsConflictException
-     */
     public function testConflictsDetectionOnUpgrade()
     {
-       $instance = $this->createMock(Instance::class);
+        $instance = $this->createMock(Instance::class);
 
         $stream = vfsStream::setup('instance');
         $instance->webroot = $stream->url();
@@ -102,7 +97,7 @@ TXT;
             ->getMock();
 
         $svn->method('revert')->willReturn(true);
+        $this->expectException(VcsException::class);
         $svn->upgrade($instance->webroot, 'trunk');
     }
-
 }

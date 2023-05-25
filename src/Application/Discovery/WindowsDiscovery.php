@@ -23,8 +23,8 @@ class WindowsDiscovery extends Discovery
             $out = $command->getStdout();
             $line = fgets($out);
 
-            while ($line !== false) {
-                $result[] = trim($line);
+            while ($line) {
+                $result[] = $line;
                 $line = fgets($out);
             }
             return $result;
@@ -65,13 +65,13 @@ class WindowsDiscovery extends Discovery
         $command->run();
 
         if ($command->getReturn() === 0) {
-            $out = $command->getStdoutContent();
+            $out = $command->getStdoutContent() ?? '';
             $out = trim($out);
             $this->config['user'] = $out;
             return $out;
         }
 
-        $out = $command->getStderrContent();
+        $out = $command->getStderrContent() ?? '';
         $out = trim($out);
 
         throw new ConfigException(

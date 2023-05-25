@@ -15,22 +15,22 @@ use TikiManager\Tests\Helpers\Tests;
  */
 class SrcTest extends TestCase
 {
-
     /**
      * @var string
      */
-    static $testPath;
+    protected static $testPath;
+
     /**
      * @var Src
      */
     private $srcUpdate;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         static::$testPath = Environment::get('TEMP_FOLDER') . '/test-update-src';
     }
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $fs = new Filesystem();
         $fs->mkdir(static::$testPath);
@@ -38,7 +38,7 @@ class SrcTest extends TestCase
         $this->srcUpdate = new Src(static::$testPath);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $fs = new Filesystem();
         $fs->remove(static::$testPath);
@@ -163,9 +163,9 @@ class SrcTest extends TestCase
 
         $info = $this->srcUpdate->info();
 
-        $this->assertContains('Source Code detected', $info);
-        $this->assertContains('Version: ' . $version['version'], $info);
-        $this->assertContains('Date: ' . date(\DateTime::COOKIE, strtotime($version['date'])), $info);
+        $this->assertStringContainsString('Source Code detected', $info);
+        $this->assertStringContainsString('Version: ' . $version['version'], $info);
+        $this->assertStringContainsString('Date: ' . date(\DateTime::COOKIE, strtotime($version['date'])), $info);
     }
 
     public function testExtractInvalidZip()
@@ -179,10 +179,6 @@ class SrcTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Failed to retrieve archive file
-     */
     public function testUpdateFailDownload()
     {
         $stub = $this->getMockBuilder(Src::class)
@@ -193,6 +189,8 @@ class SrcTest extends TestCase
         $stub->expects($this->once())->method('downloadSrc')
             ->will($this->returnValue(false));
 
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to retrieve archive file');
         $stub->update();
     }
 

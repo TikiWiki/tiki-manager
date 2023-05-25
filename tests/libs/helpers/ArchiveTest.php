@@ -1,5 +1,8 @@
 <?php
 
+namespace TikiManager\Tests\Helpers;
+
+use DateTime;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Libs\Helpers\Archive;
@@ -10,9 +13,9 @@ use TikiManager\Libs\Helpers\Archive;
  */
 class ArchiveTest extends TestCase
 {
-    static $createdDirs = [];
+    protected static $createdDirs = [];
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $fs = new Filesystem();
         foreach (static::$createdDirs as $dir) {

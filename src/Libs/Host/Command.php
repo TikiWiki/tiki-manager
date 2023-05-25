@@ -89,6 +89,7 @@ class Command
             $status = proc_get_status($this->process);
             return $status;
         }
+        return [];
     }
 
     /**
