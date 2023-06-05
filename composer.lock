@@ -520,17 +520,17 @@
         },
         {
             "name": "laminas/laminas-validator",
-            "version": "2.31.0",
+            "version": "2.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-validator.git",
-                "reference": "7dc274aa5afd5e23be0dbea13363e3d66ba5808b"
+                "reference": "c5f73b1dc9b657af24736b56318bcd880d9fee94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/laminas/laminas-validator/laminas-laminas-validator-7dc274aa5afd5e23be0dbea13363e3d66ba5808b-zip-cc7976.zip",
-                "reference": "7dc274aa5afd5e23be0dbea13363e3d66ba5808b",
-                "shasum": "ba422afaf2fd75d081dded963058baa895672810"
+                "url": "https://composer.tiki.org/dist/laminas/laminas-validator/laminas-laminas-validator-c5f73b1dc9b657af24736b56318bcd880d9fee94-zip-0cac53.zip",
+                "reference": "c5f73b1dc9b657af24736b56318bcd880d9fee94",
+                "shasum": "bf83db721842933deb43aadfb6d6bf7dc42b1426"
             },
             "require": {
                 "laminas/laminas-servicemanager": "^3.21.0",
@@ -545,7 +545,6 @@
                 "laminas/laminas-coding-standard": "^2.5",
                 "laminas/laminas-db": "^2.18",
                 "laminas/laminas-filter": "^2.32",
-                "laminas/laminas-http": "^2.18",
                 "laminas/laminas-i18n": "^2.23",
                 "laminas/laminas-session": "^2.16",
                 "laminas/laminas-uri": "^2.10.0",
@@ -553,7 +552,7 @@
                 "psalm/plugin-phpunit": "^0.18.4",
                 "psr/http-client": "^1.0.2",
                 "psr/http-factory": "^1.0.2",
-                "vimeo/psalm": "^5.11"
+                "vimeo/psalm": "^5.12"
             },
             "suggest": {
                 "laminas/laminas-db": "Laminas\\Db component, required by the (No)RecordExists validator",
@@ -593,7 +592,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2023-05-19T09:42:26+00:00"
+            "time": "2023-06-01T08:43:15+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -1105,17 +1104,17 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.2.1",
+            "version": "v3.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "e2d1534420bd723d0ef5aec58a22c5fe60ce6f5e"
+                "reference": "7c3aff79d10325257a001fcf92d991f24fc967cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/deprecation-contracts/symfony-deprecation-contracts-e2d1534420bd723d0ef5aec58a22c5fe60ce6f5e-zip-0311d5.zip",
-                "reference": "e2d1534420bd723d0ef5aec58a22c5fe60ce6f5e",
-                "shasum": "153e8c90afb4fd3992a814e0b9897f379f40df6e"
+                "url": "https://composer.tiki.org/dist/symfony/deprecation-contracts/symfony-deprecation-contracts-7c3aff79d10325257a001fcf92d991f24fc967cf-zip-ede10c.zip",
+                "reference": "7c3aff79d10325257a001fcf92d991f24fc967cf",
+                "shasum": "c0d311f5a4665260299e57fed01a2801649824c8"
             },
             "require": {
                 "php": ">=8.1"
@@ -1123,7 +1122,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "3.3-dev"
+                    "dev-main": "3.4-dev"
                 },
                 "thanks": {
                     "name": "symfony/contracts",
@@ -1165,7 +1164,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-03-01T10:25:55+00:00"
+            "time": "2023-05-23T14:45:45+00:00"
         },
         {
             "name": "symfony/dotenv",
@@ -2438,17 +2437,17 @@
         },
         {
             "name": "symfony/string",
-            "version": "v6.2.8",
+            "version": "v6.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "193e83bbd6617d6b2151c37fff10fa7168ebddef"
+                "reference": "f2e190ee75ff0f5eced645ec0be5c66fac81f51f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/string/symfony-string-193e83bbd6617d6b2151c37fff10fa7168ebddef-zip-57d923.zip",
-                "reference": "193e83bbd6617d6b2151c37fff10fa7168ebddef",
-                "shasum": "bd01ff3c70e11f1ee67c38e0827e13809b779d07"
+                "url": "https://composer.tiki.org/dist/symfony/string/symfony-string-f2e190ee75ff0f5eced645ec0be5c66fac81f51f-zip-25e759.zip",
+                "reference": "f2e190ee75ff0f5eced645ec0be5c66fac81f51f",
+                "shasum": "6b26c2dd75884e660e47ee2bac5dce5a12638636"
             },
             "require": {
                 "php": ">=8.1",
@@ -2458,13 +2457,13 @@
                 "symfony/polyfill-mbstring": "~1.0"
             },
             "conflict": {
-                "symfony/translation-contracts": "<2.0"
+                "symfony/translation-contracts": "<2.5"
             },
             "require-dev": {
                 "symfony/error-handler": "^5.4|^6.0",
                 "symfony/http-client": "^5.4|^6.0",
                 "symfony/intl": "^6.2",
-                "symfony/translation-contracts": "^2.0|^3.0",
+                "symfony/translation-contracts": "^2.5|^3.0",
                 "symfony/var-exporter": "^5.4|^6.0"
             },
             "type": "library",
@@ -2517,7 +2516,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-03-20T16:06:02+00:00"
+            "time": "2023-03-21T21:06:29+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -2806,17 +2805,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.15",
+            "version": "1.10.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "762c4dac4da6f8756eebb80e528c3a47855da9bd"
+                "reference": "352bdbb960bb523e3d71b834862589f910921c23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-762c4dac4da6f8756eebb80e528c3a47855da9bd-zip-7af42e.zip",
-                "reference": "762c4dac4da6f8756eebb80e528c3a47855da9bd",
-                "shasum": "fee1bf9d9dd9e9b51808861515f90004f4a646b2"
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-352bdbb960bb523e3d71b834862589f910921c23-zip-a0e2cd.zip",
+                "reference": "352bdbb960bb523e3d71b834862589f910921c23",
+                "shasum": "0711221e8f148f05e8af280b47e4c9bf379c0140"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2857,7 +2856,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-05-09T15:28:01+00:00"
+            "time": "2023-06-05T08:21:46+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
@@ -3004,5 +3003,5 @@
         "php": ">=7.1.3"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
