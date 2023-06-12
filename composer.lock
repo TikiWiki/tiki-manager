@@ -520,17 +520,17 @@
         },
         {
             "name": "laminas/laminas-validator",
-            "version": "2.32.0",
+            "version": "2.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-validator.git",
-                "reference": "c5f73b1dc9b657af24736b56318bcd880d9fee94"
+                "reference": "1d82b5c0ede9316263e14d11e9284dfb3130f158"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/laminas/laminas-validator/laminas-laminas-validator-c5f73b1dc9b657af24736b56318bcd880d9fee94-zip-0cac53.zip",
-                "reference": "c5f73b1dc9b657af24736b56318bcd880d9fee94",
-                "shasum": "bf83db721842933deb43aadfb6d6bf7dc42b1426"
+                "url": "https://composer.tiki.org/dist/laminas/laminas-validator/laminas-laminas-validator-1d82b5c0ede9316263e14d11e9284dfb3130f158-zip-f442e5.zip",
+                "reference": "1d82b5c0ede9316263e14d11e9284dfb3130f158",
+                "shasum": "45831c4fd5f2aa68f63fa19ebce73a21c3d8d2cc"
             },
             "require": {
                 "laminas/laminas-servicemanager": "^3.21.0",
@@ -592,7 +592,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2023-06-01T08:43:15+00:00"
+            "time": "2023-06-12T09:43:54+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -2805,17 +2805,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.16",
+            "version": "1.10.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "352bdbb960bb523e3d71b834862589f910921c23"
+                "reference": "52b6416c579663eebdd2f1d97df21971daf3b43f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-352bdbb960bb523e3d71b834862589f910921c23-zip-a0e2cd.zip",
-                "reference": "352bdbb960bb523e3d71b834862589f910921c23",
-                "shasum": "0711221e8f148f05e8af280b47e4c9bf379c0140"
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-52b6416c579663eebdd2f1d97df21971daf3b43f-zip-ef1b79.zip",
+                "reference": "52b6416c579663eebdd2f1d97df21971daf3b43f",
+                "shasum": "18537c9ace24df175e33c3c5c69574bc543f1103"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2856,7 +2856,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-06-05T08:21:46+00:00"
+            "time": "2023-06-07T22:00:43+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
