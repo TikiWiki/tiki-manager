@@ -26,7 +26,7 @@ class TikiVersionCommand extends TikiManagerCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $vcsOption = $input->getOption('vcs');
-        $vcsOption = strtoupper($vcsOption);
+        $vcsOption = $vcsOption ? strtoupper($vcsOption) : '';
         if (! in_array($vcsOption, ['SVN', 'GIT', 'SRC'])) {
             $vcsOption = '';
         }
