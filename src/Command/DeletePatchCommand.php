@@ -60,7 +60,7 @@ class DeletePatchCommand extends TikiManagerCommand
             } else {
                 $this->io->writeln('<comment>No patches applied yet.</comment>');
             }
-            
+
             $patch = $this->io->ask('What is the patch ID?', null, function ($answer) {
                 if (empty($answer)) {
                     throw new \RuntimeException('Patch ID cannot be empty');
