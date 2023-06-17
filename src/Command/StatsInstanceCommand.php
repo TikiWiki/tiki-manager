@@ -191,7 +191,7 @@ class StatsInstanceCommand extends TikiManagerCommand
             $instances = CommandHelper::validateInstanceSelection($instancesOpt, $instances);
         }
 
-        $toExclude = explode(',', $excludesOpt);
+        $toExclude = $excludesOpt ? explode(',', $excludesOpt) : [];
         foreach ($toExclude as $toDelete) {
             unset($instances[$toDelete]);
         }
