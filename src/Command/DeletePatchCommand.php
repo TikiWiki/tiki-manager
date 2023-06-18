@@ -74,19 +74,25 @@ class DeletePatchCommand extends TikiManagerCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $patchId = $input->getOption('patch');
+        try {
+            if (empty($patchId)) {
+                throw new \RuntimeException('Patch ID cannot be empty.');
+            }
 
-        if (empty($patchId)) {
-            throw new \RuntimeException('Patch ID cannot be empty.');
+            $patch = Patch::find($patchId);
+            if (empty($patch)) {
+                throw new \RuntimeException(sprintf('Patch %s not found.', $patchId));
+            }
+
+            $patch->delete();
+            $this->io->writeln('Patch was removed from the list of applied patches. To actually remove the patch, you can restore a backup, update or upgrade without stashing changes, clone from another instance or revert the instance to its original state.');
+            return 0;
+        } catch (\RuntimeException $e) {
+            $this->logger->error('Failed to Delete patch!'. PHP_EOL . $e->getMessage(), [
+                'patch' => $patchId,
+                'exception' => $e,
+            ]);
+            return $e->getCode() ?? -1;
         }
-
-        $patch = Patch::find($patchId);
-        if (empty($patch)) {
-            throw new \RuntimeException(sprintf('Patch %s not found.', $patchId));
-        }
-
-        $patch->delete();
-        $this->io->writeln('Patch was removed from the list of applied patches. To actually remove the patch, you can restore a backup, update or upgrade without stashing changes, clone from another instance or revert the instance to its original state.');
-
-        return 0;
     }
 }
