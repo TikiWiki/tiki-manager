@@ -299,7 +299,7 @@ trait InstanceConfigure
         $instance->phpexec = $this->input->getOption('phpexec');
 
         // Detect the PHP that best suits the selected branch
-        if ($branchName = $this->input->getOption('branch')) {
+        if (! $this->input->getOption('blank') && $branchName = $this->input->getOption('branch')) {
             $apps = $instance->getApplications();
             /** @var Tiki $tiki */
             $tiki = reset($apps);
@@ -721,6 +721,6 @@ trait InstanceConfigure
         if (substr(PHP_OS, 0, 3) == 'WIN' && count($phpModules) == 1) {
             $phpModules = explode("\n", $phpModules[0]);
         }
-        return $phpModules ;
+        return $phpModules;
     }
 }

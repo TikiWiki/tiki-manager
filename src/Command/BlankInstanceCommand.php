@@ -18,10 +18,15 @@ class BlankInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $command = $this->getApplication()->find('instance:create');
+        $command_name = 'manager:instance:create';
+        if (! $this->getApplication()->has($command_name)) {
+            $command_name = 'instance:create';
+        }
+
+        $command = $this->getApplication()->find($command_name);
 
         $arguments = [
-            'command' => 'instance:create',
+            'command' => $command_name,
             '--blank' => true
         ];
 
