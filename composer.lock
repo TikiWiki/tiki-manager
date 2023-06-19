@@ -678,17 +678,17 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "2.0.42",
+            "version": "2.0.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "665d289f59e646a259ebf13f29be7f6f54cab24b"
+                "reference": "149f608243f8133c61926aae26ce67d2b22b37e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpseclib/phpseclib/phpseclib-phpseclib-665d289f59e646a259ebf13f29be7f6f54cab24b-zip-34b53e.zip",
-                "reference": "665d289f59e646a259ebf13f29be7f6f54cab24b",
-                "shasum": "86c2e3391243fa951f7fda9bdf08f2f73e601d89"
+                "url": "https://composer.tiki.org/dist/phpseclib/phpseclib/phpseclib-phpseclib-149f608243f8133c61926aae26ce67d2b22b37e5-zip-228a74.zip",
+                "reference": "149f608243f8133c61926aae26ce67d2b22b37e5",
+                "shasum": "8e3ef327182bc27a0e4ee5de12f1af2dc7e8c624"
             },
             "require": {
                 "php": ">=5.3.3"
@@ -780,7 +780,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-03-06T12:45:53+00:00"
+            "time": "2023-06-13T08:41:47+00:00"
         },
         {
             "name": "psr/container",
@@ -2805,17 +2805,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.18",
+            "version": "1.10.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "52b6416c579663eebdd2f1d97df21971daf3b43f"
+                "reference": "af5a296ff02610c1bfb4ddfac9fd4a08657b9046"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-52b6416c579663eebdd2f1d97df21971daf3b43f-zip-ef1b79.zip",
-                "reference": "52b6416c579663eebdd2f1d97df21971daf3b43f",
-                "shasum": "18537c9ace24df175e33c3c5c69574bc543f1103"
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-af5a296ff02610c1bfb4ddfac9fd4a08657b9046-zip-7acece.zip",
+                "reference": "af5a296ff02610c1bfb4ddfac9fd4a08657b9046",
+                "shasum": "48b2214f0f1ac092729493c23e438c576dbf1476"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2856,7 +2856,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-06-07T22:00:43+00:00"
+            "time": "2023-06-14T15:26:58+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
