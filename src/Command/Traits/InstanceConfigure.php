@@ -378,7 +378,10 @@ trait InstanceConfigure
             if ($version instanceof Version && $version->branch == $branchName) {
                 $default = (string)$version;
             }
-            $versions[] = (string)$version;
+            $str_version = (string)$version;
+            if (! strpos($str_version, '^{}')) {
+                $versions[] = $str_version;
+            }
         }
 
         $selection = $this->io->choice('Branch', $versions, $default);
@@ -657,9 +660,9 @@ trait InstanceConfigure
 
             if ($shorthandByte == 'G') {
                 $memoryLimit = $matches[1] * 1024 * 1024 * 1024;
-            } else if ($shorthandByte == 'M') {
+            } elseif ($shorthandByte == 'M') {
                 $memoryLimit = $matches[1] * 1024 * 1024;
-            } else if ($shorthandByte == 'K') {
+            } elseif ($shorthandByte == 'K') {
                 $memoryLimit = $matches[1] * 1024;
             } else {
                 $memoryLimit = (int) $accessMemoryLimit;
@@ -712,11 +715,11 @@ trait InstanceConfigure
             ->createCommand($instance->phpexec, ['-m'])
             ->run()
             ->getStdoutContent();
-            
+
         $phpModules = $phpModules ? explode(PHP_EOL, $phpModules) : [];
 
-        if(substr(PHP_OS, 0, 3) == 'WIN' && count($phpModules) == 1){
-            $phpModules = explode("\n",$phpModules[0]);
+        if (substr(PHP_OS, 0, 3) == 'WIN' && count($phpModules) == 1) {
+            $phpModules = explode("\n", $phpModules[0]);
         }
         return $phpModules ;
     }
