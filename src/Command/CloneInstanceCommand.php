@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
  *     See copyright.txt for details and a complete list of authors.
@@ -234,7 +235,11 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         $sourceInstance = $sourceInstances[0];
-        $instances = CommandHelper::getInstances('all');
+        if ($cloneUpgrade) {
+            $instances = CommandHelper::getInstances('upgrade');
+        } else {
+            $instances = CommandHelper::getInstances('all');
+        }
 
         $instances = array_filter($instances, function ($instance) use ($sourceInstance) {
             return $instance->getId() != $sourceInstance->getId();
@@ -325,7 +330,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
         }
 
-        if (! $onlyCode) {
+        if (!$onlyCode) {
             $dbConfigErrorMessage = 'Unable to load/set database configuration for instance {instance_name} (id: {instance_id}). {exception_message}';
 
             try {
@@ -346,10 +351,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 try {
                     $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
 
-                    if (
-                        !$setupTargetDatabase && !$this->input->isInteractive() &&
-                        !$this->testExistingDbConnection($destinationInstance)
-                    ) {
+                    if (! $setupTargetDatabase && ! $this->input->isInteractive() && ! $this->testExistingDbConnection($destinationInstance)) {
                         throw new \Exception('Existing database configuration failed to connect.');
                     }
 
@@ -390,7 +392,7 @@ class CloneInstanceCommand extends TikiManagerCommand
 
             if (file_exists($archiveDir)) {
                 $archiveFiles = array_diff(scandir($archiveDir, SCANDIR_SORT_DESCENDING), ['.', '..']);
-                if (! empty($archiveFiles[0])) {
+                if (!empty($archiveFiles[0])) {
                     $archive = $archiveDir . DIRECTORY_SEPARATOR . $archiveFiles[0];
                     $this->logger->notice('Using last created backup ({backup_name}) of {instance_name}', [
                         'instance_name' => $sourceInstance->name,
@@ -493,7 +495,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         $targetDB = $target->getDatabaseConfig();
 
         return (($sourceAccess->host == $targetAccess->host ||
-                ($sourceAccess->host != $targetAccess->host && !in_array($targetDB->host, ['127.0.0.1', 'localhost'])))
+            ($sourceAccess->host != $targetAccess->host && !in_array($targetDB->host, ['127.0.0.1', 'localhost'])))
             && Database::compareDatabase($sourceDB, $targetDB));
     }
 }

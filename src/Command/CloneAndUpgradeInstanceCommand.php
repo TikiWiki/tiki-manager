@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright (c) Copyright by authors of the Tiki Manager Project. All Rights Reserved.
  *     See copyright.txt for details and a complete list of authors.
@@ -128,7 +129,11 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $command = $this->getApplication()->find('instance:clone');
+        $command_name = 'manager:instance:clone';
+        if (!$this->getApplication()->has($command_name)) {
+            $command_name = 'instance:clone';
+        }
+        $command = $this->getApplication()->find($command_name);
 
         $argumentsToAdd = ['upgrade'];
 
