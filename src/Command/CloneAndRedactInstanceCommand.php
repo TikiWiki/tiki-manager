@@ -28,7 +28,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if (empty($input->getOption('instances'))) {
-            $instances = CommandHelper::getInstances();
+            $instances = CommandHelper::getInstances('upgrade');
             $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
             if (empty($instancesInfo)) {
@@ -37,7 +37,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
             }
             $this->io->note('To prevent data loss, Redact operations will create a clone of your instance and then redact it. Your instance will not be modified');
             CommandHelper::renderInstancesTable($output, $instancesInfo);
-            $answer = $this->io->ask('Which instance(s) do you want to redact', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance do you want to redact', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
                 return implode(',', array_map(function ($elem) {
                     return $elem->getId();
@@ -49,8 +49,9 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instances = CommandHelper::getInstances('tiki');
+        $instances = CommandHelper::getInstances('upgrade');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        $tiki_namespace = true;
 
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No Tiki instances available.</comment>');
@@ -75,7 +76,14 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
             $webroot = preg_replace('/\/$/', '', $instance->webroot);
             $blankInstWebroot = preg_replace('/' . end($array) . '$/', '', $webroot) . $blankInstanceName;
 
-            $command = $this->getApplication()->find('instance:create');
+            // check if we are on tiki namespace
+            $command_name = 'manager:instance:create';
+            if (! $this->getApplication()->has($command_name)) {
+                $command_name = 'instance:create';
+                $tiki_namespace = false;
+            }
+
+            $command = $this->getApplication()->find($command_name);
             $arguments = [
                 '--blank' => true,
                 '--type' => $instance->type,
@@ -95,7 +103,10 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
             // then clone the source instance
             $output->writeln('Clone the source instance on the blank instance just created ...');
             $cloneInstance = Instance::getInstanceByName($blankInstanceName);
-            $command = $this->getApplication()->find('instance:clone');
+
+            $command_name = $tiki_namespace ? 'manager:instance:clone' : 'instance:clone';
+
+            $command = $this->getApplication()->find($command_name);
 
             $arguments = [
                 '--source' => $instance->getId(),
@@ -145,10 +156,11 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
 
             // redact the clone
             $output->writeln('Redact the clone ...');
-            $command = $this->getApplication()->find('instance:console');
+            $command_name = $tiki_namespace ? 'manager:instance:console' : 'instance:console';
+            $command = $this->getApplication()->find($command_name);
 
             $arguments = [
-                'command' => 'instance:console',
+                'command' => $command_name,
                 '--instances' => $cloneInstance->getId(),
                 '--command' => "database:redact --site='redact'",
             ];
