@@ -14,7 +14,7 @@ php composer.phar install
 To easily configure Tiki-Manager application, copy `.env.dist` file to `.env` and insert your configurations for the uncommented (#) entries.
 
 ### Version Control System
-Tiki Manager by default uses git and public repository. If you want o use SVN as your default vcs or another repository please add the following lines to your `.env` file.
+Tiki Manager by default uses git and public repository. If you want to use SVN as your default vcs (but you shouldn't as SVN is deprecated) or another repository please add the following lines to your `.env` file.
 ```
 DEFAULT_VCS=svn
 GIT_TIKIWIKI_URI=<CUSTOM_GIT_REPOSITORY_URL>
