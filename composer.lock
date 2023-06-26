@@ -2805,17 +2805,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.19",
+            "version": "1.10.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "af5a296ff02610c1bfb4ddfac9fd4a08657b9046"
+                "reference": "b2a30186be2e4d97dce754ae4e65eb0ec2f04eb5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-af5a296ff02610c1bfb4ddfac9fd4a08657b9046-zip-7acece.zip",
-                "reference": "af5a296ff02610c1bfb4ddfac9fd4a08657b9046",
-                "shasum": "48b2214f0f1ac092729493c23e438c576dbf1476"
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-b2a30186be2e4d97dce754ae4e65eb0ec2f04eb5-zip-cf8d77.zip",
+                "reference": "b2a30186be2e4d97dce754ae4e65eb0ec2f04eb5",
+                "shasum": "e431d073a1dc1b3c06ab3e8314a22f0f625251f0"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2856,7 +2856,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-06-14T15:26:58+00:00"
+            "time": "2023-06-21T20:07:58+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
@@ -2912,17 +2912,17 @@
         },
         {
             "name": "symfony/phpunit-bridge",
-            "version": "v5.4.23",
+            "version": "v5.4.25",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/phpunit-bridge.git",
-                "reference": "1572c5b7cad812bdf0414d89a32a33a2dafb38ba"
+                "reference": "ed279c7839967958ee152c32eaa0eaaeac819404"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/phpunit-bridge/symfony-phpunit-bridge-1572c5b7cad812bdf0414d89a32a33a2dafb38ba-zip-eb8383.zip",
-                "reference": "1572c5b7cad812bdf0414d89a32a33a2dafb38ba",
-                "shasum": "ea582f2bf2171a3edc878a5152ecc5b6b86a180e"
+                "url": "https://composer.tiki.org/dist/symfony/phpunit-bridge/symfony-phpunit-bridge-ed279c7839967958ee152c32eaa0eaaeac819404-zip-fe8df9.zip",
+                "reference": "ed279c7839967958ee152c32eaa0eaaeac819404",
+                "shasum": "ef9a6d51db4a100d1601be7e89d68a1e47409160"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -2988,7 +2988,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-04-18T09:42:03+00:00"
+            "time": "2023-06-02T09:36:43+00:00"
         }
     ],
     "aliases": [],
