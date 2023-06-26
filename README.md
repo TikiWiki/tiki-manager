@@ -2,8 +2,8 @@
 
 ## Installation
 
-The preferred way to install this extension is through composer.
-To install Tiki Manager it is required to have [composer](https://getcomposer.org/download/) installed.
+The preferred way to install this extension is through Composer.
+To install Tiki Manager, it is required to have [Composer](https://getcomposer.org/download/) installed.
 
 ```
 php composer.phar install
@@ -23,7 +23,7 @@ SVN_TIKIWIKI_URI=<CUSTOM_SVN_REPOSITORY_URL>
 
 #### Behind Proxy or without internet connection
 
-Tiki Manager is able to use Tiki's distributed version packages as an alternative when there is no connection to external servers like gitlab or sourceforge.
+Tiki Manager is able to use Tiki's distributed version packages as an alternative when there is no connection to external servers like GitLab or SourceForge.
 
 Setting the default VCS to `src`, Tiki Manager will use existing packages in the data/tiki_src folder (default).
 ```
