@@ -23,7 +23,11 @@ trait InstanceUpgrade
     public function getUpgradeVersion(Instance $instance, bool $onlySupported, string $branch = null, Version $curVersion = null): ?Version
     {
         $curVersion = $curVersion ?: $instance->getLatestVersion();
-        $versions = $instance->getApplication()->getUpgradableVersions($curVersion, $onlySupported);
+        if ($instance->getApplication()) {
+            $versions = $instance->getApplication()->getUpgradableVersions($curVersion, $onlySupported);
+        } else {
+            $versions = $instance->getCompatibleVersions(false);
+        }
 
         if (empty($versions)) {
             $message = 'No upgrades are available. This is likely because you are already at the latest version';
@@ -53,7 +57,11 @@ trait InstanceUpgrade
 
     public function validateUpgradeVersion(Instance $instance, bool $onlySupported, string $branch, Version $version): bool
     {
-        $versions = $instance->getApplication()->getUpgradableVersions($version, $onlySupported);
+        if ($instance->getApplication()) {
+            $versions = $instance->getApplication()->getUpgradableVersions($version, $onlySupported);
+        } else {
+            $versions = $instance->getCompatibleVersions(false);
+        }
 
         $vcs = $instance->vcs_type;
         $branch = VersionControl::formatBranch($branch, $vcs);

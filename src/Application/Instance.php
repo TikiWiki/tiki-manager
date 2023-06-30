@@ -86,23 +86,17 @@ FROM
     instance i
 INNER JOIN access a
     ON i.instance_id=a.instance_id
-INNER JOIN
+LEFT JOIN
     version v ON i.instance_id = v.instance_id
-INNER JOIN (
-    SELECT
-        MAX(version_id) version
-    FROM
-        version
-    GROUP BY
-        instance_id
-    ) t ON t.version = v.version_id
+LEFT JOIN
+    version vmax ON i.instance_id = vmax.instance_id AND v.version_id < vmax.version_id
 WHERE
-    LOWER(v.type) in('svn', 'tarball', 'git', 'src')
+    vmax.version_id IS NULL
 SQL;
 
-    const SQL_SELECT_UPDATABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . ';';
+    const SQL_SELECT_UPDATABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . " AND LOWER(v.type) in('svn', 'tarball', 'git', 'src');";
 
-    const SQL_SELECT_UPGRADABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . " AND v.revision <> '' ;";
+    const SQL_SELECT_UPGRADABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . " AND ((LOWER(v.type) in('svn', 'tarball', 'git', 'src') AND v.revision <> '') OR v.version_id IS NULL);";
 
     const SQL_DUPLICATED_INSTANCE = <<<SQL
 SELECT
@@ -1091,14 +1085,18 @@ SQL;
         return null;
     }
 
-    public function getCompatibleVersions()
+    public function getCompatibleVersions(bool $withBlank = null)
     {
 
         $apps = $this->getApplications();
         $selection = getEntries($apps, 0);
         $app = reset($selection);
 
-        return $app->getCompatibleVersions();
+        if (! is_null($withBlank)) {
+            return $app->getCompatibleVersions($withBlank);
+        } else {
+            return $app->getCompatibleVersions();
+        }
     }
 
     /**
