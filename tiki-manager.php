@@ -73,7 +73,6 @@ $application->add(new \TikiManager\Command\WatchInstanceCommand());
 $application->add(new \TikiManager\Command\DetectInstanceCommand());
 $application->add(new \TikiManager\Command\EditInstanceCommand());
 $application->add(new \TikiManager\Command\BlankInstanceCommand());
-$application->add(new \TikiManager\Command\CheckInstanceCommand());
 $application->add(new \TikiManager\Command\VerifyInstanceCommand());
 $application->add(new \TikiManager\Command\UpdateInstanceCommand());
 $application->add(new \TikiManager\Command\UpgradeInstanceCommand());
