@@ -67,6 +67,20 @@ class VirtualminDiscovery extends LinuxDiscovery
                     'target' => $base . '/public_html',
                     'tmp' => $base . '/tmp',
                 ]];
+            } else {
+                $command = $this->access->createCommand('virtualmin', ["list-domains", "--domain $domain", "--user-only"]);
+                $command->run();
+                if ($command->getReturn() === 0) {
+                    $possibleUser = $command->getStdoutContent();
+                    $base = '/home/' . $possibleUser;
+                    if ($this->access->fileExists($base)) {
+                        return [[
+                            'base' => $base,
+                            'target' => $base . '/public_html',
+                            'tmp' => $base . '/tmp',
+                        ]];
+                    }
+                }
             }
         }
 
