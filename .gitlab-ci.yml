@@ -68,42 +68,6 @@ composer:
   needs: [ ]
   allow_failure: false
 
-lint-scripts-php54:
-  image: php:5.4-cli
-  <<: *lint-scripts
-  script:
-    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
-
-lint-scripts-php55:
-  image: php:5.5-cli
-  <<: *lint-scripts
-  script:
-    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
-
-lint-scripts-php56:
-  image: php:5.6-cli
-  <<: *lint-scripts
-  script:
-    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
-
-lint-scripts-php70:
-  image: php:7.0-cli
-  <<: *lint-scripts
-  script:
-    - find scripts -name "*.php" | sort -u | xargs -L 1 php -l
-
-lint-scripts-php71:
-  image: xorti/tiki-devops:php-7.1-qa
-  <<: *lint-scripts
-
-lint-scripts-php72:
-  image: xorti/tiki-devops:php-7.2-qa
-  <<: *lint-scripts
-
-lint-scripts-php73:
-  image: xorti/tiki-devops:php-7.3-qa
-  <<: *lint-scripts
-
 lint-scripts-php74:
   image: xorti/tiki-devops:php-7.4-qa
   <<: *lint-scripts
@@ -195,18 +159,6 @@ code_quality:
     - *install-composer-script
     - composer build-phar
   <<: *unit-tests
-
-unit-tests-php71:
-  image: xorti/tiki-devops:php-7.1-qa
-  <<: *unit-tests-composer-update
-
-unit-tests-php72:
-  image: xorti/tiki-devops:php-7.2-qa
-  <<: *unit-tests-composer-update
-
-unit-tests-php73:
-  image: xorti/tiki-devops:php-7.3-qa
-  <<: *unit-tests-composer-update
 
 unit-tests-php74:
   image: xorti/tiki-devops:php-7.4-qa
