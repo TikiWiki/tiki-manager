@@ -84,6 +84,11 @@ SQL;
         return $this->branch;
     }
 
+    public function getType()
+    {
+        return $this->type;
+    }
+
     public function getDateRevision()
     {
         return $this->date_revision;

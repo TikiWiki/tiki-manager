@@ -38,16 +38,24 @@ trait InstanceUpgrade
             return null;
         }
 
-        $default = null;
-        if ($branch) {
-            $vcs = $instance->vcs_type;
-            $branch = VersionControl::formatBranch($branch, $vcs);
-            $default = Version::buildFake($vcs, $branch);
-        }
-
         $versionsMap = [];
         foreach ($versions as $curVersion) {
             $versionsMap[(string) $curVersion] = $curVersion;
+        }
+
+        $default = null;
+        if ($branch) {
+            $vcs = $instance->vcs_type;
+            if (empty($vcs)) {
+                foreach ($versions as $curVersion) {
+                    if (strstr((string) $curVersion, $branch)) {
+                        $vcs = $curVersion->getType();
+                        break;
+                    }
+                }
+            }
+            $branch = VersionControl::formatBranch($branch, $vcs);
+            $default = Version::buildFake($vcs, $branch);
         }
 
         $choice = $this->io->choice('Which version do you want to upgrade to', array_keys($versionsMap), (string) $default);
