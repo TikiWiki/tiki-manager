@@ -5,12 +5,6 @@
       - $INSTANCE_TYPE == $INSTANCE_TYPE_SSH
       - $INSTANCE_TYPE == $INSTANCE_TYPE_FTP
 
-local-create-instance-src-php71: 
-  <<: *local-command-test-src
-  variables:
-    TEST_FILE: CreateInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-create-instance-src-php74: 
   <<: *local-command-test-src
   variables:
@@ -22,12 +16,6 @@ local-create-instance-src-php81:
   variables:
     TEST_FILE: CreateInstanceCommandTest.php
     PHP_VERSION: "8.1"
-
-local-update-instance-src-php71: 
-  <<: *local-command-test-src
-  variables:
-    TEST_FILE: UpdateInstanceCommandTest.php
-    PHP_VERSION: "7.1"
 
 local-update-instance-src-php74: 
   <<: *local-command-test-src
@@ -41,12 +29,6 @@ local-update-instance-src-php81:
     TEST_FILE: UpdateInstanceCommandTest.php
     PHP_VERSION: "8.1"
 
-local-upgrade-instance-src-php71:
-  <<: *local-command-test-src
-  variables:
-    TEST_FILE: UpgradeInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-upgrade-instance-src-php74:
   <<: *local-command-test-src
   variables:
@@ -58,12 +40,6 @@ local-upgrade-instance-src-php81:
   variables:
     TEST_FILE: UpgradeInstanceCommandTest.php
     PHP_VERSION: "8.1"
-
-local-backup-instance-src-php71:
-  <<: *local-command-test-src
-  variables:
-    TEST_FILE: BackupInstanceCommandTest.php
-    PHP_VERSION: "7.1"
 
 local-backup-instance-src-php74:
   <<: *local-command-test-src
@@ -77,12 +53,6 @@ local-backup-instance-src-php81:
     TEST_FILE: BackupInstanceCommandTest.php
     PHP_VERSION: "8.1"
 
-local-restore-instance-src-php71:
-  <<: *local-command-test-src
-  variables:
-    TEST_FILE: RestoreInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-restore-instance-src-php74:
   <<: *local-command-test-src
   variables:
@@ -95,12 +65,6 @@ local-restore-instance-src-php81:
     TEST_FILE: RestoreInstanceCommandTest.php
     PHP_VERSION: "8.1"
 
-local-clone-instance-src-php71:
-  <<: *local-command-test-src
-  variables:
-    TEST_FILE: CloneInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-clone-instance-src-php74:
   <<: *local-command-test-src
   variables:
@@ -112,12 +76,6 @@ local-clone-instance-src-php81:
   variables:
     TEST_FILE: CloneInstanceCommandTest.php
     PHP_VERSION: "8.1"
-
-local-clone-upgrade-instance-src-php71:
-  <<: *local-command-test-src
-  variables:
-    TEST_FILE: CloneAndUpgradeCommandTest.php
-    PHP_VERSION: "7.1"
 
 local-clone-upgrade-instance-src-php74:
   <<: *local-command-test-src

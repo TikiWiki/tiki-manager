@@ -6,12 +6,6 @@
       - $INSTANCE_TYPE == $INSTANCE_TYPE_FTP
       - $SCHEDULER == "update_vendor"
 
-local-create-instance-git-php71: 
-  <<: *local-command-test-git
-  variables:
-    TEST_FILE: CreateInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-create-instance-git-php74: 
   <<: *local-command-test-git
   variables:
@@ -23,12 +17,6 @@ local-create-instance-git-php81:
   variables:
     TEST_FILE: CreateInstanceCommandTest.php
     PHP_VERSION: "8.1"
-
-local-update-instance-git-php71: 
-  <<: *local-command-test-git
-  variables:
-    TEST_FILE: UpdateInstanceCommandTest.php
-    PHP_VERSION: "7.1"
 
 local-update-instance-git-php74: 
   <<: *local-command-test-git
@@ -42,12 +30,6 @@ local-update-instance-git-php81:
     TEST_FILE: UpdateInstanceCommandTest.php
     PHP_VERSION: "8.1"
 
-local-upgrade-instance-git-php71:
-  <<: *local-command-test-git
-  variables:
-    TEST_FILE: UpgradeInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-upgrade-instance-git-php74:
   <<: *local-command-test-git
   variables:
@@ -59,12 +41,6 @@ local-upgrade-instance-git-php81:
   variables:
     TEST_FILE: UpgradeInstanceCommandTest.php
     PHP_VERSION: "8.1"
-
-local-backup-instance-git-php71:
-  <<: *local-command-test-git
-  variables:
-    TEST_FILE: BackupInstanceCommandTest.php
-    PHP_VERSION: "7.1"
 
 local-backup-instance-git-php74:
   <<: *local-command-test-git
@@ -78,12 +54,6 @@ local-backup-instance-git-php81:
     TEST_FILE: BackupInstanceCommandTest.php
     PHP_VERSION: "8.1"
 
-local-restore-instance-git-php71:
-  <<: *local-command-test-git
-  variables:
-    TEST_FILE: RestoreInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-restore-instance-git-php74:
   <<: *local-command-test-git
   variables:
@@ -96,12 +66,6 @@ local-restore-instance-git-php81:
     TEST_FILE: RestoreInstanceCommandTest.php
     PHP_VERSION: "8.1"
 
-local-clone-instance-git-php71:
-  <<: *local-command-test-git
-  variables:
-    TEST_FILE: CloneInstanceCommandTest.php
-    PHP_VERSION: "7.1"
-
 local-clone-instance-git-php74:
   <<: *local-command-test-git
   variables:
@@ -113,12 +77,6 @@ local-clone-instance-git-php81:
   variables:
     TEST_FILE: CloneInstanceCommandTest.php
     PHP_VERSION: "8.1"
-
-local-clone-upgrade-instance-git-php71:
-  <<: *local-command-test-git
-  variables:
-    TEST_FILE: CloneAndUpgradeCommandTest.php
-    PHP_VERSION: "7.1"
 
 local-clone-upgrade-instance-git-php74:
   <<: *local-command-test-git
