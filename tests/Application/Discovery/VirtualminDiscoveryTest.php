@@ -80,11 +80,19 @@ class VirtualminDiscoveryTest extends TestCase
         $instanceMock->weburl = 'https://test.tiki.com';
         $mock->setInstance($instanceMock);
 
-        $accessMock = $this->createMock(Access::class);
+        $commandMock = $this->createMock(Command::class);
+        $commandMock
+            ->method('getReturn')
+            ->willReturn(1);
+
+        $accessMock = $this->createMock(Local::class);
         $accessMock
             ->expects($this->atMost(2))
             ->method('fileExists')
             ->willReturn(false);
+        $accessMock
+            ->method('createCommand')
+            ->willReturn($commandMock);
 
         $mock->setAccess($accessMock);
 
