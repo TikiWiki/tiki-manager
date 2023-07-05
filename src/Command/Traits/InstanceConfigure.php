@@ -378,10 +378,7 @@ trait InstanceConfigure
             if ($version instanceof Version && $version->branch == $branchName) {
                 $default = (string)$version;
             }
-            $str_version = (string)$version;
-            if (! strpos($str_version, '^{}')) {
-                $versions[] = $str_version;
-            }
+            $versions[] = (string)$version;
         }
 
         $selection = $this->io->choice('Branch', $versions, $default);
