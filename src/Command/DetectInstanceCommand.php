@@ -77,8 +77,9 @@ class DetectInstanceCommand extends TikiManagerCommand
 
         /** @var Instance $instance */
         foreach ($selectedInstances as $instance) {
-            $this->io->section($instance->name);
-
+            if ($instance->name) {
+                $this->io->section($instance->name);
+            }
             $originalExec = $instance->phpexec;
 
             $instance->phpexec = null;
