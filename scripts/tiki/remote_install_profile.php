@@ -21,7 +21,7 @@ if ($profile) {
     $installer->install($profile);
     echo('<info>Profile applied.</info>');
 } else {
-    echo('<error>Profile not found.</error>');
+    echo('<error>Profile not found - Domain: '.$_SERVER['argv'][2].' - Profile: '.$_SERVER['argv'][3].'</error>');
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
