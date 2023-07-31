@@ -32,6 +32,9 @@
     "process-timeout": 5000,
     "allow-plugins": {
       "bamarni/composer-bin-plugin": true
+    },
+    "platform": {
+      "php": "7.4"
     }
   },
   "autoload": {
