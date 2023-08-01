@@ -28,6 +28,7 @@ class Git extends VersionControlSystem
     {
         parent::__construct($instance, $vcsOptions, $logger);
         $this->setRepositoryUrl($_ENV['GIT_TIKIWIKI_URI']);
+        $this->setSafeDirectory($instance);
     }
 
     public function setRepositoryUrl($url): void
@@ -615,5 +616,31 @@ class Git extends VersionControlSystem
     protected function canStash(): bool
     {
         return $this->vcsOptions['allow_stash'] ?? false;
+    }
+
+    /**
+     * Set safe.directory in git global config
+     *
+     * @param Instance $instance
+     * @return null
+     */
+    private function setSafeDirectory($instance)
+    {
+        $cacheFile = $_ENV['CACHE_FOLDER'] . '/' . $instance->name . '.txt';
+        $skipSafeDir = isset($_ENV['GIT_DONT_ADD_SAFEDIR']) ? (bool) $_ENV['GIT_DONT_ADD_SAFEDIR'] : false;
+
+        if (! $skipSafeDir && ! file_exists($cacheFile)) {
+            $command = 'config --global --add safe.directory \'' . $instance->webroot . '\'';
+            try {
+                $safeDirectories = $this->exec(null, 'config --list --show-origin');
+                if (strpos($safeDirectories, 'safe.directory=' . $instance->webroot) === false) {
+                    $this->exec(null, $command);
+                    file_put_contents($cacheFile, time());
+                }
+            } catch (\Exception $e) {
+                $this->exec(null, $command);
+                file_put_contents($cacheFile, time());
+            }
+        }
     }
 }
