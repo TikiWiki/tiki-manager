@@ -629,7 +629,7 @@ class Git extends VersionControlSystem
         $cacheFile = $_ENV['CACHE_FOLDER'] . '/' . $instance->name . '.txt';
         $skipSafeDir = isset($_ENV['GIT_DONT_ADD_SAFEDIR']) ? (bool) $_ENV['GIT_DONT_ADD_SAFEDIR'] : false;
 
-        if (! $skipSafeDir && ! file_exists($cacheFile)) {
+        if (! empty($instance->webroot) && ! $skipSafeDir && ! file_exists($cacheFile)) {
             $command = 'config --global --add safe.directory \'' . $instance->webroot . '\'';
             try {
                 $safeDirectories = $this->exec(null, 'config --list --show-origin');
