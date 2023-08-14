@@ -84,17 +84,17 @@
         },
         {
             "name": "dragonmantank/cron-expression",
-            "version": "v3.3.2",
+            "version": "v3.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dragonmantank/cron-expression.git",
-                "reference": "782ca5968ab8b954773518e9e49a6f892a34b2a8"
+                "reference": "adfb1f505deb6384dc8b39804c5065dd3c8c8c0a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/dragonmantank/cron-expression/dragonmantank-cron-expression-782ca5968ab8b954773518e9e49a6f892a34b2a8-zip-b5ea0c.zip",
-                "reference": "782ca5968ab8b954773518e9e49a6f892a34b2a8",
-                "shasum": "4f096ce0f78c530db1e7c05e282da42f3385313b"
+                "url": "https://composer.tiki.org/dist/dragonmantank/cron-expression/dragonmantank-cron-expression-adfb1f505deb6384dc8b39804c5065dd3c8c8c0a-zip-d2abfb.zip",
+                "reference": "adfb1f505deb6384dc8b39804c5065dd3c8c8c0a",
+                "shasum": "95fb582539b2eb009f7b193599854c45c9960682"
             },
             "require": {
                 "php": "^7.2|^8.0",
@@ -137,7 +137,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-09-10T18:51:20+00:00"
+            "time": "2023-08-10T19:36:49+00:00"
         },
         {
             "name": "gitonomy/gitlib",
@@ -2769,17 +2769,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.26",
+            "version": "1.10.29",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "5d660cbb7e1b89253a47147ae44044f49832351f"
+                "reference": "ee5d8f2d3977fb09e55603eee6fb53bdd76ee9c1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-5d660cbb7e1b89253a47147ae44044f49832351f-zip-37267a.zip",
-                "reference": "5d660cbb7e1b89253a47147ae44044f49832351f",
-                "shasum": "c8d8e94e5fea6d7b6a201878fe50e105434c5bf3"
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/ee5d8f2d3977fb09e55603eee6fb53bdd76ee9c1",
+                "reference": "ee5d8f2d3977fb09e55603eee6fb53bdd76ee9c1",
+                "shasum": ""
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2806,6 +2806,13 @@
                 "dev",
                 "static analysis"
             ],
+            "support": {
+                "docs": "https://phpstan.org/user-guide/getting-started",
+                "forum": "https://github.com/phpstan/phpstan/discussions",
+                "issues": "https://github.com/phpstan/phpstan/issues",
+                "security": "https://github.com/phpstan/phpstan/security/policy",
+                "source": "https://github.com/phpstan/phpstan-src"
+            },
             "funding": [
                 {
                     "url": "https://github.com/ondrejmirtes",
@@ -2820,7 +2827,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-07-19T12:44:37+00:00"
+            "time": "2023-08-14T13:24:11+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
@@ -2970,5 +2977,5 @@
     "platform-overrides": {
         "php": "7.4"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
