@@ -545,6 +545,12 @@ class CommandHelper
         if ($e instanceof VcsException) {
             $errors[] = 'Tiki Manager detected a problem with your instance´s VCS.';
             $errors[] = $e->getMessage();
+            $errors[] = 'You can also use the "stash" option to save your local modifications, and try to apply them after update/upgrade.';
+            $errors[] = 'Below is an example of how to update an instance using the "stash" option to avoid vcs conflicts:';
+            $errors[] = '- If you are using Tiki Manager in standalone (CLI) or via Virtualmin, access your CLI and go to the Tiki Manager root folder and run the update command with the stash option as following:';
+            $errors[] = 'php tiki-manager.php instance:update --stash';
+            $errors[] = '- If the command is executed via cron job or Tiki scheduler, edit your job and add "--stash" to the console command.';
+            $errors[] = '- If you are using Tiki Manager via the web interface implemented in Tiki, make sure the stash select option is set to "Yes/true"';
         } elseif (! empty($instanceId) && is_numeric($instanceId)) {
             $errors[] = 'Failed to install instance. Please follow these steps to continue the process manually.';
             $errors[] = '- php tiki-manager.php instance:access --instances=' . $instanceId;
