@@ -2777,9 +2777,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/ee5d8f2d3977fb09e55603eee6fb53bdd76ee9c1",
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-ee5d8f2d3977fb09e55603eee6fb53bdd76ee9c1-zip-389e35.zip",
                 "reference": "ee5d8f2d3977fb09e55603eee6fb53bdd76ee9c1",
-                "shasum": ""
+                "shasum": "66eaa096b4b8ac13faf5dfcb47a7195ad05b0a6e"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2806,13 +2806,6 @@
                 "dev",
                 "static analysis"
             ],
-            "support": {
-                "docs": "https://phpstan.org/user-guide/getting-started",
-                "forum": "https://github.com/phpstan/phpstan/discussions",
-                "issues": "https://github.com/phpstan/phpstan/issues",
-                "security": "https://github.com/phpstan/phpstan/security/policy",
-                "source": "https://github.com/phpstan/phpstan-src"
-            },
             "funding": [
                 {
                     "url": "https://github.com/ondrejmirtes",
