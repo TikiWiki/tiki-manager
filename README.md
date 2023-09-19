@@ -2,26 +2,31 @@
 
 ## Installation
 
-The preferred way to install this extension is through Composer.
-To install Tiki Manager, it is required to have [Composer](https://getcomposer.org/download/) installed.
+There are three options
 
-```
-php composer.phar install
-```
+Via WikiSuite:
+https://wikisuite.org/How-to-install-WikiSuite
+
+Standalone
+https://doc.tiki.org/Manager#Installation
+
+As a Tiki Package
+https://doc.tiki.org/Tiki-Manager-Package
+
 
 ## Configuration
 
-To easily configure Tiki-Manager application, copy `.env.dist` file to `.env` and insert your configurations for the uncommented (#) entries.
+To easily configure Tiki Manager, copy the `.env.dist` file to `.env` and insert your configurations for the uncommented (#) entries.
 
 ### Version Control System
-Tiki Manager by default uses git and public repository. If you want to use SVN as your default vcs (but you shouldn't as SVN is deprecated) or another repository please add the following lines to your `.env` file.
+Tiki Manager by default uses Git and the main public repository at https://gitlab.com/tikiwiki/tiki. If you want to use SVN as your default vcs (but you shouldn't as SVN is deprecated) or another repository please add the following lines to your `.env` file.
 ```
 DEFAULT_VCS=svn
 GIT_TIKIWIKI_URI=<CUSTOM_GIT_REPOSITORY_URL>
 SVN_TIKIWIKI_URI=<CUSTOM_SVN_REPOSITORY_URL>
 ```
 
-#### Behind Proxy or without internet connection
+#### Behind a Proxy or without internet connection
 
 Tiki Manager is able to use Tiki's distributed version packages as an alternative when there is no connection to external servers like GitLab or SourceForge.
 
@@ -33,26 +38,18 @@ DEFAULT_VCS=src
 Download the distributed Tiki packages, from https://sourceforge.net/projects/tikiwiki/files/, and save them into data/tiki_src folder.
 
 ### Email settings
-To configure Tiki-Manager email sender address add the following line to your `.env` file.
+To configure Tiki Manager email sender address add the following line to your `.env` file.
 ```
 FROM_EMAIL_ADDRESS=<SENDER_EMAIL_ADDRESS>
 ```
 
 #### Configure SMTP Server
-By default Tiki-Manager uses sendmail to send email notifications. If you intend to use SMTP instead add the following lines to your `.env` file.
+By default Tiki Manager uses sendmail to send email notifications. If you intend to use SMTP instead, add the following lines to your `.env` file.
 ```
 SMTP_HOST=<SERVER_ADDRESS>
 SMTP_PORT=<SERVER_PORT>
 SMTP_USER=(optional if authentication is required)
 SMTP_PASS=(optional if authentication is required)
-```
-
-### Web Manager settings
-If you want to setup a default folder to install your web manager or apache user:group are different than apache:apache you can add the following settings to your `.env` file.
-```
-WWW_PATH=<WEB_MANAGER_FOLDER>
-WWW_USER=<APACHE_USER>
-WWW_GROUP=<APACHE_GROUP>
 ```
 
 ## Documentation
