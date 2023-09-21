@@ -299,7 +299,8 @@ trait InstanceConfigure
         $instance->phpexec = $this->input->getOption('phpexec');
 
         // Detect the PHP that best suits the selected branch
-        if (! $this->input->getOption('blank') && $branchName = $this->input->getOption('branch')) {
+        $is_blank = $this->input->hasOption('blank') && $this->input->getOption('blank');
+        if (! $is_blank && $branchName = $this->input->getOption('branch')) {
             $apps = $instance->getApplications();
             /** @var Tiki $tiki */
             $tiki = reset($apps);
