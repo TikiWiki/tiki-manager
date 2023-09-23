@@ -78,10 +78,7 @@ class Git extends VersionControlSystem
         $sortedVersions = [];
 
         foreach ($versions as $version) {
-            $str_version = Version::buildFake('git', $version);
-            if (! strpos($str_version->branch, '^{}')) {
-                $sortedVersions[] = $str_version;
-            }
+            $sortedVersions[] = Version::buildFake('git', $version);
         }
 
         return $sortedVersions;
