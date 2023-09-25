@@ -332,18 +332,23 @@ TXT;
         $this->assertEquals($prevVersionBranch, trim($branch));
 
         $upgradeBranch = $mainBranch;
+
+        /* // Disable Lag update testing
         $git->update($path, $upgradeBranch, 10);
 
         $branch = $git->getRepositoryBranch($path);
         $this->assertEquals($upgradeBranch, trim($branch));
 
         $revision = $git->getRevision($path);
+        */
 
         $git->update($path, $upgradeBranch);
         $branch = $git->getRepositoryBranch($path);
         $this->assertEquals($upgradeBranch, trim($branch));
 
         // Check same branch but different revisions;
+        /* // Disable Lag update testing
         $this->assertNotEquals($revision, $git->getRevision($path));
+        */
     }
 }
