@@ -44,7 +44,7 @@ class Git extends VersionControlSystem
     {
         $versions = [];
 
-        foreach (explode("\n", `git ls-remote $this->repositoryUrl`) as $line) {
+        foreach (explode("\n", `git ls-remote --heads --tags --refs $this->repositoryUrl`) as $line) {
             $parsed = explode("\t", $line);
 
             if (!isset($parsed[1])) {
