@@ -538,9 +538,9 @@ Your requirements could not be resolved to an installable set of packages.');
             return is_object($version) ? $version->branch : $version;
         }, $compatible);
 
-        $this->assertContains("tags/22.1^{}", $branches);
+        $this->assertContains("tags/22.1", $branches);
         $this->assertContains("22.x", $branches);
-        $this->assertContains("tags/26.1^{}", $branches);
+        $this->assertContains("tags/26.1", $branches);
         $this->assertContains("master", $branches);
         $this->assertContains("trunk", $branches);
         $this->assertCount(6, $branches);
@@ -626,8 +626,8 @@ Your requirements could not be resolved to an installable set of packages.');
 
         $expectedBranches = [
             '22.x',
-            'tags/22.1^{}',
-            'tags/26.1^{}',
+            'tags/22.1',
+            'tags/26.1',
             'master',
             'trunk',
         ];
@@ -824,8 +824,8 @@ Your requirements could not be resolved to an installable set of packages.');
             Version::buildFake('git', '22.x'),
             Version::buildFake('git', 'tags/12.0RC4'),
             Version::buildFake('git', 'tags/19.0beta1'),
-            Version::buildFake('git', 'tags/22.1^{}'),
-            Version::buildFake('git', 'tags/26.1^{}'),
+            Version::buildFake('git', 'tags/22.1'),
+            Version::buildFake('git', 'tags/26.1'),
             Version::buildFake('git', 'master'),
             Version::buildFake('git', 'trunk'),
         ];
