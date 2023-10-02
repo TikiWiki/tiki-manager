@@ -28,6 +28,7 @@ class BackupInstanceCommandTest extends TestCase
     protected static $dbLocalFile;
     protected static $instanceSettings;
     protected static $instanceIds;
+    private static $backupDir;
     private static $archiveDir;
 
     public static function setUpBeforeClass(): void
@@ -38,6 +39,7 @@ class BackupInstanceCommandTest extends TestCase
         self::$instancePath = implode(DIRECTORY_SEPARATOR, [$basePath, 'instance']);
         self::$dbLocalFile =  implode(DIRECTORY_SEPARATOR, [self::$instancePath, 'db', 'local.php']);
 
+        self::$backupDir = rtrim($_ENV['BACKUP_FOLDER'], '/');
         self::$archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], '/');
 
         $vcs = strtoupper($_ENV['DEFAULT_VCS']);
@@ -81,47 +83,38 @@ class BackupInstanceCommandTest extends TestCase
     public function testBackupInstance()
     {
         // Ensure that instance was created successfully
-        $instanceId = self::$instanceIds['instance'];
+        $instance = Instance::getInstance(self::$instanceIds['instance']);
+        $instanceId = $instance->id;
+        $instanceName = $instance->name;
+
         $this->assertNotFalse($instanceId);
 
-        $command = new BackupInstanceCommand();
+        $backupCommand = new BackupInstanceCommand();
 
         $arguments = [
             '--instances' => $instanceId,
         ];
 
-        $input = new ArrayInput($arguments, $command->getDefinition());
+        $input = new ArrayInput($arguments, $backupCommand->getDefinition());
         $input->setInteractive(false);
 
-        $exitCode = $command->run($input, App::get('output'));
-
-        ob_end_clean();
+        $exitCode = $backupCommand->run($input, App::get('output'));
 
         $this->assertEquals(0, $exitCode);
-    }
 
-    /**
-     * @depends testBackupInstance
-     */
-    public function testCheckBackupFile()
-    {
+        // Check if the .sql database dump file is indeed created during instance backup
+        $dbDumpPath = self::$backupDir . DIRECTORY_SEPARATOR . $instanceId . '-' . $instanceName . DIRECTORY_SEPARATOR . 'database_dump.sql';
+        $this->assertEquals(1, file_exists($dbDumpPath));
+
+        // Check backup file
         $archivePath = self::getFullArchivePath();
         $iterator = new FilesystemIterator($archivePath);
         $this->assertCount(1, $iterator);
-    }
 
-    /**
-     * @depends testCheckBackupFile
-     */
-    public function testExtractFile()
-    {
-        $archivePath = self::getFullArchivePath();
-        $iterator = new FilesystemIterator($archivePath);
+        // Test file extraction
         $backupFile = $iterator->getPathname();
-
-        $command = 'tar -tjf ' . $backupFile . ' > /dev/null';
-        $result = shell_exec($command);
-
+        $extractCommand = 'tar -tjf ' . $backupFile . ' > /dev/null';
+        $result = shell_exec($extractCommand);
         $this->assertEquals(0, $result);
     }
 
