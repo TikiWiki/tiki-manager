@@ -2769,17 +2769,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.38",
+            "version": "1.10.39",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "5302bb402c57f00fb3c2c015bac86e0827e4b691"
+                "reference": "d9dedb0413f678b4d03cbc2279a48f91592c97c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-5302bb402c57f00fb3c2c015bac86e0827e4b691-zip-cd39c1.zip",
-                "reference": "5302bb402c57f00fb3c2c015bac86e0827e4b691",
-                "shasum": "11ffeaf94a0fde0553ab7b3f83e7f57f9f3d36f2"
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-d9dedb0413f678b4d03cbc2279a48f91592c97c4-zip-857d5c.zip",
+                "reference": "d9dedb0413f678b4d03cbc2279a48f91592c97c4",
+                "shasum": "f679527ecc0613e41a86c5bb938be0403d6a8d97"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2820,7 +2820,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-10-06T14:19:14+00:00"
+            "time": "2023-10-17T15:46:26+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
