@@ -8,6 +8,7 @@
 
 namespace TikiManager\Command;
 
+use Exception;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -187,7 +188,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             'allow_stash' => $input->getOption('stash')
         ];
         $timeout = $input->getOption('timeout') ?: Environment::get('COMMAND_EXECUTION_TIMEOUT');
-        $_ENV['COMMAND_EXECUTION_TIMEOUT'] = $timeout;
+        putenv("COMMAND_EXECUTION_TIMEOUT=$timeout");
 
         $setupTargetDatabase = (bool) ($input->getOption('db-prefix') || $input->getOption('db-name'));
 
@@ -215,9 +216,13 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         $arguments = array_slice($input->getArgument('mode'), $offset);
-        if (!empty($arguments[0])) {
+        $sourceOption = $input->getOption("source");
+        if (! empty($arguments[0])) {
             $sourceInstances = getEntries($instances, $arguments[0]);
-        } elseif ($sourceOption = $input->getOption("source")) {
+            if (empty($sourceInstances)) {
+                throw new Exception("Invalid sourceInstanceId. Usage : php tiki-manager instance:clone [clone | upgrade] [sourceInstanceId targetInstanceId [upgradeBranch]]");
+            }
+        } elseif ($sourceOption) {
             $sourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
         } else {
             $this->io->newLine();
@@ -251,10 +256,13 @@ class CloneInstanceCommand extends TikiManagerCommand
             $output->writeln('<comment>No instances available as destination.</comment>');
             return 0;
         }
-
-        if (!empty($arguments[1])) {
+        $targetOption = implode(',', $input->getOption('target'));
+        if (! empty($arguments[1])) {
             $targetInstances = getEntries($instances, $arguments[1]);
-        } elseif ($targetOption = implode(',', $input->getOption('target'))) {
+            if (empty($targetInstances)) {
+                throw new Exception("Invalid targetInstanceId.\n Usage : php tiki-manager instance:clone [clone | upgrade] [sourceInstanceId targetInstanceId [upgradeBranch]]");
+            }
+        } elseif ($targetOption) {
             $targetInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
         } else {
             $this->io->newLine();
@@ -336,9 +344,9 @@ class CloneInstanceCommand extends TikiManagerCommand
             try {
                 // The source instance needs to be well configured by default
                 if (!$this->testExistingDbConnection($sourceInstance)) {
-                    throw new \Exception('Existing database configuration failed to connect.');
+                    throw new Exception('Existing database configuration failed to connect.');
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->logger->error($dbConfigErrorMessage, [
                     'instance_name' => $sourceInstance->name,
                     'instance_id' => $sourceInstance->getId(),
@@ -352,12 +360,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                     $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
 
                     if (! $setupTargetDatabase && ! $this->input->isInteractive() && ! $this->testExistingDbConnection($destinationInstance)) {
-                        throw new \Exception('Existing database configuration failed to connect.');
+                        throw new Exception('Existing database configuration failed to connect.');
                     }
 
                     $this->setupDatabase($destinationInstance, $setupTargetDatabase);
                     $destinationInstance->database()->setupConnection();
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->logger->error($dbConfigErrorMessage, [
                         'instance_name' => $destinationInstance->name,
                         'instance_id' => $destinationInstance->getId(),
@@ -387,7 +395,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         $standardProcess = true;
         if ($useLastBackup) {
             $standardProcess = false;
-            $archiveDir = rtrim($_ENV['ARCHIVE_FOLDER'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+            $archiveDir = rtrim(getenv('ARCHIVE_FOLDER'), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
             $archiveDir .= sprintf('%s-%s', $sourceInstance->id, $sourceInstance->name);
 
             if (file_exists($archiveDir)) {
@@ -417,7 +425,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $this->io->section('Creating snapshot of: ' . $sourceInstance->name);
             try {
                 $archive = $sourceInstance->backup($direct, true, $onlyCode);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->logger->error($e->getMessage());
             }
         }
@@ -461,7 +469,7 @@ class CloneInstanceCommand extends TikiManagerCommand
 
                 try {
                     $app->performUpgrade($destinationInstance, $upgrade_version, $options);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
                     continue;
                 }
