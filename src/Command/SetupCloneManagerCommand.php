@@ -140,9 +140,9 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             $argumentToAdd = '';
         }
 
-        if($input->getOption('upgrade')){
+        if ($input->getOption('upgrade')) {
             $instances = CommandHelper::getInstances('upgrade');
-        }else{
+        } else {
             $instances = CommandHelper::getInstances('all', true);
         }
         // check for availability of instance
@@ -163,7 +163,7 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             if ($input->getOption('upgrade') && $instancesInfo) {
                 $output->writeln('<comment>Some instances are not upgradeable and thus, they are not listed here.</comment>');
             }
-            
+
             $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
 
@@ -175,7 +175,7 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             $selectedSourceInstances = $helper->ask($input, $output, $question);
         }
 
-        $sourceInstance = $selectedSourceInstances[0];        
+        $sourceInstance = $selectedSourceInstances[0];
         $input->setOption('source', implode(',', CommandHelper::getInstanceIds($selectedSourceInstances)));
 
         // select target instance

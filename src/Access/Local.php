@@ -103,8 +103,7 @@ class Local extends Access implements ShellPrompt
             }
 
             $formattedVersion = CommandHelper::formatPhpVersion($version);
-            if (($version >= 50300 && !$requirements) ||
-                $requirements->getPhpVersion()->isValidVersion($formattedVersion)) {
+            if (($version >= 50300 && !$requirements) || ($requirements && $requirements->getPhpVersion()->isValidVersion($formattedVersion))) {
                 $valid[$formattedVersion] = $binary;
             }
         }
