@@ -106,7 +106,7 @@ class CommandHelper
             ],
             [
                 'source',
-                'Get checksums from repository (best option)'
+                'Get new checksums from repository (best option)'
             ],
             [
                 'skip',

@@ -91,13 +91,13 @@ class VerifyInstanceCommand extends TikiManagerCommand
                     $fetchChecksum = true;
                 }
 
-                if (empty($trimInstanceRevision) || $trimInstanceRevision != $tikiRevision) {
-                    $this->io->warning('It is recommended to fetch new checksum information.');
+                if (! $version->hasChecksums()) {
+                    $this->io->warning('No checksums exist.');
                     $fetchChecksum = true;
                 }
 
-                if (! $version->hasChecksums()) {
-                    $this->io->warning('No checksums exist.');
+                if (empty($trimInstanceRevision) || $trimInstanceRevision != $tikiRevision) {
+                    $this->io->warning('It is recommended to fetch new checksum information.');
                     $fetchChecksum = true;
                 }
 
