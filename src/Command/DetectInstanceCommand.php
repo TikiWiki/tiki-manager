@@ -11,6 +11,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Application\Instance;
+use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
+use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Command\Helper\CommandHelper;
 
 class DetectInstanceCommand extends TikiManagerCommand
@@ -116,6 +118,16 @@ class DetectInstanceCommand extends TikiManagerCommand
             if ($instance->branch != $branch) {
                 $instance->updateVersion();
             };
+
+            $requirements_helper = new TikiRequirementsHelper(new YamlFetcher());
+            $tikiRequirements = $requirements_helper->findByBranchName($instance->getRevision());
+
+            if ($tikiRequirements->checkRequirements($instance)) {
+                $this->io->writeln('<info>PHP version is supported.</info>');
+            } else {
+                $this->io->error('PHP version is not supported.');
+                continue;
+            }
 
             $this->io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');
         }
