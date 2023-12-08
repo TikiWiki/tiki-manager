@@ -372,13 +372,15 @@ class Tiki extends Application
      */
     public function checkFileLocationOutput($line)
     {
-        $result = false;
-
         if (strpos($line, '[Warning]') !== false) {
-            $result = true;
+            return true;
         }
 
-        return $result;
+        if (strpos($line, 'ERROR') !== false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
