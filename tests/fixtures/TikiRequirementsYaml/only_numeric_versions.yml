@@ -1,0 +1,119 @@
+- name: Tiki26
+  version: 26
+  php:
+    min: 8.1
+    max: 8.2
+  mariadb:
+    min: 5.5
+  mysql:
+    min: 5.7
+
+- name: Tiki25
+  version: 25
+  php:
+    min: 7.4
+    max: 7.4
+  mariadb:
+    min: 5.5
+  mysql:
+    min: 5.7
+
+- name: Tiki24 LTS
+  version: 24
+  php:
+    min: 7.4
+    max: 7.4
+  mariadb:
+    min: 5.5
+  mysql:
+    min: 5.7
+
+- name: Tiki23
+  version: 23
+  php:
+    min: 7.4
+    max: 7.4
+  mariadb:
+    min: 5.5
+  mysql:
+    min: 5.7
+
+- name: Tiki22
+  version: 22
+  php:
+    min: 7.4
+    max: 7.4
+  mariadb:
+    min: 5.5
+  mysql:
+    min: 5.7
+
+- name: Tiki21 LTS
+  version: 21
+  php:
+    min: 7.2
+    max: 7.3
+  mariadb:
+    min: 5.5
+  mysql:
+    min: 5.7
+
+- name: Tiki20
+  version: 20
+  php:
+    min: 7.1
+    max: 7.2
+  mariadb:
+    min: 5.5
+    max: 10.4
+  mysql:
+    min: 5.5.3
+    max: 5.7
+
+- name: Tiki19
+  version: 19
+  php:
+    min: 7.1
+    max: 7.2
+  mariadb:
+    min: 5.5
+    max: 10.4
+  mysql:
+    min: 5.5.3
+    max: 5.7
+
+- name: Tiki18 LTS
+  version: 18
+  php:
+    min: 5.6
+    max: 7.2
+  mariadb:
+    min: 5.1
+    max: 10.4
+  mysql:
+    min: 5.0
+    max: 5.7
+
+- name: Tiki15 LTS
+  version: 15
+  php:
+    min: 5.5
+    max: 5.6
+  mariadb:
+    min: 5.0
+    max: 10.1
+  mysql:
+    min: 5.0
+    max: 5.6
+
+- name: Tiki12 LTS
+  version: 12
+  php:
+    min: 5.3
+    max: 5.6
+  mariadb:
+    min: 5.1
+    max: 5.5
+  mysql:
+    min: 5.0
+    max: 5.5

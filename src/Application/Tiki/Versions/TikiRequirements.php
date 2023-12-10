@@ -7,6 +7,7 @@
 
 namespace TikiManager\Application\Tiki\Versions;
 
+use TikiManager\Application\Exception\BadValueException;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 
@@ -27,8 +28,22 @@ class TikiRequirements
      */
     private $mariaDBVersion;
 
-    public function __construct($name, $version, $phpVersion, $mysqlVersion, $mariaDBVersion)
+    /**
+     * @param string $name Name of the version
+     * @param string $version version
+     * @param SoftwareRequirement $phpVersion PHP version constraints
+     * @param SoftwareRequirement $mysqlVersion MySql version constraints
+     * @param SoftwareRequirement $mariaDBVersion MariaDB version constraints
+     * @throws BadValueException
+     */
+    public function __construct(string $name, string $version, SoftwareRequirement $phpVersion, SoftwareRequirement $mysqlVersion, SoftwareRequirement $mariaDBVersion)
     {
+        // validate version, as all other parameters are validate by type
+        // Versions in tiki: branch(26.x): 26, tag(26.1): 26.1, branch(master): master
+        if (! preg_match('/(?:\d+(?:\.\d+)?|master)/', $version)) {
+            throw new BadValueException('Value of version (' . $version . ') is not valid for TikiRequirements');
+        }
+
         $this->name = $name;
         $this->version = $version;
         $this->phpVersion = $phpVersion;

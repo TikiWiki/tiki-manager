@@ -11,11 +11,30 @@ use TikiManager\Application\Tiki\Versions\Fetcher\RequirementsFetcher;
 
 class TikiRequirementsHelper
 {
+    /**
+     * @var TikiRequirements[]
+     */
     private $requirements;
 
     public function __construct(RequirementsFetcher $fetcher)
     {
         $this->requirements = $fetcher->getRequirements();
+
+        // make sure requirements are sorted, since we rely on that: master > xx (e.g 26) > xx.y (e.g 26.1)
+        usort($this->requirements, function (TikiRequirements $a, TikiRequirements $b) {
+            $aVersion = $a->getVersion();
+            $bVersion = $b->getVersion();
+
+            if ($aVersion === $bVersion) { // this should never happen as versions should be unique
+                return 0;
+            }
+
+            if ($aVersion === 'master' || $aVersion > $bVersion) {
+                return -1;
+            }
+
+            return 1;
+        });
     }
 
     public function findByBranchName($branchName): ?TikiRequirements
@@ -27,7 +46,12 @@ class TikiRequirementsHelper
         }
         $tikiVersion = $matches[0][0];
         $supported = array_values(array_filter($this->requirements, function ($requirement) use ($tikiVersion) {
-            return version_compare($tikiVersion, $requirement->getVersion(), '>=');
+            $version = $requirement->getVersion();
+            if ($version === 'master') {
+                return ($tikiVersion === 'master' || $tikiVersion === 'trunk');
+            } else {
+                return version_compare($tikiVersion, $requirement->getVersion(), '>=');
+            }
         }));
 
         if (empty($supported)) {

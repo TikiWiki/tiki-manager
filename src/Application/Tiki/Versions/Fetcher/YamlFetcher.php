@@ -14,10 +14,23 @@ use TikiManager\Config\Environment;
 
 class YamlFetcher implements RequirementsFetcher
 {
+    /**
+     * @var string Path to the requirements file
+     */
+    private $requirementsFile;
+
+    public function __construct($requirementsFile = null)
+    {
+        if (!empty($requirementsFile)) {
+            $this->requirementsFile = $requirementsFile;
+        } else {
+            $this->requirementsFile = Environment::get('CONFIG_FOLDER'). DS . '/tiki_requirements.yml';
+        }
+    }
+
     public function getRequirements(): array
     {
-        $file = Environment::get('CONFIG_FOLDER'). DS . '/tiki_requirements.yml';
-        $value = Yaml::parseFile($file);
+        $value = Yaml::parseFile($this->requirementsFile);
 
         return array_map(function ($req) {
             return new TikiRequirements(
