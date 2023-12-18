@@ -531,6 +531,7 @@ class Tiki extends Application
         $version = $this->registerCurrentInstallation();
         $this->installComposer();
         $this->installComposerDependencies(); // fix permissions does not return a proper exit code if composer fails
+        $this->installNodeJsDependencies();
         $this->installTikiPackages();
         $this->fixPermissions();
 
@@ -1072,6 +1073,58 @@ TXT;
     }
 
     /**
+     * Runs NPM install and build
+     * @return void
+     */
+    public function installNodeJsDependencies()
+    {
+        if (! $this->supportsNodeJSBuild()) {
+            return;
+        }
+
+        $instance = $this->instance;
+        $access = $instance->getBestAccess('scripting');
+
+        if (! $access instanceof ShellPrompt || ! $instance->hasConsole()) {
+            return;
+        }
+
+        if (! $access->hasExecutable('npm')) {
+            $this->io->writeln('Command "npm" not found, skipping installing NPM packages...');
+            return;
+        }
+
+        $access->chdir($instance->webroot);
+
+        $this->io->writeln('Installing NPM dependencies... <fg=yellow>[may take a while]</>');
+
+        $command = $access->createCommand('npm', ['install', '--clean-install', '--engine-strict']);
+
+        $command->run();
+        $commandOutput = $command->getStderrContent() ?: '';
+        $commandOutput .= $command->getStdoutContent();
+
+        trim_output($commandOutput);
+
+        if ($command->getReturn() !== 0) {
+            throw new \Exception("NPM install failed.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+        }
+
+        $this->io->writeln('NPM, Building artifacts (JS/CSS)... <fg=yellow>[may take a while]</>');
+        $command = $access->createCommand('npm', ['run', 'build']);
+
+        $command->run();
+        $commandOutput = $command->getStderrContent() ?: '';
+        $commandOutput .= $command->getStdoutContent();
+
+        trim_output($commandOutput);
+
+        if ($command->getReturn() !== 0) {
+            throw new \Exception("NPM build failed.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+        }
+    }
+
+    /**
      * @return bool True if operation completed, false if not supported
      */
     protected function updateTikiPackages(): bool
@@ -1116,6 +1169,7 @@ TXT;
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
             $this->installComposer();
             $this->installComposerDependencies();
+            $this->installNodeJsDependencies();
         }
 
         $this->io->writeln('Updating database schema...');
@@ -1186,6 +1240,14 @@ TXT;
         $baseVersion = $this->instance->getApplication()->getBaseVersion();
 
         return $baseVersion >= 18 || $baseVersion == 'master' || $baseVersion == 'trunk';
+    }
+
+    protected function supportsNodeJSBuild(): bool
+    {
+        // Build system with NodeJS was introduces for 27.x
+        $baseVersion = $this->instance->getApplication()->getBaseVersion();
+
+        return $baseVersion >= 27 || $baseVersion == 'master' || $baseVersion == 'trunk';
     }
 
     public function clearCache($all = false)

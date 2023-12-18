@@ -402,13 +402,11 @@ Your requirements could not be resolved to an installable set of packages.');
         $instanceStub->method('getVersionControlSystem')->willReturn(new Git($instanceStub));
 
         $instanceStub
-            ->expects($this->once())
             ->method('hasConsole')
             ->willReturn(true);
 
         $accessStub = $this->createMock(Local::class);
         $accessStub
-            ->expects($this->once())
             ->method('shellExec')
             ->willReturn(null);
 

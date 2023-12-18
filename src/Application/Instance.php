@@ -870,6 +870,7 @@ SQL;
 
             $this->getApplication()->applyPatches();
             $this->getApplication()->installComposerDependencies();
+            $this->getApplication()->installNodeJsDependencies();
             $this->getApplication()->installTikiPackages();
 
             $this->io->writeln("Fixing permissions for {$this->name}");
