@@ -149,9 +149,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/gitonomy/gitlib/gitonomy-gitlib-9fea656e75ad6e3452feb2cac46a6c1239cd7f74-zip-3585c6.zip",
+                "url": "https://api.github.com/repos/gitonomy/gitlib/zipball/9fea656e75ad6e3452feb2cac46a6c1239cd7f74",
                 "reference": "9fea656e75ad6e3452feb2cac46a6c1239cd7f74",
-                "shasum": "d98039e834353f9122ed80518df388ef25b1e054"
+                "shasum": ""
             },
             "require": {
                 "ext-pcre": "*",
@@ -202,6 +202,10 @@
                 }
             ],
             "description": "Library for accessing git",
+            "support": {
+                "issues": "https://github.com/gitonomy/gitlib/issues",
+                "source": "https://github.com/gitonomy/gitlib/tree/v1.3.8"
+            },
             "funding": [
                 {
                     "url": "https://tidelift.com/funding/github/packagist/gitonomy/gitlib",
@@ -2770,17 +2774,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.48",
+            "version": "1.10.50",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "087ed4b5f4a7a6e8f3bbdfbfe98ce5c181380bc6"
+                "reference": "06a98513ac72c03e8366b5a0cb00750b487032e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-087ed4b5f4a7a6e8f3bbdfbfe98ce5c181380bc6-zip-78b7e5.zip",
-                "reference": "087ed4b5f4a7a6e8f3bbdfbfe98ce5c181380bc6",
-                "shasum": "591a6a4c5ab5ef8c3810a5b6feecca1f48dfbb01"
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-06a98513ac72c03e8366b5a0cb00750b487032e4-zip-b6a47c.zip",
+                "reference": "06a98513ac72c03e8366b5a0cb00750b487032e4",
+                "shasum": "fac49f7b389aa8295133fed572ec3a59f150ebf6"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2821,7 +2825,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-12-08T14:34:28+00:00"
+            "time": "2023-12-13T10:59:42+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
