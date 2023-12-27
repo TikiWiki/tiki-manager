@@ -15,7 +15,7 @@
     "laminas/laminas-servicemanager": "^3.4",
     "monolog/monolog": "^1.26",
     "php": ">=7.4.0",
-    "phpseclib/phpseclib": "^2.0",
+    "phpseclib/phpseclib": "^3.0",
     "psr/log": "^1.1",
     "symfony/console": "^3.4 || ^4.1 || ^5.1",
     "symfony/dependency-injection": "^4.4",
