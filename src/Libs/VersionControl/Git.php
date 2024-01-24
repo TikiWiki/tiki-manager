@@ -626,20 +626,48 @@ class Git extends VersionControlSystem
      */
     private function setSafeDirectory($instance)
     {
-        $cacheFile = $_ENV['CACHE_FOLDER'] . '/' . $instance->name . '.txt';
         $skipSafeDir = isset($_ENV['GIT_DONT_ADD_SAFEDIR']) ? (bool) $_ENV['GIT_DONT_ADD_SAFEDIR'] : false;
 
-        if (! empty($instance->webroot) && ! $skipSafeDir && ! file_exists($cacheFile)) {
+        if ($skipSafeDir) {
+            return; // return early if we should not process safedir
+        }
+
+        $cacheTimestamp = 0;
+        $cacheFile = $_ENV['CACHE_FOLDER'] . '/' . $instance->name . '.txt';
+        if (file_exists($cacheFile)) {
+            $cacheTimestamp = (int) file_get_contents($cacheFile);
+        }
+
+        $gitConfigFileTimestamp = 0;
+        // From https://git-scm.com/docs/git-config#FILES
+        $envHome = $_SERVER['HOME'] ?? (getenv('HOME') ?: '');
+        $envXdgConfigHome = $_SERVER['XDG_CONFIG_HOME'] ?? (getenv('XDG_CONFIG_HOME') ?: '');
+        if (empty($envXdgConfigHome)) {
+            $envXdgConfigHome = $envHome . '/.config' ;
+        }
+        $possibleGlobalConfigFiles = [
+            $envXdgConfigHome . '/git/config',
+            $envHome . '/.gitconfig',
+        ];
+        foreach ($possibleGlobalConfigFiles as $gitConfigFile) {
+            if (file_exists($gitConfigFile)) {
+                $gitConfigFileTimestamp = max($gitConfigFileTimestamp, filemtime($gitConfigFile));
+            }
+        }
+        if ($gitConfigFileTimestamp == 0) { // no file found, force refresh
+            $gitConfigFileTimestamp = time();
+        }
+
+        if (! empty($instance->webroot) && $gitConfigFileTimestamp > $cacheTimestamp) {
             $command = 'config --global --add safe.directory \'' . $instance->webroot . '\'';
             try {
-                $safeDirectories = $this->exec(null, 'config --list --show-origin');
+                $safeDirectories = $this->exec(null, 'config --list');
                 if (strpos($safeDirectories, 'safe.directory=' . $instance->webroot) === false) {
                     $this->exec(null, $command);
                     file_put_contents($cacheFile, time());
                 }
             } catch (\Exception $e) {
                 $this->exec(null, $command);
-                file_put_contents($cacheFile, time());
             }
         }
     }
