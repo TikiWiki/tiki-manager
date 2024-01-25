@@ -437,7 +437,7 @@ class Tiki extends Application
         rename($local, $local . $ext);
         $local .= $ext;
 
-        $sourcefile = $_ENV['SVN_TIKIWIKI_URI'] . "/{$version->branch}/$filename";
+        $sourcefile = $_ENV['GIT_TIKIWIKI_FILE_ROOT'] . "/{$version->branch}/$filename";
         $sourcefile = str_replace('/./', '/', $sourcefile);
 
         $content = file_get_contents($sourcefile);
