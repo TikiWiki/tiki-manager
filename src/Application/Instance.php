@@ -1019,6 +1019,21 @@ SQL;
     }
 
     /**
+     * Get instance application branch
+     *
+     * @return mixed
+     */
+    public function getBranch()
+    {
+
+        if ($this->app == 'tiki') {
+            return $this->getApplication()->getBranch();
+        }
+
+        return null;
+    }
+
+    /**
      * Get instance application revision
      *
      * @return mixed

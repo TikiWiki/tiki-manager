@@ -120,7 +120,7 @@ class DetectInstanceCommand extends TikiManagerCommand
             };
 
             $requirements_helper = new TikiRequirementsHelper(new YamlFetcher());
-            $tikiRequirements = $requirements_helper->findByBranchName($instance->getRevision());
+            $tikiRequirements = $requirements_helper->findByBranchName($instance->getBranch());
 
             if ($tikiRequirements->checkRequirements($instance)) {
                 $this->io->writeln('<info>PHP version is supported.</info>');
