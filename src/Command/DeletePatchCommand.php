@@ -18,6 +18,8 @@ class DeletePatchCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:patch:delete')
             ->setDescription('Delete a patch applied to an instance')

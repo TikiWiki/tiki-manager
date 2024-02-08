@@ -18,6 +18,8 @@ class ApplyPatchCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:patch:apply')
             ->setDescription('Apply a patch of Tiki source or 3rd party vendor source to an instance')
@@ -132,6 +134,7 @@ class ApplyPatchCommand extends TikiManagerCommand
 
         $selectedInstances = CommandHelper::validateInstanceSelection($input->getOption('instances'), $instances);
 
+        $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
             $patch = Patch::initialize($instance->getId(), $package, $url);
             if ($patch->exists()) {
@@ -153,7 +156,16 @@ class ApplyPatchCommand extends TikiManagerCommand
                 $this->io->error($e->getMessage());
                 continue;
             }
+
+            $hookName->registerPostHookVars([
+                'instance' => $instance,
+            ]);
         }
+
+        $hookName->registerPostHookVars([
+            'package' => $package,
+            'url' => $url,
+        ]);
 
         return 0;
     }

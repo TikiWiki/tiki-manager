@@ -15,6 +15,8 @@ class BackupInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:backup')
             ->setDescription('Backup instance')
@@ -152,6 +154,7 @@ class BackupInstanceCommand extends TikiManagerCommand
 
         $isFull = !$input->getOption('partial') ?? (Environment::get('BACKUP_TYPE', 'full') != 'partial');
 
+        $hook = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
             $output->writeln('<fg=cyan>Performing backup for ' . $instance->name . '</>');
             $log = [];
@@ -159,6 +162,7 @@ class BackupInstanceCommand extends TikiManagerCommand
             try {
                 $backupFile = $instance->backup(false, $isFull);
                 if (!empty($backupFile)) {
+                    $hook->registerPostHookVars(['instance' => $instance, 'backup_file' => $backupFile]);
                     $this->io->success('Backup created with success.');
                     $this->io->note('Backup file: ' . $backupFile);
                 } else {

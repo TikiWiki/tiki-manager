@@ -16,6 +16,8 @@ class CheckRequirementsCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:check')
             ->setDescription('Check Tiki Manager requirements')

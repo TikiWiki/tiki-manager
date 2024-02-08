@@ -19,6 +19,8 @@ class ManagerTestSendEmailCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:test-send-email')
             ->setDescription('Test send email')

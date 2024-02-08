@@ -29,6 +29,8 @@ class UpdateInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:update')
             ->setDescription('Update instance')
@@ -170,6 +172,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 'allow_stash' => $input->getOption('stash')
             ];
 
+            $hookName = $this->getCommandHook();
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
                 $instanceLogger = $this->logger->withName('instance_' . $instance->id);
@@ -197,6 +200,8 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $app = $instance->getApplication();
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();
+
+                $hookName->registerPostHookVars(['instance' => $instance]);
 
                 $options = [
                     'checksum-check' => $checksumCheck,

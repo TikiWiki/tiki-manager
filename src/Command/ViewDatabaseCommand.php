@@ -11,6 +11,8 @@ class ViewDatabaseCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('database:view')
             ->setDescription('View database')

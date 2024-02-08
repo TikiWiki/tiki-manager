@@ -12,6 +12,8 @@ class ConsoleInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:console')
             ->setDescription('Run Tiki console commands')
@@ -89,8 +91,10 @@ class ConsoleInstanceCommand extends TikiManagerCommand
         $command = $input->getOption('command');
         $command = $command == 'help' ? '' : $command; // Normalize command
 
+        $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
             $output->writeln('<fg=cyan>Calling command in ' . $instance->name . '</>');
+            $hookName->registerPostHookVars(['instance' => $instance]);
 
             $access = $instance->getBestAccess('scripting');
             $access->chdir($instance->webroot);

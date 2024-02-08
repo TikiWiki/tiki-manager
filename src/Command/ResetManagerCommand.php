@@ -12,6 +12,8 @@ class ResetManagerCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:reset')
             ->setDescription('Reset Tiki Manager')

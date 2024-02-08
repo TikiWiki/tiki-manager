@@ -16,6 +16,8 @@ class ListInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:list')
             ->setDescription('List instances')

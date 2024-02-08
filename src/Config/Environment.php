@@ -6,6 +6,8 @@
  */
 namespace TikiManager\Config;
 
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
 use Phar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -16,6 +18,7 @@ use TikiManager\Libs\Requirements\Requirements;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use TikiManager\Config\Exception\ConfigurationErrorException;
+use TikiManager\Logger\ConsoleLogger;
 use TikiManager\Style\TikiManagerStyle;
 
 /**
@@ -44,7 +47,6 @@ class Environment
     private function __construct()
     {
         $this->homeDirectory = dirname(dirname(__DIR__));
-        $this->setIO();
         require_once $this->homeDirectory . '/src/Libs/Helpers/functions.php';
     }
 
@@ -100,6 +102,20 @@ class Environment
         $this->loadEnvironmentVariablesContainingLogic();
         $this->runSetup();
         $this->isLoaded = true;
+
+        $this->setIO();
+        $this->setLogger();
+    }
+
+    public function setLogger()
+    {
+        $container = App::getContainer();
+        $output = $container->get('output');
+
+        $logger = new Logger('tiki-manager');
+        $logger->pushHandler(new PsrHandler(new ConsoleLogger($output)));
+
+        $container->set('Logger', $logger);
     }
 
     public function setComposerPath($composerPath)

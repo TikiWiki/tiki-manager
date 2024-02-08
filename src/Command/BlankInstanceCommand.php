@@ -10,6 +10,8 @@ class BlankInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:blank')
             ->setDescription('Creates a new blank instance')

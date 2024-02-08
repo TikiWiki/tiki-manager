@@ -18,6 +18,8 @@ class SetupBackupManagerCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:setup-backups')
             ->setDescription('Set-up a cronjob to perform instance backups')

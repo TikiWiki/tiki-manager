@@ -11,6 +11,8 @@ class DeleteDatabaseCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('database:delete')
             ->setDescription('Delete database')

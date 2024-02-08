@@ -16,6 +16,8 @@ class ManagerInfoCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:info')
             ->setDescription('Show Tiki Manager Info')

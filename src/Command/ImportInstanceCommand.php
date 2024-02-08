@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
 
 class ImportInstanceCommand extends TikiManagerCommand
@@ -21,6 +22,8 @@ class ImportInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:import')
             ->setDescription('Import instance')
@@ -163,6 +166,9 @@ class ImportInstanceCommand extends TikiManagerCommand
             $instance->save();
 
             $this->importApplication($instance);
+
+            $hookName = $this->getCommandHook();
+            $hookName->registerPostHookVars(['instance' => $instance]);
 
             $this->io->success('Import completed, please test your site at ' . $instance->weburl);
             return 0;

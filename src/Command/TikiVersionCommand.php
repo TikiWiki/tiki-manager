@@ -16,6 +16,8 @@ class TikiVersionCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('tiki:versions')
             ->setDescription('List Tiki versions')

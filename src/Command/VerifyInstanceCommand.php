@@ -14,6 +14,8 @@ class VerifyInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:verify')
             ->setDescription('Verify instance')
@@ -61,7 +63,10 @@ class VerifyInstanceCommand extends TikiManagerCommand
                 $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
             }
 
+            $hookName = $this->getCommandHook();
             foreach ($selectedInstances as $instance) {
+                $hookName->registerPostHookVars(['instance' => $instance]);
+
                 $version = $instance->getLatestVersion();
 
                 if (! $version) {
@@ -110,6 +115,9 @@ class VerifyInstanceCommand extends TikiManagerCommand
                     $version->branch = $app->getBranch();
                     $version->date = date('Y-m-d');
                     $version->save();
+
+                    // Override info in case of change
+                    $hookName->registerPostHookVars(['instance' => $instance]);
 
                     $updateFromOption = $input->getOption('update-from');
                     if (empty($updateFromOption)) {

@@ -16,6 +16,8 @@ class RestoreInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:restore')
             ->setDescription('Restore a blank installation')
@@ -55,6 +57,7 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 }
             );
 
+            $hookName = $this->getCommandHook();
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Instance to restore to: ' . $instance->name . '</>');
@@ -100,6 +103,8 @@ class RestoreInstanceCommand extends TikiManagerCommand
                     'If there are issues, connect with make access to troubleshoot directly on the server.',
                     'You\'ll need to login to this restored instance and update the file paths with the new values.'
                 ]);
+
+                $hookName->registerPostHookVars(['instance' => $instance]);
             }
         } else {
             $output->writeln('<comment>No instances available to restore to/from.</comment>');

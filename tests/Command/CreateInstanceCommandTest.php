@@ -10,6 +10,10 @@ namespace TikiManager\Tests\Command;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
+use TikiManager\Command\CreateInstanceCommand;
+use TikiManager\Command\TikiManagerCommand;
+use TikiManager\Config\App;
+use TikiManager\Hooks\TikiCommandHook;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 use TikiManager\Tests\Helpers\VersionControl;
 
@@ -90,6 +94,11 @@ class CreateInstanceCommandTest extends TestCase
         }
 
         static::$instanceId = $instanceId;
+
+        $hookHandler = App::get('HookHandler');
+        $hook = $hookHandler->getHook('instance:create');
+
+        $this->checkHookVars($hook);
     }
 
     /**
@@ -140,5 +149,36 @@ class CreateInstanceCommandTest extends TestCase
         $this->assertEquals($options['--db-name'], $dbs_tiki);
 
         static::$instanceId = $instanceId;
+    }
+
+    private function checkHookVars(TikiCommandHook $hook)
+    {
+        // Check HOOK variables
+        $hookVars = $hook->getPostHookVars();
+
+        $expectedVariables = [
+            'INSTANCE_TYPE_',
+            'INSTANCE_VCS_TYPE_',
+            'INSTANCE_NAME_',
+            'INSTANCE_WEBROOT_',
+            'INSTANCE_WEBURL_',
+            'INSTANCE_TEMPDIR_',
+            'INSTANCE_PHPEXEC_',
+            'INSTANCE_PHPVERSION_',
+            'INSTANCE_BACKUP_USER_',
+            'INSTANCE_BACKUP_GROUP_',
+            'INSTANCE_BACKUP_PERM_',
+            'INSTANCE_BRANCH_',
+            'INSTANCE_LAST_ACTION_',
+            'INSTANCE_LAST_ACTION_DATE_',
+        ];
+
+        $instances = explode(',', $hookVars['INSTANCE_IDS']);
+        foreach ($instances as $instanceId) {
+            foreach ($expectedVariables as $expectedVariable) {
+                $varName = $expectedVariable . $instanceId;
+                $this->assertTrue(array_key_exists($varName, $hookVars), 'Expected variable ' . $varName);
+            }
+        }
     }
 }

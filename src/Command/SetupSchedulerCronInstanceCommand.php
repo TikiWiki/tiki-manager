@@ -12,6 +12,8 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:setup-scheduler-cron')
             ->setDescription('Setup instance\'s scheduler cron')
@@ -130,10 +132,12 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
         $time = $input->getOption('time');
         Helper\CommandHelper::validateCrontabInput($time);
 
+        $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
             try {
                 $cronJob = $this->handleInstance($instance, $input);
                 $this->writeCronJobStatus($cronJob);
+                $hookName->registerPostHookVars(['instance' => $instance, 'cron' => $cronJob]);
             } catch (\Exception $e) {
                 $this->io->writeln('<error>'. $e->getMessage() . '</error>');
             }

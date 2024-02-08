@@ -26,6 +26,8 @@ class SetupCloneManagerCommand extends TikiManagerCommand
      */
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:setup-clone')
             ->setDescription('Setup a cronjob to perform instance clone')

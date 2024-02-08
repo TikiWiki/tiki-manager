@@ -18,6 +18,8 @@ class SetupWatchManagerCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:setup-watch')
             ->setDescription('Set-up cron job to perform hash checks')

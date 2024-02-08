@@ -20,6 +20,8 @@ class SetupUpdateCommand extends TikiManagerCommand
      */
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:setup-update')
             ->setDescription('Setup automatic instance updates')

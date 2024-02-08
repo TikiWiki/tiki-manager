@@ -12,6 +12,8 @@ class DeleteBackupCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('backups:delete')
             ->setDescription('Delete backups folder')

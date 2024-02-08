@@ -8,9 +8,12 @@
 namespace TikiManager\Tests\Command;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LogLevel;
+use Psr\Log\Test\TestLogger;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Instance;
+use TikiManager\Config\App;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Files;
@@ -33,6 +36,8 @@ class CloneInstanceCommandTest extends TestCase
     protected static $dbConfig = [];
 
     protected static $prevVersionBranch;
+
+    protected $logger;
 
     public static function setUpBeforeClass(): void
     {
@@ -88,7 +93,15 @@ class CloneInstanceCommandTest extends TestCase
         }
     }
 
-    protected function tearDown(): void
+    public function setUp(): void
+    {
+        $this->logger = new TestLogger();
+
+        $container = App::getContainer();
+        $container->set('Logger', $this->logger);
+    }
+
+    public function tearDown(): void
     {
         $this->restoreDBConfigFiles();
     }
@@ -134,7 +147,7 @@ class CloneInstanceCommandTest extends TestCase
         ];
 
         $result = InstanceHelper::clone($arguments);
-        $this->assertTrue($result['exitCode'] === 0);
+        $this->assertEquals(0, $result);
 
         $instance = (new Instance())->getInstance(self::$instanceIds['target']);
         $app = $instance->getApplication();
@@ -171,9 +184,9 @@ class CloneInstanceCommandTest extends TestCase
             '--direct' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
-        $this->assertTrue($result['exitCode'] !== 0);
-        $this->assertStringContainsString('Database host and name are the same', $result['output']);
+        $result = InstanceHelper::clone($arguments, false);
+        $this->assertNotEquals(0, $result);
+        $this->assertTrue($this->logger->hasErrorThatContains('Database host and name are the same'));
     }
 
     public function testCloneDatabaseWithTargetMissingDbFile()
@@ -194,12 +207,10 @@ class CloneInstanceCommandTest extends TestCase
             '--direct' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
-        $this->assertTrue($result['exitCode'] !== 0);
-        $output = $result['output'];
+        $result = InstanceHelper::clone($arguments, false);
+        $this->assertNotEquals(0, $result);
 
-        $this->assertStringContainsString('Database configuration file not found', $output);
-        $this->assertStringContainsString('Unable to load/set database configuration for instance', $output);
+        $this->assertTrue($this->logger->hasErrorThatContains('Unable to load/set database configuration for instance'));
     }
 
     public function testCloneDatabaseTargetManyInstances()
@@ -222,12 +233,9 @@ class CloneInstanceCommandTest extends TestCase
             '--direct' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
-        $this->assertEquals(1, $result['exitCode']);
-        $this->assertStringContainsString(
-            'Database setup options can only be used when a single target instance',
-            $result['output']
-        );
+        $result = InstanceHelper::clone($arguments, false);
+        $this->assertEquals(1, $result);
+        $this->assertTrue($this->logger->hasRecordThatContains('Database setup options can only be used when a single target instance', LogLevel::ERROR));
     }
 
     public function testCloneDatabaseTargetBlank()
@@ -250,8 +258,8 @@ class CloneInstanceCommandTest extends TestCase
             '--direct' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
-        $this->assertEquals(0, $result['exitCode'], $result['output']);
+        $result = InstanceHelper::clone($arguments, false);
+        $this->assertEquals(0, $result);
 
         $instance = (new Instance())->getInstance(self::$instanceIds['blank']);
         $app = $instance->getApplication();
@@ -291,8 +299,8 @@ class CloneInstanceCommandTest extends TestCase
             '--direct' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
-        $this->assertEquals(0, $result['exitCode']);
+        $result = InstanceHelper::clone($arguments, false);
+        $this->assertEquals(0, $result);
 
         $instance = (new Instance())->getInstance(self::$instanceIds['target']);
         $app = $instance->getApplication();
@@ -332,9 +340,9 @@ class CloneInstanceCommandTest extends TestCase
             '--direct' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, false, ['interactive' => false]);
-        $this->assertEquals(1, $result['exitCode']);
-        $this->assertStringContainsString('Unable to access database', $result['output']);
+        $result = InstanceHelper::clone($arguments, false);
+        $this->assertEquals(1, $result);
+        $this->assertTrue($this->logger->hasErrorThatContains('Unable to load/set database configuration for instance'));
     }
 
     protected function compareDB($instance1, $instance2)

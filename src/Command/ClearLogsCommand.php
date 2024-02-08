@@ -11,6 +11,8 @@ class ClearLogsCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('logs:clear')
             ->setDescription('Clear logs folder')

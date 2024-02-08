@@ -18,6 +18,8 @@ class StatsInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:stats')
             ->setDescription('Fetch data (ex: KPIs) from instances.')
@@ -72,6 +74,7 @@ class StatsInstanceCommand extends TikiManagerCommand
             }
         }
 
+        $hookName = $this->getCommandHook();
         foreach ($sourceInstances as $instance) {
             $this->io->writeln('<comment>Calling command in ' . $instance->name . '</comment>');
             $access = $instance->getBestAccess('scripting');
@@ -91,6 +94,7 @@ class StatsInstanceCommand extends TikiManagerCommand
             }
 
             $cmdOutput = $result->getStdoutContent();
+            $hookName->registerPostHookVars(['instance' => $instance, 'stats' => $cmdOutput]);
             $rows = json_decode($cmdOutput, true);
 
             if (empty($rows)) {

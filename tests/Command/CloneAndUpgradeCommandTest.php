@@ -8,8 +8,11 @@
 namespace TikiManager\Tests\Command;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LogLevel;
+use Psr\Log\Test\TestLogger;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
+use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Files;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
@@ -28,6 +31,8 @@ class CloneAndUpgradeCommandTest extends TestCase
     protected static $dbSourceFile;
     protected static $dbTargetFile;
     protected static $instanceIds = [];
+
+    protected $logger;
 
     public static function setUpBeforeClass(): void
     {
@@ -90,6 +95,14 @@ class CloneAndUpgradeCommandTest extends TestCase
         $fs->remove(static::$instancePath);
     }
 
+    public function setUp(): void
+    {
+        $this->logger = new TestLogger();
+
+        $container = App::getContainer();
+        $container->set('Logger', $this->logger);
+    }
+
     public function testCloneUpgradeInstance()
     {
         $vcs = strtoupper($_ENV['DEFAULT_VCS']);
@@ -113,8 +126,8 @@ class CloneAndUpgradeCommandTest extends TestCase
             '--direct' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
-        $this->assertTrue($result['exitCode'] === 0);
+        $result = InstanceHelper::clone($arguments, true);
+        $this->assertEquals(0, $result);
 
         $instance = (new Instance())->getInstance(static::$instanceIds['target']);
         $app = $instance->getApplication();
@@ -155,9 +168,10 @@ class CloneAndUpgradeCommandTest extends TestCase
             '--branch' => VersionControl::formatBranch($upgradeBranch),
         ];
 
-        $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
-        $this->assertTrue($result['exitCode'] !== 0);
-        $this->assertStringContainsString('Database host and name are the same', $result['output']);
+        $result = InstanceHelper::clone($arguments, true);
+        $this->assertNotEquals(0, $result);
+
+        $this->assertTrue($this->logger->hasRecordThatContains('Database host and name are the same', LogLevel::ERROR));
     }
 
     /**
@@ -188,8 +202,8 @@ class CloneAndUpgradeCommandTest extends TestCase
             '--skip-cache-warmup' => true,
         ];
 
-        $result = InstanceHelper::clone($arguments, true, ['interactive' => false]);
-        $this->assertTrue($result['exitCode'] === 0);
+        $result = InstanceHelper::clone($arguments, true);
+        $this->assertEquals(0, $result);
 
         $instance = (new Instance())->getInstance(static::$instanceIds['target']);
         $dbCnf = $instance->getDatabaseConfig();

@@ -13,6 +13,8 @@ class ReportManagerCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:report')
             ->setDescription('Manage reports')

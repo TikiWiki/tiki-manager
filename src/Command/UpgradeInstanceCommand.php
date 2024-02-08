@@ -10,6 +10,8 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TikiManager\Application\Instance;
+use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Libs\Helpers\Checksum;
@@ -20,6 +22,8 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:upgrade')
             ->setDescription('Upgrade instance')
@@ -117,7 +121,9 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
 
         //update
+        $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
+            /** @var Instance $instance */
             // Ensure that the current phpexec is still valid;
             $instance->detectPHP();
             $phpVersion = CommandHelper::formatPhpVersion($instance->phpversion);
@@ -149,6 +155,8 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
             try {
                 $instance->lock();
+                $latestVersion = $instance->getLatestVersion();
+                $previousBranch = $latestVersion instanceof Version ? $latestVersion->branch : null ;
                 $filesToResolve = $app->performUpgrade($instance, $selectedVersion, [
                     'checksum-check' => $checksumCheck,
                     'skip-reindex' => $skipReindex,
@@ -162,6 +170,8 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 if ($checksumCheck) {
                     Checksum::handleCheckResult($instance, $version, $filesToResolve);
                 }
+
+                $hookName->registerPostHookVars(['instance' => $instance, 'previous_branch' => $previousBranch]);
             } catch (\Exception $e) {
                 $this->logger->error('Failed to upgrade instance!', [
                     'instance' => $instance->name,

@@ -21,6 +21,8 @@ class WatchInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:watch')
             ->setDescription('Perform an hash check')
@@ -98,6 +100,7 @@ class WatchInstanceCommand extends TikiManagerCommand
             }
         }
 
+        $hook = $this->getCommandHook();
         foreach ($instances as $instance) {
             $version = $instance->getLatestVersion();
 
@@ -117,6 +120,12 @@ class WatchInstanceCommand extends TikiManagerCommand
                 $log .= 'Expected revision ' . $versionRevision . ', found revision ' . $tikiRevision . ' on instance.' . PHP_EOL;
                 $versionError = true;
             }
+
+            $hook->registerPostHookVars([
+                'instance' => $instance,
+                'tikiRevision' => $tikiRevision,
+                'versionError' => $versionError
+            ]);
 
             if ($versionError) {
                 $log .= 'Fix this error with Tiki Manager by running "tiki-manager instance:check" and choose instance "' . $instance->id . '.';

@@ -17,6 +17,8 @@ class DeleteInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:delete')
             ->setDescription('Delete instance connection')
@@ -69,10 +71,12 @@ class DeleteInstanceCommand extends TikiManagerCommand
         $instancesOption = explode(',', $instancesOption);
         $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
 
+        $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
             $this->io->writeln(sprintf('<fg=cyan>Deleting instance %s...</>', $instance->name));
             $instance->delete();
             $this->io->writeln(sprintf('<info>Deleted instance %s</info>', $instance->name));
+            $hookName->registerPostHookVars(['instance' => $instance]);
         }
 
         return 0;

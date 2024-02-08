@@ -17,6 +17,8 @@ class RevertInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:revert')
             ->setDescription('Revert instance state')

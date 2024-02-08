@@ -29,6 +29,7 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
@@ -122,7 +123,7 @@ $application->add(new \TikiManager\Command\CheckoutCommand());
 if (extension_loaded('posix')) {
     $userInfo = posix_getpwuid(posix_geteuid());
     if ($userInfo['name'] === 'root') {
-        $io = \TikiManager\Config\App::get('io');
+        $io = App::get('io');
         $io->warning('You are running Tiki Manager as root. This is not an ideal situation. ' . PHP_EOL .
             'Ex: If later, you run as a normal user, you may have issues with file permissions.');
     }
@@ -132,21 +133,41 @@ if (extension_loaded('posix')) {
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
     //Check if there are an update available (offline)
-    $command = $event->getCommand();
     $updater = UpdateManager::getUpdater();
+    $command = $event->getCommand();
     if ($command->getName() != 'manager:update' && $updater->hasUpdateAvailable(false)) {
-        $io = \TikiManager\Config\App::get('io');
+        $io = App::get('io');
         $io->warning('A new version is available. Run `manager:update` to update.');
     }
+
+    $input = $event->getInput();
+    if ($command instanceof \TikiManager\Command\TikiManagerCommand && !$input->getParameterOption('skip-hooks', false)) {
+        $command->getCommandHook()->execute('pre');
+    }
 });
+
 $dispatcher->addListener(ConsoleEvents::ERROR, function (ConsoleErrorEvent $event) {
-    $io = \TikiManager\Config\App::get('io');
+    $io = App::get('io');
 
     $error = $event->getError();
     $io->error($error->getMessage());
     trim_output($error);
 
+    $command = $event->getCommand();
+    $input = $event->getInput();
+    if ($command instanceof \TikiManager\Command\TikiManagerCommand && !$input->getParameterOption('skip-hooks', false)) {
+        $command->getCommandHook()->execute('errors');
+    }
+
     exit($event->getExitCode());
+});
+
+$dispatcher->addListener(ConsoleEvents::TERMINATE, function (ConsoleTerminateEvent $event) {
+    $command = $event->getCommand();
+    $input = $event->getInput();
+    if ($command instanceof \TikiManager\Command\TikiManagerCommand && !$input->getParameterOption('skip-hooks', false)) {
+        $command->getCommandHook()->execute('post');
+    }
 });
 $application->setDispatcher($dispatcher);
 

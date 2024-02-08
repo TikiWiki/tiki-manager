@@ -18,6 +18,8 @@ class ListPatchCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:patch:list')
             ->setDescription('List patches applied to an instance')

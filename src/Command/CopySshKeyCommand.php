@@ -11,6 +11,8 @@ class CopySshKeyCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:copysshkey')
             ->setDescription('Copy SSH key')
@@ -34,11 +36,13 @@ class CopySshKeyCommand extends TikiManagerCommand
                 return CommandHelper::validateInstanceSelection($answer, $instances);
             });
 
+            $hookName = $this->getCommandHook();
             $selectedInstances = $helper->ask($input, $output, $question);
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Copying SSH key to ' . $instance->name . '... (use "exit" to move to next the instance)</>');
                 $access = $instance->getBestAccess('scripting');
                 $access->firstConnect();
+                $hookName->registerPostHookVars(['instance' => $instance]);
             }
         } else {
             $output->writeln('<comment>No instances available to copy the SSH key.</comment>');

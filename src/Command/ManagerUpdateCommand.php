@@ -19,6 +19,8 @@ class ManagerUpdateCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('manager:update')
             ->setDescription('Update Tiki Manager')

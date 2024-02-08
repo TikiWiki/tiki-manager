@@ -13,6 +13,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
 use TikiManager\Command\UpgradeInstanceCommand;
 use TikiManager\Config\App;
+use TikiManager\Hooks\TikiCommandHook;
 use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
@@ -103,5 +104,45 @@ class UpgradeInstanceCommandTest extends TestCase
         $resultBranch = $app->getBranch();
 
         $this->assertEquals($expectedBranch, $resultBranch);
+
+
+        $hookHandler = App::get('HookHandler');
+        $hook = $hookHandler->getHook('instance:upgrade');
+
+        $this->checkHookVars($hook);
+    }
+
+    private function checkHookVars(TikiCommandHook $hook)
+    {
+        // Check HOOK variables
+        $hookVars = $hook->getPostHookVars();
+
+        $expectedVariables = [
+            'INSTANCE_TYPE_',
+            'INSTANCE_VCS_TYPE_',
+            'INSTANCE_NAME_',
+            'INSTANCE_WEBROOT_',
+            'INSTANCE_WEBURL_',
+            'INSTANCE_TEMPDIR_',
+            'INSTANCE_PHPEXEC_',
+            'INSTANCE_PHPVERSION_',
+            'INSTANCE_BACKUP_USER_',
+            'INSTANCE_BACKUP_GROUP_',
+            'INSTANCE_BACKUP_PERM_',
+            'INSTANCE_BRANCH_',
+            'INSTANCE_LAST_ACTION_',
+            'INSTANCE_LAST_ACTION_DATE_',
+            'INSTANCE_PREVIOUS_BRANCH_',
+        ];
+
+        $instances = explode(',', $hookVars['INSTANCE_IDS']);
+        foreach ($instances as $instanceId) {
+            foreach ($expectedVariables as $expectedVariable) {
+                $varName = $expectedVariable . $instanceId;
+                $this->assertTrue(array_key_exists($varName, $hookVars), 'Expected variable ' . $varName);
+            }
+        }
+
+        $this->assertEquals($_ENV['PREV_VERSION_BRANCH'], $hookVars['INSTANCE_PREVIOUS_BRANCH_' . $instanceId]);
     }
 }

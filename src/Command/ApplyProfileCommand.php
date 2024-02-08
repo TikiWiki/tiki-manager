@@ -18,6 +18,8 @@ class ApplyProfileCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:profile:apply')
             ->setDescription('Apply profile to instance')
@@ -95,11 +97,16 @@ class ApplyProfileCommand extends TikiManagerCommand
 
         $selectedInstances = CommandHelper::validateInstanceSelection($input->getOption('instances'), $instances);
 
+        $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
             $this->io->writeln(sprintf('<fg=cyan>Applying profile to %s ...</>', $instance->name));
             $instance->getApplication()->installProfile($repository, $profile);
             Archive::cleanup($instance->id, $instance->name);
+
+            $hookName->registerPostHookVars(['instance' => $instance]);
         }
+
+        $hookName->registerPostHookVars(['profile' => $profile]);
 
         return 0;
     }

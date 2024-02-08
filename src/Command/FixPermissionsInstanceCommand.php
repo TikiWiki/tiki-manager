@@ -11,6 +11,8 @@ class FixPermissionsInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:fixpermissions')
             ->setDescription('Fix permission on a Tiki instance')
@@ -37,9 +39,11 @@ class FixPermissionsInstanceCommand extends TikiManagerCommand
             });
 
             $selectedInstances = $helper->ask($input, $output, $question);
+            $hookName = $this->getCommandHook();
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Fixing permissions for ' . $instance->name . '...</>');
                 $instance->getApplication()->fixPermissions();
+                $hookName->registerPostHookVars(['instance' => $instance]);
             }
         } else {
             $output->writeln('<comment>No Tiki instances available to fix permissions.</comment>');

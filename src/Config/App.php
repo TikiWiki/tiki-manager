@@ -10,9 +10,8 @@ namespace TikiManager\Config;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use TikiManager\Application\Info;
 use TikiManager\Application\Instance;
-use TikiManager\Libs\Database\Database;
+use TikiManager\Hooks\HookHandler;
 use TikiManager\Style\Formatter\HtmlOutputFormatter;
-use TikiManager\Style\TikiManagerStyle;
 
 class App
 {
@@ -38,12 +37,16 @@ class App
 
         $container->register('ConsoleHtmlFormatter', HtmlOutputFormatter::class);
 
+        $container->register('HookHandler', HookHandler::class)->addArgument(
+            $_ENV['HOOKS_FOLDER']
+        );
+
         return $container;
     }
 
     /**
      * @param $name
-     * @return Database|Info|TikiManagerStyle
+     * @return object|null
      * @throws \Exception
      */
     public static function get($name)

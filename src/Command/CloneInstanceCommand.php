@@ -31,6 +31,8 @@ class CloneInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:clone')
             ->setDescription('Clone instance')
@@ -277,7 +279,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         if ($setupTargetDatabase && count($targetInstances) > 1) {
-            $this->io->error('Database setup options can only be used when a single target instance is passed.');
+            $this->logger->error('Database setup options can only be used when a single target instance is passed.');
             return 1;
         }
 
@@ -391,6 +393,9 @@ class CloneInstanceCommand extends TikiManagerCommand
             return 1;
         }
 
+        $hookName = $this->getCommandHook();
+        $hookName->registerPostHookVars(['source' => $sourceInstance]);
+
         $archive = '';
         $standardProcess = true;
         if ($useLastBackup) {
@@ -435,6 +440,8 @@ class CloneInstanceCommand extends TikiManagerCommand
             return 1;
         }
 
+        $hookName->registerPostHookVars(['backup' => $archive]);
+
         $options = [
             'checksum-check' => $checksumCheck,
             'skip-reindex' => $skipReindex,
@@ -451,6 +458,8 @@ class CloneInstanceCommand extends TikiManagerCommand
             $instanceVCS = $destinationInstance->getVersionControlSystem();
             $instanceVCS->setLogger($this->logger);
             $instanceVCS->setVCSOptions($vcsOptions);
+
+            $hookName->registerPostHookVars(['instance' => $destinationInstance]);
 
             $destinationInstance->lock();
             $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct, $onlyData, $onlyCode, $options);

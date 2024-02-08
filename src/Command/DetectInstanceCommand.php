@@ -22,6 +22,8 @@ class DetectInstanceCommand extends TikiManagerCommand
 
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:detect')
             ->setDescription('Detect Tiki branch or tag')
@@ -77,6 +79,8 @@ class DetectInstanceCommand extends TikiManagerCommand
         $instancesOption = explode(',', $instancesOption);
         $selectedInstances = array_intersect_key($this->instances, array_flip($instancesOption));
 
+        $hookName = $this->getCommandHook();
+
         /** @var Instance $instance */
         foreach ($selectedInstances as $instance) {
             if ($instance->name) {
@@ -128,6 +132,8 @@ class DetectInstanceCommand extends TikiManagerCommand
                 $this->io->error('PHP version is not supported.');
                 continue;
             }
+
+            $hookName->registerPostHookVars(['instance' => $instance, 'branch' => $branch]);
 
             $this->io->writeln('<info>Detected ' .strtoupper($instance->vcs_type) . ': ' . $branch . '</info>');
         }

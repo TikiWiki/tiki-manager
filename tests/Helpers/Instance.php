@@ -90,9 +90,8 @@ class Instance
      * @param array $arguments
      * @param bool $upgrade
      * @param array $options
-     * @return array
      */
-    public static function clone(array $arguments, bool $upgrade = false, array $options = []): array
+    public static function clone(array $arguments, bool $upgrade = false): bool
     {
         $application = new Application();
         $application->add(new CloneInstanceCommand());
@@ -103,12 +102,9 @@ class Instance
         $commandTester = new CommandTester($command);
 
         $arguments = array_merge(['command' => $command->getName()], $arguments);
-        $commandTester->execute($arguments, $options);
+        $commandTester->execute($arguments, ['interactive' => false]);
 
-        return [
-            'exitCode' => $commandTester->getStatusCode(),
-            'output' => $commandTester->getDisplay(),
-        ];
+        return $commandTester->getStatusCode();
     }
 
     private static function getLastInstanceId()

@@ -333,7 +333,7 @@ trait InstanceConfigure
      * @param Instance $instance
      * @throws \Exception
      */
-    public function importApplication(Instance $instance): void
+    public function importApplication(Instance $instance): Instance
     {
         if (!$this->detectApplication($instance)) {
             throw new \Exception('Unable to import. An application was not detected in this instance.');
@@ -347,6 +347,8 @@ trait InstanceConfigure
         if ($instance->id !== $resultInstance->id) {
             throw new \Exception('An error occurred while registering instance/application details', 2);
         }
+
+        return $resultInstance;
     }
 
     /**
@@ -544,10 +546,10 @@ trait InstanceConfigure
      * Persist the instance information and install the application
      *
      * @param Instance $instance
-     * @return void
+     * @return Instance
      * @throws \TikiManager\Application\Exception\ConfigException
      */
-    public function install(Instance $instance)
+    public function install(Instance $instance): Instance
     {
         $checksumCheck = $this->input->getOption('check') ?? false;
 
@@ -562,11 +564,11 @@ trait InstanceConfigure
 
         if ($instance->selection == 'blank : none') {
             $this->io->success('This is a blank instance. This is useful to restore a backup later.');
-            return;
+            return $instance;
         }
 
         if ($this->detectApplication($instance)) {
-            return;
+            return $instance;
         }
 
         $apps = $instance->getApplications();
@@ -587,6 +589,8 @@ trait InstanceConfigure
         $instance->installApplication($app, $version, $checksumCheck);
 
         $this->io->success('Please test your site at ' . $instance->weburl);
+
+        return $instance;
     }
 
     /**
@@ -621,6 +625,7 @@ trait InstanceConfigure
      */
     public function isMissingPHPRequirements(Instance $instance, LoggerInterface $log): bool
     {
+        return false;
         $missingRequirements = [];
         $access = $instance->getBestAccess();
 

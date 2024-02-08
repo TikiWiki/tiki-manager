@@ -13,12 +13,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
 
 class MaintenanceInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:maintenance')
             ->setDescription('instances under maintenance')
@@ -66,6 +67,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
         $messages = [];
         $errors = [];
 
+        $hookName = $this->getCommandHook();
         if (! empty($instancesOption)) {
             foreach ($instancesOption as $instanceId) {
                 $instance = Instance::getInstance($instanceId);
@@ -76,6 +78,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
                     $errors[] = $instance->name;
                 }
                 $instance->getApplication()->fixPermissions();
+                $hookName->registerPostHookVars(['instance' => $instance, 'maintenance_status' => $instance->isLocked() ? 'on' : 'off']);
             }
             if (! empty($messages)) {
                 $this->io->success('Instances [' . implode(',', $messages) . '] maintenance "' . $status . '"');
@@ -97,9 +100,9 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
 
                 $selectedInstance = $helper->ask($input, $output, $question);
                 $instance = $selectedInstance[0];
-
                 $success = ($status == 'on') ? $instance->lock() : $instance->unlock();
                 $instance->getApplication()->fixPermissions();
+                $hookName->registerPostHookVars(['instance' => $instance, 'maintenance_status' => $instance->isLocked() ? 'on' : 'off']);
 
                 if ($success) {
                     $this->io->success('Instance ' . $instance->name . ' maintenance ' . $status);

@@ -22,6 +22,8 @@ class CreateInstanceCommand extends TikiManagerCommand
      */
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:create')
             ->setDescription('Creates a new instance (or take over an already installed Tiki)')
@@ -219,7 +221,8 @@ class CreateInstanceCommand extends TikiManagerCommand
                     throw new \Exception('Unable to install. An application was detected in this instance.');
                 }
 
-                $this->importApplication($instance);
+                $instance = $this->importApplication($instance);
+                $this->getCommandHook()->registerPostHookVars(['instance' => $instance]);
 
                 $this->io->success('Please test your site at ' . $instance->weburl);
                 return 0;
@@ -231,7 +234,8 @@ class CreateInstanceCommand extends TikiManagerCommand
                 $this->setupDatabase($instance);
             }
 
-            $this->install($instance);
+            $instance = $this->install($instance);
+            $this->getCommandHook()->registerPostHookVars(['instance' => $instance]);
 
             return 0;
         } catch (\Exception $e) {

@@ -12,6 +12,8 @@ class AccessInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:access')
             ->setDescription('Remote access to instance')
@@ -50,6 +52,7 @@ class AccessInstanceCommand extends TikiManagerCommand
                 $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
             }
 
+            $hookName = $this->getCommandHook();
             foreach ($selectedInstances as $instance) {
                 $access = $instance->getBestAccess('scripting');
                 if (! empty($_ENV['RUN_THROUGH_TIKI_WEB'])) {
@@ -58,6 +61,8 @@ class AccessInstanceCommand extends TikiManagerCommand
                     $output->writeln('<fg=cyan>Connecting to ' . $instance->name . ' at ' . $instance->webroot . ' directory... (use "exit" to move to next the instance)</>');
                     $access->openShell($instance->webroot);
                 }
+
+                $hookName->registerPostHookVars(['instance' => $instance]);
             }
         } else {
             $output->writeln('<comment>No instances available to access.</comment>');

@@ -14,6 +14,8 @@ class EditInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:edit')
             ->setDescription('Edit instance')
@@ -104,6 +106,7 @@ class EditInstanceCommand extends TikiManagerCommand
                 $selectedInstances = CommandHelper::validateInstanceSelection($input->getOption('instances'), $instances);
             }
 
+            $hookName = $this->getCommandHook();
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Edit data for ' . $instance->name . '</>');
 
@@ -195,6 +198,8 @@ class EditInstanceCommand extends TikiManagerCommand
                 $instance->backup_group = $backup_group;
                 $instance->backup_perm = octdec($backup_perm);
                 $instance->save();
+
+                $hookName->registerPostHookVars(['instance' => $instance]);
 
                 $this->io->newLine();
                 $output->writeln('<comment>'. $instance->name .' instance information has been modified successfully.</comment>');

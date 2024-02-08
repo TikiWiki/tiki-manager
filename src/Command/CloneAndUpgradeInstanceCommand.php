@@ -18,6 +18,8 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('instance:cloneandupgrade')
             ->setDescription('Clone and upgrade instance')

@@ -11,6 +11,8 @@ class ClearCacheCommand extends TikiManagerCommand
 {
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('cache:clear')
             ->setDescription('Clears application\'s cache')

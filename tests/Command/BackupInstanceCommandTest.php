@@ -13,6 +13,7 @@ use TikiManager\Command\BackupInstanceCommand;
 use TikiManager\Application\Instance;
 use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
+use TikiManager\Command\TikiManagerCommand;
 use TikiManager\Config\App;
 use TikiManager\Tests\Helpers\Instance as InstanceHelper;
 
@@ -101,6 +102,7 @@ class BackupInstanceCommandTest extends TestCase
         $exitCode = $backupCommand->run($input, App::get('output'));
 
         $this->assertEquals(0, $exitCode);
+        $this->checkHookVars($backupCommand);
 
         // Check if the .sql database dump file is indeed created during instance backup
         $dbDumpPath = self::$backupDir . DIRECTORY_SEPARATOR . $instanceId . '-' . $instanceName . DIRECTORY_SEPARATOR . 'database_dump.sql';
@@ -125,5 +127,38 @@ class BackupInstanceCommandTest extends TestCase
     {
         $instance = Instance::getInstance(self::$instanceIds['instance']);
         return self::$archiveDir . DIRECTORY_SEPARATOR . $instance->id . '-' . $instance->name;
+    }
+
+    private function checkHookVars(TikiManagerCommand $command)
+    {
+        // Check HOOK variables
+        $hook = $command->getCommandHook();
+        $hookVars = $hook->getPostHookVars();
+
+        $expectedVariables = [
+            'INSTANCE_TYPE_',
+            'INSTANCE_VCS_TYPE_',
+            'INSTANCE_NAME_',
+            'INSTANCE_WEBROOT_',
+            'INSTANCE_WEBURL_',
+            'INSTANCE_TEMPDIR_',
+            'INSTANCE_PHPEXEC_',
+            'INSTANCE_PHPVERSION_',
+            'INSTANCE_BACKUP_USER_',
+            'INSTANCE_BACKUP_GROUP_',
+            'INSTANCE_BACKUP_PERM_',
+            'INSTANCE_BRANCH_',
+            'INSTANCE_LAST_ACTION_',
+            'INSTANCE_LAST_ACTION_DATE_',
+            'INSTANCE_BACKUP_FILE_'
+        ];
+
+        $instances = explode(',', $hookVars['INSTANCE_IDS']);
+        foreach ($instances as $instanceId) {
+            foreach ($expectedVariables as $expectedVariable) {
+                $varName = $expectedVariable . $instanceId;
+                $this->assertTrue(array_key_exists($varName, $hookVars), 'Expected variable ' . $varName);
+            }
+        }
     }
 }
