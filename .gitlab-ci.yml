@@ -367,14 +367,16 @@ phar:
 
 compressed:
   stage: package
+  variables:
+    PACK_FILES_FOLDERS_LIST: config data scripts src vendor hooks .env.dist composer.json composer.lock LICENSE README.md tiki-manager tiki-manager.php VERSION .version
   script:
     - composer install --no-dev $COMPOSER_FLAGS
     - git log --pretty=fuller 'HEAD^..HEAD' > VERSION
     - git log --pretty="format:TIKI_MANAGER_GIT_DATE=%cd%nTIKI_MANAGER_GIT_HASH=%h" 'HEAD^..HEAD' --date="format:%Y%m%d%H%M%S" > .version
-    - find config data scripts src vendor .env.dist composer.json composer.lock LICENSE README.md tiki-manager tiki-manager.php VERSION .version -type f -exec chmod 664 {} \;
-    - find config data scripts src vendor .env.dist composer.json composer.lock LICENSE README.md tiki-manager tiki-manager.php VERSION .version -type d -exec chmod 775 {} \;
+    - find ${PACK_FILES_FOLDERS_LIST} -type f -exec chmod 664 {} \;
+    - find ${PACK_FILES_FOLDERS_LIST} -type d -exec chmod 775 {} \;
     - chmod 775 tiki-manager
-    - tar czvf tiki-manager.tgz config data scripts src vendor .env.dist composer.json composer.lock LICENSE README.md tiki-manager tiki-manager.php VERSION .version
+    - tar czvf tiki-manager.tgz ${PACK_FILES_FOLDERS_LIST}
   allow_failure: false
   needs:
     - composer
