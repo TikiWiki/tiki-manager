@@ -50,7 +50,7 @@ abstract class TikiManagerCommand extends Command implements LoggerAwareInterfac
     /**
      * @inheritDoc
      */
-    public function run(InputInterface $input, OutputInterface $output)
+    public function run(InputInterface $input, OutputInterface $output):int
     {
         Environment::getInstance()->setIO($input, $output);
         $this->io = App::get('io');
