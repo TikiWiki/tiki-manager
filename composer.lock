@@ -889,17 +889,17 @@
         },
         {
             "name": "symfony/console",
-            "version": "v5.4.35",
+            "version": "v5.4.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "dbdf6adcb88d5f83790e1efb57ef4074309d3931"
+                "reference": "39f75d9d73d0c11952fdcecf4877b4d0f62a8f6e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-dbdf6adcb88d5f83790e1efb57ef4074309d3931-zip-8a4656.zip",
-                "reference": "dbdf6adcb88d5f83790e1efb57ef4074309d3931",
-                "shasum": "547dc8ffcd20096389eee76bc038dcae2844df10"
+                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-39f75d9d73d0c11952fdcecf4877b4d0f62a8f6e-zip-17624d.zip",
+                "reference": "39f75d9d73d0c11952fdcecf4877b4d0f62a8f6e",
+                "shasum": "9391c1f16161713942a9b4c79fe84cfde82c57db"
             },
             "require": {
                 "php": ">=7.2.5",
@@ -981,7 +981,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-01-23T14:28:09+00:00"
+            "time": "2024-02-20T16:33:57+00:00"
         },
         {
             "name": "symfony/dependency-injection",
@@ -2240,17 +2240,17 @@
         },
         {
             "name": "symfony/process",
-            "version": "v5.4.35",
+            "version": "v5.4.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "cbc28e34015ad50166fc2f9c8962d28d0fe861eb"
+                "reference": "4fdf34004f149cc20b2f51d7d119aa500caad975"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/process/symfony-process-cbc28e34015ad50166fc2f9c8962d28d0fe861eb-zip-07437c.zip",
-                "reference": "cbc28e34015ad50166fc2f9c8962d28d0fe861eb",
-                "shasum": "0fc50c8133af27401f7398a323c0ff1ef518a351"
+                "url": "https://composer.tiki.org/dist/symfony/process/symfony-process-4fdf34004f149cc20b2f51d7d119aa500caad975-zip-b5f16d.zip",
+                "reference": "4fdf34004f149cc20b2f51d7d119aa500caad975",
+                "shasum": "12cb7fd96bd6fc39d0d9846883118adf1e4bbeb0"
             },
             "require": {
                 "php": ">=7.2.5",
@@ -2295,7 +2295,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-01-23T13:51:25+00:00"
+            "time": "2024-02-12T15:49:53+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -2379,17 +2379,17 @@
         },
         {
             "name": "symfony/string",
-            "version": "v5.4.35",
+            "version": "v5.4.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "c209c4d0559acce1c9a2067612cfb5d35756edc2"
+                "reference": "4e232c83622bd8cd32b794216aa29d0d266d353b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/string/symfony-string-c209c4d0559acce1c9a2067612cfb5d35756edc2-zip-d229db.zip",
-                "reference": "c209c4d0559acce1c9a2067612cfb5d35756edc2",
-                "shasum": "4e50e78c005a63a65f6ca0287ebc79090b466e0f"
+                "url": "https://composer.tiki.org/dist/symfony/string/symfony-string-4e232c83622bd8cd32b794216aa29d0d266d353b-zip-18f9b2.zip",
+                "reference": "4e232c83622bd8cd32b794216aa29d0d266d353b",
+                "shasum": "a4e261ae2699827a4dafcdd56d0eef3dd5e13ff5"
             },
             "require": {
                 "php": ">=7.2.5",
@@ -2458,7 +2458,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-01-23T13:51:25+00:00"
+            "time": "2024-02-01T08:49:30+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -2876,17 +2876,17 @@
         },
         {
             "name": "symfony/phpunit-bridge",
-            "version": "v5.4.35",
+            "version": "v5.4.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/phpunit-bridge.git",
-                "reference": "2a0216076da723aeabebef57bbb5009d0ee920f6"
+                "reference": "c4d978502e03cc6a45d8454e06e59ff22d4907d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/phpunit-bridge/symfony-phpunit-bridge-2a0216076da723aeabebef57bbb5009d0ee920f6-zip-4453c3.zip",
-                "reference": "2a0216076da723aeabebef57bbb5009d0ee920f6",
-                "shasum": "10098409446ee8d79a885881b1ad3aeb49fa6595"
+                "url": "https://composer.tiki.org/dist/symfony/phpunit-bridge/symfony-phpunit-bridge-c4d978502e03cc6a45d8454e06e59ff22d4907d5-zip-87a0ae.zip",
+                "reference": "c4d978502e03cc6a45d8454e06e59ff22d4907d5",
+                "shasum": "34d72093cd3f7c72812921403034db1bf1acd280"
             },
             "require": {
                 "php": ">=7.1.3",
@@ -2952,7 +2952,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-01-23T13:51:25+00:00"
+            "time": "2024-02-08T14:03:57+00:00"
         }
     ],
     "aliases": [],
