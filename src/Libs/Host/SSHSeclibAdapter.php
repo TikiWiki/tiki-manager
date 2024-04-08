@@ -6,6 +6,8 @@
 
 namespace TikiManager\Libs\Host;
 
+use phpseclib3\Crypt\PublicKeyLoader;
+use phpseclib3\Net\SFTP;
 use TikiManager\Libs\Host\Exception\SSHSeclibException;
 
 class SSHSeclibAdapter
@@ -51,7 +53,7 @@ class SSHSeclibAdapter
             return self::$resources[$key];
         }
 
-        $handle = new \phpseclib\Net\SFTP($host, $port);
+        $handle = new SFTP($host, $port);
 
 
         if (!$handle
@@ -60,11 +62,7 @@ class SSHSeclibAdapter
             return self::$resources[$key] = false;
         };
 
-        $password = new \phpseclib\Crypt\RSA();
-        $password->setPrivateKey(file_get_contents($_ENV['SSH_KEY']));
-        $password->setPublicKey(file_get_contents($_ENV['SSH_PUBLIC_KEY']));
-
-        if (!$handle->login($user, $password)) {
+        if (!$handle->login($user, PublicKeyLoader::load(file_get_contents($_ENV['SSH_KEY'])))) {
             return self::$resources[$key] = false;
         };
 
