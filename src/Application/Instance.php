@@ -308,7 +308,7 @@ SQL;
         $instances = [];
         while ($instance = $result->fetchObject('TikiManager\Application\Instance')) {
             if ($exclude_blank) {
-                if ($instance->getApplication()) {
+                if ($instance->hasApplication()) {
                     $instances[$instance->getId()] = $instance;
                 }
             } else {
@@ -325,7 +325,7 @@ SQL;
 
         $tikiInstances = [];
         foreach ($allInstances as $instance) {
-            if ($instance->getApplication() instanceof Tiki) {
+            if ($instance->isTiki()) {
                 $tikiInstances[$instance->id] = $instance;
             }
         }
@@ -339,7 +339,7 @@ SQL;
 
         $noTikiInstances = [];
         foreach ($allInstances as $instance) {
-            if (! $instance->getApplication()) {
+            if (! $instance->hasApplication()) {
                 $noTikiInstances[$instance->id] = $instance;
             }
         }
@@ -724,6 +724,19 @@ SQL;
     public function hasConsole()
     {
         return $this->getBestAccess()->fileExists('console.php');
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasApplication()
+    {
+        return ! empty($this->app);
+    }
+
+    public function isTiki()
+    {
+        return $this->app === 'tiki';
     }
 
     /**
