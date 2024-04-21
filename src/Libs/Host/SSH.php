@@ -167,6 +167,14 @@ class SSH
 
         $localHost = new Local();
 
+        // path may be escaped, in that case we un-escape, since we will escape after
+        if (
+            substr($src, 0, 1) === "'" && substr($src, -1) === "'"
+            || substr($src, 0, 1) === '"' && substr($src, -1) === '"'
+        ) {
+            $src = substr($src, 1, -1);
+        }
+
         // is it relative
         if ($src[0] !== '/' && ! empty($this->location)) {
             $src = $this->location . '/' . $src;
