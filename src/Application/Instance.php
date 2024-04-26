@@ -629,7 +629,7 @@ SQL;
                 // so scripts like setup.sh can use correct php version
                 $bin_folder = dirname($path);
                 if (strpos($path_env, $bin_folder) === false) {
-                    $access->setenv('PATH', "${bin_folder}:${path_env}");
+                    $access->setenv('PATH', "$bin_folder:$path_env");
                 }
 
                 return true;

@@ -100,11 +100,12 @@ class Environment
         $dotenvLoader->loadEnv($envFile);
 
         $this->loadEnvironmentVariablesContainingLogic();
-        $this->runSetup();
-        $this->isLoaded = true;
 
         $this->setIO();
         $this->setLogger();
+
+        $this->runSetup();
+        $this->isLoaded = true;
     }
 
     public function setLogger()

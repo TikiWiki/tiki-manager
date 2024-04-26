@@ -161,7 +161,7 @@ class Local
 
     public function openShell($workingDir = '')
     {
-        
+
         if (empty($workingDir)) {
             return;
         }

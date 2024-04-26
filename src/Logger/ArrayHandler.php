@@ -13,7 +13,7 @@ class ArrayHandler extends AbstractProcessingHandler
         return $this->log;
     }
 
-    protected function write(array $record)
+    protected function write(array $record): void
     {
         $this->log[] = $record['formatted'];
     }
