@@ -102,6 +102,11 @@ SQL;
             $result = is_numeric($result)
                 ? floatval($result)
                 : $result;
+        } else {
+            if (! empty($branch)) {
+                // If we get here then is a non-numeric version, we will assume is similar to master.
+                $result = 'master';
+            }
         }
         return $result;
     }

@@ -16,6 +16,9 @@ use TikiManager\Libs\Host\Command;
 
 class Git extends VersionControlSystem
 {
+    protected const DEFAULT_GIT_REPOSITORY = 'https://gitlab.com/tikiwiki/tiki.git';
+    protected $isDefultRepository = false;
+
     protected $command = 'git';
 
     protected $quiet = true;
@@ -27,13 +30,14 @@ class Git extends VersionControlSystem
     public function __construct(Instance $instance, array $vcsOptions = [], LoggerInterface $logger = null)
     {
         parent::__construct($instance, $vcsOptions, $logger);
-        $this->setRepositoryUrl($_ENV['GIT_TIKIWIKI_URI']);
+        $this->setRepositoryUrl($_ENV['GIT_TIKIWIKI_URI'] ?? self::DEFAULT_GIT_REPOSITORY);
         $this->setSafeDirectory($instance);
     }
 
     public function setRepositoryUrl($url): void
     {
         $this->repositoryUrl = $url;
+        $this->isDefultRepository = ($url === self::DEFAULT_GIT_REPOSITORY);
     }
 
     /**
@@ -57,9 +61,12 @@ class Git extends VersionControlSystem
             }
 
             if (strpos($line, 'refs/heads/') !== false) {
-                // Only list master, versions (20.x, 19.x, 18.3) and experimental branches (example: experimental/acme)
-                if (!preg_match('/^refs\/heads\/(\d+\.(\d+|x)|master|experimental\/.+)$/', $line)) {
-                    continue;
+                if ($this->isDefultRepository) {
+                    // For the main tiki repository only list master, versions (20.x, 19.x, 18.3) and experimental
+                    // branches (example: experimental/acme).
+                    if (!preg_match('/^refs\/heads\/(\d+\.(\d+|x)|master|experimental\/.+)$/', $line)) {
+                        continue;
+                    }
                 }
                 $versions[] = str_replace('refs/heads/', '', $line); // Example: branch/master
             }

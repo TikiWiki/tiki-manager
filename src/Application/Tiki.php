@@ -918,6 +918,9 @@ TXT;
         foreach ($versions as $key => $version) {
             preg_match('/(\d+\.|trunk|master)/', $version->branch, $matches);
             if (!array_key_exists(0, $matches)) {
+                // If is not a version formatted after a tiki version or master, then we can't guess if is compatible
+                // we just add the version to the list (assuming is a custom branch and as such should be in the list)
+                $compatible[$key] = $version;
                 continue;
             }
 
