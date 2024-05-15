@@ -96,6 +96,12 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Ignore version requirements. Allows to select non-supported branches, useful for testing.'
+            )
+            ->addOption(
+                'no-maintenance',
+                null,
+                InputOption::VALUE_NONE,
+                'Update will be performed without setting the website in maintenance mode.'
             );
     }
 
@@ -103,6 +109,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
     {
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        $enableMaintenance = empty($input->getOption('no-maintenance'));
 
         if (isset($instancesInfo)) {
             $instancesOption = $input->getOption('instances');
@@ -196,7 +203,10 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 );
                 $this->io->writeln('<fg=cyan>' .$message. '</>');
 
-                $instance->lock();
+                if ($enableMaintenance) {
+                    $instance->lock();
+                }
+
                 $app = $instance->getApplication();
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();
