@@ -45,9 +45,9 @@ class SoftwareRequirement
         return $this->max;
     }
 
-    public function isValidVersion($version): bool
+    public function isValidVersion($version, $ignoreMaxVersion = false): bool
     {
-        if (empty($this->max)) {
+        if (empty($this->max) || $ignoreMaxVersion) {
             return Comparator::greaterThanOrEqualTo($version, $this->min);
         }
 

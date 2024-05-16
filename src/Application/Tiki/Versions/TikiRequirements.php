@@ -91,10 +91,10 @@ class TikiRequirements
         return $this->mariaDBVersion;
     }
 
-    public function checkRequirements(Instance $instance): bool
+    public function checkRequirements(Instance $instance, bool $ignoreMaxVersion = false): bool
     {
         $phpVersion = CommandHelper::formatPhpVersion($instance->phpversion);
 
-        return $this->phpVersion->isValidVersion($phpVersion);
+        return $this->phpVersion->isValidVersion($phpVersion, $ignoreMaxVersion);
     }
 }

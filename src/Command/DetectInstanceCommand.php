@@ -124,10 +124,14 @@ class DetectInstanceCommand extends TikiManagerCommand
             };
 
             $requirements_helper = new TikiRequirementsHelper(new YamlFetcher());
-            $tikiRequirements = $requirements_helper->findByBranchName($instance->getBranch());
+            $instanceBranch = $instance->getBranch();
+            $tikiRequirements = $requirements_helper->findByBranchName($instanceBranch);
 
             if ($tikiRequirements->checkRequirements($instance)) {
                 $this->io->writeln('<info>PHP version is supported.</info>');
+            } elseif ($instanceBranch === 'master' && $tikiRequirements->checkRequirements($instance, true)) {
+                $maxPhpVersion = CommandHelper::formatPhpVersion($tikiRequirements->getPhpVersion()->getMax());
+                $this->io->warning("This version of PHP ($phpVersion) is above the recommended max version ($maxPhpVersion) for the master branch and Tiki may not work as expected.");
             } else {
                 $this->io->error('PHP version is not supported.');
                 continue;
