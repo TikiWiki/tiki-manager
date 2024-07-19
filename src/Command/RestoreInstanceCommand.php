@@ -27,6 +27,19 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Check files checksum after operation has been performed.'
+            )
+            ->addOption(
+                'skip-config-check',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip system_configuration_file check.'
+            )
+            ->addOption(
+                'allow-common-parent-levels',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Allow files and folders to be restored if they share the n-th parent use 0 (default) for the instance root folder and N (>=1) for allowing parent folders. Use -1 to skip this check',
+                "0"
             );
     }
 
@@ -39,6 +52,8 @@ class RestoreInstanceCommand extends TikiManagerCommand
         $restorableInstancesInfo = CommandHelper::getInstancesInfo($restorableInstances);
 
         $checksumCheck = $input->getOption('check');
+        $skipSystemConfigurationCheck = $input->getOption('skip-config-check') !== null;
+        $allowCommonParents = (int)$input->getOption('allow-common-parent-levels');
 
         if (isset($instancesInfo) && isset($restorableInstancesInfo)) {
             $this->io->note('It is only possible to restore a backup on a blank install.');
@@ -92,7 +107,18 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 $this->setupDatabase($instance);
                 $instance->database()->setupConnection();
 
-                $errors = $instance->restore($restorableInstance, $file, false, $checksumCheck);
+                $errors = $instance->restore(
+                    $restorableInstance,
+                    $file,
+                    false,
+                    $checksumCheck,
+                    false,
+                    false,
+                    false,
+                    [],
+                    $skipSystemConfigurationCheck,
+                    $allowCommonParents
+                );
 
                 if (isset($errors)) {
                     return 1;

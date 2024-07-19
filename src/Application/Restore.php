@@ -8,6 +8,7 @@ namespace TikiManager\Application;
 
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Exception\RestoreErrorException;
+use TikiManager\Application\Tiki\Handler\SystemConfigurationFile;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\Git;
@@ -24,6 +25,8 @@ class Restore extends Backup
     protected $process;
     protected $source;
     protected $onlyData;
+    protected $skipSystemConfigurationCheck = false;
+    protected $allowCommonParents = 0;
     public $iniFilesToExclude = [];
 
     /**
@@ -31,12 +34,18 @@ class Restore extends Backup
      * @param Instance $instance
      * @param bool $direct
      * @param bool $onlyData
+     * @param bool $skipSystemConfigurationCheck If should skip checking for dangerous directives in the system configuration file
+     *
      * @throws Exception\FolderPermissionException
      */
-    public function __construct(Instance $instance, bool $direct = false, bool $onlyData = false)
+    public function __construct(Instance $instance, bool $direct = false, bool $onlyData = false, bool $skipSystemConfigurationCheck = false, $allowCommonParents = 0)
     {
         parent::__construct($instance, $direct);
+
         $this->onlyData = $onlyData;
+        $this->skipSystemConfigurationCheck = $skipSystemConfigurationCheck;
+        $this->allowCommonParents = $allowCommonParents;
+
         $this->restoreRoot = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore';
         $this->restoreDirname = sprintf('%s-%s', $instance->getId(), $instance->name);
         $this->restoreLockFile = $instance->tempdir . DIRECTORY_SEPARATOR . 'restore.lock';
@@ -155,6 +164,10 @@ class Restore extends Backup
 
     public function readManifest($manifestPath)
     {
+        $differentInstance = $this->instance->getId() != $this->getSourceInstance()->getId();
+
+        $skipPathCheck = ($this->allowCommonParents < 0) || (count(explode('/', $this->instance->webroot)) < $this->allowCommonParents);
+
         $access = $this->getAccess();
 
         if ($this->direct && $this->source->type == 'local') {
@@ -168,7 +181,6 @@ class Restore extends Backup
         $manifest = explode(PHP_EOL, $manifest);
         $manifest = array_map('trim', $manifest);
         $manifest = array_filter($manifest, 'strlen');
-        $backupType = Backup::FULL_BACKUP;
 
         $windowsAbsolutePathsRegex = '/^([a-zA-Z]\:[\/,\\\\]).{1,}/';
 
@@ -181,6 +193,9 @@ class Restore extends Backup
         }
 
         foreach ($manifest as $line) {
+            $backupType = Backup::FULL_BACKUP;
+            $hash = '';
+
             $values = explode('    ', $line);
             switch (count($values)) {
                 case 2:
@@ -213,15 +228,29 @@ class Restore extends Backup
 
             if ($destination[0] === '/' || $windowsAbsolutePaths) {
                 if ($type === 'app') {
-                    $destination = '';
-                } else {
-                    $this->io->warning("{Skipping {$destination}. Path shouldn't have absolute paths, to avoid override data.");
-                    continue;
-                }
-            }
+                    $destination = $webroot; // Always restore the main app to the instance root folder
+                } elseif (! $skipPathCheck) {
+                    $sourceInstanceParentFolder = $this->getSourceInstance()->webroot;
+                    $targetInstanceParentFolder = $webroot;
 
-            $destination = $webroot . DIRECTORY_SEPARATOR . $destination;
-            $destination = ApplicationHelper::getAbsolutePath($destination);
+                    // support restore if the absolute path of (e.g. conf_external) shares the Nth (N>=0) parent folder of the source webroot.
+                    if ($this->allowCommonParents > 0) {
+                        $sourceInstanceParentFolder = dirname($sourceInstanceParentFolder, $this->allowCommonParents);
+                        $targetInstanceParentFolder = dirname($targetInstanceParentFolder, $this->allowCommonParents);
+                    }
+
+                    if (strncmp($sourceInstanceParentFolder, $destination, strlen($sourceInstanceParentFolder)) === 0) {
+                        // relativize the path comparing with destination (or the Nth parent folder) instance in this case
+                        $destination = $targetInstanceParentFolder . DIRECTORY_SEPARATOR . substr($destination, strlen($sourceInstanceParentFolder));
+                    } else {
+                        $this->io->warning("Skipping {$destination}. Path shouldn't have absolute paths, to avoid override data. You can use --allow-common-parent-levels if you want to allow restore from sibling folders");
+                        continue;
+                    }
+                }
+            } else {
+                // make path and absolute path, based on the target instance
+                $destination = $webroot . DIRECTORY_SEPARATOR . $destination;
+            }
 
             $folders[] = [
                 $type,
@@ -267,14 +296,45 @@ class Restore extends Backup
             list($type, $src, $target, $isFull) = $folder;
 
             // system configuration file
-            if ($type == 'conf_external') {
-                if ($this->isSSHToLocal()) {
+            if (substr($type, 0, 5) === 'conf_') {
+                if (($this->instance->getId() != $this->getSourceInstance()->getId()) // restoring to a different instance
+                    && (! $this->skipSystemConfigurationCheck) // and we should check for dangerous directives
+                ) {
+                    $configFileToTest = $src;
+
+                    $cleanConfigFileCopyAfter = false;
+                    if ($this->isDirectSSHToLocal()) { // file is not accessible locally, so we need a copy of the file for inspection
+                        $configFileToTest = $this->instance->tempdir
+                            . DIRECTORY_SEPARATOR
+                            . 'tmp-sys-config-file-' . date("Ymd_H:i:s") . '-rand' . rand(0, 999999);
+                        $this->getSourceInstance()->getBestAccess('filetransfer')->downloadFile($src, $configFileToTest);
+                        $cleanConfigFileCopyAfter = true;
+                    }
+
+                    $systemConfigFileHandler = new SystemConfigurationFile();
+                    if ($systemConfigFileHandler->hasDangerousDirectives($configFileToTest)) {
+                        $info = pathinfo($target);
+                        if ($info['extension'] == 'php' && (substr($info['filename'], -4) == '.ini')) { // extension is .ini.php
+                            $info['extension'] = 'ini.php';
+                        }
+
+                        $target = substr($target, 0, strlen($target)-strlen($info['extension'])-1)
+                            . '-cloned-' . date("Ymd_H:i:s") . '-rand' . rand(0, 999999)
+                            . '.' . $info['extension'];
+                    }
+
+                    if ($cleanConfigFileCopyAfter) {
+                        @unlink($configFileToTest);
+                    }
+                }
+
+                if ($this->isDirectSSHToLocal()) {
                     $this->getSourceInstance()->getBestAccess()->downloadFile($src, $target);
                 } else {
                     $this->getAccess()->uploadFile($src, $target);
                 }
 
-                continue;
+                continue; // end of conf file handling
             }
 
             if ($type == 'app' && !$isFull) {
@@ -393,13 +453,13 @@ class Restore extends Backup
 
             $accessToRestore = $access;
 
-            if ($localToSSH = $this->isLocalToSSH()) {
+            if ($localToSSH = $this->isDirectLocalToSSH()) {
                 $sshPort = $access->port;
                 $target = $access->getRsyncPrefix() . $target;
                 $access = $this->source->getBestAccess();
             }
 
-            if ($sshToLocal = $this->isSSHToLocal()) {
+            if ($sshToLocal = $this->isDirectSSHToLocal()) {
                 $sourceAccess = $this->getSourceInstance()->getBestAccess();
                 $sshPort = $sourceAccess->port;
                 $rsyncPrefix = $sourceAccess->getRsyncPrefix();
@@ -545,7 +605,10 @@ class Restore extends Backup
     }
 
     /**
-     * @param $manifest_file
+     * Builds a list of INI files that are within the root folder, they should be excluded from the main code restore.
+     * INI files have their own handling, so this list will be used to avoid restoring them with the main folder restore.
+     *
+     * @param $manifest
      */
     public function setIniFilesToExclude($manifest)
     {
@@ -670,14 +733,22 @@ class Restore extends Backup
         $this->restoreDirname = $dirName;
     }
 
-    protected function isSSHToLocal(): bool
+    protected function isDirectSSHToLocal(): bool
     {
+        if (! $this->direct) {
+            return false;
+        }
+
         $sourceInstance = $this->getSourceInstance();
         return $sourceInstance && $sourceInstance->type == 'ssh' && $this->instance->type == 'local';
     }
 
-    protected function isLocalToSSH(): bool
+    protected function isDirectLocalToSSH(): bool
     {
+        if (! $this->direct) {
+            return false;
+        }
+
         $sourceInstance = $this->getSourceInstance();
         return $sourceInstance && $sourceInstance->type == 'local' && $this->instance->type == 'ssh';
     }

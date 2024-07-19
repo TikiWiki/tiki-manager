@@ -157,6 +157,19 @@ class CloneInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Clone only code files. Skip cloning database.'
+            )
+            ->addOption(
+                'skip-config-check',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip system_configuration_file check.'
+            )
+            ->addOption(
+                'allow-common-parent-levels',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Allow files and folders to be restored if they share the n-th parent use 0 (default) for the instance root folder and N (>=1) for allowing parent folders. Use -1 to skip this check',
+                "0"
             );
     }
 
@@ -191,6 +204,9 @@ class CloneInstanceCommand extends TikiManagerCommand
         ];
         $timeout = $input->getOption('timeout') ?: Environment::get('COMMAND_EXECUTION_TIMEOUT');
         putenv("COMMAND_EXECUTION_TIMEOUT=$timeout");
+
+        $skipSystemConfigurationCheck = $input->getOption('skip-config-check') !== false;
+        $allowCommonParents = (int)$input->getOption('allow-common-parent-levels');
 
         $setupTargetDatabase = (bool) ($input->getOption('db-prefix') || $input->getOption('db-name'));
 
@@ -462,7 +478,18 @@ class CloneInstanceCommand extends TikiManagerCommand
             $hookName->registerPostHookVars(['instance' => $destinationInstance]);
 
             $destinationInstance->lock();
-            $errors = $destinationInstance->restore($sourceInstance, $archive, true, $checksumCheck, $direct, $onlyData, $onlyCode, $options);
+            $errors = $destinationInstance->restore(
+                $sourceInstance,
+                $archive,
+                true,
+                $checksumCheck,
+                $direct,
+                $onlyData,
+                $onlyCode,
+                $options,
+                $skipSystemConfigurationCheck,
+                $allowCommonParents
+            );
 
             if (isset($errors)) {
                 return 1;

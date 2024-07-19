@@ -10,6 +10,8 @@
 namespace TikiManager\Application;
 
 use Exception;
+use Exception\FolderPermissionException;
+use Exception\RestoreErrorException;
 use TikiManager\Application\Instance\CrontabManager;
 use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Config\App;
@@ -783,19 +785,25 @@ SQL;
      * @param bool $clone
      * @param bool $checksumCheck
      * @param bool $direct
-     * @throws Exception\FolderPermissionException
-     * @throws Exception\RestoreErrorException
+     * @param bool $onlyData
+     * @param bool $onlyCode
+     * @param array $options
+     * @param bool $skipSystemConfigurationCheck
+     * @param int $allowCommonParents
+     *
+     * @throws FolderPermissionException
+     * @throws RestoreErrorException
      */
-    public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false, $onlyData = false, $onlyCode = false, $options = [])
+    public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false, $onlyData = false, $onlyCode = false, $options = [], $skipSystemConfigurationCheck = false, $allowCommonParents = 0)
     {
-        $restore = new Restore($this, $direct, $onlyData);
+        $restore = new Restore($this, $direct, $onlyData, $skipSystemConfigurationCheck, $allowCommonParents);
+
         $restore->lock();
         $restore->setProcess($clone);
 
         if ($direct) {
             $restore->setRestoreRoot(dirname($archive));
             $restore->setRestoreDirname(basename($archive));
-            $restore->setSourceInstance($srcInstance);
         }
 
         $message = "Restoring files from '{$archive}' into {$this->name}...";
@@ -806,6 +814,7 @@ SQL;
 
         $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
 
+        $restore->setSourceInstance($srcInstance);
         $restore->restoreFiles($archive);
 
         // Redetect the VCS type
