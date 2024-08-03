@@ -80,8 +80,12 @@ if (!in_array('include-index-backup', $arguments)) {
 }
 
 $args = implode(' ', $args);
-$command = "mysqldump --quick --create-options --extended-insert --no-tablespaces $args >> " . $tempFile;
-exec($command);
+$command = "(mysqldump --quick --create-options --extended-insert --no-tablespaces $args >> " . $tempFile . ") 2>&1";
+exec($command, $output, $returnCode);
+
+if ($returnCode !== 0) {
+    exit($returnCode);
+}
 
 chmod($outputFile, 0777);
 
