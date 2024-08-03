@@ -1352,4 +1352,20 @@ SQL;
         }
         return false;
     }
+
+    /**
+     * Check if execution timeout is higher in tiki instance preference
+     *
+     * @param string $timeout
+     * @return string
+     */
+    private function getMaxExecTimeout($timeout) : string
+    {
+        $instanceExecTimeout = $this->getApplication()->getPref('allocate_time_unified_rebuild');
+        if ($instanceExecTimeout && (int) $instanceExecTimeout > (int) $timeout) {
+            return $instanceExecTimeout;
+        }
+
+        return $timeout;
+    }
 }
