@@ -73,13 +73,13 @@ class Tiki extends Application
         $randomName = md5(time() . 'backup') . '.sql';
         $remoteFile = $this->instance->getWorkPath($randomName);
 
-        $exitcode = $access->runPHP(
+        $exitCode = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
             [$this->instance->webroot, $remoteFile, $indexMode]
         );
 
         $warnMsgForInsecurePwd = 'Using a password on the command line interface can be insecure';
-        if ($exitcode === 0 || strpos($exitcode, $warnMsgForInsecurePwd) !== false) {
+        if ($exitCode === 0 || strpos($exitCode, $warnMsgForInsecurePwd) !== false) {
             $access->downloadFile($remoteFile, $targetFile);
         }
 
