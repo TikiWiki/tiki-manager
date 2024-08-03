@@ -1263,10 +1263,14 @@ SQL;
 
     public function reindex(): bool
     {
+        $envExecTimeout = $_ENV['COMMAND_EXECUTION_TIMEOUT'];
+        $_ENV['COMMAND_EXECUTION_TIMEOUT'] = $this->getMaxExecTimeout($envExecTimeout);
+
         $access = $this->getBestAccess('scripting');
         $command = new Command("{$this->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
         $data = $access->runCommand($command);
         $output = $data->getStdoutContent();
+        $_ENV['COMMAND_EXECUTION_TIMEOUT'] = $envExecTimeout;
         return str_contains($output, 'Rebuilding index done') && $data->getReturn() == 0;
     }
 
@@ -1282,6 +1286,22 @@ SQL;
             return;
         }
         $this->getVersionControlSystem()->revert($this->webroot);
+    }
+
+    /**
+     * Check if execution timeout is higher in tiki instance preference
+     *
+     * @param string $timeout
+     * @return string
+     */
+    private function getMaxExecTimeout($timeout) : string
+    {
+        $instanceExecTimeout = $this->getApplication()->getPref('allocate_time_unified_rebuild');
+        if ($instanceExecTimeout && (int) $instanceExecTimeout > (int) $timeout) {
+            return $instanceExecTimeout;
+        }
+
+        return $timeout;
     }
 
     public function addOrUpdateInstanceTag(string $tagName, string $tagValue): bool
