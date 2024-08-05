@@ -492,13 +492,13 @@ class CloneInstanceCommand extends TikiManagerCommand
                     $allowCommonParents
                 );
             } catch (\Throwable $e) {
+                $errors = true;
                 $this->io->error($e->getMessage());
-                $this->askUnlock($destinationInstance);
-                return 1;
             }
 
             if (isset($errors)) {
                 $destinationInstance->updateState('failure', $this->getName(), 'restore function failure');
+                $this->askUnlock($destinationInstance);
                 return 1;
             }
 
