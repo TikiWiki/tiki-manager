@@ -130,6 +130,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 'r',
                 InputOption::VALUE_OPTIONAL,
                 'Specific revision to update the instance to'
+            )
+            ->addOption(
+                'skip-lock',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip lock website.'
             );
     }
 

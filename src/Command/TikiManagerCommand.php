@@ -22,6 +22,9 @@ abstract class TikiManagerCommand extends Command implements LoggerAwareInterfac
     /** @var InputInterface */
     protected $input;
 
+    /** @var OutputInterface */
+    protected $output;
+
     /** @var TikiManagerStyle */
     protected $io;
 
@@ -53,6 +56,7 @@ abstract class TikiManagerCommand extends Command implements LoggerAwareInterfac
         $this->io = App::get('io');
 
         $this->input = $input;
+        $this->output = $output;
 
         return parent::run($input, $output);
     }

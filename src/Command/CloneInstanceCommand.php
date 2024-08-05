@@ -179,6 +179,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 InputOption::VALUE_REQUIRED,
                 'Allow files and folders to be restored if they share the n-th parent use 0 (default) for the instance root folder and N (>=1) for allowing parent folders. Use -1 to skip this check',
                 "0"
+            )
+            ->addOption(
+                'skip-lock',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip lock website.'
             );
     }
 
@@ -206,6 +212,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         $targetOption = implode(",", $input->getOption('target'));
         $onlyData = $input->getOption('only-data');
         $onlyCode = $input->getOption('only-code');
+        $skipLock = $input->getOption('skip-lock');
         $vcsOptions = [
             'allow_stash' => $input->getOption('stash')
         ];
@@ -467,19 +474,28 @@ class CloneInstanceCommand extends TikiManagerCommand
 
             $hookName->registerPostHookVars(['instance' => $destinationInstance]);
 
-            $destinationInstance->lock();
-            $errors = $destinationInstance->restore(
-                $sourceInstance,
-                $archive,
-                true,
-                $checksumCheck,
-                $direct,
-                $onlyData,
-                $onlyCode,
-                $options,
-                $skipSystemConfigurationCheck,
-                $allowCommonParents
-            );
+            if (! $skipLock) {
+                $destinationInstance->lock();
+            }
+
+            try {
+                $errors = $destinationInstance->restore(
+                    $sourceInstance,
+                    $archive,
+                    true,
+                    $checksumCheck,
+                    $direct,
+                    $onlyData,
+                    $onlyCode,
+                    $options,
+                    $skipSystemConfigurationCheck,
+                    $allowCommonParents
+                );
+            } catch (\Throwable $e) {
+                $this->io->error($e->getMessage());
+                $this->askUnlock($destinationInstance);
+                return 1;
+            }
 
             if (isset($errors)) {
                 $destinationInstance->updateState('failure', $this->getName(), 'restore function failure');
@@ -535,5 +551,25 @@ class CloneInstanceCommand extends TikiManagerCommand
         return (($sourceAccess->host == $targetAccess->host ||
             ($sourceAccess->host != $targetAccess->host && !in_array($targetDB->host, ['127.0.0.1', 'localhost'])))
             && Database::compareDatabase($sourceDB, $targetDB));
+    }
+
+    /**
+     * Ask to unlock the website
+     *
+     * @param Instance $instance
+     * @return null
+     */
+    private function askUnlock(Instance $instance)
+    {
+        if ($instance->isLocked()) {
+            $question = CommandHelper::getQuestion('Do you want to unlock the website? [y,n]');
+            $question->setNormalizer(function ($value) {
+                return (strtolower($value[0]) == 'y') ? true : false;
+            });
+            $confirm = $this->getHelper('question')->ask($this->input, $this->output, $question);
+            if ($confirm) {
+                $instance->unlock();
+            }
+        }
     }
 }
