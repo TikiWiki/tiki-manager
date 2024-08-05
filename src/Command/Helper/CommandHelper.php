@@ -7,6 +7,7 @@
 
 namespace TikiManager\Command\Helper;
 
+use Gitonomy\Git\Repository;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Question\Question;
@@ -551,6 +552,16 @@ class CommandHelper
         $io->writeln('<info>Running on ' . $discovery->detectDistro() . '</info>');
         $io->writeln('<info>PHP Version: ' . phpversion() . '</info>');
         $io->writeln('<info>PHP exec: ' . PHP_BINARY . '</info>');
+
+        try {
+            $repository = new Repository($_ENV['TRIM_ROOT']);
+
+            $io->writeln('<info>Branch: ' . $repository->getHead()->getRevision() . '</info>');
+            $io->writeln('<info>Commit Hash: ' . $repository->getHead()->getCommit()->getShortHash() . '</info>');
+            $io->writeln('<info>Commit Date: ' . $repository->getHead()->getCommit()->getCommitterDate()->format('Y-m-d H:i:s') . '</info>');
+        } catch (\Exception $e) {
+            $io->writeln('<error>It was not possible to git related information.</error>');
+        }
     }
 
     /**
