@@ -307,7 +307,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 'instance' => $instance->name,
                 'exception' => $e,
             ]);
-            CommandHelper::setInstanceSetupError($instance->id, $e);
+            CommandHelper::setInstanceSetupError($instance->id, $e, 'update');
         }
     }
 
@@ -334,7 +334,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 'instance' => $instance->name,
                 'exception' => $e,
             ]);
-            CommandHelper::setInstanceSetupError($instance->id, $e);
+            CommandHelper::setInstanceSetupError($instance->id, $e, 'upgrade');
         }
     }
 }

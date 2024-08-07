@@ -622,8 +622,10 @@ class CommandHelper
      *
      * @param $instanceId
      * @param \Exception|null $e
+     * @param string $action
+     * @throws \Exception
      */
-    public static function setInstanceSetupError($instanceId, \Exception $e = null)
+    public static function setInstanceSetupError($instanceId, \Exception $e = null, $action = 'install')
     {
         $errors = [];
         $io = App::get('io');
@@ -641,7 +643,17 @@ class CommandHelper
             $errors[] = 'Failed to install instance. Please follow these steps to continue the process manually.';
             $errors[] = '- php tiki-manager.php instance:access --instances=' . $instanceId;
             $errors[] = '- bash setup.sh -n fix';
-            $errors[] = '- php -q -d memory_limit=256M console.php database:install';
+
+            switch ($action) {
+                case 'update':
+                case 'upgrade':
+                    $errors[] = '- php -q -d memory_limit=256M console.php database:update';
+                    break;
+                default:
+                    $errors[] = '- php -q -d memory_limit=256M console.php database:install';
+                    break;
+            }
+
             if ($e && $_ENV['TRIM_DEBUG']) {
                 $errors[] = $e->getMessage();
             }

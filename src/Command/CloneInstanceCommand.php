@@ -514,7 +514,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                     $app->performUpgrade($destinationInstance, $upgrade_version, $options);
                 } catch (Exception $e) {
                     $destinationInstance->updateState('failure', $this->getName(), 'performUpgrade function failure: ' . $e->getMessage());
-                    CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
+                    CommandHelper::setInstanceSetupError($destinationInstance->id, $e, 'upgrade');
                     continue;
                 }
             }
