@@ -472,22 +472,31 @@ class CommandHelper
      * @param $output
      * @param $rows
      */
-    public static function renderVersionsTable($output, $rows)
+    public static function renderVersionsByFormat($output, $rows, $viewFormat = 'table')
     {
         if (empty($rows)) {
             return;
         }
 
-        $versionsTableHeaders = [
-            'Type',
-            'Name'
-        ];
+        if ($viewFormat === 'simple') {
+            foreach ($rows as $row) {
+                $detectedEncoding = mb_detect_encoding($row[1], "UTF-8, ISO-8859-1, ASCII", true);
+                $encodingToUse = $detectedEncoding ?: 'ISO-8859-1';
+                $encodedValue = mb_convert_encoding($row[1], 'UTF-8', $encodingToUse);
+                $output->writeln('<info>' . $encodedValue . '</info>');
+            }
+        } else {
+            $versionsTableHeaders = [
+                'Type',
+                'Name'
+            ];
 
-        $table = new Table($output);
-        $table
-            ->setHeaders($versionsTableHeaders)
-            ->setRows($rows);
-        $table->render();
+            $table = new Table($output);
+            $table
+                ->setHeaders($versionsTableHeaders)
+                ->setRows($rows);
+            $table->render();
+        }
     }
 
     /**
