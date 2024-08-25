@@ -441,7 +441,7 @@ class CommandHelper
         $instance->phpversion = 50500;
         $tikiApplication = new Tiki($instance);
 
-        return $tikiApplication->getCompatibleVersions();
+        return $tikiApplication->getVersions();
     }
 
     /**

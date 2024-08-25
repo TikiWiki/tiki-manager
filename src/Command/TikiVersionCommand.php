@@ -50,13 +50,14 @@ class TikiVersionCommand extends TikiManagerCommand
         $viewFormat = $input->getOption('format');
         $filePath = $input->getOption('file');
 
+        $dataOutput = $output;
         if ($filePath) {
             $handle = fopen($filePath, 'w');
             if (! $handle) {
                 $output->writeln('<error>Unable to open file for writing: ' . $filePath . '</error>');
                 return 1;
             }
-            $output = new StreamOutput($handle);
+            $dataOutput = new StreamOutput($handle);
         }
 
         if ($instanceId) {
@@ -89,14 +90,12 @@ class TikiVersionCommand extends TikiManagerCommand
             $versions = $tikiApplication->getCompatibleVersions(false);
         } else {
             $versions = CommandHelper::getVersions($vcsOption);
-            // unset blank
-            unset($versions[-1]);
         }
 
         $versionsInfo = CommandHelper::getVersionsInfo($versions);
         if (isset($versionsInfo)) {
             $this->io->newLine();
-            CommandHelper::renderVersionsByFormat($output, $versionsInfo, $viewFormat);
+            CommandHelper::renderVersionsByFormat($dataOutput, $versionsInfo, $viewFormat);
         } else {
             $output->writeln('<comment>No versions available to list.</comment>');
         }
