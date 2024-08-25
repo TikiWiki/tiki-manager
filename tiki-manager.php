@@ -30,6 +30,7 @@ use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
@@ -120,26 +121,67 @@ $application->add(new \TikiManager\Command\TikiVersionCommand());
 
 $application->add(new \TikiManager\Command\CheckoutCommand());
 
-if (extension_loaded('posix')) {
-    $userInfo = posix_getpwuid(posix_geteuid());
-    if ($userInfo['name'] === 'root') {
-        $io = App::get('io');
-        $io->warning('You are running Tiki Manager as root. This is not an ideal situation. ' . PHP_EOL .
-            'Ex: If later, you run as a normal user, you may have issues with file permissions.');
-    }
-}
-
 // this should be moved to a custom src/Console/Application (like composer)
 $dispatcher = new EventDispatcher();
+
+// Check if is run as root
+$application->getDefinition()->addOption(new InputOption(
+    'no-root-check',
+    null,
+    InputOption::VALUE_NONE,
+    'Do not perform root user check'
+));
+$dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
+    // check if tiki manager is being run as root (and add a warning)
+    $input = $event->getInput();
+
+    $skipRootCheck = $input->getOption('no-root-check') || Environment::getInstance()->get('NO_ROOT_CHECK') == '1';
+    $quiet = $input->getOption('quiet');
+
+    if ($skipRootCheck || $quiet) {
+        return; //skip
+    }
+
+    // root user check
+    if (extension_loaded('posix')) {
+        $userInfo = posix_getpwuid(posix_geteuid());
+        if ($userInfo['name'] === 'root') {
+            $io = App::get('io');
+            $io->warning('You are running Tiki Manager as root. This is not an ideal situation.' . PHP_EOL .
+            'Ex: If later, you run as a normal user, you may have issues with file permissions.');
+        }
+    }
+});
+
+// Check for updates
+$application->getDefinition()->addOption(new InputOption(
+    'no-update-check',
+    null,
+    InputOption::VALUE_NONE,
+    'Do not check for updates'
+));
 $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
     //Check if there are an update available (offline)
-    $updater = UpdateManager::getUpdater();
     $command = $event->getCommand();
-    if ($command->getName() != 'manager:update' && $updater->hasUpdateAvailable(false)) {
+    $input = $event->getInput();
+
+    $noUpdateCheck = $input->getOption('no-update-check') || Environment::getInstance()->get('NO_UPDATE_CHECK') == '1';
+    $quiet = $input->getOption('quiet');
+
+    if ($noUpdateCheck || $quiet || $command->getName() == 'manager:update') {
+        return; //skip
+    }
+
+    $updater = UpdateManager::getUpdater();
+    if ($updater->hasUpdateAvailable(false)) {
         $io = App::get('io');
         $io->warning('A new version is available. Run `manager:update` to update.');
     }
+});
 
+$dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
+    //Run hooks
+    $command = $event->getCommand();
     $input = $event->getInput();
     if ($command instanceof \TikiManager\Command\TikiManagerCommand && !$input->getParameterOption('skip-hooks', false)) {
         $command->getCommandHook()->execute('pre');
@@ -169,6 +211,7 @@ $dispatcher->addListener(ConsoleEvents::TERMINATE, function (ConsoleTerminateEve
         $command->getCommandHook()->execute('post');
     }
 });
+
 $application->setDispatcher($dispatcher);
 
 $output = new Symfony\Component\Console\Output\ConsoleOutput();
