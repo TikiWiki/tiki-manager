@@ -848,7 +848,7 @@ class Tiki extends Application
         if ($access->fileExists('console.php') && $access instanceof ShellPrompt) {
             $access = $this->instance->getBestAccess('scripting');
             $access->chdir($this->instance->webroot);
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php database:install");
+            $access->shellExec("{$this->instance->phpexec} -q console.php database:install");
             $this->setDbLock();
         } elseif ($access->fileExists('installer/shell.php')) {
             if ($access instanceof ShellPrompt) {
@@ -1272,7 +1272,7 @@ TXT;
         if (!$access instanceof FTP && $this->instance->hasConsole()) {
             $command = $access->createCommand(
                 $this->instance->phpexec,
-                ['-q', '-d', 'memory_limit=256M', 'console.php', 'database:update']
+                ['-q', 'console.php', 'database:update']
             );
             $command->run();
             if ($command->getReturn() !== 0) {
