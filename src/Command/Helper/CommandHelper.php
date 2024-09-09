@@ -28,14 +28,16 @@ class CommandHelper
      * Get information from Instance Object
      *
      * @param array $instances An array of Instance objects
+     * @param bool $all_infos set to true to get all infos about the instance
      * @return array|null
      */
-    public static function getInstancesInfo($instances)
+    public static function getInstancesInfo(array $instances, bool $all_infos = false): ?array
     {
         $instancesInfo = null;
 
         foreach ($instances as $instance) {
-            $instancesInfo[] = [
+            $extra = [];
+            $instance_initial_infos = [
                 'id' => $instance->id,
                 'type' => $instance->type,
                 'name' => $instance->name,
@@ -47,6 +49,31 @@ class CommandHelper
                 'last_action_date' => $instance->last_action_date,
                 'last_revision_date' => $instance->last_revision_date
             ];
+            if ($all_infos) {
+                $requirements = (new \TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher)->getParsedRequirements();
+                $filter = array_filter($requirements, function ($result) use ($instance) {
+                    $branch = str_replace(['tags/','.x'], '', $instance->branch);
+                    $pattern = '/' . preg_quote((string)$result['version'], '/') . '/';
+                    if (! empty($instance->branch) && preg_match($pattern, $branch)) {
+                        return $result;
+                    }
+                });
+                $default_php_version = "7.4";
+                $output = $instance->getBestAccess()->shellExec("$instance->phpexec -v");
+                if ($output) {
+                    preg_match('/PHP (\d+\.\d+\.\d+)/', $output, $matches);
+                    $default_php_version = $matches[1];
+                }
+                $filter = array_values($filter);
+                $extra = [
+                    'webroot' => $instance->webroot,
+                    'tempdir' => $instance->tempdir,
+                    'phpexec' => $instance->phpexec,
+                    'php_min' => $filter[0]['php']['min'] ?? $default_php_version,
+                    'php_max' => $filter[0]['php']['max'] ?? $default_php_version
+                ];
+            }
+            $instancesInfo[] = array_merge($instance_initial_infos, $extra);
         }
 
         return $instancesInfo;
@@ -57,9 +84,10 @@ class CommandHelper
      *
      * @param $output
      * @param $rows
+     * @param bool $all_infos set to true to get all infos about the instance
      * @return bool
      */
-    public static function renderInstancesTable($output, $rows)
+    public static function renderInstancesTable($output, $rows, bool $all_infos = false)
     {
         if (empty($rows)) {
             return false;
@@ -77,6 +105,14 @@ class CommandHelper
             'Action Date',
             'Revision Date'
         ];
+
+        if ($all_infos) {
+            $instanceTableHeaders[]='Web ROOT';
+            $instanceTableHeaders[]='Temp Dir';
+            $instanceTableHeaders[]='PHPExec';
+            $instanceTableHeaders[]='PHP Min';
+            $instanceTableHeaders[]='PHP Max';
+        }
 
         $table = new Table($output);
         $table

@@ -90,6 +90,7 @@ $application->add(new \TikiManager\Command\MaintenanceInstanceCommand());
 $application->add(new \TikiManager\Command\ConsoleInstanceCommand());
 $application->add(new \TikiManager\Command\StatsInstanceCommand());
 $application->add(new \TikiManager\Command\ImportInstanceCommand());
+$application->add(new \TikiManager\Command\InstanceInfoCommand());
 $application->add(new \TikiManager\Command\SetupSchedulerCronInstanceCommand());
 $application->add(new \TikiManager\Command\RevertInstanceCommand());
 

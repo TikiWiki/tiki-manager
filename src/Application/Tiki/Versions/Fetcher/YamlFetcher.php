@@ -30,8 +30,6 @@ class YamlFetcher implements RequirementsFetcher
 
     public function getRequirements(): array
     {
-        $value = Yaml::parseFile($this->requirementsFile);
-
         return array_map(function ($req) {
             return new TikiRequirements(
                 $req['name'],
@@ -40,6 +38,15 @@ class YamlFetcher implements RequirementsFetcher
                 new SoftwareRequirement($req['mysql']['min'] ?? '', $req['mysql']['max'] ?? ''),
                 new SoftwareRequirement($req['mariadb']['min'] ?? '', $req['mariadb']['max'] ?? '')
             );
-        }, $value);
+        }, $this->getParsedRequirements());
+    }
+
+    /**
+     * Get the parsed requirements
+     * @return array
+     */
+    public function getParsedRequirements(): array
+    {
+        return Yaml::parseFile($this->requirementsFile);
     }
 }
