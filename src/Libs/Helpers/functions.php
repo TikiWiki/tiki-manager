@@ -6,7 +6,12 @@ require_once dirname(__DIR__) . '/Requirements/Requirements.php';
 require_once dirname(__DIR__) . '/Requirements/LinuxRequirements.php';
 require_once dirname(__DIR__) . '/Requirements/WindowsRequirements.php';
 
+use Monolog\Formatter\LineFormatter;
 use TikiManager\Config\App;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\RotatingFileHandler;
+use TikiManager\Libs\Helpers\LoggerManager;
 
 if (! function_exists('readline')) {
     /**
@@ -448,14 +453,10 @@ function setupPhar()
     $result = $phar->extractTo($_ENV['TRIM_ROOT'], explode(',', $_ENV['EXECUTABLE_SCRIPT']), true);
 }
 
-function trim_output($output)
+function trim_output($output, $context = [])
 {
-    $fh = fopen($_ENV['TRIM_OUTPUT'], 'a+');
-    if (is_resource($fh)) {
-        fprintf($fh, "%s\n", $output);
-        fclose($fh);
-    }
-    chmod($_ENV['TRIM_OUTPUT'], 0666);
+    $logger = LoggerManager::getInstance();
+    $logger->logInfo($output, $context);
 }
 
 function trim_debug($output)

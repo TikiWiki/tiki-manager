@@ -1031,12 +1031,12 @@ TXT;
             !$access->fileExists($bundled . 'vendor/autoload.php') ||
             preg_match('/Your requirements could not be resolved/', $commandOutput)
         ) {
-            trim_output($commandOutput);
+            trim_output($commandOutput, ['instance_id' => $instance->getId()]);
             throw new \Exception("Composer install failed for {$bundled}composer.lock (Tiki bundled packages).\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
         }
 
         if (preg_match('/Could not apply patch! Skipping./', $commandOutput)) {
-            trim_output($commandOutput);
+            trim_output($commandOutput, ['instance_id' => $instance->getId()]);
         }
     }
 
@@ -1067,7 +1067,7 @@ TXT;
 
         if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
             $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
-            trim_output($commandOutput);
+            trim_output($commandOutput, ['instance_id' => $instance->getId()]);
 
             $errorMsg = "Failed to " . $action. " Tiki Packages listed in composer.json in the root folder.";
 
@@ -1149,7 +1149,7 @@ TXT;
         }
 
         if ($command->getReturn() !== 0) {
-            trim_output($commandOutput);
+            trim_output($commandOutput, ['instance_id' => $this->instance->getId()]);
             $this->io->error($errorMsg);
         }
 

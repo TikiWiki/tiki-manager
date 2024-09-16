@@ -966,7 +966,7 @@ SQL;
         } catch (\Exception $e) {
             // Write the error in Tiki Manager output file
             // This should be replaced with LoggerInterface
-            trim_output($e->getMessage());
+            trim_output($e->getMessage(), ['instance_id' => $this->id]);
         }
 
         return  [];
