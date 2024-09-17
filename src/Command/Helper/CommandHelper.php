@@ -18,7 +18,6 @@ use TikiManager\Application\Tiki;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Exception\InvalidCronTimeException;
 use TikiManager\Config\App;
-use TikiManager\Config\Environment;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use Cron\CronExpression;
 
@@ -251,46 +250,51 @@ class CommandHelper
     }
 
     /**
-     * Validate Instances Selection
+     * Validate Instances Selection.
+     * Instances selection allows selecting instances per ID or per Name.
      *
      * @param $answer
-     * @param $instances
+     * @param $allInstances
      * @return array
      */
-    public static function validateInstanceSelection($answer, $instances)
+    public static function validateInstanceSelection($answer, $allInstances)
     {
         if (empty($answer)) {
             throw new \RuntimeException(
                 'You must select an instance #ID'
             );
-        } elseif (strtolower($answer) == "all") {
-            $selectedInstances = array();
-            foreach ($instances as $id => $instance) {
-                $selectedInstances[ $id ] = $instance;
-                $selectedInstances[ $instance->name ] = $instance;
-            }
+        }
+
+        if (strtolower($answer) === 'all') {
+            $selectedInstances = $allInstances;
         } else {
-            $reindexedInstances = array();
-            foreach ($instances as $id => $instance) {
-                $reindexedInstances[ $id ] = $instance;
-                $reindexedInstances[ $instance->name ] = $instance;
+            $instances = [];
+            $selectedInstances = [];
+
+            foreach ($allInstances as $instance) {
+                $instances[$instance->name] = $instance;
+                $instances[$instance->getId()] = $instance;
             }
 
-            $instancesId = array_filter(array_map('trim', explode(',', $answer)));
-            $invalidInstancesId = array_diff($instancesId, array_keys($reindexedInstances));
-            if ($invalidInstancesId) {
+            $answerInstances = array_filter(array_map('trim', explode(',', $answer)));
+            $invalidIdentifiers = [];
+
+            foreach ($answerInstances as $answerInstance) {
+                if (! isset($instances[$answerInstance])) {
+                    $invalidIdentifiers[] = $answerInstance;
+                    continue;
+                }
+
+                $selectedInstances[] = $instances[$answerInstance];
+            }
+
+            if (count($invalidIdentifiers) > 0) {
                 throw new \RuntimeException(
-                    'Invalid instance(s) ID(s) #' . implode(',', $invalidInstancesId)
+                    'Invalid instance(s) name(s) or ID(s): ' . implode(',', $invalidIdentifiers)
                 );
             }
-
-            $selectedInstances = [];
-            foreach ($instancesId as $index) {
-                if (array_key_exists($index, $reindexedInstances)) {
-                    $selectedInstances[] = $reindexedInstances[$index];
-                }
-            }
         }
+
         return $selectedInstances;
     }
 
