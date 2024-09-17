@@ -70,7 +70,7 @@ class LoggerManager
      * Logs information messages to the log file.
      * Uses the Monolog logger to log the output with the provided context.
      *
-     * @param string $output The message or data to log.
+     * @param string|null $output The message or data to log.
      * @param array $context Additional context information to be logged.
      * @return void
      */

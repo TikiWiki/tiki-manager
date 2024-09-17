@@ -6,11 +6,7 @@ require_once dirname(__DIR__) . '/Requirements/Requirements.php';
 require_once dirname(__DIR__) . '/Requirements/LinuxRequirements.php';
 require_once dirname(__DIR__) . '/Requirements/WindowsRequirements.php';
 
-use Monolog\Formatter\LineFormatter;
 use TikiManager\Config\App;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-use Monolog\Handler\RotatingFileHandler;
 use TikiManager\Libs\Helpers\LoggerManager;
 
 if (! function_exists('readline')) {
