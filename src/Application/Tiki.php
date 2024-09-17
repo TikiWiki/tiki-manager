@@ -1279,6 +1279,7 @@ TXT;
                 $message = 'Failed to update database. For more information check the logs or access instance and run `php console.php database:update`.';
                 App::get('io')->writeln('<error>' . $message . '</error>');
                 debug($command->getStdoutContent(), $this->instance->name);
+                debug($command->getStderrContent(), $this->instance->name);
             }
         } else {
             $access->runPHP(
