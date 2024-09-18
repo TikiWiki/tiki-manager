@@ -72,7 +72,7 @@
   version: 21
   php:
     min: 7.2
-    max: 7.3    
+    max: 7.4
   mariadb:
     min: 5.5
   mysql:
