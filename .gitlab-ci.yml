@@ -2,7 +2,7 @@ include:
   - local: '/.gitlab-ci/stage-functional-tests-local-git.yml'
   - template: Code-Quality.gitlab-ci.yml
 
-image: xorti/tiki-devops:php-8.1-qa
+image: xorti/tiki-devops:php-7.4-qa
 
 variables:
   MYSQL_ROOT_PASSWORD: secret
@@ -162,7 +162,7 @@ code_quality:
 
 unit-tests-php74:
   image: xorti/tiki-devops:php-7.4-qa
-  <<: *unit-tests-composer-update
+  <<: *unit-tests-composer-install
 
 unit-tests-php80:
   image: xorti/tiki-devops:php-8.0-qa
@@ -170,7 +170,7 @@ unit-tests-php80:
 
 unit-tests-php81:
   image: xorti/tiki-devops:php-8.1-qa
-  <<: *unit-tests-composer-install
+  <<: *unit-tests-composer-update
 
 #----------------------------------------------------------------------------------------------------------------------#
 # FUNCTIONAL TESTS SECTION

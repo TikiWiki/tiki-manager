@@ -13,28 +13,25 @@
     "gitonomy/gitlib": "^1.2",
     "laminas/laminas-mail": "^2.12",
     "laminas/laminas-servicemanager": "^3.4",
-    "monolog/monolog": "~2.9",
-    "php": ">=7.4.0",
+    "monolog/monolog": "^1.26 || ^2.0 || ^3.0",
+    "php": "^7.4 || ^8.0",
     "phpseclib/phpseclib": "^3.0",
-    "psr/log": "^1.1",
-    "symfony/console": "~5.4",
-    "symfony/dependency-injection": "~5.4",
-    "symfony/event-dispatcher": "~5.4",
-    "symfony/http-client": "~5.4",
-    "symfony/dotenv": "~5.4",
-    "symfony/finder": "~5.4",
-    "symfony/filesystem": "~5.4",
-    "symfony/process": "~5.4",
-    "symfony/yaml": "~5.4"
+    "psr/log": "^1.1 || ^2.0",
+    "symfony/console": "^3.4 || ^4.0 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/dependency-injection": "^4.4 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/event-dispatcher": "^4.1 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/http-client": "^4.1 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/dotenv": "^4.3 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/finder": "^4.4 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/filesystem": "^3.4 || ^4.1 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/process": "^3.4 || ^4.3 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/yaml": "^3.4 || ^4.3 || ^5.0 || ^6.0 || ^7.0"
   },
   "config": {
     "discard-changes": true,
     "process-timeout": 5000,
     "allow-plugins": {
       "bamarni/composer-bin-plugin": true
-    },
-    "platform": {
-      "php": "7.4"
     }
   },
   "autoload": {
