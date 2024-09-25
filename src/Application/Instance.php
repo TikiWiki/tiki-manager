@@ -28,7 +28,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -40,7 +40,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -55,7 +55,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_NAME = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -83,7 +83,7 @@ SQL;
 
     const SQLQUERY_UPDATABLE_AND_UPGRADABLE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -115,7 +115,7 @@ SQL;
 
     const SQL_SELECT_LATEST_VERSION = <<<SQL
 SELECT
-    version_id id, instance_id, type, branch, date, revision, action,date_revision
+    version_id id, instance_id, type, branch, date, revision, action, date_revision
 FROM
     version
 WHERE
@@ -139,9 +139,9 @@ SQL;
     const SQL_INSERT_INSTANCE = <<<SQL
 INSERT OR REPLACE INTO
     instance
-    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, app)
+    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, app, state)
 VALUES
-    (:id, :name, :contact, :web, :url, :temp, :phpexec, :app)
+    (:id, :name, :contact, :web, :url, :temp, :phpexec, :app, :state)
 ;
 SQL;
 
@@ -153,6 +153,15 @@ SET
     webroot = :web,
     weburl = :url,
     tempdir = :temp
+WHERE
+    instance_id = :id
+;
+SQL;
+
+    const SQL_UPDATE_INSTANCE_STATE = <<<SQL
+UPDATE instance
+SET
+    state = :state
 WHERE
     instance_id = :id
 ;
@@ -276,6 +285,7 @@ SQL;
     public $backup_group;
     public $backup_perm;
     public $vcs_type;
+    public $state;
 
     public $selection;
     public $last_action;
@@ -420,6 +430,14 @@ SQL;
         return $backups;
     }
 
+    public function updateState($state, $action, $reason)
+    {
+        $prevState = $this->state ?? 'unknown';
+        $this->state = $state;
+        trim_output("\nInstance {$this->id} state changed from {$prevState} to {$this->state} during {$action}. Reason: {$reason}.\n");
+        query(self::SQL_UPDATE_INSTANCE_STATE, [':id' => $this->id, ':state' => $state]);
+    }
+
     public function save()
     {
         $params = [
@@ -431,6 +449,7 @@ SQL;
             ':temp' => $this->tempdir,
             ':phpexec' => $this->phpexec,
             ':app' => $this->app,
+            ':state' => $this->state
         ];
 
         query(self::SQL_INSERT_INSTANCE, $params);

@@ -13,9 +13,9 @@ class Version
     const SQL_INSERT_VERSION = <<<SQL
         INSERT OR REPLACE INTO
             version
-            (version_id, instance_id, type, branch, revision, date, action,date_revision)
+            (version_id, instance_id, type, branch, revision, date, action, date_revision)
         VALUES
-            (:id, :instance, :type, :branch, :revision, :date, :action,:revdate)
+            (:id, :instance, :type, :branch, :revision, :date, :action, :revdate)
         ;
 SQL;
 

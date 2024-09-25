@@ -8,7 +8,6 @@ use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
-use TikiManager\Config\App;
 
 class RestoreInstanceCommand extends TikiManagerCommand
 {
@@ -121,8 +120,11 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 );
 
                 if (isset($errors)) {
+                    $restorableInstance->updateState('failure', $this->getName(), 'restore function failure');
                     return 1;
                 }
+
+                $restorableInstance->updateState('success', $this->getName(), 'Instance restored');
 
                 $this->io->success('It is now time to test your site: ' . $instance->name);
                 $this->io->note([

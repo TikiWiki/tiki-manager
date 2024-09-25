@@ -480,6 +480,12 @@ class Environment
                     UPDATE info SET value = '11' WHERE name = 'version';
                 ");
             // no break
+            case 11:
+                $db->exec("
+                    ALTER TABLE instance ADD COLUMN state VARCHAR(10) DEFAULT NULL;
+                    UPDATE info SET value = '12' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

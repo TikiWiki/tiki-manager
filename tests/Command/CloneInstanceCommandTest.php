@@ -7,6 +7,7 @@
 
 namespace TikiManager\Tests\Command;
 
+use PHP_CodeSniffer\Tokenizers\PHP;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
 use Psr\Log\Test\TestLogger;
@@ -380,8 +381,8 @@ class CloneInstanceCommandTest extends TestCase
             $process->setTimeout(0);
             $process->run();
 
-            $this->assertEquals(0, $process->getExitCode());
             $output = $process->getOutput();
+            $this->assertEquals(0, $process->getExitCode());
             $this->assertStringContainsString('Identical resources', $output);
             $this->assertStringContainsString('Completed', $output);
         }

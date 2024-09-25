@@ -236,6 +236,7 @@ class CreateInstanceCommand extends TikiManagerCommand
 
             $instance = $this->install($instance);
             $this->getCommandHook()->registerPostHookVars(['instance' => $instance]);
+            $instance->updateState('success', $this->getName(), 'Instance created');
 
             return 0;
         } catch (\Exception $e) {

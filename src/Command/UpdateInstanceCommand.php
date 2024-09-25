@@ -292,7 +292,9 @@ class UpdateInstanceCommand extends TikiManagerCommand
             if ($options['checksum-check'] ?? false) {
                 Checksum::handleCheckResult($instance, $version, $filesToResolve);
             }
+            $instance->updateState('success', $this->getName(), 'Instance Updated');
         } catch (\Exception $e) {
+            $instance->updateState('failure', $this->getName(), 'runUpdate function failure: ' . $e->getMessage());
             $logger->error('Failed to update instance!', [
                 'instance' => $instance->name,
                 'exception' => $e,
@@ -317,7 +319,9 @@ class UpdateInstanceCommand extends TikiManagerCommand
             if ($options['checksum-check'] ?? false) {
                 Checksum::handleCheckResult($instance, $version, $filesToResolve);
             }
+            $instance->updateState('success', $this->getName(), 'Instance Upgraded');
         } catch (\Exception $e) {
+            $instance->updateState('failure', $this->getName(), 'runUpgrade function failure: ' . $e->getMessage());
             $logger->error('Failed to upgrade instance!', [
                 'instance' => $instance->name,
                 'exception' => $e,

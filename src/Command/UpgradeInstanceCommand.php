@@ -170,9 +170,10 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 if ($checksumCheck) {
                     Checksum::handleCheckResult($instance, $version, $filesToResolve);
                 }
-
+                $instance->updateState('success', $this->getName(), 'Instance Upgraded');
                 $hookName->registerPostHookVars(['instance' => $instance, 'previous_branch' => $previousBranch]);
             } catch (\Exception $e) {
+                $instance->updateState('failure', $this->getName(), 'InstanceUpgradeCommand failure: ' . $e->getMessage());
                 $this->logger->error('Failed to upgrade instance!', [
                     'instance' => $instance->name,
                     'exception' => $e,

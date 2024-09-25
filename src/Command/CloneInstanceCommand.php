@@ -14,8 +14,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
-use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
-use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
@@ -492,6 +490,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             );
 
             if (isset($errors)) {
+                $destinationInstance->updateState('failure', $this->getName(), 'restore function failure');
                 return 1;
             }
 
@@ -506,6 +505,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 try {
                     $app->performUpgrade($destinationInstance, $upgrade_version, $options);
                 } catch (Exception $e) {
+                    $destinationInstance->updateState('failure', $this->getName(), 'performUpgrade function failure: ' . $e->getMessage());
                     CommandHelper::setInstanceSetupError($destinationInstance->id, $e);
                     continue;
                 }
@@ -513,6 +513,8 @@ class CloneInstanceCommand extends TikiManagerCommand
             if ($destinationInstance->isLocked()) {
                 $destinationInstance->unlock();
             }
+
+            $destinationInstance->updateState('success', $this->getName(), 'Instance cloned');
         }
 
         if (!$keepBackup && !$direct) {
