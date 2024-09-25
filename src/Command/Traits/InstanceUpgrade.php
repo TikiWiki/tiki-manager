@@ -3,10 +3,7 @@
 namespace TikiManager\Command\Traits;
 
 use TikiManager\Application\Instance;
-use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
-use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Application\Version;
-use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Libs\Helpers\VersionControl;
 
 trait InstanceUpgrade
@@ -58,9 +55,12 @@ trait InstanceUpgrade
             $default = Version::buildFake($vcs, $branch);
         }
 
-        $choice = $this->io->choice('Which version do you want to upgrade to', array_keys($versionsMap), (string) $default);
+        if ($default == null) {
+            $choice = $this->io->choice('Which version do you want to upgrade to', array_keys($versionsMap), (string) $default);
+            return $versionsMap[$choice];
+        }
 
-        return $versionsMap[$choice];
+        return $default;
     }
 
     public function validateUpgradeVersion(Instance $instance, bool $onlySupported, string $branch, Version $version): bool
