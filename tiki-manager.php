@@ -121,6 +121,10 @@ $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
 
+$application->add(new \TikiManager\Command\TagAddOrEditCommand());
+$application->add(new \TikiManager\Command\TagListCommand());
+$application->add(new \TikiManager\Command\TagDeleteCommand());
+
 $application->add(new \TikiManager\Command\CheckoutCommand());
 
 // this should be moved to a custom src/Console/Application (like composer)

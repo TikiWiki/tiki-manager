@@ -276,6 +276,13 @@ class CloneInstanceCommand extends TikiManagerCommand
             $targetInstances = $helper->ask($input, $output, $question);
         }
 
+        foreach ($targetInstances as $targetInstance) {
+            if ($targetInstance->isInstanceProtected()) {
+                $output->writeln("<error>Operation aborted: The target database '{$targetInstance->name}' is protected using the 'sys_db_protected' tag.</error>");
+                return 1;
+            }
+        }
+
         if ($setupTargetDatabase && count($targetInstances) > 1) {
             $this->logger->error('Database setup options can only be used when a single target instance is passed.');
             return 1;

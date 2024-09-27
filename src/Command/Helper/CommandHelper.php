@@ -81,6 +81,30 @@ class CommandHelper
     }
 
     /**
+     * Render a table with tag(s) of an instance
+     *
+     * @param $output
+     * @param $rows
+     * @return bool
+     */
+    public static function renderInstanceTags($output, $rows, $multiple = false)
+    {
+        $table = new Table($output);
+        $header = ['Tag Name', 'Tag Value'];
+
+        if ($multiple) {
+            array_unshift($header, 'No.');
+        }
+
+        $table
+            ->setHeaders($header)
+            ->setRows($rows);
+        $table->render();
+
+        return true;
+    }
+
+    /**
      * Render a table with all Instances
      *
      * @param $output

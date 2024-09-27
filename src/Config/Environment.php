@@ -486,6 +486,19 @@ class Environment
                     UPDATE info SET value = '12' WHERE name = 'version';
                 ");
             // no break
+            case 12:
+                $db->exec("
+                    CREATE TABLE IF NOT EXISTS tags (
+                        tag_id INTEGER NOT NULL,
+                        instance_id INTEGER NOT NULL,
+                        tag_name TEXT NOT NULL,
+                        tag_value TEXT NOT NULL,
+                        PRIMARY KEY(tag_id AUTOINCREMENT),
+                        FOREIGN KEY(instance_id) REFERENCES instance(instance_id)
+                    );
+                    UPDATE info SET value = '13' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

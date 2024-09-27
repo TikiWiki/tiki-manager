@@ -271,6 +271,42 @@ WHERE
 ;
 SQL;
 
+    const SQL_INSERT_INSTANCE_TAG = <<<SQL
+INSERT INTO
+    tags
+    (instance_id, tag_name, tag_value)
+VALUES
+    (:id, :tagname, :tagvalue)
+;
+SQL;
+
+    const SQL_UPDATE_INSTANCE_TAG = <<<SQL
+UPDATE tags
+SET
+    tag_value = :tagvalue
+WHERE
+    instance_id = :id AND tag_name = :tagname
+;
+SQL;
+
+    const SQL_DELETE_INSTANCE_TAG = <<<SQL
+DELETE FROM
+    tags
+WHERE
+    instance_id = :id AND (COALESCE(:tagname, '') = '' OR tag_name = :tagname);
+;
+SQL;
+
+    const SQL_GET_INSTANCE_TAGS = <<<SQL
+SELECT
+    tag_name, tag_value
+FROM
+    tags
+WHERE
+    instance_id = :id AND (COALESCE(:tagname, '') = '' OR tag_name = :tagname);
+;
+SQL;
+
     private $id;
     public $name;
     public $contact;
@@ -536,6 +572,7 @@ SQL;
         query(self::SQL_DELETE_VERSION, [':id' => $this->id]);
         query(self::SQL_DELETE_ALL_INSTANCE_PROPERTIES, [':id' => $this->id]);
         query(self::SQL_DELETE_PATCH, [':id' => $this->id]);
+        query(self::SQL_DELETE_INSTANCE_TAG, [':id' => $this->id]);
     }
 
     public function registerAccessMethod($type, $host, $user, $password = null, $port = null)
@@ -1245,5 +1282,54 @@ SQL;
             return;
         }
         $this->getVersionControlSystem()->revert($this->webroot);
+    }
+
+    public function addOrUpdateInstanceTag(string $tagName, string $tagValue): bool
+    {
+        $params = [':id' => $this->id, ':tagname' => $tagName, ':tagvalue' => $tagValue];
+        $tag = $this->getInstanceTags($tagName);
+        if (count($tag)) {
+            $result = query(self::SQL_UPDATE_INSTANCE_TAG, $params);
+        } else {
+            $result = query(self::SQL_INSERT_INSTANCE_TAG, $params);
+        }
+        return $result && $result->rowCount();
+    }
+
+    public function deleteInstanceTag(string $tagName): bool
+    {
+        $params = [':id' => $this->id, ':tagname' => $tagName];
+        $results = query(self::SQL_DELETE_INSTANCE_TAG, $params);
+        return $results && $results->rowCount();
+    }
+
+    public function getInstanceTags(?string $tagName): array
+    {
+        $params = [':id' => $this->id];
+        if ($tagName) {
+            $params[':tagname'] = $tagName;
+        }
+
+        $result = query(self::SQL_GET_INSTANCE_TAGS, $params);
+        $tags = $result->fetchAll();
+
+        return array_map(function ($item, $index) use ($tagName) {
+            $row = ['tagname' => $item['tag_name'], 'tagvalue' => $item['tag_value']];
+            if (!$tagName) {
+                $row = ['no' => $index + 1] + $row;
+            }
+            return $row;
+        }, $tags, array_keys($tags));
+    }
+
+    public function isInstanceProtected(): bool
+    {
+        $tags = $this->getInstanceTags('sys_db_protected');
+        foreach ($tags as $tag) {
+            if ($tag['tagname'] === 'sys_db_protected' && $tag['tagvalue'] === 'y') {
+                return true;
+            }
+        }
+        return false;
     }
 }

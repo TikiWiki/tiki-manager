@@ -73,6 +73,10 @@ class DeleteInstanceCommand extends TikiManagerCommand
 
         $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
+            if ($instance->isInstanceProtected()) {
+                $output->writeln(sprintf('<error>Operation aborted: The instance %s is protected using the \'sys_db_protected\' tag.</error>', $instance->name));
+                continue; // Skip the deletion for the protected instance
+            }
             $this->io->writeln(sprintf('<fg=cyan>Deleting instance %s...</>', $instance->name));
             $instance->delete();
             $this->io->writeln(sprintf('<info>Deleted instance %s</info>', $instance->name));

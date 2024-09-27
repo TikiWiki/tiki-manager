@@ -88,6 +88,11 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 );
                 $restorableInstance = reset($selectedRestorableInstances);
 
+                if ($restorableInstance->isInstanceProtected()) {
+                    $output->writeln(sprintf('<error>Operation aborted: The source instance %s for restoration is protected using the \'sys_db_protected\' tag.</error>', $restorableInstance->name));
+                    continue;
+                }
+
                 $files = $restorableInstance->getArchives();
                 foreach ($files as $key => $path) {
                     $output->writeln('[' . $key . '] ' . basename($path));
