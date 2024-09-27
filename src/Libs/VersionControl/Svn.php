@@ -452,4 +452,52 @@ class Svn extends VersionControlSystem
     {
         return $this->vcsOptions['allow_stash'] ?? false;
     }
+
+    /**
+     * Checks if a specific revision is present in an SVN repository.
+     *
+     * This method executes an SVN command to retrieve information about the specified revision.
+     * If the command succeeds, it means the revision exists in the repository; otherwise, if it fails,
+     * it's likely that the revision does not exist.
+     *
+     * @param string $targetFolder The directory where the SVN repository is located.
+     * @param string $revision The revision number to check for.
+     * @return bool True if the revision exists, false otherwise.
+     */
+    public function isRevisionPresent($targetFolder, $revision)
+    {
+        try {
+            $this->exec($targetFolder, sprintf('svn info -r %s', escapeshellarg($revision)));
+            return true;
+        } catch (VcsException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Ensures the SVN working copy is updated to a specific revision.
+     *
+     * Since SVN typically has access to the full repository history after a checkout, the concept of deepening,
+     * as used in Git, does not apply. However, it's still important to verify the existence of a specific revision
+     * and update the working copy to it. This function first checks for the revision's presence using `isRevisionPresent`.
+     * If found, it updates the working copy to that revision. If the revision is not found, it throws an exception.
+     *
+     * @param string $targetFolder The local path to the SVN working copy.
+     * @param string $revision The revision to update the working copy to.
+     * @return void
+     * @throws VcsException If the revision is not found or the `svn update` command fails.
+     */
+    public function deepenCloneUntilRevisionPresent($targetFolder, $revision)
+    {
+        $found = $this->isRevisionPresent($targetFolder, $revision);
+        if ($found) {
+            try {
+                $this->exec($targetFolder, sprintf('svn update -r %s', escapeshellarg($revision)));
+            } catch (\Exception $e) {
+                throw new VcsException("Failed to update to revision {$revision} in SVN: " . $e->getMessage(), 0, $e);
+            }
+        } else {
+            throw new VcsException("Revision {$revision} not found in SVN repository.");
+        }
+    }
 }

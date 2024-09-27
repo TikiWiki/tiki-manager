@@ -552,7 +552,7 @@ trait InstanceConfigure
     public function install(Instance $instance): Instance
     {
         $checksumCheck = $this->input->getOption('check') ?? false;
-
+        $revision = $this->input->getOption('revision');
         $discovery = $instance->getDiscovery();
         $instance->vcs_type = $discovery->detectVcsType();
         $instance->detectPHP();
@@ -586,7 +586,7 @@ trait InstanceConfigure
             'you can use \'tiki-manager instance:access\' to complete the installation manually.'
         );
 
-        $instance->installApplication($app, $version, $checksumCheck);
+        $instance->installApplication($app, $version, $checksumCheck, $revision);
 
         $this->io->success('Please test your site at ' . $instance->weburl);
 

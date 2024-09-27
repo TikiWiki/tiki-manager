@@ -12,7 +12,6 @@ use Exception;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
@@ -27,6 +26,19 @@ class CloneInstanceCommand extends TikiManagerCommand
     use InstanceConfigure;
     use InstanceUpgrade;
 
+    protected $mode = 'clone';
+    protected $revision = '';
+
+    public function setMode($mode)
+    {
+        $this->mode = $mode;
+    }
+
+    public function setRevision($revision)
+    {
+        $this->revision = $revision;
+    }
+
     protected function configure()
     {
         parent::configure();
@@ -35,7 +47,6 @@ class CloneInstanceCommand extends TikiManagerCommand
             ->setName('instance:clone')
             ->setDescription('Clone instance')
             ->setHelp('This command allows you make another identical copy of Tiki')
-            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
             ->addOption(
                 'check',
                 null,
@@ -182,11 +193,8 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         $helper = $this->getHelper('question');
-
-        $clone = false;
-        $cloneUpgrade = false;
-        $offset = 0;
-
+        $revision = $this->revision;
+        $cloneUpgrade = $this->mode === 'upgrade';
         $checksumCheck = $input->getOption('check');
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
@@ -194,7 +202,8 @@ class CloneInstanceCommand extends TikiManagerCommand
         $direct = $input->getOption('direct');
         $keepBackup = $input->getOption('keep-backup');
         $useLastBackup = $input->getOption('use-last-backup');
-        $argument = $input->getArgument('mode');
+        $sourceOption = $input->getOption("source");
+        $targetOption = implode(",", $input->getOption('target'));
         $onlyData = $input->getOption('only-data');
         $onlyCode = $input->getOption('only-code');
         $vcsOptions = [
@@ -213,32 +222,12 @@ class CloneInstanceCommand extends TikiManagerCommand
             return 1;
         }
 
-        if (isset($argument) && !empty($argument)) {
-            if (is_array($argument)) {
-                $clone = $input->getArgument('mode')[0] == 'clone';
-                $cloneUpgrade = $input->getArgument('mode')[0] == 'upgrade';
-            } else {
-                $cloneUpgrade = $input->getArgument('mode') == 'upgrade';
-            }
-        }
-
         if ($cloneUpgrade && ($onlyData || $onlyCode)) {
             $this->io->error('The options --only-code and --only-data cannot be used when cloning and upgrading an instance.');
             return 1;
         }
 
-        if ($clone != false || $cloneUpgrade != false) {
-            $offset = 1;
-        }
-
-        $arguments = array_slice($input->getArgument('mode'), $offset);
-        $sourceOption = $input->getOption("source");
-        if (! empty($arguments[0])) {
-            $sourceInstances = getEntries($instances, $arguments[0]);
-            if (empty($sourceInstances)) {
-                throw new Exception("Invalid sourceInstanceId. Usage : php tiki-manager instance:clone [clone | upgrade] [sourceInstanceId targetInstanceId [upgradeBranch]]");
-            }
-        } elseif ($sourceOption) {
+        if ($sourceOption) {
             $sourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
         } else {
             $this->io->newLine();
@@ -272,13 +261,8 @@ class CloneInstanceCommand extends TikiManagerCommand
             $output->writeln('<comment>No instances available as destination.</comment>');
             return 0;
         }
-        $targetOption = implode(',', $input->getOption('target'));
-        if (! empty($arguments[1])) {
-            $targetInstances = getEntries($instances, $arguments[1]);
-            if (empty($targetInstances)) {
-                throw new Exception("Invalid targetInstanceId.\n Usage : php tiki-manager instance:clone [clone | upgrade] [sourceInstanceId targetInstanceId [upgradeBranch]]");
-            }
-        } elseif ($targetOption) {
+
+        if ($targetOption) {
             $targetInstances = CommandHelper::validateInstanceSelection($targetOption, $instances);
         } else {
             $this->io->newLine();
@@ -298,7 +282,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         if ($cloneUpgrade) {
-            $branch = $arguments[2] ?? $input->getOption('branch');
+            $branch = $input->getOption('branch');
             $ignoreReq = $input->getOption('ignore-requirements') ?? false;
 
             // Get current version from Source
@@ -462,6 +446,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             'skip-cache-warmup' => $skipCache,
             'live-reindex' => $liveReindex,
             'timeout' => $timeout,
+            'revision' => $revision
         ];
 
         /** @var Instance $destinationInstance */

@@ -102,6 +102,12 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Update will be performed without setting the website in maintenance mode.'
+            )
+            ->addOption(
+                'revision',
+                'r',
+                InputOption::VALUE_OPTIONAL,
+                'Specific revision to update the instance to'
             );
     }
 
@@ -170,6 +176,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
             }
 
             $checksumCheck = $input->getOption('check');
+            $revision = $input->getOption('revision');
             $skipReindex = $input->getOption('skip-reindex');
             $skipCache = $input->getOption('skip-cache-warmup');
             $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
@@ -219,6 +226,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                     'skip-cache-warmup' => $skipCache,
                     'live-reindex' => $liveReindex,
                     'lag' => $lag,
+                    'revision' => $revision
                 ];
 
                 if ($switch) {

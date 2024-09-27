@@ -12,7 +12,6 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 
 class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
 {
@@ -24,7 +23,6 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
             ->setName('instance:cloneandupgrade')
             ->setDescription('Clone and upgrade instance')
             ->setHelp('This command allows you make another identical copy of Tiki with an extra upgrade operation')
-            ->addArgument('mode', InputArgument::IS_ARRAY | InputArgument::OPTIONAL)
             ->addOption(
                 'check',
                 null,
@@ -126,6 +124,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_OPTIONAL,
                 'Modify the default command execution timeout from 3600 seconds to a custom value'
+            )
+            ->addOption(
+                'revision',
+                'r',
+                InputOption::VALUE_OPTIONAL,
+                'Specific revision to update the instance to'
             );
     }
 
@@ -136,23 +140,16 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
             $command_name = 'instance:clone';
         }
         $command = $this->getApplication()->find($command_name);
+        $command->setMode('upgrade');
 
-        $argumentsToAdd = ['upgrade'];
-
-        $args = $input->getArgument('mode');
-        if (isset($args) && !empty($args)) {
-            $offset = $args[0] == 'upgrade' ? 1 : 0;
-            $args = array_slice($args, $offset);
-
-            $argumentsToAdd = array_merge($argumentsToAdd, $args);
-        }
-
-        $arguments = [
-            'mode' => $argumentsToAdd,
-        ];
-
+        $arguments = [];
         foreach ($input->getOptions() as $key => $value) {
-            if ($value) {
+            if (!$value) {
+                continue;
+            }
+            if ($key === 'revision') {
+                $command->setRevision($value);
+            } else {
                 $arguments['--' . $key] = $value;
             }
         }

@@ -171,6 +171,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Skip PHP minimum requirements check'
+            )
+            ->addOption(
+                'revision',
+                'r',
+                InputOption::VALUE_OPTIONAL,
+                'Specific revision to checkout'
             );
     }
 

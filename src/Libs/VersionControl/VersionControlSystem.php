@@ -118,6 +118,23 @@ abstract class VersionControlSystem implements LoggerAwareInterface
     abstract public function getAvailableBranches();
 
     /**
+     * Checks for revision is present or not
+     *
+     * @param string $targetFolder The directory where the repository is located.
+     * @param string $revision The revision identifier (commit hash, tag, or SVN revision number).
+     * @return bool
+     */
+    abstract public function isRevisionPresent($targetFolder, $revision);
+
+    /**
+     * Clone until specific revision is found
+     *
+     * @param string $targetFolder The directory where the repository is located.
+     * @param string $revision The revision identifier (commit hash, tag, or SVN revision number).
+     */
+    abstract public function deepenCloneUntilRevisionPresent($targetFolder, $revision);
+
+    /**
      * Get current repository branch
      * @param $targetFolder
      * @return mixed

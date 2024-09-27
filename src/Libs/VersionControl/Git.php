@@ -331,15 +331,17 @@ class Git extends VersionControlSystem
      * @param string $targetFolder
      * @param string $branch
      * @param int $lag The number of days
+     * @param string|null $revision The specific revision to checkout after update
      * @void
      * @throws VcsException
      */
-    public function update(string $targetFolder, string $branch, int $lag = 0)
+    public function update(string $targetFolder, string $branch, int $lag = 0, ?string $revision = null)
     {
-        $commitSHA = null;
+        $commitSHA = $revision;
         $fetchOptions = [];
         $time = time() - $lag * 60 * 60 * 24;
-        $messageUpdate = "Updating '{$branch}' branch";
+        $revisionMsg = $revision ? "with revision {$revision}" : "";
+        $messageUpdate = "Updating '{$branch}' branch {$revisionMsg}";
 
         $branchInfo = $this->info($targetFolder);
         $isUpgrade = $this->isUpgrade($branchInfo, $branch);
@@ -354,7 +356,7 @@ class Git extends VersionControlSystem
         };
 
         if ($isUpgrade) {
-            $messageUpdate = "Upgrading to '{$branch}' branch";
+            $messageUpdate = "Upgrading to '{$branch}' branch {$revisionMsg}";
             $this->remoteSetBranch($targetFolder, $branch);
         }
 
@@ -375,7 +377,11 @@ class Git extends VersionControlSystem
 
         $fetch();
 
-        if ($lag) {
+        if ($revision && !$this->isRevisionPresent($targetFolder, $revision)) {
+            $this->deepenCloneUntilRevisionPresent($targetFolder, $revision);
+        }
+
+        if (!$revision && $lag) {
             list('commit' => $commitSHA, 'date' => $date) = $this->getLastCommit($targetFolder, $branch, $time);
             $messageUpdate .= " ({$commitSHA}) at {$date}";
         }
@@ -675,6 +681,62 @@ class Git extends VersionControlSystem
                 }
             } catch (\Exception $e) {
                 $this->exec(null, $command);
+            }
+        }
+    }
+
+    /**
+     * Checks if a given revision is present in the target folder.
+     *
+     * This method uses the `git rev-parse --verify` command to check if the specified revision exists in the repository.
+     * If the command succeeds, it means the commit is found, and the method returns true. If the command fails,
+     * indicating the commit is not found, the method catches the exception and returns false.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $revision The revision (e.g., commit SHA) to check for existence.
+     * @return bool Returns true if the revision is present, false otherwise.
+     */
+    public function isRevisionPresent($targetFolder, $revision)
+    {
+        try {
+            $this->exec($targetFolder, sprintf('rev-parse --verify %s', escapeshellarg($revision)));
+            return true;
+        } catch (VcsException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Deepens a shallow clone until a specified revision is found or a maximum depth is reached.
+     *
+     * This method increases the depth of a shallow clone in increments, checking for the presence of
+     * a specific revision at each step. If the repository is already a full clone, the deepening process
+     * stops. The process also stops if the revision is found or if the maximum allowed depth is reached.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $revision The revision (e.g., commit SHA) to search for in the repository.
+     */
+    public function deepenCloneUntilRevisionPresent($targetFolder, $revision)
+    {
+        $found = $this->isRevisionPresent($targetFolder, $revision);
+        $maxDepth = 1000;
+        $deepenAmount = 100;
+        $currentDepth = 0;
+
+        while (! $found && $currentDepth < $maxDepth) {
+            if (! $this->isShallow($targetFolder)) {
+                $this->logger->info("The repository is already a full clone. Stopping deepening process...");
+                break;
+            }
+
+            $this->exec($targetFolder, "fetch --deepen=$deepenAmount");
+            $found = $this->isRevisionPresent($targetFolder, $revision);
+            $currentDepth += $deepenAmount;
+
+            if ($found) {
+                $this->logger->info("Revision $revision found after deepening the clone to a depth of $currentDepth.");
+            } elseif ($currentDepth >= $maxDepth) {
+                $this->logger->warning("Reached maximum deepening depth of $maxDepth without finding revision $revision.");
             }
         }
     }

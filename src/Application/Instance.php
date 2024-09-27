@@ -1183,9 +1183,9 @@ SQL;
      * @param bool $checksumCheck
      * @throws \Exception
      */
-    public function installApplication(Application $app, Version $version, $checksumCheck = false)
+    public function installApplication(Application $app, Version $version, $checksumCheck = false, $revision = null)
     {
-        $app->install($version, $checksumCheck);
+        $app->install($version, $checksumCheck, $revision);
 
         if ($app->requiresDatabase()) {
             $this->database()->setupConnection();

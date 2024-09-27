@@ -81,6 +81,12 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Ignore version requirements. Allows to select non-supported branches, useful for testing.'
+            )
+            ->addOption(
+                'revision',
+                'r',
+                InputOption::VALUE_OPTIONAL,
+                'Specific revision to update the instance to'
             );
     }
 
@@ -122,6 +128,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
         //update
         $hookName = $this->getCommandHook();
+        $revision = $input->getOption('revision');
         foreach ($selectedInstances as $instance) {
             /** @var Instance $instance */
             // Ensure that the current phpexec is still valid;
@@ -162,7 +169,8 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                     'skip-reindex' => $skipReindex,
                     'skip-cache-warmup' => $skipCache,
                     'live-reindex' => $liveReindex,
-                    'lag' => $lag
+                    'lag' => $lag,
+                    'revision' => $revision
                 ]);
 
                 $version = $instance->getLatestVersion();

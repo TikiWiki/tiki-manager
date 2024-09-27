@@ -90,7 +90,7 @@ class Tiki extends Application
      * @param Version $version
      * @param $folder
      */
-    public function extractTo(Version $version, $folder): void
+    public function extractTo(Version $version, $folder, $revision = null): void
     {
         $dirExists = file_exists($folder);
 
@@ -113,11 +113,23 @@ class Tiki extends Application
                 // Delete the existing cache and attempt to clone
                 $fs = new Filesystem();
                 $fs->remove($folder);
-                $this->extractTo($version, $folder);
+                $this->extractTo($version, $folder, $revision);
             }
         } else {
             $this->io->writeln('Cloning cache repository from server... <fg=yellow>[may take a while]</>');
             $this->vcs_instance->clone($version->branch, $folder);
+        }
+
+        if ($revision) {
+            // Check if the revision exists, if not, deepen the clone
+            if (! $this->vcs_instance->isRevisionPresent($folder, $revision)) {
+                $this->io->writeln("<info>Deepening the clone to find revision {$revision}...</info>");
+                $this->vcs_instance->deepenCloneUntilRevisionPresent($folder, $revision);
+            }
+
+            // checkout to that specific revision.
+            $this->io->writeln("<info>Checking out to revision {$revision}...</info>");
+            $this->vcs_instance->checkoutBranch($folder, $version->branch, $revision);
         }
 
         $this->io->writeln('Installing composer dependencies on cache repository... <fg=yellow>[may take a while]</>');
@@ -494,13 +506,13 @@ class Tiki extends Application
      * @param bool $checksumCheck
      * @return null
      */
-    public function install(Version $version, $checksumCheck = false)
+    public function install(Version $version, $checksumCheck = false, $revision = null)
     {
         $access = $this->instance->getBestAccess('scripting');
         $host = $access->getHost();
 
         $folder = cache_folder($this, $version);
-        $this->extractTo($version, $folder);
+        $this->extractTo($version, $folder, $revision);
 
         $this->io->writeln('<info>Installing Tiki ' . $version->branch . ' using ' . $version->type . '</info>');
 
@@ -684,6 +696,7 @@ class Tiki extends Application
         $vcsType = $this->vcs_instance->getIdentifier();
         $can_svn = $access->hasExecutable('svn') && $vcsType == 'SVN';
         $can_git = $access->hasExecutable('git') && $vcsType == 'GIT';
+        $revision = $options['revision'] ?? null;
 
         if ($access instanceof ShellPrompt && ($can_git || $can_svn || $vcsType === 'SRC')) {
             $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
@@ -695,12 +708,15 @@ class Tiki extends Application
             }
 
             $lag = $options['lag'] ?? 0;
-            $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag);
+            $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag, $revision);
             foreach ([$escaped_temp_path, $escaped_cache_path] as $path) {
                 $script = sprintf('chmod(%s, 0777);', $path);
                 $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
             }
         } elseif ($access instanceof Mountable) {
+            if ($revision) {
+                $this->io->warning('Checking out a specific revision is not supported for non-Git repositories. Ignoring the revision argument.');
+            }
             $folder = cache_folder($this, $version);
             $this->extractTo($version, $folder);
             $access->copyLocalFolder($folder);
@@ -714,6 +730,7 @@ class Tiki extends Application
         $access = $this->instance->getBestAccess('scripting');
         $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
         $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
+        $revision = $options['revision'] ?? null;
 
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
@@ -725,7 +742,7 @@ class Tiki extends Application
 
         $this->clearCache();
         $this->moveVendor();
-        $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag);
+        $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag, $revision);
         foreach (['temp', 'temp/cache'] as $path) {
             $script = sprintf('chmod(%s, 0777);', $path);
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
