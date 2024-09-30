@@ -73,18 +73,13 @@ class Tiki extends Application
         $randomName = md5(time() . 'backup') . '.sql';
         $remoteFile = $this->instance->getWorkPath($randomName);
 
-        $exitCode = $access->runPHP(
+        $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
             [$this->instance->webroot, $remoteFile, $indexMode]
         );
 
-        if ($exitCode === 0) {
-            $access->downloadFile($remoteFile, $targetFile);
-        }
-
-        if ($access->fileExists($remoteFile)) {
-            $access->deleteFile($remoteFile);
-        }
+        $access->downloadFile($remoteFile, $targetFile);
+        $access->deleteFile($remoteFile);
 
         return file_exists($targetFile);
     }
