@@ -202,7 +202,16 @@ class InstanceTest extends TestCase
      */
     public function testReindexWithSuccess()
     {
-        $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess']);
+        $tikiMock = $this->createMock(Tiki::class);
+        $tikiMock->expects($this->once())
+            ->method('getPref')
+            ->with('allocate_time_unified_rebuild')
+            ->willReturn('600');
+
+        $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess', 'getApplication']);
+        $instanceMock->expects($this->once())
+            ->method('getApplication')
+            ->willReturn($tikiMock);
 
         $commandMock = $this->createMock(Command::class);
         $commandMock
@@ -234,7 +243,16 @@ class InstanceTest extends TestCase
      */
     public function testReindexWithFailure()
     {
-        $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess']);
+        $tikiMock = $this->createMock(Tiki::class);
+        $tikiMock->expects($this->once())
+            ->method('getPref')
+            ->with('allocate_time_unified_rebuild')
+            ->willReturn('600');
+
+        $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess', 'getApplication']);
+        $instanceMock->expects($this->once())
+            ->method('getApplication')
+            ->willReturn($tikiMock);
 
         $commandMock = $this->createMock(Command::class);
         $commandMock
