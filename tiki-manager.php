@@ -121,6 +121,8 @@ $application->add(new \TikiManager\Command\ClearLogsCommand());
 
 $application->add(new \TikiManager\Command\TikiVersionCommand());
 
+$application->add(new \TikiManager\Command\CreateTemporaryUserInstanceCommand());
+
 $application->add(new \TikiManager\Command\TagAddOrEditCommand());
 $application->add(new \TikiManager\Command\TagListCommand());
 $application->add(new \TikiManager\Command\TagDeleteCommand());
