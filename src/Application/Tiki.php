@@ -1083,11 +1083,9 @@ TXT;
         $command->run();
 
         if ($command->getReturn() !== 0 || !$access->fileExists('vendor/autoload.php')) {
-            $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
-            trim_output($commandOutput, ['instance_id' => $instance->getId()]);
-
             $errorMsg = "Failed to " . $action. " Tiki Packages listed in composer.json in the root folder.";
-
+            $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent() ?: $errorMsg;
+            trim_output($commandOutput, ['instance_id' => $instance->getId()]);
             $this->io->error($errorMsg . "\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
         }
     }

@@ -2,14 +2,15 @@
 
 namespace TikiManager\Tests\Hooks;
 
+use Monolog\Handler\TestHandler;
+use Monolog\Level;
+use Monolog\Logger;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Process\Process;
 use TikiManager\Config\App;
 use TikiManager\Hooks\HookHandler;
-use TikiManager\Hooks\InstanceCreateHook;
 use TikiManager\Hooks\TikiCommandHook;
 
 /**
@@ -69,12 +70,14 @@ class TikiCommandHookTest extends TestCase
         $hookHandler = new HookHandler($fileSystem->url() . '/hooks');
         $container->set('HookHandler', $hookHandler);
 
-        $logger = new TestLogger();
+        $testHandler = new TestHandler();
+        $logger = new Logger('test', [$testHandler]);
+
         $hook = new TikiCommandHook('instance-create', $logger);
         $scripts = $hook->getScripts('post');
 
         $this->assertNull($scripts);
-        $this->assertTrue($logger->hasDebugThatContains('directory does not exist'));
+        $this->assertTrue($testHandler->hasDebugThatContains('directory does not exist'));
     }
 
     /**
@@ -83,7 +86,8 @@ class TikiCommandHookTest extends TestCase
      */
     public function testRunScriptCommandWithFailure()
     {
-        $logger = new TestLogger();
+        $testHandler = new TestHandler();
+        $logger = new Logger('test', [$testHandler]);
         $hook = new TikiCommandHook('instance-create', $logger);
         $processMock = $this->createMock(Process::class);
 
@@ -117,16 +121,18 @@ class TikiCommandHookTest extends TestCase
             ->willReturn('Error test!');
 
         $this->assertFalse($this->invokeMethod($hook, 'runScriptCommand', [$processMock]));
-        $this->assertTrue($logger->hasDebug([
+
+        $Loglevel = class_exists('Monolog\Level') ? Level::Debug : $logger::DEBUG;
+        $this->assertTrue($testHandler->hasRecord([
             'message' => 'Command {command}',
             'context' => [
                 'command' => 'bash test.sh',
                 'cwd' => '/tmp',
                 'env' => $_ENV
             ]
-        ]));
+        ], $Loglevel));
 
-        $this->assertTrue($logger->hasError('Error test!'));
+        $this->assertTrue($testHandler->hasError('Error test!'));
     }
 
     /**
@@ -135,7 +141,8 @@ class TikiCommandHookTest extends TestCase
      */
     public function testRunScriptCommandWithSuccess()
     {
-        $logger = new TestLogger();
+        $testHandler = new TestHandler();
+        $logger = new Logger('test', [$testHandler]);
         $hook = new TikiCommandHook('instance-create', $logger);
         $processMock = $this->createMock(Process::class);
         $processMock
@@ -158,7 +165,7 @@ class TikiCommandHookTest extends TestCase
 
         $this->assertTrue($this->invokeMethod($hook, 'runScriptCommand', [$processMock]));
 
-        $this->assertTrue($logger->hasDebugThatContains('Completed!'));
+        $this->assertTrue($testHandler->hasDebugThatContains('Completed!'));
     }
 
     public function invokeMethod(&$object, $methodName, array $parameters = array())
@@ -210,7 +217,8 @@ class TikiCommandHookTest extends TestCase
             ->setMethods(['buildScriptCommand', 'runScriptCommand'])
             ->getMock();
 
-        $logger = new TestLogger();
+        $testHandler = new TestHandler();
+        $logger = new Logger('test', [$testHandler]);
         $mock->setLogger($logger);
 
         $mock
@@ -224,33 +232,35 @@ class TikiCommandHookTest extends TestCase
 
         $mock->execute('post');
 
+        $Loglevel = class_exists('Monolog\Level') ? Level::Info : $logger::INFO;
         $path = $fileSystem->url() . '/hooks/instance-create/post/';
-        $this->assertTrue($logger->hasInfoThatContains('Hook file: ' . $path . 'sound.sh'));
+        $this->assertTrue($testHandler->hasInfoThatContains('Hook file: ' . $path . 'sound.sh'));
         $this->assertTrue(
-            $logger->hasRecord(
+            $testHandler->hasRecord(
                 [
                     'message' => 'Hook script {status}',
                     'context' => ['status' => 'succeeded']
                 ],
-                'info'
+                $Loglevel
             )
         );
-        $this->assertTrue($logger->hasInfoThatContains('Hook file: ' . $path . 'notify.sh'));
+        $this->assertTrue($testHandler->hasInfoThatContains('Hook file: ' . $path . 'notify.sh'));
 
         $this->assertTrue(
-            $logger->hasRecord(
+            $testHandler->hasRecord(
                 [
                     'message' => 'Hook script {status}',
                     'context' => ['status' => 'failed']
                 ],
-                'info'
+                $Loglevel
             )
         );
 
-        $logger = new TestLogger();
+        $testHandler = new TestHandler();
+        $logger = new Logger('test', [$testHandler]);
         $mock->setLogger($logger);
 
         $mock->execute('pre');
-        $this->assertFalse($logger->hasInfoThatContains('Hook file'));
+        $this->assertFalse($testHandler->hasInfoThatContains('Hook file'));
     }
 }

@@ -7,9 +7,10 @@
 
 namespace TikiManager\Tests\Command;
 
+use Monolog\Handler\TestHandler;
+use Monolog\Logger;
+use Monolog\Level;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LogLevel;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance;
 use TikiManager\Config\App;
@@ -33,6 +34,7 @@ class CloneAndUpgradeCommandTest extends TestCase
     protected static $instanceIds = [];
 
     protected $logger;
+    protected $testHandler;
 
     public static function setUpBeforeClass(): void
     {
@@ -97,7 +99,9 @@ class CloneAndUpgradeCommandTest extends TestCase
 
     public function setUp(): void
     {
-        $this->logger = new TestLogger();
+        $testHandler = new TestHandler();
+        $this->logger = new Logger('test', [$testHandler]);
+        $this->testHandler = $testHandler;
 
         $container = App::getContainer();
         $container->set('Logger', $this->logger);
@@ -171,7 +175,8 @@ class CloneAndUpgradeCommandTest extends TestCase
         $result = InstanceHelper::clone($arguments, true);
         $this->assertNotEquals(0, $result);
 
-        $this->assertTrue($this->logger->hasRecordThatContains('Database host and name are the same', LogLevel::ERROR));
+        $Loglevel = class_exists('Monolog\Level') ? Level::Error : Logger::ERROR;
+        $this->assertTrue($this->testHandler->hasRecordThatContains('Database host and name are the same', $Loglevel));
     }
 
     /**

@@ -54,8 +54,12 @@ class ConsoleLogger extends AbstractLogger
      *
      * @return void
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
+        if (!is_string($message) && !$message instanceof \Stringable) {
+            throw new \InvalidArgumentException('Message must be a string or an instance of Stringable.');
+        }
+
         if (!isset($this->verbosityLevelMap[$level])) {
             throw new InvalidArgumentException(sprintf('The log level "%s" does not exist.', $level));
         }

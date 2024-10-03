@@ -13,12 +13,12 @@ class ArrayHandler extends AbstractProcessingHandler
         return $this->log;
     }
 
-    protected function write(array $record): void
+    protected function write($record): void
     {
         $this->log[] = $record['formatted'];
     }
 
-    public function reset()
+    public function reset(): void
     {
         $this->log = [];
         parent::reset();

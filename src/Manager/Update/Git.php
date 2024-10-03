@@ -169,7 +169,7 @@ class Git extends UpdateManager
      *
      * @param LoggerInterface $logger
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
         $this->repository->setLogger($logger);

@@ -7,10 +7,10 @@
 
 namespace TikiManager\Tests\Command;
 
-use PHP_CodeSniffer\Tokenizers\PHP;
+use Monolog\Handler\TestHandler;
+use Monolog\Logger;
+use Monolog\Level;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LogLevel;
-use Psr\Log\Test\TestLogger;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Instance;
@@ -39,6 +39,7 @@ class CloneInstanceCommandTest extends TestCase
     protected static $prevVersionBranch;
 
     protected $logger;
+    protected $testHandler;
 
     public static function setUpBeforeClass(): void
     {
@@ -96,7 +97,9 @@ class CloneInstanceCommandTest extends TestCase
 
     public function setUp(): void
     {
-        $this->logger = new TestLogger();
+        $testHandler = new TestHandler();
+        $this->logger = new Logger('test', [$testHandler]);
+        $this->testHandler = $testHandler;
 
         $container = App::getContainer();
         $container->set('Logger', $this->logger);
@@ -187,7 +190,7 @@ class CloneInstanceCommandTest extends TestCase
 
         $result = InstanceHelper::clone($arguments, false);
         $this->assertNotEquals(0, $result);
-        $this->assertTrue($this->logger->hasErrorThatContains('Database host and name are the same'));
+        $this->assertTrue($this->testHandler->hasErrorThatContains('Database host and name are the same'));
     }
 
     public function testCloneDatabaseWithTargetMissingDbFile()
@@ -211,7 +214,7 @@ class CloneInstanceCommandTest extends TestCase
         $result = InstanceHelper::clone($arguments, false);
         $this->assertNotEquals(0, $result);
 
-        $this->assertTrue($this->logger->hasErrorThatContains('Unable to load/set database configuration for instance'));
+        $this->assertTrue($this->testHandler->hasErrorThatContains('Unable to load/set database configuration for instance'));
     }
 
     public function testCloneDatabaseTargetManyInstances()
@@ -234,9 +237,10 @@ class CloneInstanceCommandTest extends TestCase
             '--direct' => true,
         ];
 
+        $Loglevel = class_exists('Monolog\Level') ? Level::Error : Logger::ERROR;
         $result = InstanceHelper::clone($arguments, false);
         $this->assertEquals(1, $result);
-        $this->assertTrue($this->logger->hasRecordThatContains('Database setup options can only be used when a single target instance', LogLevel::ERROR));
+        $this->assertTrue($this->testHandler->hasRecordThatContains('Database setup options can only be used when a single target instance', $Loglevel));
     }
 
     public function testCloneDatabaseTargetBlank()
@@ -343,7 +347,7 @@ class CloneInstanceCommandTest extends TestCase
 
         $result = InstanceHelper::clone($arguments, false);
         $this->assertEquals(1, $result);
-        $this->assertTrue($this->logger->hasErrorThatContains('Unable to load/set database configuration for instance'));
+        $this->assertTrue($this->testHandler->hasErrorThatContains('Unable to load/set database configuration for instance'));
     }
 
     protected function compareDB($instance1, $instance2)

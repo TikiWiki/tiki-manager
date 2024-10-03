@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "000513f2be81ce569ba9ddb75f614462",
+    "content-hash": "485f0b043e375bda269072dc6686e538",
     "packages": [
         {
             "name": "composer/semver",
@@ -2938,17 +2938,17 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.12.4",
+            "version": "1.12.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "ffa517cb918591b93acc9b95c0bebdcd0e4538bd"
+                "reference": "7e6c6cb7cecb0a6254009a1a8a7d54ec99812b17"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-ffa517cb918591b93acc9b95c0bebdcd0e4538bd-zip-e40bb3.zip",
-                "reference": "ffa517cb918591b93acc9b95c0bebdcd0e4538bd",
-                "shasum": "f3ad18b5408466850d0b2cfab3098ee524e4129d"
+                "url": "https://composer.tiki.org/dist/phpstan/phpstan/phpstan-phpstan-7e6c6cb7cecb0a6254009a1a8a7d54ec99812b17-zip-6ddc38.zip",
+                "reference": "7e6c6cb7cecb0a6254009a1a8a7d54ec99812b17",
+                "shasum": "c230f4a4120ef111645226512d9b7cb2a0f0c501"
             },
             "require": {
                 "php": "^7.2|^8.0"
@@ -2985,7 +2985,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-09-19T07:58:01+00:00"
+            "time": "2024-09-26T12:45:22+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
