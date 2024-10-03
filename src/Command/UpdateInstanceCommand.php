@@ -187,8 +187,14 @@ class UpdateInstanceCommand extends TikiManagerCommand
             ];
 
             $hookName = $this->getCommandHook();
+            $bisectInstances = [];
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
+                $isBisectSession = $instance->getOnGoingBisectSession();
+                if ($isBisectSession) {
+                    $bisectInstances[] = $instance->id;
+                    continue;
+                }
                 $instanceLogger = $this->logger->withName('instance_' . $instance->id);
                 $arrHandler = new ArrayHandler(Logger::ERROR);
                 $arrHandler->setFormatter($this->getFormatter());
@@ -251,6 +257,14 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 }
             }
 
+            if (count($bisectInstances)) {
+                $actionMsg = $switch ? 'upgrade' : 'update';
+                $backupSkippedErrMsg = $actionMsg . " is skipped for instances [%s] because bisect session is ongoing for these instance.";
+                $backupSkippedErrMsg = sprintf($backupSkippedErrMsg, implode(',', $bisectInstances));
+                $logs[] = $backupSkippedErrMsg;
+                $this->io->warning($backupSkippedErrMsg);
+            }
+
             $emails = $input->getOption('email') ?? '';
             $emails = array_filter(explode(',', $emails), function ($email) {
                 return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
@@ -270,7 +284,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 }
             }
 
-            if (!empty($logs)) {
+            if (!empty($logs) || !empty($bisectInstances)) {
                 return 1;
             }
         } else {

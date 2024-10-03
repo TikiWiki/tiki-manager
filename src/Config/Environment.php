@@ -499,6 +499,19 @@ class Environment
                     UPDATE info SET value = '13' WHERE name = 'version';
                 ");
             // no break
+            case 13:
+                $db->exec("
+                    CREATE TABLE IF NOT EXISTS bisect_sessions (
+                        instance_id INTEGER NOT NULL UNIQUE,
+                        bad_commit TEXT NOT NULL,
+                        good_commit TEXT NOT NULL,
+                        current_commit TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        FOREIGN KEY(instance_id) REFERENCES instance(instance_id)
+                    );
+                    UPDATE info SET value = '14' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

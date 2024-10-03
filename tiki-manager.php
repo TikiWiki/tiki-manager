@@ -129,6 +129,11 @@ $application->add(new \TikiManager\Command\TagDeleteCommand());
 
 $application->add(new \TikiManager\Command\CheckoutCommand());
 
+$application->add(new \TikiManager\Command\InstanceBisectStartCommand());
+$application->add(new \TikiManager\Command\InstanceBisectBadCommand());
+$application->add(new \TikiManager\Command\InstanceBisectGoodCommand());
+$application->add(new \TikiManager\Command\InstanceBisectResetCommand());
+
 // this should be moved to a custom src/Console/Application (like composer)
 $dispatcher = new EventDispatcher();
 

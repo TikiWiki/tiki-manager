@@ -155,7 +155,13 @@ class BackupInstanceCommand extends TikiManagerCommand
         $isFull = !$input->getOption('partial') ?? (Environment::get('BACKUP_TYPE', 'full') != 'partial');
 
         $hook = $this->getCommandHook();
+        $bisectInstances = [];
         foreach ($selectedInstances as $instance) {
+            $isBisectSession = $instance->getOnGoingBisectSession();
+            if ($isBisectSession) {
+                $bisectInstances[] = $instance->id;
+                continue;
+            }
             $output->writeln('<fg=cyan>Performing backup for ' . $instance->name . '</>');
             $log = [];
             $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
@@ -179,6 +185,13 @@ class BackupInstanceCommand extends TikiManagerCommand
             }
         }
 
+        if (count($bisectInstances)) {
+            $backupSkippedErrMsg = "Backup is skipped for instances [%s] because bisect session is ongoing for these instance.";
+            $backupSkippedErrMsg = sprintf($backupSkippedErrMsg, implode(',', $bisectInstances));
+            $logs[] = $backupSkippedErrMsg;
+            $this->io->warning($backupSkippedErrMsg);
+        }
+
         $emails = $input->getOption('email') ?? '';
         $emails = array_filter(explode(',', $emails), function ($email) {
             return filter_var(trim($email), FILTER_VALIDATE_EMAIL);
@@ -196,6 +209,10 @@ class BackupInstanceCommand extends TikiManagerCommand
                 debug($e->getMessage());
                 $this->io->error($e->getMessage());
             }
+        }
+
+        if (count($bisectInstances)) {
+            return 1;
         }
 
         return 0;

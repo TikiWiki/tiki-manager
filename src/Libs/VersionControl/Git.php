@@ -232,6 +232,13 @@ class Git extends VersionControlSystem
             if (preg_match('/^tags\\/[^\^\~]*/', $output, $matches)) {
                 $output = str_replace('tags/tags', 'tags', $matches[0]);
             } else {
+                // when bisecting, the branch is not HEAD but the branch name
+                $commitHash = $this->exec($targetFolder, 'rev-parse HEAD');
+                $gitCmd = "branch --contains $commitHash";
+                $branchOutput = $this->exec($targetFolder, $gitCmd);
+                if (!empty($branchOutput) && preg_match('/bisect started on ([\d]+\.\w+)/', $branchOutput, $matches)) {
+                    return trim($matches[1]);
+                }
                 $output = 'HEAD';
             }
         }
@@ -683,6 +690,57 @@ class Git extends VersionControlSystem
                 $this->exec(null, $command);
             }
         }
+    }
+
+    /**
+     * Start the git bisect session.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $badCommit The commit SHA or reference considered bad.
+     * @param string $goodCommit The commit SHA or reference considered good, if available.
+     * @return string The output from the git command.
+     */
+    public function startBisect($targetFolder, $badCommit, $goodCommit)
+    {
+        $this->exec($targetFolder, 'bisect start');
+        $badOutput = $this->markBadBisect($targetFolder, $badCommit);
+        $goodOutput = $this->markGoodBisect($targetFolder, $goodCommit);
+        return trim($badOutput . "\n" . $goodOutput);
+    }
+
+    /**
+     * Marks a commit as good in the current git bisect session.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $commitId The commit SHA or reference to mark as good.
+     * @return string The output from the git command.
+     */
+    public function markGoodBisect($targetFolder, $commitId)
+    {
+        return trim($this->exec($targetFolder, sprintf('bisect good %s', escapeshellarg($commitId))));
+    }
+
+    /**
+     * Marks a commit as bad in the current git bisect session.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $commitId The commit SHA or reference to mark as bad.
+     * @return string The output from the git command.
+     */
+    public function markBadBisect($targetFolder, $commitId)
+    {
+        return trim($this->exec($targetFolder, sprintf('bisect bad %s', escapeshellarg($commitId))));
+    }
+
+    /**
+     * Resets the git bisect session, returning the repository to the pre-bisect state.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @return string The output from the git bisect reset command.
+     */
+    public function resetBisect($targetFolder)
+    {
+        return trim($this->exec($targetFolder, 'bisect reset'));
     }
 
     /**

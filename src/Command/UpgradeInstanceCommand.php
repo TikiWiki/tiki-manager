@@ -128,8 +128,14 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
         //update
         $hookName = $this->getCommandHook();
+        $bisectInstances = [];
         $revision = $input->getOption('revision');
         foreach ($selectedInstances as $instance) {
+            $isBisectSession = $instance->getOnGoingBisectSession();
+            if ($isBisectSession) {
+                $bisectInstances[] = $instance->id;
+                continue;
+            }
             /** @var Instance $instance */
             // Ensure that the current phpexec is still valid;
             $instance->detectPHP();
@@ -193,6 +199,14 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             if ($instance->isLocked()) {
                 $instance->unlock();
             }
+        }
+
+        if (count($bisectInstances)) {
+            $bisectErrMsg = "Upgrade skipped for Instance(s) [%s] because bisect session is ongoing for these instance(s).";
+            $bisectErrMsg = sprintf($bisectErrMsg, implode(',', $bisectInstances));
+            $this->io->warning($bisectErrMsg);
+            $this->logger->warning($bisectErrMsg);
+            return 1;
         }
 
         return 0;

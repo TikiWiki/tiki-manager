@@ -6,6 +6,7 @@ use TikiManager\Application\Restore;
 use TikiManager\Application\Version;
 use TikiManager\Config\Environment;
 use TikiManager\Traits\FileArchive;
+use TikiManager\Application\Exception\VcsException;
 
 class Src extends VersionControlSystem
 {
@@ -267,5 +268,45 @@ class Src extends VersionControlSystem
         // This method is not intended to be used
         // Used in partial backups (only supported on Git/SVN)
         return false;
+    }
+
+    /**
+     * Bisect operation is not allowed for SRC.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function startBisect($targetFolder, $badCommit, $goodCommit)
+    {
+        throw new VcsException('SRC does not support bisect operations.');
+    }
+
+    /**
+     * Bisect operation is not allowed for SRC.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function markGoodBisect($targetFolder, $commitId)
+    {
+        throw new VcsException('SRC does not support bisect operations.');
+    }
+
+    /**
+     * Bisect operation is not allowed for SRC.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function markBadBisect($targetFolder, $commitId)
+    {
+        throw new VcsException('SRC does not support bisect operations.');
+    }
+
+    /**
+     * Bisect operation is not allowed for SRC.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function resetBisect($targetFolder)
+    {
+        throw new VcsException('SRC does not support bisect operations.');
     }
 }

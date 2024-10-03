@@ -271,6 +271,31 @@ WHERE
 ;
 SQL;
 
+    const SQL_SET_BISECT_SESSION = <<<SQL
+INSERT OR REPLACE INTO
+    bisect_sessions
+    (instance_id, bad_commit, good_commit, current_commit, status)
+VALUES
+    (:instance_id, :bad_commit, :good_commit, :current_commit, :status)
+;
+SQL;
+
+    const SQL_GET_BISECT_SESSION = <<<SQL
+SELECT * FROM 
+    bisect_sessions
+WHERE
+    instance_id = :instance_id AND status = :status
+;
+SQL;
+
+    const SQL_DELETE_BISECT_SESSION = <<<SQL
+DELETE FROM
+    bisect_sessions
+WHERE
+    instance_id = :id
+;
+SQL;
+
     const SQL_INSERT_INSTANCE_TAG = <<<SQL
 INSERT INTO
     tags
@@ -293,7 +318,7 @@ SQL;
 DELETE FROM
     tags
 WHERE
-    instance_id = :id AND (COALESCE(:tagname, '') = '' OR tag_name = :tagname);
+    instance_id = :id AND (COALESCE(:tagname, '') = '' OR tag_name = :tagname)
 ;
 SQL;
 
@@ -303,7 +328,7 @@ SELECT
 FROM
     tags
 WHERE
-    instance_id = :id AND (COALESCE(:tagname, '') = '' OR tag_name = :tagname);
+    instance_id = :id AND (COALESCE(:tagname, '') = '' OR tag_name = :tagname)
 ;
 SQL;
 
@@ -573,6 +598,7 @@ SQL;
         query(self::SQL_DELETE_ALL_INSTANCE_PROPERTIES, [':id' => $this->id]);
         query(self::SQL_DELETE_PATCH, [':id' => $this->id]);
         query(self::SQL_DELETE_INSTANCE_TAG, [':id' => $this->id]);
+        query(self::SQL_DELETE_BISECT_SESSION, [':id' => $this->id]);
     }
 
     public function registerAccessMethod($type, $host, $user, $password = null, $port = null)
@@ -1286,6 +1312,25 @@ SQL;
             return;
         }
         $this->getVersionControlSystem()->revert($this->webroot);
+    }
+
+    public function updateOrSaveBisectSession($sessionDetails)
+    {
+        try {
+            query(self::SQL_SET_BISECT_SESSION, $sessionDetails);
+            $app = $this->getApplication();
+            $app->installComposerDependencies();
+            $app->installNodeJsDependencies();
+            $app->runDatabaseUpdate();
+        } catch (\Exception $e) {
+            throw new \Exception("Error setting bisect session: " . $e->getMessage());
+        }
+    }
+
+    public function getOnGoingBisectSession()
+    {
+        $result = query(self::SQL_GET_BISECT_SESSION, [':instance_id' => $this->getId(), ':status' => 'in_progress']);
+        return $result->fetchObject();
     }
 
     /**

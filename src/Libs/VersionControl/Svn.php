@@ -9,7 +9,6 @@ namespace TikiManager\Libs\VersionControl;
 
 use Exception;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsConflictException;
 use TikiManager\Application\Exception\VcsException;
@@ -451,6 +450,46 @@ class Svn extends VersionControlSystem
     protected function canStash(): bool
     {
         return $this->vcsOptions['allow_stash'] ?? false;
+    }
+
+    /**
+     * Bisect operation is not allowed for SVN.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function startBisect($targetFolder, $badCommit, $goodCommit)
+    {
+        throw new VcsException('SVN does not support bisect operations.');
+    }
+
+    /**
+     * Bisect operation is not allowed for SVN.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function markGoodBisect($targetFolder, $commitId)
+    {
+        throw new VcsException('SVN does not support bisect operations.');
+    }
+
+    /**
+     * Bisect operation is not allowed for SVN.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function markBadBisect($targetFolder, $commitId)
+    {
+        throw new VcsException('SVN does not support bisect operations.');
+    }
+
+    /**
+     * Bisect operation is not allowed for SVN.
+     * It is for git only
+     * @throws VcsException
+     */
+    public function resetBisect($targetFolder)
+    {
+        throw new VcsException('SVN does not support bisect operations.');
     }
 
     /**

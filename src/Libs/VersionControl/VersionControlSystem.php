@@ -118,6 +118,46 @@ abstract class VersionControlSystem implements LoggerAwareInterface
     abstract public function getAvailableBranches();
 
     /**
+     * Start the git bisect session.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $badCommit The commit SHA or reference considered bad.
+     * @param string $goodCommit The commit SHA or reference considered good, if available.
+     * @return string The output from the git command.
+     * @throws VcsException
+     */
+    abstract public function startBisect($targetFolder, $badCommit, $goodCommit);
+
+    /**
+     * Marks a commit as good in the current git bisect session.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $commitId The commit SHA or reference to mark as good.
+     * @return string The output from the git command.
+     * @throws VcsException
+     */
+    abstract public function markGoodBisect($targetFolder, $commitId);
+
+    /**
+     * Marks a commit as bad in the current git bisect session.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @param string $commitId The commit SHA or reference to mark as bad.
+     * @return string The output from the git command.
+     * @throws VcsException
+     */
+    abstract public function markBadBisect($targetFolder, $commitId);
+
+    /**
+     * Resets the git bisect session, returning the repository to the pre-bisect state.
+     *
+     * @param string $targetFolder The directory where the git repository is located.
+     * @return string The output from the git bisect reset command.
+     * @throws VcsException
+     */
+    abstract public function resetBisect($targetFolder);
+
+    /**
      * Checks for revision is present or not
      *
      * @param string $targetFolder The directory where the repository is located.

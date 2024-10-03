@@ -252,6 +252,14 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         $sourceInstance = $sourceInstances[0];
+
+        $isBisectSession = $sourceInstance->getOnGoingBisectSession();
+        if ($isBisectSession) {
+            $actionMsg = $cloneUpgrade ? 'clone and upgrade' : 'clone';
+            $this->io->warning($actionMsg . ' is skipped for Instance (' . $sourceInstance->id . ') because bisect session is ongoing for source instance');
+            return 1;
+        }
+
         if ($cloneUpgrade) {
             $instances = CommandHelper::getInstances('upgrade');
         } else {
@@ -283,11 +291,43 @@ class CloneInstanceCommand extends TikiManagerCommand
             $targetInstances = $helper->ask($input, $output, $question);
         }
 
-        foreach ($targetInstances as $targetInstance) {
+        $bisectInstances = [];
+        $protectedInstances = [];
+
+        foreach ($targetInstances as $i => $targetInstance) {
             if ($targetInstance->isInstanceProtected()) {
-                $output->writeln("<error>Operation aborted: The target database '{$targetInstance->name}' is protected using the 'sys_db_protected' tag.</error>");
-                return 1;
+                $protectedInstances[] = $targetInstance->name;
+                unset($targetInstances[$i]);
+                continue;
             }
+            $isBisectSession = $targetInstance->getOnGoingBisectSession();
+            if ($isBisectSession) {
+                $bisectInstances[] = $targetInstance->id;
+                unset($targetInstances[$i]);
+            }
+        }
+
+        $actionMsg = $cloneUpgrade ? 'clone and upgrade' : 'clone';
+
+        if (!empty($protectedInstances)) {
+            $protectedMsg = $actionMsg . ' is skipped: target instance(s) are protected using the "sys_db_protected" tag: [%s].';
+            $protectedMsg = sprintf($protectedMsg, implode(',', $protectedInstances));
+            $this->io->warning($protectedMsg);
+            $this->logger->warning($protectedMsg);
+        }
+
+        if (!empty($bisectInstances)) {
+            $bisectMsg = $actionMsg . ' is skipped for Instance(s) [%s] because bisect session is ongoing for these target instances.';
+            $bisectMsg = sprintf($bisectMsg, implode(',', $bisectInstances));
+            $this->io->warning($bisectMsg);
+            $this->logger->warning($bisectMsg);
+        }
+
+        if (empty($targetInstances)) {
+            $noTargetInstancesMsg = 'No valid target instances to continue the clone process.';
+            $this->logger->error($noTargetInstancesMsg);
+            $this->io->error($noTargetInstancesMsg);
+            return 1;
         }
 
         if ($setupTargetDatabase && count($targetInstances) > 1) {
