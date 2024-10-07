@@ -56,17 +56,34 @@ class SSH extends Access implements ShellPrompt
     public function firstConnect()
     {
         $host = $this->getHost();
-        $host->setupKey($_ENV['SSH_PUBLIC_KEY']);
 
-        $this->io->writeln("Testing connection...");
+        if ($host->checkSshKey() !== true) {
+            $this->io->warning("Your ssh keys do not seem properly setup yet, Tiki Manager will attempt to setup your ssh keys now.");
 
-        $host->runCommands('exit');
+            $host->setupKey($_ENV['SSH_PUBLIC_KEY']);
 
-        $answer = $this->io->confirm('After successfully entering your password, were you asked for a password again?', false);
+            $this->io->writeln("Testing connection...");
+            $host->runCommands('exit');
 
-        if ($answer == 'yes') {
-            $this->changeType('ssh::nokey');
+            $answer = $this->io->confirm('After successfully entering your password, were you asked for a password again?', false);
+
+            if ($answer == 'yes') {
+                $this->changeType('ssh::nokey');
+            }
+
+            $result = $host->checkSshKey();
+
+            if ($result !== true) {
+                $message = "Your ssh keys are not properly set up. Please use 'tiki-manager instance:copysshkey' command.";
+                $message .= ' ' . $result;
+
+                $this->io->error($message);
+
+                return false;
+            }
         }
+
+        $this->io->success('Tiki Manager successfully connected to the remote server');
 
         return true;
     }

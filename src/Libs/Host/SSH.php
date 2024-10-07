@@ -37,7 +37,16 @@ class SSH
 
         $sshConnectionId = implode('_', [$this->user,$this->host, $this->port]);
         if (!isset(self::$sshKeyCheck[$sshConnectionId])) {
-            self::$sshKeyCheck[$sshConnectionId] = $this->checkSshKey();
+            $result = $this->checkSshKey();
+
+            self::$sshKeyCheck[$sshConnectionId] = $result === true;
+
+            if (! self::$sshKeyCheck[$sshConnectionId]) {
+                $message = "Your ssh keys are not properly set up. Please use 'tiki-manager instance:copysshkey' command.";
+                $message .= ' ' . $result;
+
+                $this->io->error($result);
+            }
         }
     }
 
@@ -227,8 +236,11 @@ class SSH
 
     /**
      * Check if Private Key is within the authorized keys from remote server
+     *
+     * @param bool $showError
+     * @return bool
      */
-    private function checkSshKey()
+    public function checkSshKey()
     {
         $params = [
             '-i',
@@ -259,12 +271,7 @@ class SSH
         $returnVar = $command->getReturn();
 
         if ($returnVar != 0) {
-            $message = "Your ssh keys are not properly set up. Please use 'tiki-manager instance:copysshkey' command.";
-            if ($err = $command->getStderrContent()) {
-                $message .= ' ' . $err;
-            }
-            $this->io->error($message);
-            return false;
+            return trim($command->getStderrContent());
         }
 
         return true;
