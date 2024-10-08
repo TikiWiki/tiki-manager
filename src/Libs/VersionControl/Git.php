@@ -119,12 +119,17 @@ class Git extends VersionControlSystem
     /**
      * @param $targetFolder
      * @param $toAppend
+     * @param $isPriorityCommand
      * @return mixed|string
      * @throws VcsException
      */
-    public function exec($targetFolder, $toAppend)
+    public function exec($targetFolder, $toAppend, $isPriorityCommand = false)
     {
         $command = sprintf('%s %s', $this->command, $toAppend);
+
+        if ($isPriorityCommand && $this->access) {
+            $command = $this->access->executeWithPriorityParams($command);
+        }
 
         if (!empty($targetFolder)) {
             $command = sprintf('cd %s && ', $targetFolder) . $command;
@@ -161,7 +166,7 @@ class Git extends VersionControlSystem
         $branch = escapeshellarg($branchName);
         $repoUrl = escapeshellarg($this->repositoryUrl);
         $folder = escapeshellarg($targetFolder);
-        return $this->exec(null, sprintf('clone --depth 1 -b %s %s %s', $branch, $repoUrl, $folder));
+        return $this->exec(null, sprintf('clone --depth 1 -b %s %s %s', $branch, $repoUrl, $folder), true);
     }
 
     /**
@@ -307,7 +312,7 @@ class Git extends VersionControlSystem
         $gitCmd = $commitSHA ? "checkout -B $branch $commitSHA" : "checkout $branch";
         $gitCmd .= $this->quiet ? ' --quiet' : '';
 
-        return $this->exec($targetFolder, $gitCmd);
+        return $this->exec($targetFolder, $gitCmd, true);
     }
 
     /**
@@ -447,6 +452,8 @@ class Git extends VersionControlSystem
     {
         $command = $this->command . ' ls-files --modified';
 
+        $command = $this->access->executeWithPriorityParams($command);
+
         $command = sprintf('cd %s && %s', $folder, $command);
 
         $commandInstance = new Command($command);
@@ -465,6 +472,8 @@ class Git extends VersionControlSystem
     public function getDeletedFiles($folder)
     {
         $command = $this->command . ' ls-files -d';
+
+        $command = $this->access->executeWithPriorityParams($command);
 
         $command = sprintf('cd %s && %s', $folder, $command);
 
@@ -488,6 +497,8 @@ class Git extends VersionControlSystem
         if (!$includeIgnore) {
             $command .= ' --exclude-standard';
         }
+
+        $command = $this->access->executeWithPriorityParams($command);
 
         $command = sprintf('cd %s && %s', $folder, $command);
 

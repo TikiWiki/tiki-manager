@@ -465,4 +465,34 @@ class SSH extends Access implements ShellPrompt
     {
         return $this->user . "@" . $this->host . ":";
     }
+
+     /**
+     * Reducing the priority of operations to minimize their impact on system performance.
+     * Adjusts the priority of a command using 'nice' and 'ionice' if available.
+     *
+     * @param string|empty $cmd The command to execute.
+     * @return string The command potentially modified with 'nice' and 'ionice'.
+     */
+    public function executeWithPriorityParams($cmd = '')
+    {
+        // Check if the remote system is Linux since 'nice' and 'ionice' are Unix/Linux commands
+        $remoteOS = strtolower(trim($this->shellExec('uname -s', true)));
+        $isLinux = $remoteOS === 'linux';
+
+        if ($isLinux) {
+            // Check for 'nice' and 'ionice' availability
+            $hasNice = !empty(trim($this->shellExec('which nice', true)));
+            $hasIonice = !empty(trim($this->shellExec('which ionice', true)));
+            // Modify the command based on the availability of 'nice' and 'ionice'
+            if ($hasNice && $hasIonice) {
+                $cmd = "nice -n 19 ionice -c2 -n7 " . $cmd;
+            } elseif ($hasNice) {
+                $cmd = "nice -n 19 " . $cmd;
+            } elseif ($hasIonice) {
+                $cmd = "ionice -c2 -n7 " . $cmd;
+            }
+        }
+
+        return $cmd;
+    }
 }

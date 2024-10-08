@@ -334,4 +334,13 @@ class FTP extends Access implements Mountable
 
         return empty($dirContents);
     }
+
+    /**
+     * @param string|empty $cmd The command to execute.
+     * @return string
+     */
+    public function executeWithPriorityParams($cmd = '')
+    {
+        return $cmd;
+    }
 }

@@ -465,4 +465,34 @@ class Local extends Access implements ShellPrompt
 
         return empty($dirContents);
     }
+
+    /**
+     * Reducing the priority of operations to minimize their impact on system performance.
+     * Adjusts the priority of a command using 'nice' and 'ionice' if available.
+     *
+     * @param string|empty $cmd The command to execute.
+     * @return string The command potentially modified with 'nice' and 'ionice'.
+     */
+    public function executeWithPriorityParams($cmd = '')
+    {
+        // Check if the local system is Linux since 'nice' and 'ionice' are Unix/Linux commands
+        $localOS = strtolower(trim($this->shellExec('uname -s', true)));
+        $isLocalUnix = $localOS === 'linux';
+
+        if ($isLocalUnix) {
+            // Check for 'nice' and 'ionice' availability
+            $hasNice = trim($this->shellExec('which nice', true));
+            $hasIonice = trim($this->shellExec('which ionice', true));
+             // Modify the command based on the availability of 'nice' and 'ionice'
+            if (!empty($hasNice) && !empty($hasIonice)) {
+                $cmd = 'nice -n 19 ionice -c2 -n7 ' . $cmd;
+            } elseif (!empty($hasNice)) {
+                $cmd = 'nice -n 19 ' . $cmd;
+            } elseif (!empty($hasIonice)) {
+                $cmd = 'ionice -c2 -n7 ' . $cmd;
+            }
+        }
+
+        return $cmd;
+    }
 }

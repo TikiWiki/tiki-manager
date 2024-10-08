@@ -475,7 +475,8 @@ class Tiki extends Application
     {
         $access = $this->instance->getBestAccess('scripting');
         $access->chdir($this->instance->webroot);
-        $command = $access->createCommand('find', ['.', '-type', 'd', '-name', '.git']);
+        $adjustedFindCmd = $access->executeWithPriorityParams('find');
+        $command = $access->createCommand($adjustedFindCmd, ['.', '-type', 'd', '-name', '.git']);
         $command->run();
 
         $folders = [];

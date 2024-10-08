@@ -153,6 +153,8 @@ SQL;
     abstract public function copyFile($remoteSource, $remoteTarget);
 
     abstract public function localizeFolder($remoteLocation, $localMirror);
+
+    abstract public function executeWithPriorityParams($cmd = '');
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

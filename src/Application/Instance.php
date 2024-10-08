@@ -1293,7 +1293,9 @@ SQL;
         $_ENV['COMMAND_EXECUTION_TIMEOUT'] = $this->getMaxExecTimeout($envExecTimeout);
 
         $access = $this->getBestAccess('scripting');
-        $command = new Command("{$this->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+        $cmd = "{$this->phpexec} -q -d memory_limit=256M console.php index:rebuild --log";
+        $cmd = $access->executeWithPriorityParams($cmd);
+        $command = new Command($cmd);
         $data = $access->runCommand($command);
         $output = $data->getStdoutContent();
         $_ENV['COMMAND_EXECUTION_TIMEOUT'] = $envExecTimeout;

@@ -478,7 +478,8 @@ class Restore extends Backup
 
             $rsyncContent = array_merge($rsyncFlags, $rsyncExcludes, $rsyncFolders);
 
-            $command = $access->createCommand('rsync');
+            $adjustedRsyncCommand = $access->executeWithPriorityParams('rsync');
+            $command = $access->createCommand($adjustedRsyncCommand);
             $command->setArgs(
                 $rsyncContent
             );
@@ -495,7 +496,8 @@ class Restore extends Backup
             $access = $accessToRestore;
 
             if ($access->fileExists($src . '/.htaccess')) {
-                $command = $access->createCommand('rsync');
+                $htaccessTransferCommand = $access->executeWithPriorityParams('rsync');
+                $command = $access->createCommand($htaccessTransferCommand);
                 $command->setArgs([
                     $src . '/.htaccess',
                     $target . '/.htaccess' . ($instance->isLocked() ? '.bak' : '')
@@ -539,7 +541,8 @@ class Restore extends Backup
 
         if ($bzipStep) {
             $args = ['-dk', $archive];
-            $command = $access->createCommand('bzip2', $args);
+            $adjustedBzipCmd = $access->executeWithPriorityParams('bzip2');
+            $command = $access->createCommand($adjustedBzipCmd, $args);
             $command->run();
 
             if ($command->getReturn() !== 0) {
@@ -554,7 +557,8 @@ class Restore extends Backup
         }
 
         $args = [$tarFlags, '-C', $folder, '-f', $archive];
-        $command = $access->createCommand('tar', $args);
+        $adjustedTarCmd = $access->executeWithPriorityParams('tar');
+        $command = $access->createCommand($adjustedTarCmd, $args);
         $command->run();
 
         if ($command->getReturn() !== 0) {
@@ -770,8 +774,8 @@ class Restore extends Backup
             $flags = "-r";
         }
 
-        $this->access->shellExec(
-            sprintf("rm %s %s", $flags, $path)
-        );
+        $cmd = sprintf("rm %s %s", $flags, $path);
+        $cmd = $this->access->executeWithPriorityParams($cmd);
+        $this->access->shellExec($cmd);
     }
 }

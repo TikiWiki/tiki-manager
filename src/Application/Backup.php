@@ -181,26 +181,25 @@ class Backup
     {
         $archiveDir = $archiveDir ?: $this->archiveDir;
 
-        $nice = 'nice -n 19';
         $bzipStep = false;
 
         // If its windows we need to tar first and then bzip2 the tar
         if (ApplicationHelper::isWindows()) {
             $bzipStep = true;
-            $nice = '';
         }
 
         $fileName = sprintf('%s_%s.tar%s', $this->backupDirname, date('Y-m-d_H-i-s'), $bzipStep ? '' : '.bz2');
         $tarPath = $archiveDir . DIRECTORY_SEPARATOR . $fileName;
 
         $command = sprintf(
-            "%s tar -cp%s -C %s -f %s %s",
-            $nice,
+            "tar -cp%s -C %s -f %s %s",
             $bzipStep ? '' : 'j',
             escapeshellarg($this->backupRoot),
             escapeshellarg($tarPath),
             escapeshellarg($this->backupDirname)
         );
+
+        $command = $this->access->executeWithPriorityParams($command);
 
         exec($command, $output, $return_var);
 
@@ -217,6 +216,7 @@ class Backup
         }
 
         $command = sprintf('bzip2 %s', $tarPath);
+        $command = $this->access->executeWithPriorityParams($command);
         exec($command, $output, $return_var);
 
         $tarPath .= '.bz2';
