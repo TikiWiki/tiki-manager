@@ -62,7 +62,7 @@ class SSHSeclibAdapter
             return self::$resources[$key] = false;
         };
 
-        if (!$handle->login($user, PublicKeyLoader::load(file_get_contents($_ENV['SSH_KEY'])))) {
+        if (!$handle->login($user, PublicKeyLoader::loadPrivateKey(file_get_contents($_ENV['SSH_KEY'])))) {
             return self::$resources[$key] = false;
         };
 
