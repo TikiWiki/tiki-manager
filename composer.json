@@ -56,6 +56,12 @@
     "phpstan/phpstan": "^1.4"
   },
   "scripts": {
+    "pre-install-cmd": [
+      "TikiManager\\Composer\\ValidateVersion::validate"
+    ],
+    "pre-update-cmd": [
+      "TikiManager\\Composer\\ValidateVersion::validate"
+    ],
     "tests": [
       "find scripts src -name '*.php' -exec php -l {} \\;",
       "./vendor/bin/phpunit --bootstrap src/env_includes.php tests"
