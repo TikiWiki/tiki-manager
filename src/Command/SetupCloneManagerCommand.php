@@ -11,6 +11,7 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\Environment;
 
@@ -276,13 +277,50 @@ class SetupCloneManagerCommand extends TikiManagerCommand
 
         // Write cron in the crontab file
         $tempFile = Environment::get('TEMP_FOLDER') . '/crontab';
-        $currentCron = shell_exec('crontab -l');
-        if (file_put_contents($tempFile, $currentCron . PHP_EOL . $entry) && shell_exec('crontab ' . $tempFile)) {
-            $this->io->error("Failed to edit crontab file. Please add the following line to your crontab file: \n{$entry}");
+        $currentCronProcess = Process::fromShellCommandline("crontab -l", null, null, null, 1800);
+        $currentCronProcess->run();
+        $currentCron = $currentCronProcess->getOutput();
+        $error = $currentCronProcess->getErrorOutput();
+        $exitCode = $currentCronProcess->getExitCode();
+        if ($exitCode !== 0) {
+            $this->io->error("Error: Failed to getting list of cron jobs");
             return 1;
         }
+        $cronData = explode("\n\n", $currentCron);
+        $cronJobExists = false;
+        foreach ($cronData as $cronJob) {
+            if (strpos($cronJob, $entry) !== false) {
+                $cronJobExists = true;
+                break;
+            }
+        }
+        if ($cronJobExists) {
+            $this->io->writeln("<comment>Entry is already there, so we will not add a duplicate: \n{$entry} </comment>");
+            return 1;
+        }
+        if (file_put_contents($tempFile, $currentCron . PHP_EOL . $entry)) {
+            $cronTab = Process::fromShellCommandline('crontab ' .$tempFile, null, null, null, 1800);
+            $cronTab->run();
+            $cronTabOutput = $cronTab->getOutput();
+            $error = $cronTab->getErrorOutput();
+            $exitCode = $cronTab->getExitCode();
+            if ($exitCode !== 0) {
+                $this->io->error("Failed to edit crontab file. Please add the following line to your crontab file: \n{$entry}");
+                return 1;
+            }
+        }
 
-        $this->io->success('Cronjob configured and installed.');
+        $verifyCronProcess = Process::fromShellCommandline("crontab -l", null, null, null, 1800);
+        $verifyCronProcess->run();
+        $updatedCron = $verifyCronProcess->getOutput();
+
+        if (strpos($updatedCron, $entry) !== false) {
+            $this->io->success('Cronjob configured and installed successfully.');
+            return 0;
+        } else {
+            $this->io->error("Failed to validate the crontab entry. Please manually check the following command: \n{$entry}");
+            return 1;
+        }
     }
 
     /**
