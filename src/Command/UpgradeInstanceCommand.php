@@ -47,6 +47,12 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 'Instance branch to update'
             )
             ->addOption(
+                'repo-url',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Repository URL'
+            )
+            ->addOption(
                 'skip-reindex',
                 null,
                 InputOption::VALUE_NONE,
@@ -129,6 +135,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
         //update
         $hookName = $this->getCommandHook();
         $bisectInstances = [];
+        $mismatchVcsInstances = [];
         $revision = $input->getOption('revision');
         foreach ($selectedInstances as $instance) {
             $isBisectSession = $instance->getOnGoingBisectSession();
@@ -169,6 +176,18 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             try {
                 $instance->lock();
                 $latestVersion = $instance->getLatestVersion();
+
+                $repoURL = $input->getOption('repo-url') ?? $latestVersion->repo_url;
+                $branch = $branch ?? $selectedVersion->branch;
+
+                if ($instance->validateBranchInRepo($branch, $repoURL)) {
+                    $instance->setBranchAndRepo($branch, $repoURL);
+                } else {
+                    $mismatchVcsInstances[] = $instance->id;
+                    $instance->unlock();
+                    continue;
+                }
+
                 $previousBranch = $latestVersion instanceof Version ? $latestVersion->branch : null ;
                 $filesToResolve = $app->performUpgrade($instance, $selectedVersion, [
                     'checksum-check' => $checksumCheck,
@@ -206,6 +225,14 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             $bisectErrMsg = sprintf($bisectErrMsg, implode(',', $bisectInstances));
             $this->io->warning($bisectErrMsg);
             $this->logger->warning($bisectErrMsg);
+            return 1;
+        }
+
+        if (count($mismatchVcsInstances)) {
+            $mismatchVcsErrMsg = "Upgrade skipped for Instance(s) [%s] because branch and repository URL mismatch.";
+            $mismatchVcsErrMsg = sprintf($mismatchVcsErrMsg, implode(',', $mismatchVcsInstances));
+            $this->io->warning($mismatchVcsErrMsg);
+            $this->logger->warning($mismatchVcsErrMsg);
             return 1;
         }
 

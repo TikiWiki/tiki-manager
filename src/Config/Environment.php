@@ -512,6 +512,12 @@ class Environment
                     UPDATE info SET value = '14' WHERE name = 'version';
                 ");
             // no break
+            case 14:
+                $db->exec("
+                    ALTER TABLE version ADD COLUMN repo_url VARCHAR(255);
+                    UPDATE info SET value = '15' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

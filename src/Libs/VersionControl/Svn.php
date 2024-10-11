@@ -539,4 +539,9 @@ class Svn extends VersionControlSystem
             throw new VcsException("Revision {$revision} not found in SVN repository.");
         }
     }
+
+    public function isBranchBelongsToRepo($branch, $repoUrl)
+    {
+        throw new VcsException('This method is not supported for this VCS');
+    }
 }

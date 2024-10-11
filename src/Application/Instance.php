@@ -28,7 +28,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -83,7 +83,7 @@ SQL;
 
     const SQLQUERY_UPDATABLE_AND_UPGRADABLE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -115,7 +115,7 @@ SQL;
 
     const SQL_SELECT_LATEST_VERSION = <<<SQL
 SELECT
-    version_id id, instance_id, type, branch, date, revision, action, date_revision
+    version_id id, instance_id, type, branch, date, revision, action, date_revision, repo_url
 FROM
     version
 WHERE
@@ -346,6 +346,8 @@ SQL;
     public $backup_group;
     public $backup_perm;
     public $vcs_type;
+    public $repo_url;
+    public $branch;
     public $state;
 
     public $selection;
@@ -782,7 +784,8 @@ SQL;
             throw new \Exception('Unable to update version. This is a blank instance');
         }
 
-        $version->branch = $app->getBranch(true);
+        $version->repo_url = $this->repo_url;
+        $version->branch = $this->branch ?? $app->getBranch(true);
         $version->date = $app->getUpdateDate();
         $version->revision = $app->getRevision($this->webroot);
         $version->date_revision = $app->getDateRevision($this->webroot);
@@ -1398,5 +1401,18 @@ SQL;
             }
         }
         return false;
+    }
+
+    public function validateBranchInRepo($branch, $repoUrl)
+    {
+        $repoUrl = $repoUrl ?? $_ENV['GIT_TIKIWIKI_URI'];
+        $vcs = $this->getVersionControlSystem();
+        return $vcs->isBranchBelongsToRepo($branch, $repoUrl);
+    }
+
+    public function setBranchAndRepo($branch, $repoUrl)
+    {
+        $this->branch = $branch;
+        $this->repo_url = $repoUrl ?? $_ENV['GIT_TIKIWIKI_URI'];
     }
 }

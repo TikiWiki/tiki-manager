@@ -101,6 +101,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 'Instance branch'
             )
             ->addOption(
+                'repo-url',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Repository URL'
+            )
+            ->addOption(
                 'backup-user',
                 'bu',
                 InputOption::VALUE_REQUIRED,

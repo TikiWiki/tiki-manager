@@ -312,6 +312,18 @@ trait InstanceConfigure
         $this->io->info('Instance PHP Version: ' . CommandHelper::formatPhpVersion($instance->phpversion));
         $this->io->info('Instance PHP exec: ' . $instance->phpexec);
 
+        $vcsRepoUrl = $this->input->getOption('repo-url') ?? $_ENV['GIT_TIKIWIKI_URI'];
+
+        if ($this->input->isInteractive()) {
+            $vcsRepoUrl = $this->io->ask('Enter Git Repository URL', $vcsRepoUrl);
+        }
+
+        if (empty($vcsRepoUrl) || filter_var($vcsRepoUrl, FILTER_VALIDATE_URL) === false) {
+            throw new InvalidOptionException('Vcs url is invalid. Please use --repo-url=<URL>');
+        }
+
+        $instance->repo_url = $vcsRepoUrl;
+
         return $instance;
     }
 

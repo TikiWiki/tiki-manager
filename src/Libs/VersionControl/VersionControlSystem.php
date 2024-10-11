@@ -301,6 +301,8 @@ abstract class VersionControlSystem implements LoggerAwareInterface
     {
         $this->vcsOptions = $options;
     }
+
+    abstract public function isBranchBelongsToRepo($branch, $repoUrl);
 }
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4

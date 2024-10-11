@@ -49,6 +49,12 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 'Instance branch to update'
             )
             ->addOption(
+                'repo-url',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Repository URL'
+            )
+            ->addOption(
                 'check',
                 null,
                 InputOption::VALUE_NONE,
@@ -188,6 +194,8 @@ class UpdateInstanceCommand extends TikiManagerCommand
 
             $hookName = $this->getCommandHook();
             $bisectInstances = [];
+            $mismatchVcsInstances = [];
+
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
                 $isBisectSession = $instance->getOnGoingBisectSession();
@@ -223,6 +231,17 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $app = $instance->getApplication();
                 $version = $instance->getLatestVersion();
                 $branch_name = $version->getBranch();
+
+                $inputBranch = $input->getOption('branch') ?? $branch_name;
+                $repoURL = $input->getOption('repo-url') ?? $version->repo_url;
+
+                if ($instance->validateBranchInRepo($inputBranch, $repoURL)) {
+                    $instance->setBranchAndRepo($inputBranch, $repoURL);
+                } else {
+                    $mismatchVcsInstances[] = $instance->id;
+                    $instance->unlock();
+                    continue;
+                }
 
                 $hookName->registerPostHookVars(['instance' => $instance]);
 
@@ -263,6 +282,14 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $backupSkippedErrMsg = sprintf($backupSkippedErrMsg, implode(',', $bisectInstances));
                 $logs[] = $backupSkippedErrMsg;
                 $this->io->warning($backupSkippedErrMsg);
+            }
+
+            if (count($mismatchVcsInstances)) {
+                $actionMsg = $switch ? 'upgrade' : 'update';
+                $mismatchVcsErrMsg = $actionMsg . " is skipped for Instance(s) [%s] because branch and repository URL mismatch.";
+                $mismatchVcsErrMsg = sprintf($mismatchVcsErrMsg, implode(',', $mismatchVcsInstances));
+                $logs[] = $mismatchVcsErrMsg;
+                $this->io->warning($mismatchVcsErrMsg);
             }
 
             $emails = $input->getOption('email') ?? '';
@@ -308,7 +335,8 @@ class UpdateInstanceCommand extends TikiManagerCommand
     {
         try {
             $app = $instance->getApplication();
-            $filesToResolve = $app->performUpdate($instance, null, $options);
+            $target = Version::buildFake($instance->vcs_type, $instance->branch, $instance->repo_url);
+            $filesToResolve = $app->performUpdate($instance, $target, $options);
             $version = $instance->getLatestVersion();
 
             if ($options['checksum-check'] ?? false) {
@@ -330,8 +358,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
         $branch = $this->input->getOption('branch');
         $skipRequirements = $this->input->getOption('ignore-requirements') ?? false;
         $selectedVersion = $this->getUpgradeVersion($instance, !$skipRequirements, $branch);
-
-        $target = Version::buildFake($instance->vcs_type, $selectedVersion);
+        $target = Version::buildFake($instance->vcs_type, $selectedVersion->branch, $instance->repo_url);
 
         try {
             $app = $instance->getApplication();

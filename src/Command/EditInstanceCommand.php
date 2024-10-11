@@ -5,10 +5,7 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Access\Access;
-use TikiManager\Config\App;
 use Symfony\Component\Console\Input\InputOption;
-use TikiManager\Application\Instance;
 
 class EditInstanceCommand extends TikiManagerCommand
 {
@@ -79,6 +76,18 @@ class EditInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_REQUIRED,
                 'PHP binary to be used to manage the instance'
+            )
+            ->addOption(
+                'repo-url',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Repository URL'
+            )
+            ->addOption(
+                'branch',
+                'b',
+                InputOption::VALUE_REQUIRED,
+                'Instance branch'
             );
     }
 
@@ -186,6 +195,33 @@ class EditInstanceCommand extends TikiManagerCommand
                     $backup_perm = $helper->ask($input, $output, $question);
                 } else {
                     $backup_perm = $input->getOption('backup-permission');
+                }
+
+                $version = $instance->getLatestVersion();
+
+                //Instance Repository URL
+                if (empty($input->getOption('repo-url'))) {
+                    $repoURL = $version->repo_url ?? $_ENV['GIT_TIKIWIKI_URI'];
+                    $question = CommandHelper::getQuestion('Repository URL', $repoURL);
+                    $repoURL = $helper->ask($input, $output, $question);
+                } else {
+                    $repoURL = $input->getOption('repo-url');
+                }
+
+                //Instance Branch
+                if (empty($input->getOption('branch'))) {
+                    $question = CommandHelper::getQuestion('Instance Branch', $instance->branch);
+                    $branch = $helper->ask($input, $output, $question);
+                } else {
+                    $branch = $input->getOption('branch');
+                }
+
+                if ($instance->validateBranchInRepo($branch, $repoURL)) {
+                    $instance->setBranchAndRepo($branch, $repoURL);
+                    $instance->updateVersion();
+                } else {
+                    $output->writeln('<error>Branch ' . $branch . ' is not available for this instance</error>');
+                    return 1;
                 }
 
                 $instance->name = $name;

@@ -167,7 +167,8 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
         $this->postHookVars['INSTANCE_BACKUP_PERM_' . $instanceId] = $instance->backup_perm;
 
         $latestVersion = $instance->getLatestVersion();
-        $this->postHookVars['INSTANCE_BRANCH_' . $instanceId] = $latestVersion instanceof Version ? $latestVersion->branch : null ;
+        $this->postHookVars['INSTANCE_BRANCH_' . $instanceId] = $latestVersion instanceof Version ? $latestVersion->branch : null;
+        $this->postHookVars['INSTANCE_REPO_URL_' . $instanceId] = $latestVersion instanceof Version ? $latestVersion->repo_url : null;
         $this->postHookVars['INSTANCE_LAST_ACTION_' . $instanceId] = $instance->last_action;
         $this->postHookVars['INSTANCE_LAST_ACTION_DATE_' . $instanceId] = $instance->last_action_date;
     }

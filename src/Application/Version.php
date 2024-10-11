@@ -13,9 +13,9 @@ class Version
     const SQL_INSERT_VERSION = <<<SQL
         INSERT OR REPLACE INTO
             version
-            (version_id, instance_id, type, branch, revision, date, action, date_revision)
+            (version_id, instance_id, type, branch, revision, date, action,date_revision, repo_url)
         VALUES
-            (:id, :instance, :type, :branch, :revision, :date, :action, :revdate)
+            (:id, :instance, :type, :branch, :revision, :date, :action,:revdate, :repo_url)
         ;
 SQL;
 
@@ -27,18 +27,20 @@ SQL;
     public $date;
     public $action;
     public $date_revision;
+    public $repo_url;
 
     public function __construct($instance = null)
     {
         $this->instance = $instance;
     }
 
-    public static function buildFake($type, $branch)
+    public static function buildFake($type, $branch, $repo_url = null)
     {
         $v = new self;
         $v->type = strtolower($type);
         $v->branch = $branch;
         $v->date = date('Y-m-d');
+        $v->repo_url = $repo_url;
 
         return $v;
     }
@@ -58,6 +60,7 @@ SQL;
             ':date' => $this->date,
             ':action' => $this->action ?: 'create',
             ':revdate' => $this->date_revision,
+            ':repo_url' => $this->repo_url,
         ];
 
         query(self::SQL_INSERT_VERSION, $params);

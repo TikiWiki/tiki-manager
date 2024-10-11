@@ -210,10 +210,27 @@ TXT;
 
     public function testUpdateWithLag()
     {
-        $git = $this->createPartialMock(
-            Git::class,
-            ['isUpgrade', 'info', 'getLastCommit', 'checkoutBranch', 'cleanup', 'isShallow', 'fetch', 'getVersion']
-        );
+        $instance = $this->createMock(Instance::class);
+        $stream = vfsStream::setup('instance');
+        $instance->webroot = $stream->url();
+        $instance->type = 'local';
+        $access = $this->getMockBuilder(Local::class)
+            ->setConstructorArgs([$instance])
+            ->getMock();
+
+        $command = $this->createMock(Command::class);
+        $command->method('getReturn')->willReturn(0);
+
+        $access->method('runCommand')->willReturn($command);
+
+        $instance->expects($this->atLeastOnce())
+            ->method('getBestAccess')
+            ->willReturn($access);
+
+        $git = $this->getMockBuilder(Git::class)
+            ->setConstructorArgs([$instance])
+            ->setMethods(['isUpgrade', 'info', 'getLastCommit', 'checkoutBranch', 'cleanup', 'isShallow', 'fetch', 'getVersion'])
+            ->getMock();
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isShallow')->willReturn(true);
@@ -241,10 +258,27 @@ TXT;
      */
     public function testUpdateWithStashedChanges()
     {
-        $git = $this->createPartialMock(
-            Git::class,
-            ['isUpgrade', 'info', 'getChangedFiles', 'cleanup', 'stash', 'stashPop', 'fetch', 'isShallow', 'pull']
-        );
+        $instance = $this->createMock(Instance::class);
+        $stream = vfsStream::setup('instance');
+        $instance->webroot = $stream->url();
+        $instance->type = 'local';
+        $access = $this->getMockBuilder(Local::class)
+            ->setConstructorArgs([$instance])
+            ->getMock();
+
+        $command = $this->createMock(Command::class);
+        $command->method('getReturn')->willReturn(0);
+
+        $access->method('runCommand')->willReturn($command);
+
+        $instance->expects($this->atLeastOnce())
+            ->method('getBestAccess')
+            ->willReturn($access);
+
+        $git = $this->getMockBuilder(Git::class)
+            ->setConstructorArgs([$instance])
+            ->setMethods(['isUpgrade', 'info', 'getChangedFiles', 'cleanup', 'stash', 'stashPop', 'fetch', 'isShallow', 'pull'])
+            ->getMock();
 
         $git->setVCSOptions(['allow_stash' => true]);
 
@@ -267,10 +301,27 @@ TXT;
      */
     public function testUpdateWithChangesStashDisabled()
     {
-        $git = $this->createPartialMock(
-            Git::class,
-            ['isUpgrade', 'info', 'getChangedFiles', 'cleanup', 'stash', 'stashPop', 'fetch', 'isShallow', 'pull']
-        );
+        $instance = $this->createMock(Instance::class);
+        $stream = vfsStream::setup('instance');
+        $instance->webroot = $stream->url();
+        $instance->type = 'local';
+        $access = $this->getMockBuilder(Local::class)
+            ->setConstructorArgs([$instance])
+            ->getMock();
+
+        $command = $this->createMock(Command::class);
+        $command->method('getReturn')->willReturn(0);
+
+        $access->method('runCommand')->willReturn($command);
+
+        $instance->expects($this->atLeastOnce())
+            ->method('getBestAccess')
+            ->willReturn($access);
+
+        $git = $this->getMockBuilder(Git::class)
+            ->setConstructorArgs([$instance])
+            ->setMethods(['isUpgrade', 'info', 'getChangedFiles', 'cleanup', 'stash', 'stashPop', 'fetch', 'isShallow', 'pull'])
+            ->getMock();
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(false);
@@ -291,10 +342,27 @@ TXT;
      */
     public function testUpdate()
     {
-        $git = $this->createPartialMock(
-            Git::class,
-            ['isUpgrade', 'info', 'cleanup', 'pull', 'isShallow', 'fetch']
-        );
+        $instance = $this->createMock(Instance::class);
+        $stream = vfsStream::setup('instance');
+        $instance->webroot = $stream->url();
+        $instance->type = 'local';
+        $access = $this->getMockBuilder(Local::class)
+            ->setConstructorArgs([$instance])
+            ->getMock();
+
+        $command = $this->createMock(Command::class);
+        $command->method('getReturn')->willReturn(0);
+
+        $access->method('runCommand')->willReturn($command);
+
+        $instance->expects($this->atLeastOnce())
+            ->method('getBestAccess')
+            ->willReturn($access);
+
+        $git = $this->getMockBuilder(Git::class)
+            ->setConstructorArgs([$instance])
+            ->setMethods(['isUpgrade', 'info', 'cleanup', 'pull', 'isShallow', 'fetch'])
+            ->getMock();
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(false);

@@ -270,6 +270,21 @@ class Src extends VersionControlSystem
         return false;
     }
 
+    public function isRevisionPresent($targetFolder, $revision)
+    {
+        throw new VcsException('This method is not supported for SRC');
+    }
+
+    public function deepenCloneUntilRevisionPresent($targetFolder, $revision)
+    {
+        throw new VcsException('This method is not supported for SRC');
+    }
+
+    public function isBranchBelongsToRepo($branch, $repoUrl)
+    {
+        throw new VcsException('This method is not supported for SRC');
+    }
+
     /**
      * Bisect operation is not allowed for SRC.
      * It is for git only

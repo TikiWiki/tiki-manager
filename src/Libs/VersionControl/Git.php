@@ -12,6 +12,7 @@ use Symfony\Component\Process\Process;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
+use TikiManager\Libs\Helpers\VersionControl;
 use TikiManager\Libs\Host\Command;
 
 class Git extends VersionControlSystem
@@ -158,7 +159,7 @@ class Git extends VersionControlSystem
             $output = $error;
         }
 
-        return rtrim($output, "\n");
+        return rtrim($output ?? '', "\n");
     }
 
     public function clone($branchName, $targetFolder)
@@ -354,6 +355,10 @@ class Git extends VersionControlSystem
         $time = time() - $lag * 60 * 60 * 24;
         $revisionMsg = $revision ? "with revision {$revision}" : "";
         $messageUpdate = "Updating '{$branch}' branch {$revisionMsg}";
+
+        if (!empty($this->instance->repo_url)) {
+            $this->remoteSetUrl($targetFolder, $this->instance->repo_url);
+        }
 
         $branchInfo = $this->info($targetFolder);
         $isUpgrade = $this->isUpgrade($branchInfo, $branch);
@@ -808,5 +813,21 @@ class Git extends VersionControlSystem
                 $this->logger->warning("Reached maximum deepening depth of $maxDepth without finding revision $revision.");
             }
         }
+    }
+
+    public function isBranchBelongsToRepo($branch, $repoUrl)
+    {
+        $this->setRepositoryUrl($repoUrl);
+        $availableVersions = $this->getAvailableBranches();
+        foreach ($availableVersions as $version) {
+            if ($version instanceof Version) {
+                $gitBranch = VersionControl::formatBranch($version->branch, 'git');
+                if ($gitBranch === $branch) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

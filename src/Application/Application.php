@@ -124,6 +124,7 @@ abstract class Application
             $new->branch = $version->branch;
             $new->date = $version->date;
         }
+        $new->repo_url = $instance->repo_url;
         $new->action = 'update';
 
         $checksumCheck = isset($options['checksum-check']) && is_bool($options['checksum-check']) ?
@@ -204,6 +205,7 @@ abstract class Application
         $new->date = $version->date;
         $new->revision = $instance->getRevision();
         $new->date_revision = $instance->getDateRevision();
+        $new->repo_url = $instance->repo_url;
         $new->action = 'upgrade';
         $new->save();
 

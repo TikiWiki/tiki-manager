@@ -132,6 +132,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 'Specific revision to update the instance to'
             )
             ->addOption(
+                'repo-url',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Repository URL'
+            )
+            ->addOption(
                 'skip-lock',
                 null,
                 InputOption::VALUE_NONE,
@@ -153,7 +159,10 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
             if (!$value) {
                 continue;
             }
-            if ($key === 'revision') {
+
+            if ($key === 'repo-url') {
+                $command->setRepoUrl($value);
+            } elseif ($key === 'revision') {
                 $command->setRevision($value);
             } else {
                 $arguments['--' . $key] = $value;

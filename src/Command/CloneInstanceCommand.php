@@ -28,6 +28,7 @@ class CloneInstanceCommand extends TikiManagerCommand
 
     protected $mode = 'clone';
     protected $revision = '';
+    protected $repoURL;
 
     public function setMode($mode)
     {
@@ -37,6 +38,11 @@ class CloneInstanceCommand extends TikiManagerCommand
     public function setRevision($revision)
     {
         $this->revision = $revision;
+    }
+
+    public function setRepoUrl($repo)
+    {
+        $this->repoURL = $repo;
     }
 
     protected function configure()
@@ -253,6 +259,8 @@ class CloneInstanceCommand extends TikiManagerCommand
 
         $sourceInstance = $sourceInstances[0];
 
+        $repoURL = $this->repoURL ?? $sourceInstance->repo_url;
+
         $isBisectSession = $sourceInstance->getOnGoingBisectSession();
         if ($isBisectSession) {
             $actionMsg = $cloneUpgrade ? 'clone and upgrade' : 'clone';
@@ -291,6 +299,8 @@ class CloneInstanceCommand extends TikiManagerCommand
             $targetInstances = $helper->ask($input, $output, $question);
         }
 
+        $inputBranch = $input->getOption('branch') ?? $sourceInstance->branch;
+        $mismatchVcsInstances = [];
         $bisectInstances = [];
         $protectedInstances = [];
 
@@ -303,6 +313,12 @@ class CloneInstanceCommand extends TikiManagerCommand
             $isBisectSession = $targetInstance->getOnGoingBisectSession();
             if ($isBisectSession) {
                 $bisectInstances[] = $targetInstance->id;
+                unset($targetInstances[$i]);
+            }
+            if ($targetInstance->validateBranchInRepo($inputBranch, $repoURL)) {
+                $targetInstance->setBranchAndRepo($inputBranch, $repoURL);
+            } else {
+                $mismatchVcsInstances[] = $targetInstance->id;
                 unset($targetInstances[$i]);
             }
         }
@@ -321,6 +337,13 @@ class CloneInstanceCommand extends TikiManagerCommand
             $bisectMsg = sprintf($bisectMsg, implode(',', $bisectInstances));
             $this->io->warning($bisectMsg);
             $this->logger->warning($bisectMsg);
+        }
+
+        if (!empty($mismatchVcsInstances)) {
+            $invalidVcsMsg = $actionMsg . ' is aborted because Instance(s) (%s) branch (%s) does not belong to the repository (%s).';
+            $invalidVcsMsg = sprintf($invalidVcsMsg, implode(',', $mismatchVcsInstances), $inputBranch, $repoURL);
+            $this->io->error($invalidVcsMsg);
+            return 1;
         }
 
         if (empty($targetInstances)) {
@@ -537,7 +560,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
 
             if (isset($errors)) {
-                $destinationInstance->updateState('failure', $this->getName(), 'restore function failure');
+                $destinationInstance->updateState('failure', $this->getName(), 'clone function failure');
                 $this->askUnlock($destinationInstance);
                 return 1;
             }
@@ -558,6 +581,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                     continue;
                 }
             }
+
             if ($destinationInstance->isLocked()) {
                 $destinationInstance->unlock();
             }
