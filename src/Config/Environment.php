@@ -518,6 +518,16 @@ class Environment
                     UPDATE info SET value = '15' WHERE name = 'version';
                 ");
             // no break
+            case 15:
+                $db->exec("
+                    CREATE TABLE backup_ignore_list (
+                        instance_id INTEGER,
+                        exclude VARCHAR(255),
+                        UNIQUE(instance_id,exclude)
+                    );
+                    UPDATE info SET value = '16' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

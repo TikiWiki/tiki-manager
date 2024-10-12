@@ -271,6 +271,30 @@ WHERE
 ;
 SQL;
 
+    const SQL_DELETE_BCKP_IGNORE_LIST = <<<SQL
+DELETE FROM
+    backup_ignore_list
+WHERE
+    instance_id = :id AND (COALESCE(:paths, '') = '' OR exclude = :paths)
+;
+SQL;
+
+    const SQL_SELECT_BCKP_IGNORE_LISTS = <<<SQL
+SELECT * FROM 
+    backup_ignore_list
+WHERE
+    1 AND (COALESCE(:instance_id, '') = '' OR instance_id = :instance_id) AND (COALESCE(:paths, '') = '' OR exclude = :paths)
+;
+SQL;
+
+    const SQL_INSERT_BCKP_IGNORE_LIST = <<<SQL
+INSERT INTO backup_ignore_list
+    (instance_id, exclude)
+VALUES
+    (:instance_id, :paths)
+;
+SQL;
+
     const SQL_SET_BISECT_SESSION = <<<SQL
 INSERT OR REPLACE INTO
     bisect_sessions
@@ -599,6 +623,7 @@ SQL;
         query(self::SQL_DELETE_VERSION, [':id' => $this->id]);
         query(self::SQL_DELETE_ALL_INSTANCE_PROPERTIES, [':id' => $this->id]);
         query(self::SQL_DELETE_PATCH, [':id' => $this->id]);
+        query(self::SQL_DELETE_BCKP_IGNORE_LIST, [':id' => $this->id]);
         query(self::SQL_DELETE_INSTANCE_TAG, [':id' => $this->id]);
         query(self::SQL_DELETE_BISECT_SESSION, [':id' => $this->id]);
     }
@@ -853,7 +878,11 @@ SQL;
      */
     public function backup($direct = false, $full = true, $onlyCode = false)
     {
-        $backup = new Backup($this, $direct, $full, $onlyCode);
+        $excludeList = $this->getBackupIgnoreList([
+            ':instance_id' => $this->getId()
+        ]);
+
+        $backup = new Backup($this, $direct, $full, $onlyCode, $excludeList);
 
         if ($this->type === 'local' && $this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
@@ -881,7 +910,11 @@ SQL;
      */
     public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false, $onlyData = false, $onlyCode = false, $options = [], $skipSystemConfigurationCheck = false, $allowCommonParents = 0)
     {
-        $restore = new Restore($this, $direct, $onlyData, $skipSystemConfigurationCheck, $allowCommonParents);
+        $excludeList = $this->getBackupIgnoreList([
+            ':instance_id' => $this->getId()
+        ]);
+
+        $restore = new Restore($this, $direct, $onlyData, $skipSystemConfigurationCheck, $allowCommonParents, $excludeList);
 
         $restore->lock();
         $restore->setProcess($clone);
@@ -1414,5 +1447,63 @@ SQL;
     {
         $this->branch = $branch;
         $this->repo_url = $repoUrl ?? $_ENV['GIT_TIKIWIKI_URI'];
+    }
+
+    public static function getBackupIgnoreList($params = [])
+    {
+        $result = query(self::SQL_SELECT_BCKP_IGNORE_LISTS, $params);
+        $data = $result->fetchAll();
+        $rows = array_map(function ($item) {
+            return array_filter($item, function ($key) {
+                return !is_int($key);
+            }, ARRAY_FILTER_USE_KEY);
+        }, $data);
+
+        return $rows;
+    }
+
+    public function addPathToIgnoreList($paths)
+    {
+        if (empty($paths)) {
+            throw new \Exception('No path provided to ignore');
+        }
+
+        $access = $this->getBestAccess('scripting');
+
+        $pathsNotExists = [];
+        foreach ($paths as $path) {
+            $path = trim($path);
+            $pathExists = $access->fileExists($this->webroot . '/' . $path);
+            if (!$pathExists) {
+                $pathsNotExists[] = $path;
+            }
+        }
+
+        if (!empty($pathsNotExists)) {
+            throw new \Exception('Some paths do not exist: "' . implode(', ', $pathsNotExists) . '". The rest have been added.');
+        }
+
+        $ignoreList = self::getBackupIgnoreList([
+            ':instance_id' => $this->getId(),
+            ':paths' => $path
+        ]);
+
+        if (empty($ignoreList)) {
+            foreach ($paths as $path) {
+                query(self::SQL_INSERT_BCKP_IGNORE_LIST, [':instance_id' => $this->getId(), ':paths' => $path]);
+            }
+        }
+    }
+
+    public function removeBackupIgnoreList($paths = [])
+    {
+        if (empty($paths)) {
+            query(self::SQL_DELETE_BCKP_IGNORE_LIST, [':id' => $this->getId()]);
+        } else {
+            foreach ($paths as $path) {
+                $path = trim($path);
+                query(self::SQL_DELETE_BCKP_IGNORE_LIST, [':id' => $this->getId(), ':paths' => $path]);
+            }
+        }
     }
 }

@@ -709,4 +709,17 @@ class CommandHelper
 
         return $answer;
     }
+
+    public static function renderBackupIgnoreListTable($output, $rows)
+    {
+        $table = new Table($output);
+        $header = ['ID', 'Exclude Path'];
+
+        $table
+            ->setHeaders($header)
+            ->setRows($rows);
+        $table->render();
+
+        return true;
+    }
 }

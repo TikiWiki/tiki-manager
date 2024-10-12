@@ -134,6 +134,10 @@ $application->add(new \TikiManager\Command\InstanceBisectBadCommand());
 $application->add(new \TikiManager\Command\InstanceBisectGoodCommand());
 $application->add(new \TikiManager\Command\InstanceBisectResetCommand());
 
+$application->add(new \TikiManager\Command\BackupIgnoreAddCommand());
+$application->add(new \TikiManager\Command\BackupIgnoreListCommand());
+$application->add(new \TikiManager\Command\BackupIgnoreRemoveCommand());
+
 // this should be moved to a custom src/Console/Application (like composer)
 $dispatcher = new EventDispatcher();
 

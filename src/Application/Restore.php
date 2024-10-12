@@ -38,9 +38,9 @@ class Restore extends Backup
      *
      * @throws Exception\FolderPermissionException
      */
-    public function __construct(Instance $instance, bool $direct = false, bool $onlyData = false, bool $skipSystemConfigurationCheck = false, $allowCommonParents = 0)
+    public function __construct(Instance $instance, bool $direct = false, bool $onlyData = false, bool $skipSystemConfigurationCheck = false, $allowCommonParents = 0, $excludeList = [])
     {
-        parent::__construct($instance, $direct);
+        parent::__construct($instance, $direct, true, false, $excludeList);
 
         $this->onlyData = $onlyData;
         $this->skipSystemConfigurationCheck = $skipSystemConfigurationCheck;
@@ -432,6 +432,14 @@ class Restore extends Backup
             ];
 
             if ($this->direct) {
+
+                if (!empty($this->excludeList)) {
+                    foreach ($this->excludeList as $exclude) {
+                        $rsyncExcludes[] = '--exclude';
+                        $rsyncExcludes[] = $exclude['exclude'];
+                    }
+                }
+
                 // Sync options for the temp folder
                 $rsyncExcludes = array_merge($rsyncExcludes, [
                     '--include=temp/**',

@@ -40,6 +40,7 @@ class Backup
     protected $direct;
     protected $onlyCode;
     protected $full;
+    protected $excludeList;
 
     /**
      * Backup constructor.
@@ -49,7 +50,7 @@ class Backup
      * @param bool $onlyCode
      * @throws FolderPermissionException
      */
-    public function __construct($instance, $direct = false, $full = true, $onlyCode = false)
+    public function __construct($instance, $direct = false, $full = true, $onlyCode = false, $excludeList = [])
     {
         $this->setIO(App::get('io'));
 
@@ -69,6 +70,15 @@ class Backup
 
         $this->createBackupDir();
         $this->createArchiveDir();
+        $this->setExclusionList($excludeList);
+    }
+
+    public function setExclusionList(array $excludeList) {
+        $this->excludeList = $excludeList;
+    }
+
+    public function resetExclusionList() {
+        $this->excludeList = [];
     }
 
     public function copyDirectories($targets, $backupDir)
@@ -191,8 +201,16 @@ class Backup
         $fileName = sprintf('%s_%s.tar%s', $this->backupDirname, date('Y-m-d_H-i-s'), $bzipStep ? '' : '.bz2');
         $tarPath = $archiveDir . DIRECTORY_SEPARATOR . $fileName;
 
+        $exclude_command = '';
+        if (!empty($this->excludeList)) {
+            foreach ($this->excludeList as $exclude) {
+                $exclude_command .= " --exclude='" . $exclude['exclude'] . "'";
+            }
+        }
+
         $command = sprintf(
-            "tar -cp%s -C %s -f %s %s",
+            "tar%s -cp%s -C %s -f %s %s",
+            $exclude_command,
             $bzipStep ? '' : 'j',
             escapeshellarg($this->backupRoot),
             escapeshellarg($tarPath),
