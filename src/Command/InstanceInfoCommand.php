@@ -20,7 +20,7 @@ class InstanceInfoCommand extends TikiManagerCommand
             ->setName('instance:info')
             ->setDescription('Show Tiki instance Info')
             ->setHelp('This command allows you to show Tiki instance information, and can get information on json format')
-            ->addOption('instances', 'i', InputOption::VALUE_REQUIRED, 'Sources instance')
+            ->addOption('instance', 'i', InputOption::VALUE_REQUIRED, 'Sources instance')
             ->addOption('format', null, InputOption::VALUE_OPTIONAL, 'Output format (table or json)', 'table');
     }
 
@@ -36,7 +36,7 @@ class InstanceInfoCommand extends TikiManagerCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        if (empty($input->getOption('instances'))) {
+        if (empty($input->getOption('instance'))) {
             if (empty($this->instancesInfo)) {
                 return;
             }
@@ -49,7 +49,7 @@ class InstanceInfoCommand extends TikiManagerCommand
                 }, $selectedInstances));
             });
 
-            $input->setOption('instances', $answer);
+            $input->setOption('instance', $answer);
         }
     }
 
@@ -59,9 +59,9 @@ class InstanceInfoCommand extends TikiManagerCommand
             $output->writeln('<comment>No instances available to detect.</comment>');
             return 0;
         }
-        $instancesOption = $input->getOption('instances');
+        $instancesOption = $input->getOption('instance');
         $filtered_instances = array_filter($this->instances, function ($instance) use ($instancesOption) {
-            return $instance->id == $instancesOption;
+            return( $instance->id == $instancesOption || $instance->name === $instancesOption);
         });
         $selectedinstance = CommandHelper::getInstancesInfo($filtered_instances, true);
 

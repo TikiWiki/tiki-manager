@@ -45,8 +45,8 @@ class BackupIgnoreListCommand extends TikiManagerCommand
             $list = Instance::getBackupIgnoreList();
             CommandHelper::renderBackupIgnoreListTable($output, $list);
             return 0;
-        } 
-        
+        }
+
         CommandHelper::validateInstanceSelection($instanceId, $instances);
 
         $ignoreLists = Instance::getBackupIgnoreList([':instance_id' => $instanceId]);

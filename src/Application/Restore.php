@@ -431,13 +431,10 @@ class Restore extends Backup
                 '/db/local.php'
             ];
 
-            if ($this->direct) {
-
-                if (!empty($this->excludeList)) {
-                    foreach ($this->excludeList as $exclude) {
-                        $rsyncExcludes[] = '--exclude';
-                        $rsyncExcludes[] = $exclude['exclude'];
-                    }
+            if (!empty($this->excludeList)) {
+                foreach ($this->excludeList as $exclude) {
+                    $rsyncExcludes[] = '--exclude';
+                    $rsyncExcludes[] = $exclude['exclude'];
                 }
 
                 // Sync options for the temp folder

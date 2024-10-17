@@ -73,11 +73,13 @@ class Backup
         $this->setExclusionList($excludeList);
     }
 
-    public function setExclusionList(array $excludeList) {
+    public function setExclusionList(array $excludeList)
+    {
         $this->excludeList = $excludeList;
     }
 
-    public function resetExclusionList() {
+    public function resetExclusionList()
+    {
         $this->excludeList = [];
     }
 
