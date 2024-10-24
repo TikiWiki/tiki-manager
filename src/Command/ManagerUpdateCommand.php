@@ -10,9 +10,9 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Manager\Update\Exception\TrackingInformationNotFoundException;
 use TikiManager\Manager\Update\Git;
-use TikiManager\Manager\Update\RemoteSourceNotFoundException;
 use TikiManager\Manager\UpdateManager;
 
 class ManagerUpdateCommand extends TikiManagerCommand
@@ -41,6 +41,14 @@ class ManagerUpdateCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $packagesInstallation = CommandHelper::isInstalledFromPackage();
+        if ($packagesInstallation) {
+            $this->io->newLine();
+            $this->io->writeln('<comment>This instance of Tiki-Manager was installed using your operation system packages.</comment>');
+            $this->io->writeln('<comment>Use you package manager to check for a new version and to update.</comment>');
+            return 1;
+        }
+
         $updater = UpdateManager::getUpdater();
         $updater->setLogger($this->logger);
 

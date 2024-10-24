@@ -284,21 +284,19 @@ class CommandHelper
      */
     public static function validateInstanceSelection($answer, $allInstances)
     {
+        $selectedInstances = array();
         if (empty($answer)) {
-            throw new \RuntimeException(
-                'You must select an instance #ID'
-            );
-        }
-
-        if (strtolower($answer) === 'all') {
-            $selectedInstances = $allInstances;
+            throw new \RuntimeException('You must select an instance #ID');
+        } elseif (strtolower($answer) == "all") {
+            foreach ($allInstances as $id => $instance) {
+                $selectedInstances[ $id ] = $instance;
+                $selectedInstances[ $instance->name ] = $instance;
+            }
         } else {
             $instances = [];
-            $selectedInstances = [];
-
-            foreach ($allInstances as $instance) {
-                $instances[$instance->name] = $instance;
-                $instances[$instance->getId()] = $instance;
+            foreach ($allInstances as $id => $instance) {
+                $instances[ $id ] = $instance;
+                $instances[ $instance->name ] = $instance;
             }
 
             $answerInstances = array_filter(array_map('trim', explode(',', $answer)));
@@ -708,6 +706,20 @@ class CommandHelper
         }
 
         return $answer;
+    }
+
+    /**
+     * Check Tiki-Manager instance was installed using operation system packages
+     *
+     * @return bool
+     */
+    public static function isInstalledFromPackage()
+    {
+        if (file_exists($_ENV['TRIM_ROOT'] . '/VERSION')) {
+            return true;
+        }
+
+        return false;
     }
 
     public static function renderBackupIgnoreListTable($output, $rows)
