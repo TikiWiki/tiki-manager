@@ -287,12 +287,25 @@ class Environment
                 throw new ConfigurationErrorException('Impossible to generate SSH key. Make sure data folder is writable.');
             }
 
-            $this->io->writeln('If you enter a passphrase, you will need to enter it every time you run ' .
-                'Tiki Manager, and thus, automatic, unattended operations (like backups, file integrity ' .
-                "checks, etc.) will not be possible.");
+            $this->io->writeln('Generating a new SSH key.');
+
+            // Note: it is too early to check for the command 'n' option, as Command is not initiliazed yet.
+            // We have to manually ready the --no-interaction parameter.
+            $input = App::getContainer()->get('input');
+            $interactive = !$input->hasParameterOption('--no-interaction') && !$input->hasParameterOption('-n');
+
+            $passphrase = '';
+            if ($interactive) {
+                $this->io->writeln('If you enter a passphrase, you will need to enter it every time you run ' .
+                    'Tiki Manager, and thus, automatic, unattended operations (like backups, file integrity ' .
+                    "checks, etc.) will not be possible.");
+            } else {
+                $this->io->writeln('You are in non-interactive mode, the generated SSH key won\'t have any passphrase.');
+                $passphrase = '-N ""'; // set an empty passphrase to avoid user interaction.
+            }
 
             $key = $_ENV['SSH_KEY'];
-            `ssh-keygen -t rsa -f $key`;
+            `ssh-keygen -t rsa $passphrase -f $key`;
         } else {
             @chmod($_ENV['SSH_KEY'], 0600);
         }
