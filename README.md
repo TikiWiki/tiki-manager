@@ -2,7 +2,7 @@
 
 ## Installation
 
-There are three options
+There are four options
 
 Via WikiSuite:
 https://wikisuite.org/How-to-install-WikiSuite
@@ -13,6 +13,8 @@ https://doc.tiki.org/Manager#Installation
 As a Tiki Package
 https://doc.tiki.org/Tiki-Manager-Package
 
+Using a PHP Archive file (tiki-manager.phar).
+See later in this README file for more informations.
 
 ## Configuration
 
@@ -55,6 +57,44 @@ SMTP_PASS=(optional if authentication is required)
 ## Documentation
 
 Documentation is at [Tiki Documentation - Manager](https://doc.tiki.org/Manager).
+
+## Releases
+
+Tiki-manager releases are available on [Gitlab - Tiki-manager releases](https://gitlab.com/tikiwiki/tiki-manager/-/releases).
+
+Those release are automatically build by the Gitlab CI/CD when a new version tag is added.
+Only project maintainers can add such tags.
+
+You can access the latest release description by using this permalink:
+https://gitlab.com/tikiwiki/tiki-manager/-/releases/permalink/latest
+
+## Using the PHP Archive tiki-manager.phar
+
+You can download a PHP Archive file to use `tiki-manager.phar` as a single executable.
+
+Those archive are available in following places:
+
+* in the [Gitlab Package Registry](https://gitlab.com/tikiwiki/tiki-manager/-/packages)
+* as assets on [Gitlab releases](https://gitlab.com/tikiwiki/tiki-manager/-/releases)
+
+To get the latest released `tiki-manager.phar` you can use this permalink:
+https://gitlab.com/tikiwiki/tiki-manager/-/releases/permalink/latest/downloads/tiki-manager.phar
+
+Download it in an empty directory, then follow the `tiki-manager` documentation to create your `.env` file.
+
+> Note: for now there is a bug with `tiki-manager.phar`: it does not download composer automatically. So you have to install it yourself for now.
+
+Here is an example on how you can initiate `tiki-manager.phar`:
+
+```bash
+mkdir working_dir
+cd working_dir
+wget https://gitlab.com/tikiwiki/tiki-manager/-/releases/permalink/latest/downloads/tiki-manager.phar
+wget -O .env https://gitlab.com/tikiwiki/tiki-manager/-/raw/master/.env.dist?ref_type=heads
+# then edit the .env file before launching it for the first time.
+chmod u+x tiki-manager.phar
+./tiki-manager.phar -n list
+```
 
 ## Contributing
 
