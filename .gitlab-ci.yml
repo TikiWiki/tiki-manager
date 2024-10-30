@@ -20,7 +20,7 @@ stages:
   - pre-functional-tests
   - functional-tests
   - package
-  - upload
+  - prepare
   - release
   - vendors_update
 
@@ -398,12 +398,13 @@ compressed:
       - $SCHEDULER == "update_vendor"
 
 #----------------------------------------------------------------------------------------------------------------------#
-# UPLOAD SECTION
+# PREPARE SECTION
 #----------------------------------------------------------------------------------------------------------------------#
 
 upload:
-  stage: upload
+  stage: prepare
   image: curlimages/curl:latest
+  allow_failure: false
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/                 # Run this job when a tag is created, and tag match version regexp
       when: always
@@ -415,6 +416,45 @@ upload:
       curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file build/tiki-manager.phar "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.phar"
     - |
       curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file tiki-manager.tgz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.tgz"
+
+prepare_changelog:
+  stage: prepare
+  allow_failure: false
+  needs:
+    - composer
+  cache:
+    <<: *composer-cache
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/                 # Run this job when a tag is created, and tag match version regexp
+      when: always
+  script:
+    # Generating a changelog. Here is how it works:
+    # * it assumes we are running with a tag on the current commit (thats the case in release_job, thanks to the rules section)
+    # * `git describe --tags --abbrev=0 --match="v*" HEAD^1` <= search the last tag (matching v*) starting at the previous commit, and return the tag name
+    # * `git [...] log`: get all commit subjects from the tag computed by git-describe to HEAD
+    # * we filter to remove subject that does not start with something like [FIX]
+    # * then we produce a changelog file, by reordering commit by types (first important types, then less important ones)
+    # * we create a release_notes.txt file with the release changelog content.
+    # Note: if the commit as multiple types ([SEC][FIX] for example), only the first one will be taken into account for the ordering.
+    # Note: this will not work for the very first tag.
+    - echo "Generating changelog"
+    - git --no-pager log --pretty=format:"%s" $(git describe --tags --abbrev=0 --match="v*" HEAD^1)..HEAD | grep -E '^\[[A-Z]+\]' > changelog.tmp;
+    - echo "tiki-manager $CI_COMMIT_TAG" > release_notes.txt;
+    - echo "" >> release_notes.txt;
+    - grep -E '^\[MOD\]' changelog.tmp | uniq >> release_notes.txt || true;
+    - grep -E '^\[REM\]' changelog.tmp | uniq >> release_notes.txt || true;
+    - grep -E '^\[SEC\]' changelog.tmp | uniq >> release_notes.txt || true;
+    - grep -E '^\[NEW\]' changelog.tmp | uniq >> release_notes.txt || true;
+    - grep -v -E '^\[(MOD|REM|SEC|NEW)\]' changelog.tmp | sort -u >> release_notes.txt || true;
+    - rm changelog.tmp;
+    - cat release_notes.txt;
+    # and we must double newlines... else gitlab will show the full changelog on a single line
+    - sed -i -z 's/\n/\n\n/g' release_notes.txt
+  artifacts:
+    name: release_notes.txt
+    paths:
+      - release_notes.txt
+    when: on_success
 
 #----------------------------------------------------------------------------------------------------------------------#
 # RELEASE SECTION
@@ -428,19 +468,22 @@ release_job:
       when: always
   needs:
     - upload
+    - prepare_changelog
   script:
-    - echo "running release_job"
+    - echo "Running release_job"
   release:                               # See https://docs.gitlab.com/ee/ci/yaml/#release for available properties
     tag_name: '$CI_COMMIT_TAG'
-    description: '$CI_COMMIT_TAG' # TODO: compute some description from Changelog and/or git history.
+    description: release_notes.txt
     assets:
       links:
         - name: tiki-manager.phar
           url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.phar"
           link_type: 'package'
+          filepath: '/tiki-manager.phar'
         - name: tiki-manager.tgz
           url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.tgz"
           link_type: 'package'
+          filepath: '/tiki-manager.tgz'
 
 #----------------------------------------------------------------------------------------------------------------------#
 # MAINTENANCE SECTION
