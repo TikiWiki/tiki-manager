@@ -412,9 +412,9 @@ upload:
     - phar
   script:
     - |
-      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file build/tiki-manager.phar "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager-${CI_COMMIT_TAG}.phar"
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file build/tiki-manager.phar "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.phar"
     - |
-      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file tiki-manager.tgz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager-${CI_COMMIT_TAG}.tgz"
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file tiki-manager.tgz "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.tgz"
 
 #----------------------------------------------------------------------------------------------------------------------#
 # RELEASE SECTION
@@ -435,11 +435,11 @@ release_job:
     description: '$CI_COMMIT_TAG' # TODO: compute some description from Changelog and/or git history.
     assets:
       links:
-        - name: tiki-manager-${CI_COMMIT_TAG}.phar
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager-${CI_COMMIT_TAG}.phar"
+        - name: tiki-manager.phar
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.phar"
           link_type: 'package'
-        - name: tiki-manager-${CI_COMMIT_TAG}.tgz
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager-${CI_COMMIT_TAG}.tgz"
+        - name: tiki-manager.tgz
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tiki-manager/${CI_COMMIT_TAG}/tiki-manager.tgz"
           link_type: 'package'
 
 #----------------------------------------------------------------------------------------------------------------------#
