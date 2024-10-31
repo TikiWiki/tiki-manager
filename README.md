@@ -82,7 +82,9 @@ https://gitlab.com/tikiwiki/tiki-manager/-/releases/permalink/latest/downloads/t
 
 Just download it in a working directory, and run it using `php tiki-manager.phar`, or make the file executable and run `./tiki-manager.php`.
 
-> Prerequisite: you must have `composer` installed on your system. You can alternatively put the `composer.phar` executable in the same directory as `tiki-manager.phar`.
+> Prerequisite: you must have `composer` installed on your system.
+> You can alternatively put the `composer.phar` executable in the same directory as `tiki-manager.phar`,
+> or use the `COMPOSER_PATH` environment variable to specify the path to the `composer` executable.
 
 You can customize the configuration by adding a `.env` file in the same directory as `tiki-manager.phar`.
 
