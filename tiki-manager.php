@@ -40,12 +40,16 @@ use TikiManager\Manager\UpdateManager;
 try {
     Environment::getInstance()->load();
 } catch (ConfigurationErrorException $e) {
-    $io = App::get('io');
-    if ($io) {
-        $io->error($e->getMessage());
-        die;
-    } else {
-        die($e->getMessage());
+    try {
+        $io = App::get('io');
+        if ($io) {
+            $io->error($e->getMessage());
+            die;
+        } else {
+            die($e->getMessage());
+        }
+    } catch (Throwable $ioError) {
+        die($e->getMessage() . "\n" . $ioError->getMessage());
     }
 }
 
