@@ -97,7 +97,13 @@ class Environment
 
         $envFile = static::get('TM_DOTENV');
         $dotenvLoader->load($envDistFile);
-        $dotenvLoader->loadEnv($envFile);
+        // Special case: when in PHAR mode, $envDistFile is in the PHAR archive,
+        // and we want .env to be optional.
+        // $dotenvLoader->loadEnv will fail if there is no .env and no .env.dist.
+        // So, to avoid that, we do the following check:
+        if (!$_ENV['IS_PHAR'] || is_file($envFile) || is_file($envFile . '.dist')) {
+            $dotenvLoader->loadEnv($envFile);
+        }
 
         $this->loadEnvironmentVariablesContainingLogic();
 

@@ -80,9 +80,13 @@ Those archive are available in following places:
 To get the latest released `tiki-manager.phar` you can use this permalink:
 https://gitlab.com/tikiwiki/tiki-manager/-/releases/permalink/latest/downloads/tiki-manager.phar
 
-Download it in an empty directory, then follow the `tiki-manager` documentation to create your `.env` file.
+Just download it in a working directory, and run it using `php tiki-manager.phar`, or make the file executable and run `./tiki-manager.php`.
+
+You can customize the configuration by adding a `.env` file in the same directory as `tiki-manager.phar`.
 
 > Note: for now there is a bug with `tiki-manager.phar`: it does not download composer automatically. So you have to install it yourself for now.
+
+> Note: avoid putting the file in a directory where you have another Symfony project source files. It could interfere.
 
 Here is an example on how you can initiate `tiki-manager.phar`:
 
@@ -90,8 +94,6 @@ Here is an example on how you can initiate `tiki-manager.phar`:
 mkdir working_dir
 cd working_dir
 wget https://gitlab.com/tikiwiki/tiki-manager/-/releases/permalink/latest/downloads/tiki-manager.phar
-wget -O .env https://gitlab.com/tikiwiki/tiki-manager/-/raw/master/.env.dist?ref_type=heads
-# then edit the .env file before launching it for the first time.
 chmod u+x tiki-manager.phar
 ./tiki-manager.phar -n list
 ```
