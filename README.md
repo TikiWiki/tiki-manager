@@ -82,9 +82,9 @@ https://gitlab.com/tikiwiki/tiki-manager/-/releases/permalink/latest/downloads/t
 
 Just download it in a working directory, and run it using `php tiki-manager.phar`, or make the file executable and run `./tiki-manager.php`.
 
-You can customize the configuration by adding a `.env` file in the same directory as `tiki-manager.phar`.
+> Prerequisite: you must have `composer` installed on your system. You can alternatively put the `composer.phar` executable in the same directory as `tiki-manager.phar`.
 
-> Note: for now there is a bug with `tiki-manager.phar`: it does not download composer automatically. So you have to install it yourself for now.
+You can customize the configuration by adding a `.env` file in the same directory as `tiki-manager.phar`.
 
 > Note: avoid putting the file in a directory where you have another Symfony project source files. It could interfere.
 
