@@ -170,7 +170,11 @@ class Environment
         }
 
         if (empty($_ENV['COMPOSER_PATH'])) {
-            $composerPath = detectComposer($this->homeDirectory);
+            if ($_ENV['IS_PHAR'] && ($pharPath = Phar::running(false))) {
+                $composerPath = detectComposer(realpath(dirname($pharPath)));
+            } else {
+                $composerPath = detectComposer($this->homeDirectory);
+            }
             if (!$composerPath) {
                 throw new ConfigurationErrorException('Unable to find composer or composer.phar');
             }
