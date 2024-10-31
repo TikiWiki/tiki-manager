@@ -447,9 +447,9 @@ prepare_changelog:
     - grep -E '^\[NEW\]' changelog.tmp | uniq >> release_notes.txt || true;
     - grep -v -E '^\[(MOD|REM|SEC|NEW)\]' changelog.tmp | sort -u >> release_notes.txt || true;
     - rm changelog.tmp;
+    # and we make a list from all commit subjects:
+    - sed -i -e 's/^\[/* [/g' release_notes.txt
     - cat release_notes.txt;
-    # and we must double newlines... else gitlab will show the full changelog on a single line
-    - sed -i -z 's/\n/\n\n/g' release_notes.txt
   artifacts:
     name: release_notes.txt
     paths:
