@@ -7,6 +7,7 @@
 
 namespace TikiManager\Command;
 
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
@@ -47,7 +48,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
 
         if (! in_array($status, ['on', 'off'])) {
             $this->io->error('Please insert a valid status [on, off].');
-            return false;
+            return Command::FAILURE;
         }
 
         $instances = CommandHelper::getInstances('all', true);
@@ -60,10 +61,10 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
         $validInstancesOptions = count(array_intersect($instancesOption, $validInstances)) == count($instancesOption);
         if (! $validInstancesOptions) {
             $this->io->error('Please insert a valid instance id.');
-            return false;
+            return Command::FAILURE;
         }
 
-        $result = 1;
+        $result = Command::FAILURE;;
         $messages = [];
         $errors = [];
 
@@ -106,7 +107,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
 
                 if ($success) {
                     $this->io->success('Instance ' . $instance->name . ' maintenance ' . $status);
-                    $result = 0;
+                    $result = Command::SUCCESS;
                 } else {
                     $this->io->error('Instance ' . $instance->name . ' maintenance ' . $status);
                 }

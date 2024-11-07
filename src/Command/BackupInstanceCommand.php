@@ -207,7 +207,7 @@ class BackupInstanceCommand extends TikiManagerCommand
                 );
             } catch (\RuntimeException $e) {
                 debug($e->getMessage());
-                $this->io->error($e->getMessage());
+                $this->io->warning('Could not send an e-mail report: ' . $e->getMessage());
             }
         }
 

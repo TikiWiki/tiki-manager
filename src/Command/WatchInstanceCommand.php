@@ -7,6 +7,7 @@
 
 namespace TikiManager\Command;
 
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -156,18 +157,18 @@ class WatchInstanceCommand extends TikiManagerCommand
         }
 
         if (empty($log)) {
-            return 0;
+            return Command::SUCCESS;
         }
 
         try {
             $this->sendEmail($email, '[Tiki-Manager] Potential intrusions detected', $log);
         } catch (\RuntimeException $e) {
             debug($e->getMessage());
-            $this->io->error($e->getMessage());
-            return 1;
+            $this->io->warning('Could not send an e-mail report: ' . $e->getMessage());
+            return Command::FAILURE;
         }
 
         $this->io->success('Email sent, please check your inbox.');
-        return 0;
+        return Command::SUCCESS;
     }
 }
