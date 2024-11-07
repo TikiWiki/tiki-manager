@@ -64,7 +64,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
             return Command::FAILURE;
         }
 
-        $result = Command::FAILURE;;
+        $result = Command::FAILURE;
         $messages = [];
         $errors = [];
 

@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable PSR1.Files.SideEffects.FoundWithSymbols
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 namespace TikiManager\Ext;
