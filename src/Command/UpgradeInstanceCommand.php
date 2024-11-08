@@ -15,6 +15,7 @@ use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Libs\Helpers\Checksum;
+use TikiManager\Config\Environment as Env;
 
 class UpgradeInstanceCommand extends TikiManagerCommand
 {
@@ -177,7 +178,9 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 $instance->lock();
                 $latestVersion = $instance->getLatestVersion();
 
-                $repoURL = $input->getOption('repo-url') ?? $latestVersion->repo_url;
+                // Note: $latestVersion->repo_url can be empty (when created before this column was added,
+                // or by importing an existing instance.).
+                $repoURL = $input->getOption('repo-url') ?? $latestVersion->repo_url ?? Env::get('GIT_TIKIWIKI_URI');
                 $branch = $branch ?? $selectedVersion->branch;
 
                 if ($instance->validateBranchInRepo($branch, $repoURL)) {

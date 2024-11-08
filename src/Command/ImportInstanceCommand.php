@@ -113,6 +113,12 @@ class ImportInstanceCommand extends TikiManagerCommand
                 'Instance branch'
             )
             ->addOption(
+                'repo-url',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Repository URL'
+            )
+            ->addOption(
                 'phpexec',
                 null,
                 InputOption::VALUE_REQUIRED,

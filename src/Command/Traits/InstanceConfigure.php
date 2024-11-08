@@ -312,14 +312,24 @@ trait InstanceConfigure
         $this->io->info('Instance PHP Version: ' . CommandHelper::formatPhpVersion($instance->phpversion));
         $this->io->info('Instance PHP exec: ' . $instance->phpexec);
 
-        $vcsRepoUrl = $this->input->getOption('repo-url') ?? $_ENV['GIT_TIKIWIKI_URI'];
+        $vcsRepoUrl = $this->input->hasOption('repo-url') ? $this->input->getOption('repo-url') : null;
+        if (!$import) {
+            $vcsRepoUrl ??= Env::get('GIT_TIKIWIKI_URI');
+            // TODO: if $import===true, we should try to auto-detect if there is a git repo, and git the repo url using
+            // a git command. For now we just add an empty value (unless the user want to enter it manually, see bellow).
+        }
 
         if ($this->input->isInteractive()) {
             $vcsRepoUrl = $this->io->ask('Enter Git Repository URL', $vcsRepoUrl);
+            if (empty($vcsRepoUrl)) {
+                $vcsRepoUrl = null; // normalize the value if an empty string was passed in interactive mode.
+            }
         }
 
-        if (empty($vcsRepoUrl) || filter_var($vcsRepoUrl, FILTER_VALIDATE_URL) === false) {
-            throw new InvalidOptionException('Vcs url is invalid. Please use --repo-url=<URL>');
+        if (!($import && $vcsRepoUrl === null)) { // when importing, null is valid.
+            if (empty($vcsRepoUrl) || filter_var($vcsRepoUrl, FILTER_VALIDATE_URL) === false) {
+                throw new InvalidOptionException('Vcs url is invalid. Please use --repo-url=<URL>');
+            }
         }
 
         $instance->repo_url = $vcsRepoUrl;

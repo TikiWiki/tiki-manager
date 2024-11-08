@@ -21,6 +21,7 @@ use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Command\Traits\SendEmail;
 use TikiManager\Libs\Helpers\Checksum;
 use TikiManager\Logger\ArrayHandler;
+use TikiManager\Config\Environment as Env;
 
 class UpdateInstanceCommand extends TikiManagerCommand
 {
@@ -233,7 +234,9 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 $branch_name = $version->getBranch();
 
                 $inputBranch = $input->getOption('branch') ?? $branch_name;
-                $repoURL = $input->getOption('repo-url') ?? $version->repo_url;
+                // Note: $latestVersion->repo_url can be empty (when created before this column was added,
+                // or by importing an existing instance.).
+                $repoURL = $input->getOption('repo-url') ?? $version->repo_url ?? Env::get('GIT_TIKIWIKI_URI');
 
                 if ($instance->validateBranchInRepo($inputBranch, $repoURL)) {
                     $instance->setBranchAndRepo($inputBranch, $repoURL);
