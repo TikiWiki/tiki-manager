@@ -7,13 +7,15 @@
 
 namespace TikiManager\Command\Traits;
 
-use Laminas\Mail\Exception\RuntimeException;
+use Laminas\Mail\Exception\ExceptionInterface as MailExceptionInterface;
 use Laminas\Mail\Message;
 use Laminas\Mail\Transport\Sendmail;
 use Laminas\Mail\Transport\Smtp;
 use Laminas\Mail\Transport\SmtpOptions;
 use Laminas\Mail\Transport\TransportInterface;
+use TikiManager\Config\App;
 use TikiManager\Config\Environment;
+use TikiManager\Style\TikiManagerStyle;
 
 trait SendEmail
 {
@@ -60,24 +62,36 @@ trait SendEmail
     {
         $from = $from ?: Environment::get('FROM_EMAIL_ADDRESS');
 
-        if (!$from) {
-            throw new \RuntimeException('Unable to determine FROM_EMAIL_ADDRESS required to send emails. Please check README.md file.');
+        $mailer = $this->getMailer();
+
+        if (empty($from)) {
+            if (!($mailer instanceof Sendmail)) {
+                throw new \RuntimeException('Unable to determine FROM_EMAIL_ADDRESS required to send emails. Please check README.md file.');
+            }
+
+            // sendmail can use the default email setup in the host, strictly speaking does not need $from
+            // so issue an info message and continue
+            /** @var TikiManagerStyle $io */
+            $io = App::get('io');
+            $io->info('The value of FROM_EMAIL_ADDRESS is not set in the .env file. Using the default email from the system.');
         }
 
         try {
-            $mailer = $this->getMailer();
-
             // Create a message
             $mailMsg = new Message();
+
+            if (!empty($from)) {
+                $mailMsg->setFrom($from);
+            }
+
             $mailMsg
-                ->setFrom($from)
                 ->setSubject($subject)
                 ->addTo($to)
                 ->setBody($message);
 
             // Send the message
             $mailer->send($mailMsg);
-        } catch (RuntimeException $e) {
+        } catch (MailExceptionInterface $e) {
             throw new \RuntimeException('Unable to send email notification.' . PHP_EOL . $e->getMessage());
         }
     }
