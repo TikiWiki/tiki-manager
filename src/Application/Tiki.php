@@ -1052,7 +1052,7 @@ TXT;
             preg_match('/Your requirements could not be resolved/', $commandOutput)
         ) {
             trim_output($commandOutput, ['instance_id' => $instance->getId()]);
-            throw new \Exception("Composer install failed for {$bundled}composer.lock (Tiki bundled packages).\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+            throw new \Exception("Composer install failed for {$bundled}composer.lock (Tiki bundled packages).\nCheck logs in " . $_ENV['TRIM_LOGS'] . "/ for more details.");
         }
 
         if (preg_match('/Could not apply patch! Skipping./', $commandOutput)) {
@@ -1089,7 +1089,7 @@ TXT;
             $errorMsg = "Failed to " . $action. " Tiki Packages listed in composer.json in the root folder.";
             $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent() ?: $errorMsg;
             trim_output($commandOutput, ['instance_id' => $instance->getId()]);
-            $this->io->error($errorMsg . "\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+            $this->io->error($errorMsg . "\nCheck logs in " . $_ENV['TRIM_LOGS'] . "/ for more details.");
         }
     }
 
@@ -1128,7 +1128,7 @@ TXT;
         trim_output($commandOutput);
 
         if ($command->getReturn() !== 0) {
-            throw new \Exception("NPM install failed.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+            throw new \Exception("NPM install failed.\nCheck logs in " . $_ENV['TRIM_LOGS'] . "/ for more details.");
         }
 
         $this->io->writeln('NPM, Building artifacts (JS/CSS)... <fg=yellow>[may take a while]</>');
@@ -1141,7 +1141,7 @@ TXT;
         trim_output($commandOutput);
 
         if ($command->getReturn() !== 0) {
-            throw new \Exception("NPM build failed.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.");
+            throw new \Exception("NPM build failed.\nCheck logs in " . $_ENV['TRIM_LOGS'] . "/ for more details.");
         }
     }
 
@@ -1156,7 +1156,7 @@ TXT;
             ['console.php', 'package:update', '--all', '--handle-deprecated']
         );
 
-        $errorMsg = "Failed to update Tiki Packages.\nCheck " . $_ENV['TRIM_OUTPUT'] . " for more details.";
+        $errorMsg = "Failed to update Tiki Packages.\nCheck logs in " . $_ENV['TRIM_LOGS'] . "/ for more details.";
         $command->run();
 
         $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent();
