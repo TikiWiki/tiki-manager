@@ -49,6 +49,11 @@ class BackupInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Enable backups using VCS code base'
+            )->addOption(
+                'include-index-backup',
+                null,
+                InputOption::VALUE_NONE,
+                'Include the index table in the backup'
             );
     }
 
@@ -111,6 +116,7 @@ class BackupInstanceCommand extends TikiManagerCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $maxBackups = $input->getOption('max-backups') ?: Environment::get('DEFAULT_MAX_BACKUPS', 0);
+        $isIncludeIndex = $input->getOption('include-index-backup') ? true : false;
         if (isset($maxBackups) && filter_var($maxBackups, FILTER_VALIDATE_INT) === false) {
             $this->io->error('Max number of backups to keep by instance is not a number');
             return 0;
@@ -166,7 +172,7 @@ class BackupInstanceCommand extends TikiManagerCommand
             $log = [];
             $log[] = sprintf('## %s (id: %s)' . PHP_EOL, $instance->name, $instance->id);
             try {
-                $backupFile = $instance->backup(false, $isFull);
+                $backupFile = $instance->backup(false, $isFull, false, $isIncludeIndex);
                 if (!empty($backupFile)) {
                     $hook->registerPostHookVars(['instance' => $instance, 'backup_file' => $backupFile]);
                     $this->io->success('Backup created with success.');

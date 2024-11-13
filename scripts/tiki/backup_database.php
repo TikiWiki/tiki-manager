@@ -10,6 +10,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
 
 $root = $_SERVER['argv'][1];
 $outputFile = $_SERVER['argv'][2];
+$arguments = $_SERVER['argv'];
 $db_config = "{$root}/db/local.php";
 
 if (!file_exists($db_config)) {
@@ -66,6 +67,16 @@ $args[] = "--default-character-set=" . $charset;
 $command = "mysqldump --help | grep -i 'column-statistics.*TRUE' | wc -l";
 if (exec($command) == "1") {
     $args[] = "--column-statistics=0";
+}
+
+if (!in_array('include-index-backup', $arguments)) {
+    $exclude_tables = "mysql $dbArgs -N -B -e \"SELECT table_name FROM information_schema.tables WHERE table_schema = '{$dbs_tiki}' AND table_name LIKE 'index_%'\"";
+
+    exec($exclude_tables, $tablesToIgnore);
+
+    foreach ($tablesToIgnore as $table) {
+        $args[] = "--ignore-table=$dbs_tiki.$table";
+    }
 }
 
 $args = implode(' ', $args);

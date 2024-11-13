@@ -53,15 +53,18 @@ class Tiki extends Application
 
     /**
      * @param string $targetFile
+     * @param bool $indexMode
      * @return bool
      */
-    public function backupDatabase(string $targetFile): bool
+    public function backupDatabase(string $targetFile, bool $indexMode): bool
     {
         $access = $this->instance->getBestAccess('scripting');
+        $indexMode = $indexMode ? 'include-index-backup' : 'skip-index-backup';
 
         if (!$access instanceof ShellPrompt || (ApplicationHelper::isWindows() && $this->instance->type == 'local')) {
             $data = $access->runPHP(
-                dirname(__FILE__) . '/../../scripts/tiki/mysqldump.php'
+                dirname(__FILE__) . '/../../scripts/tiki/mysqldump.php',
+                [$indexMode]
             );
 
             return (bool)file_put_contents($targetFile, $data);
@@ -69,10 +72,9 @@ class Tiki extends Application
 
         $randomName = md5(time() . 'backup') . '.sql';
         $remoteFile = $this->instance->getWorkPath($randomName);
-
         $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
-            [$this->instance->webroot, $remoteFile]
+            [$this->instance->webroot, $remoteFile, $indexMode]
         );
 
         $access->downloadFile($remoteFile, $targetFile);

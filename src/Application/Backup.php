@@ -41,6 +41,7 @@ class Backup
     protected $onlyCode;
     protected $full;
     protected $excludeList;
+    protected $indexMode;
 
     /**
      * Backup constructor.
@@ -48,9 +49,11 @@ class Backup
      * @param bool $direct
      * @param bool $full
      * @param bool $onlyCode
+     * @param array $excludeList
+     * @param bool $indexMode
      * @throws FolderPermissionException
      */
-    public function __construct($instance, $direct = false, $full = true, $onlyCode = false, $excludeList = [])
+    public function __construct($instance, $direct = false, $full = true, $onlyCode = false, $excludeList = [], $indexMode = true)
     {
         $this->setIO(App::get('io'));
 
@@ -67,6 +70,7 @@ class Backup
         $this->onlyCode = $onlyCode;
         $this->errors = [];
         $this->full = !in_array($instance->vcs_type, ['git', 'svn']) ? true : $full;
+        $this->indexMode = $indexMode;
 
         $this->createBackupDir();
         $this->createArchiveDir();
@@ -299,7 +303,7 @@ class Backup
 
         file_exists($sqlpath) && unlink($sqlpath);
 
-        if (!$app->backupDatabase($sqlpath)) {
+        if (!$app->backupDatabase($sqlpath, $this->indexMode)) {
             throw new \RuntimeException('Unsuccessful database backup. Aborting.');
         }
 

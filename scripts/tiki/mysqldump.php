@@ -174,6 +174,8 @@ $mysql_host = $host_tiki;
 $mysql_database = $dbs_tiki;
 $mysql_username = $user_tiki;
 $mysql_password = $pass_tiki;
+$argv = $_SERVER['argv'] ?? [];
+$includeIndex = in_array('include-index-backup', $argv);
 
 _mysql_test($mysql_host, $mysql_database, $mysql_username, $mysql_password);
 
@@ -181,13 +183,13 @@ _mysql_test($mysql_host, $mysql_database, $mysql_username, $mysql_password);
 header('Content-type: text/plain');
 //header('Content-Disposition: attachment; filename="'.$mysql_host."_".$mysql_database."_".date('YmdHis').'.sql"');
 echo "/*mysqldump.php version $mysqldump_version */\n";
-_mysqldump($mysql_database);
+_mysqldump($mysql_database, $includeIndex);
 
 //header("Content-Length: ".ob_get_length());
 
 //ob_end_flush();
 
-function _mysqldump($mysql_database)
+function _mysqldump($mysql_database, $includeIndex)
 {
     $sql = 'show tables;';
     $result = query($sql);
@@ -195,6 +197,9 @@ function _mysqldump($mysql_database)
         _mysqldump_database_encoding();
 
         while ($row= fetch_row($result)) {
+            if (!$includeIndex && str_starts_with($row[0], 'index_')) {
+                continue;
+            }
             _mysqldump_table_structure($row[0]);
 
             _mysqldump_table_data($row[0]);

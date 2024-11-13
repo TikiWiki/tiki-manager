@@ -191,6 +191,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Skip lock website.'
+            )
+            ->addOption(
+                'skip-index-backup',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip the index table'
             );
     }
 
@@ -219,6 +225,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         $onlyData = $input->getOption('only-data');
         $onlyCode = $input->getOption('only-code');
         $skipLock = $input->getOption('skip-lock');
+        $isIncludeIndex = $input->getOption('skip-index-backup') ? false : true;
         $vcsOptions = [
             'allow_stash' => $input->getOption('stash')
         ];
@@ -504,7 +511,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $this->io->newLine();
             $this->io->section('Creating snapshot of: ' . $sourceInstance->name);
             try {
-                $archive = $sourceInstance->backup($direct, true, $onlyCode);
+                $archive = $sourceInstance->backup($direct, true, $onlyCode, $isIncludeIndex);
             } catch (Exception $e) {
                 $this->logger->error($e->getMessage());
             }

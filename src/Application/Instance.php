@@ -873,16 +873,17 @@ SQL;
      * @param bool $direct ()
      * @param bool $full Full backup or partial (backing up only changes against VCS system)
      * @param bool $onlyCode
+     * @param bool $isIncludeIndex
      * @return bool|string
      * @throws Exception\FolderPermissionException
      */
-    public function backup($direct = false, $full = true, $onlyCode = false)
+    public function backup($direct = false, $full = true, $onlyCode = false, $isIncludeIndex = true)
     {
         $excludeList = $this->getBackupIgnoreList([
             ':instance_id' => $this->getId()
         ]);
 
-        $backup = new Backup($this, $direct, $full, $onlyCode, $excludeList);
+        $backup = new Backup($this, $direct, $full, $onlyCode, $excludeList, $isIncludeIndex);
 
         if ($this->type === 'local' && $this->detectDistribution() === 'ClearOS') {
             $backup->setArchiveSymlink(dirname($this->webroot) . '/backup');
