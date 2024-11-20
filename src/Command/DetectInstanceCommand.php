@@ -77,8 +77,12 @@ class DetectInstanceCommand extends TikiManagerCommand
 
         CommandHelper::validateInstanceSelection($instancesOption, $this->instances);
         $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = array_intersect_key($this->instances, array_flip($instancesOption));
-
+        $selectedInstances = [];
+        foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
+            if (array_key_exists($key, $this->instances)) {
+                $selectedInstances[$key] = $this->instances[$key];
+            }
+        }
         $hookName = $this->getCommandHook();
 
         /** @var Instance $instance */

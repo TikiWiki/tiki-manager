@@ -61,8 +61,14 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
 
         CommandHelper::validateInstanceSelection($instancesOption, $instances);
         $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = array_intersect_key($instances, array_flip($instancesOption));
-
+        $selectedInstances = [];
+        $instancesOption = explode(',', $instancesOption);
+        $selectedInstances = [];
+        foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
+            if (array_key_exists($key, $instances)) {
+                $selectedInstances[$key] = $instances[$key];
+            }
+        }
         foreach ($selectedInstances as $instance) {
             // first create a blank instance for the clone
             $output->writeln('Create a blank instance for the clone ...');
