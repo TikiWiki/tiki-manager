@@ -2430,17 +2430,17 @@
         },
         {
             "name": "symfony/process",
-            "version": "v5.4.44",
+            "version": "v5.4.46",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "1b9fa82b5c62cd49da8c9e3952dd8531ada65096"
+                "reference": "01906871cb9b5e3cf872863b91aba4ec9767daf4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/process/symfony-process-1b9fa82b5c62cd49da8c9e3952dd8531ada65096-zip-5eb555.zip",
-                "reference": "1b9fa82b5c62cd49da8c9e3952dd8531ada65096",
-                "shasum": "304647282ed52e0d991dff29e1eac213cd94a05a"
+                "url": "https://composer.tiki.org/dist/symfony/process/symfony-process-01906871cb9b5e3cf872863b91aba4ec9767daf4-zip-9a35e0.zip",
+                "reference": "01906871cb9b5e3cf872863b91aba4ec9767daf4",
+                "shasum": "4776a9a27393a6d6b255d45269fb14f386aef8d5"
             },
             "require": {
                 "php": ">=7.2.5",
@@ -2485,7 +2485,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-17T12:46:43+00:00"
+            "time": "2024-11-06T09:18:28+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -3145,7 +3145,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -3154,6 +3154,6 @@
         "ext-pdo": "*",
         "php": "^7.4 || ^8.0"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }
