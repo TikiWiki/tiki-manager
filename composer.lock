@@ -1658,17 +1658,17 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v5.4.44",
+            "version": "v5.4.47",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "58d3dc6bfa5fb37137e32d52ddc202ba4d1cea04"
+                "reference": "3b643b83f87e1765d2e9b1e946bb56ee0b4b7bde"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/http-client/symfony-http-client-58d3dc6bfa5fb37137e32d52ddc202ba4d1cea04-zip-710e3b.zip",
-                "reference": "58d3dc6bfa5fb37137e32d52ddc202ba4d1cea04",
-                "shasum": "ffa182ab60460e60e55d24294dca914a9a794532"
+                "url": "https://composer.tiki.org/dist/symfony/http-client/symfony-http-client-3b643b83f87e1765d2e9b1e946bb56ee0b4b7bde-zip-833ed7.zip",
+                "reference": "3b643b83f87e1765d2e9b1e946bb56ee0b4b7bde",
+                "shasum": "3b7995b529b15d30f41f4fb50cb8f91b5d59e449"
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1742,7 +1742,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-16T14:04:28+00:00"
+            "time": "2024-11-13T12:18:12+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -3145,7 +3145,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -3154,6 +3154,6 @@
         "ext-pdo": "*",
         "php": "^7.4 || ^8.0"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
