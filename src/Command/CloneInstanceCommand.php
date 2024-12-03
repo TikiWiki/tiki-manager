@@ -306,10 +306,15 @@ class CloneInstanceCommand extends TikiManagerCommand
             $targetInstances = $helper->ask($input, $output, $question);
         }
 
-        $inputBranch = $input->getOption('branch') ?? $sourceInstance->branch;
-        $mismatchVcsInstances = [];
+        $inputBranchExist = true;
+        $inputBranch = $input->getOption('branch')??'';
+        if (trim($inputBranch) == '') {
+            $inputBranchExist = false;
+            $inputBranch = $sourceInstance->branch;
+        }
         $bisectInstances = [];
         $protectedInstances = [];
+        $actionMsg = $cloneUpgrade ? 'clone and upgrade' : 'clone';
 
         foreach ($targetInstances as $i => $targetInstance) {
             if ($targetInstance->isInstanceProtected()) {
@@ -322,15 +327,20 @@ class CloneInstanceCommand extends TikiManagerCommand
                 $bisectInstances[] = $targetInstance->id;
                 unset($targetInstances[$i]);
             }
+            // If we want clone data only, we need to use the branch from the destination instance
+            if (!$inputBranchExist && $targetInstance->branch && $onlyData) {
+                $inputBranch = $targetInstance->branch;
+            }
+
             if ($targetInstance->validateBranchInRepo($inputBranch, $repoURL)) {
                 $targetInstance->setBranchAndRepo($inputBranch, $repoURL);
             } else {
-                $mismatchVcsInstances[] = $targetInstance->id;
+                $invalidVcsMsg = $actionMsg . ' is aborted because Instance (%s) branch (%s) does not belong to the repository (%s).';
+                $invalidVcsMsg = sprintf($invalidVcsMsg, $targetInstance->id, $inputBranch, $repoURL);
+                $this->io->error($invalidVcsMsg);
                 unset($targetInstances[$i]);
             }
         }
-
-        $actionMsg = $cloneUpgrade ? 'clone and upgrade' : 'clone';
 
         if (!empty($protectedInstances)) {
             $protectedMsg = $actionMsg . ' is skipped: target instance(s) are protected using the "sys_db_protected" tag: [%s].';
@@ -344,13 +354,6 @@ class CloneInstanceCommand extends TikiManagerCommand
             $bisectMsg = sprintf($bisectMsg, implode(',', $bisectInstances));
             $this->io->warning($bisectMsg);
             $this->logger->warning($bisectMsg);
-        }
-
-        if (!empty($mismatchVcsInstances)) {
-            $invalidVcsMsg = $actionMsg . ' is aborted because Instance(s) (%s) branch (%s) does not belong to the repository (%s).';
-            $invalidVcsMsg = sprintf($invalidVcsMsg, implode(',', $mismatchVcsInstances), $inputBranch, $repoURL);
-            $this->io->error($invalidVcsMsg);
-            return 1;
         }
 
         if (empty($targetInstances)) {
