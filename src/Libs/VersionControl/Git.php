@@ -298,7 +298,7 @@ class Git extends VersionControlSystem
      */
     public function getDateRevision($targetFolder, $commitId)
     {
-        $gitCmd = 'show -s --format=%cd --date=format:\'%Y-%m-%d\' '. $commitId;
+        $gitCmd = 'show -s --format=%cd --date="format:%Y-%m-%d" '. $commitId;
         return $this->exec($targetFolder, $gitCmd);
     }
     /**
