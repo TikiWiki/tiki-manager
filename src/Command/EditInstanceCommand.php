@@ -57,13 +57,13 @@ class EditInstanceCommand extends TikiManagerCommand
                 'backup-user',
                 'bu',
                 InputOption::VALUE_REQUIRED,
-                'Instance backup user'
+                'Instance backup user: the local user that will be used as backup files owner.'
             )
             ->addOption(
                 'backup-group',
                 'bg',
                 InputOption::VALUE_REQUIRED,
-                'Instance backup group'
+                'Instance backup group: the local group that will be used as backup files owner.'
             )
             ->addOption(
                 'backup-permission',
@@ -174,7 +174,7 @@ class EditInstanceCommand extends TikiManagerCommand
 
                 //Instance Backup user
                 if (empty($input->getOption('backup-user'))) {
-                    $question = CommandHelper::getQuestion('Backup owner', $instance->getProp('backup_user'));
+                    $question = CommandHelper::getQuestion('Backup user (the local user that will be used as backup files owner)', $instance->getProp('backup_user'));
                     $backup_user = $helper->ask($input, $output, $question);
                 } else {
                     $backup_user = $input->getOption('backup-user');
@@ -182,7 +182,7 @@ class EditInstanceCommand extends TikiManagerCommand
 
                 //Instance Backup group
                 if (empty($input->getOption('backup-group'))) {
-                    $question = CommandHelper::getQuestion('Backup group', $instance->getProp('backup_group'));
+                    $question = CommandHelper::getQuestion('Backup group (the local group that will be used as backup files owner)', $instance->getProp('backup_group'));
                     $backup_group = $helper->ask($input, $output, $question);
                 } else {
                     $backup_group = $input->getOption('backup-group');

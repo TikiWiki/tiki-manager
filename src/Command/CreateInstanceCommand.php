@@ -110,13 +110,13 @@ class CreateInstanceCommand extends TikiManagerCommand
                 'backup-user',
                 'bu',
                 InputOption::VALUE_REQUIRED,
-                'Instance backup user'
+                'Instance backup user: the local user that will be used as backup files owner.'
             )
             ->addOption(
                 'backup-group',
                 'bg',
                 InputOption::VALUE_REQUIRED,
-                'Instance backup group'
+                'Instance backup group: the local group that will be used as backup files owner.'
             )
             ->addOption(
                 'backup-permission',

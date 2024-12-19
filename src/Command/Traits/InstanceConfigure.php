@@ -266,7 +266,7 @@ trait InstanceConfigure
         $backupGroup = $this->input->getOption('backup-group') ?? $backupGroup ?? '';
         $backupPerm = $this->input->getOption('backup-permission') ?? $backupPerm ?? '';
 
-        $backupUser = $this->io->ask('Backup user', $backupUser, function ($value) {
+        $backupUser = $this->io->ask('Backup user (the local user that will be used as backup files owner)', $backupUser, function ($value) {
             if (!$value) {
                 throw new InvalidOptionException('Backup user cannot be empty. Please use --backup-user=<USER>');
             }
@@ -274,7 +274,7 @@ trait InstanceConfigure
             return $value;
         });
 
-        $backupGroup = $this->io->ask('Backup group', $backupGroup, function ($value) {
+        $backupGroup = $this->io->ask('Backup group (the local group that will be used as backup files owner)', $backupGroup, function ($value) {
             if (!$value) {
                 throw new InvalidOptionException('Backup group cannot be empty. Please use --backup-group=<GROUP>');
             }
