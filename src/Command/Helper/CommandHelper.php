@@ -60,7 +60,8 @@ class CommandHelper
                     }
                 });
                 $default_php_version = "7.4";
-                $output = $instance->getBestAccess()->shellExec("$instance->phpexec -v");
+                $access = $instance->getBestAccess();
+                $output = $access->shellExec("$instance->phpexec -v");
                 if ($output) {
                     preg_match('/PHP (\d+\.\d+\.\d+)/', $output, $matches);
                     $default_php_version = $matches[1];
@@ -71,7 +72,11 @@ class CommandHelper
                     'tempdir' => $instance->tempdir,
                     'phpexec' => $instance->phpexec,
                     'php_min' => $filter[0]['php']['min'] ?? $default_php_version,
-                    'php_max' => $filter[0]['php']['max'] ?? $default_php_version
+                    'php_max' => $filter[0]['php']['max'] ?? $default_php_version,
+                    'user' => $access ? $access->user : null,
+                    'backup_user' => $instance->getProp('backup_user'),
+                    'backup_group' => $instance->getProp('backup_group'),
+                    'backup_perm' => DecOct($instance->getProp('backup_perm')),
                 ];
             }
             $instancesInfo[] = array_merge($instance_initial_infos, $extra);
@@ -138,6 +143,10 @@ class CommandHelper
             $instanceTableHeaders[]='PHPExec';
             $instanceTableHeaders[]='PHP Min';
             $instanceTableHeaders[]='PHP Max';
+            $instanceTableHeaders[]='User';
+            $instanceTableHeaders[]='Backup user';
+            $instanceTableHeaders[]='Backup group';
+            $instanceTableHeaders[]='Backup permission';
         }
 
         $table = new Table($output);
