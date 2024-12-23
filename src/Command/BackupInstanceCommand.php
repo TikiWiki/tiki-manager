@@ -182,6 +182,7 @@ class BackupInstanceCommand extends TikiManagerCommand
                 }
                 $instance->reduceBackups($maxBackups);
             } catch (\Exception $e) {
+                $this->io->error($e->getMessage());
                 $log[] = $e->getMessage() . PHP_EOL;
                 $log[] = $e->getTraceAsString() . PHP_EOL;
             }
