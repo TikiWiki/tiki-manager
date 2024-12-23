@@ -64,9 +64,7 @@ class DetectInstanceCommand extends TikiManagerCommand
             CommandHelper::renderInstancesTable($output, $this->instancesInfo);
             $answer = $this->io->ask('Which instance(s) do you want to detect', null, function ($answer) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $this->instances);
-                return implode(',', array_map(function ($elem) {
-                    return $elem->getId();
-                }, $selectedInstances));
+                return implode(',', CommandHelper::getInstanceIds($selectedInstances));
             });
 
             $input->setOption('instances', $answer);
@@ -82,14 +80,7 @@ class DetectInstanceCommand extends TikiManagerCommand
 
         $instancesOption = $input->getOption('instances');
 
-        CommandHelper::validateInstanceSelection($instancesOption, $this->instances);
-        $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = [];
-        foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
-            if (array_key_exists($key, $this->instances)) {
-                $selectedInstances[$key] = $this->instances[$key];
-            }
-        }
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $this->instances);
         $hookName = $this->getCommandHook();
 
         /** @var Instance $instance */

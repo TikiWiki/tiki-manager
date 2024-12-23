@@ -71,11 +71,8 @@ class CheckoutCommand extends TikiManagerCommand
             }
             $this->io->newLine();
             $answer = $this->io->ask('Which instance do you want to checkout', null, function ($answer) use ($instances) {
-                $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
-                $selectedInstances = array_map(function ($elem) {
-                    return $elem->getId();
-                }, $selectedInstances);
-                return array_shift($selectedInstances);
+                $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
+                return reset($selectedInstances)->getId();
             });
 
             $input->setOption('instance', $answer);

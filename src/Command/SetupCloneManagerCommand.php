@@ -162,9 +162,6 @@ class SetupCloneManagerCommand extends TikiManagerCommand
         }
         $helper = $this->getHelper('question');
 
-        $selectedSourceInstances = array_filter($instances, function ($instance) use ($input) {
-            return $instance->getId() == $input->getOption('source');
-        });
         // select source instance
         if (empty($input->getOption('source'))) {
             $this->io->newLine();
@@ -178,14 +175,16 @@ class SetupCloneManagerCommand extends TikiManagerCommand
 
             $question = CommandHelper::getQuestion('Select the source instance', null);
             $question->setValidator(function ($answer) use ($instances) {
-                return CommandHelper::validateInstanceSelection($answer, $instances);
+                return CommandHelper::validateInstanceSelection($answer, $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
             });
 
             $selectedSourceInstances = $helper->ask($input, $output, $question);
+        } else {
+            $selectedSourceInstances = CommandHelper::validateInstanceSelection($input->getOption('source'), $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
         }
 
         $sourceInstance = reset($selectedSourceInstances);
-        $input->setOption('source', implode(',', CommandHelper::getInstanceIds($selectedSourceInstances)));
+        $input->setOption('source', $sourceInstance->getId());
 
         // select target instance
         $instances = CommandHelper::getInstances('all');
@@ -198,9 +197,6 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             return 0;
         }
 
-        $selectedDestinationInstances = array_filter($instances, function ($instance) use ($input) {
-            return $instance->getId() == $input->getOption('target');
-        });
         if (empty($input->getOption('target'))) {
             $this->io->newLine();
             CommandHelper::renderInstancesTable($output, $instancesInfo);
@@ -211,6 +207,8 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             });
 
             $selectedDestinationInstances = $helper->ask($input, $output, $question);
+        } else {
+            $selectedDestinationInstances = CommandHelper::validateInstanceSelection($input->getOption('target'), $instances);
         }
         $input->setOption('target', implode(',', CommandHelper::getInstanceIds($selectedDestinationInstances)));
 

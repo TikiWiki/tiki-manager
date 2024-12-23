@@ -92,7 +92,13 @@ class WatchInstanceCommand extends TikiManagerCommand
         $instances = CommandHelper::getInstances('update');
 
         if (!empty($excludedInstances)) {
-            $instancesToExclude = explode(',', $excludedInstances);
+            $instancesToExclude = CommandHelper::getInstanceIds(
+                CommandHelper::validateInstanceSelection(
+                    $excludedInstances,
+                    CommandHelper::getInstances('all', true),
+                    CommandHelper::INSTANCE_SELECTION_ALLOW_EMPTY | CommandHelper::INSTANCE_SELECTION_IGNORE_INVALID
+                )
+            );
 
             foreach ($instances as $key => $instance) {
                 if (in_array($instance->id, $instancesToExclude)) {

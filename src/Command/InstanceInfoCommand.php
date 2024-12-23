@@ -57,9 +57,7 @@ class InstanceInfoCommand extends TikiManagerCommand
 
             $answer = $this->io->ask('Which instance(s) do you want to get info for', null, function ($answer) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $this->instances);
-                return implode(',', array_map(function ($elem) {
-                    return $elem->getId();
-                }, $selectedInstances));
+                return implode(',', CommandHelper::getInstanceIds($selectedInstances));
             });
 
             $input->setOption('instance', $answer);

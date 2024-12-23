@@ -89,7 +89,7 @@ class RestoreInstanceCommand extends TikiManagerCommand
                     'Which instance do you want to restore from?',
                     null,
                     function ($answer) use ($restorableInstances) {
-                        return CommandHelper::validateInstanceSelection($answer, $restorableInstances);
+                        return CommandHelper::validateInstanceSelection($answer, $restorableInstances, CommandHelper::INSTANCE_SELECTION_SINGLE);
                     }
                 );
                 $restorableInstance = reset($selectedRestorableInstances);

@@ -59,11 +59,7 @@ class ConsoleInstanceCommand extends TikiManagerCommand
                 }
             );
 
-            $selectedInstances = implode(',', array_map(function ($elem) {
-                return $elem->getId();
-            }, $selectedInstances));
-
-            $input->setOption('instances', $selectedInstances);
+            $input->setOption('instances', implode(',', CommandHelper::getInstanceIds($selectedInstances)));
         }
 
         if (empty($input->getOption('command'))) {
@@ -84,14 +80,7 @@ class ConsoleInstanceCommand extends TikiManagerCommand
 
         $instancesOption = $input->getOption('instances');
 
-        CommandHelper::validateInstanceSelection($instancesOption, $instances);
-        $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = [];
-        foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
-            if (array_key_exists($key, $instances)) {
-                $selectedInstances[$key] = $instances[$key];
-            }
-        }
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
         $command = $input->getOption('command');
         $command = $command == 'help' ? '' : $command; // Normalize command
 

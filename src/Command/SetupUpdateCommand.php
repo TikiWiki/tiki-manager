@@ -100,6 +100,7 @@ class SetupUpdateCommand extends TikiManagerCommand
         // Check if option (set in cli is also valid)
         $instances = CommandHelper::getInstances('update');
         CommandHelper::validateInstanceSelection($instancesOption, $instances);
+        // Note: if the value was "all", we MUST keep "all"!! and not change to IDs.
 
         $email = $input->getOption('email');
         $email = CommandHelper::validateEmailInput($email);

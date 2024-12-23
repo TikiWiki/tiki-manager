@@ -45,9 +45,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
             CommandHelper::renderInstancesTable($output, $instancesInfo);
             $answer = $this->io->ask('Which instance do you want to redact', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
-                return implode(',', array_map(function ($elem) {
-                    return $elem->getId();
-                }, $selectedInstances));
+                return implode(',', CommandHelper::getInstanceIds($selectedInstances));
             });
             $input->setOption('instances', $answer);
         }
@@ -65,14 +63,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
         }
         $instancesOption = $input->getOption('instances');
 
-        CommandHelper::validateInstanceSelection($instancesOption, $instances);
-        $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = [];
-        foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
-            if (array_key_exists($key, $instances)) {
-                $selectedInstances[$key] = $instances[$key];
-            }
-        }
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
         foreach ($selectedInstances as $instance) {
             // first create a blank instance for the clone
             $output->writeln('Create a blank instance for the clone ...');

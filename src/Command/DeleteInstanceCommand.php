@@ -46,9 +46,7 @@ class DeleteInstanceCommand extends TikiManagerCommand
             CommandHelper::renderInstancesTable($output, $instancesInfo);
             $answer = $this->io->ask('Which instance(s) do you want to delete', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
-                return implode(',', array_map(function ($elem) {
-                    return $elem->getId();
-                }, $selectedInstances));
+                return implode(',', CommandHelper::getInstanceIds($selectedInstances));
             });
 
             $input->setOption('instances', $answer);
@@ -67,14 +65,7 @@ class DeleteInstanceCommand extends TikiManagerCommand
 
         $instancesOption = $input->getOption('instances');
 
-        CommandHelper::validateInstanceSelection($instancesOption, $instances);
-        $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = [];
-        foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
-            if (array_key_exists($key, $instances)) {
-                $selectedInstances[$key] = $instances[$key];
-            }
-        }
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
         $hookName = $this->getCommandHook();
         foreach ($selectedInstances as $instance) {
             if ($instance->isInstanceProtected()) {

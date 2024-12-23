@@ -74,7 +74,7 @@ class BackupInstanceCommand extends TikiManagerCommand
             CommandHelper::renderInstancesTable($output, $instancesInfo);
             $this->io->newLine();
 
-            $instances = $this->io->ask('Which instance(s) do you want to backup', 'all', function ($answer) use ($instances) {
+            $instancesOption = $this->io->ask('Which instance(s) do you want to backup', 'all', function ($answer) use ($instances) {
                 if ($answer == 'all') {
                     return $answer;
                 }
@@ -82,7 +82,7 @@ class BackupInstanceCommand extends TikiManagerCommand
                 return implode(',', CommandHelper::getInstanceIds($selectedInstances));
             });
 
-            $input->setOption('instances', $instances);
+            $input->setOption('instances', $instancesOption);
         }
 
         if (isset($instancesInfo) && $input->getOption('instances') == 'all' && empty($input->getOption('exclude'))) {
@@ -136,29 +136,28 @@ class BackupInstanceCommand extends TikiManagerCommand
             return 0;
         }
 
-        if ($instancesOption = $input->getOption('instances')) {
-            if ($instancesOption == 'all') {
-                $exclude = explode(',', $input->getOption('exclude') ?? '');
-                foreach ($instances as $key => $instance) {
-                    if (in_array($instance->id, $exclude)) {
-                        unset($instances[$key]);
-                    }
-                }
+        $instancesOption = $input->getOption('instances');
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
 
-                $selectedInstances = $instances;
-            } else {
-                $instancesIds = explode(',', $instancesOption);
+        if ($instancesOption === 'all' && !empty($input->getOption('exclude'))) {
+            // Exclude option is only available with --instance=all (according the the option description).
+            $instancesToExclude = CommandHelper::getInstanceIds(
+                CommandHelper::validateInstanceSelection(
+                    $input->getOption('exclude'),
+                    $instances,
+                    // We must not fail if there are deprecated instances in exclude parameter!
+                    CommandHelper::INSTANCE_SELECTION_ALLOW_EMPTY | CommandHelper::INSTANCE_SELECTION_IGNORE_INVALID
+                )
+            );
 
-                $selectedInstances = [];
-                foreach ($instancesIds as $index) {
-                    if (array_key_exists($index, $instances)) {
-                        $selectedInstances[] = $instances[$index];
-                    }
+            foreach ($selectedInstances as $key => $instance) {
+                if (in_array($instance->id, $instancesToExclude)) {
+                    unset($selectedInstances[$key]);
                 }
             }
         }
 
-        if (empty($instancesOption) || empty($selectedInstances)) {
+        if (empty($selectedInstances)) {
             throw new \RuntimeException('No instances defined for backup');
         }
 

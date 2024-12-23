@@ -55,13 +55,12 @@ class CreateTemporaryUserInstanceCommand extends TikiManagerCommand
                 'Which instance do you want to create the temporary user on?',
                 null,
                 function ($answer) use ($instances, $input) {
-                    if (empty(CommandHelper::validateInstanceSelection($answer, $instances))) {
-                        throw new \RuntimeException('Invalid instance selected.');
-                    }
+                    $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
+                    $instanceId = reset($selectedInstances)->getId(); // first element ID (INSTANCE_SELECTION_SINGLE ensure that we have one and only one result)
 
-                    $input->setOption('instance', $answer);
+                    $input->setOption('instance', $instanceId);
 
-                    return $answer;
+                    return $instanceId;
                 }
             );
         }
@@ -111,7 +110,9 @@ class CreateTemporaryUserInstanceCommand extends TikiManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $instance = Instance::getInstance($input->getOption('instance'));
+        $allIinstances = CommandHelper::getInstances('tiki');
+        $selectedInstances = CommandHelper::validateInstanceSelection($answer, $allInstances, CommandHelper::INSTANCE_SELECTION_SINGLE);
+        $instance = reset($selectedInstances); // first element
         if (empty($instance)) {
             $this->io->warning('No Tiki instances available.');
             return 1;

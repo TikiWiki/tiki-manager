@@ -58,9 +58,7 @@ class ApplyProfileCommand extends TikiManagerCommand
             $output->writeln('<comment>In case you want to apply the profile to more than one instance, please use a comma (,) between the values</comment>');
             $answer = $this->io->ask('Which instance(s) do you want to apply the profile on', null, function ($answer) use ($instances) {
                 $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
-                return implode(',', array_map(function ($elem) {
-                    return $elem->getId();
-                }, $selectedInstances));
+                return implode(',', CommandHelper::getInstanceIds($selectedInstances));
             });
 
             $input->setOption('instances', $answer);

@@ -47,14 +47,7 @@ class AccessInstanceCommand extends TikiManagerCommand
 
                 $selectedInstances = $helper->ask($input, $output, $question);
             } else {
-                CommandHelper::validateInstanceSelection($instancesOption, $instances);
-                $instancesOption = explode(',', $instancesOption);
-                $selectedInstances = [];
-                foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
-                    if (array_key_exists($key, $instances)) {
-                        $selectedInstances[$key] = $instances[$key];
-                    }
-                }
+                $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
             }
 
             $hookName = $this->getCommandHook();

@@ -261,7 +261,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         if ($sourceOption) {
-            $sourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances);
+            $sourceInstances = CommandHelper::validateInstanceSelection($sourceOption, $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
         } else {
             $this->io->newLine();
             $output->writeln('<comment>NOTE: Clone operations are only available on Local and SSH instances.</comment>');
@@ -271,13 +271,13 @@ class CloneInstanceCommand extends TikiManagerCommand
 
             $question = CommandHelper::getQuestion('Select the source instance', null);
             $question->setValidator(function ($answer) use ($instances) {
-                return CommandHelper::validateInstanceSelection($answer, $instances);
+                return CommandHelper::validateInstanceSelection($answer, $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
             });
 
             $sourceInstances = $helper->ask($input, $output, $question);
         }
 
-        $sourceInstance = $sourceInstances[0];
+        $sourceInstance = reset($sourceInstances); // get first element
 
         $repoURL = $this->repoURL ?? $sourceInstance->repo_url;
         $sourceInstance->copy_errors = $input->getOption('copy-errors') ?: 'ask';

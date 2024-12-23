@@ -103,7 +103,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
 
                 $question = CommandHelper::getQuestion('Select the instance', null);
                 $question->setValidator(function ($answer) use ($instances) {
-                    return CommandHelper::validateInstanceSelection($answer, $instances);
+                    return CommandHelper::validateInstanceSelection($answer, $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
                 });
 
                 $selectedInstance = $helper->ask($input, $output, $question);

@@ -81,9 +81,7 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
                 }
             );
 
-            $selectedInstances = implode(',', array_map(function ($elem) {
-                return $elem->getId();
-            }, $selectedInstances));
+            $selectedInstances = implode(',', CommandHelper::getInstanceIds($selectedInstances));
 
             $input->setOption('instances', $selectedInstances);
         }
@@ -125,14 +123,7 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
 
         $instancesOption = $input->getOption('instances');
 
-        CommandHelper::validateInstanceSelection($instancesOption, $instances);
-        $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = [];
-        foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
-            if (array_key_exists($key, $instances)) {
-                $selectedInstances[$key] = $instances[$key];
-            }
-        }
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
         $time = $input->getOption('time');
         Helper\CommandHelper::validateCrontabInput($time);
 

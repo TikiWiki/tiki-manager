@@ -24,6 +24,10 @@ use Cron\CronExpression;
 
 class CommandHelper
 {
+    const INSTANCE_SELECTION_SINGLE = 0x1;
+    const INSTANCE_SELECTION_ALLOW_EMPTY = 0x2;
+    const INSTANCE_SELECTION_IGNORE_INVALID = 0x4;
+
     /**
      * Get information from Instance Object
      *
@@ -285,16 +289,20 @@ class CommandHelper
 
     /**
      * Validate Instances Selection.
-     * Instances selection allows selecting instances per ID or per Name.
+     * Instances selection allows selecting instances per ID or per Name or with the "all" keyword.
      *
      * @param $answer
      * @param $allInstances
-     * @return array
+     * @param $flags a combinaison of flags concerning the validation.
+     * @return array selected Instances. The array order is the same as in $anwser (or $allInstances when you use "all"). The index ARE NOT the instance IDs.
      */
-    public static function validateInstanceSelection($answer, $allInstances)
+    public static function validateInstanceSelection($answer, $allInstances, $flags = 0x0)
     {
         $selectedInstances = [];
         if (empty($answer)) {
+            if ($flags & CommandHelper::INSTANCE_SELECTION_ALLOW_EMPTY) {
+                return $selectedInstances;
+            }
             throw new \RuntimeException('You must select an instance #ID');
         } elseif (strtolower($answer) == "all") {
             $selectedInstances = $allInstances;
@@ -317,11 +325,18 @@ class CommandHelper
                 $selectedInstances[] = $instances[$answerInstance];
             }
 
-            if (count($invalidIdentifiers) > 0) {
+            if (! ($flags & CommandHelper::INSTANCE_SELECTION_IGNORE_INVALID) && count($invalidIdentifiers) > 0) {
                 throw new \RuntimeException(
                     'Invalid instance(s) name(s) or ID(s): ' . implode(',', $invalidIdentifiers)
                 );
             }
+        }
+
+        if (! ($flags & CommandHelper::INSTANCE_SELECTION_ALLOW_EMPTY) && count($selectedInstances) === 0) {
+            throw new \RuntimeException('You must select at least one instance #ID');
+        }
+        if (($flags & CommandHelper::INSTANCE_SELECTION_SINGLE) && count($selectedInstances) > 1) {
+            throw new \RuntimeException('You can only select one instance #ID');
         }
 
         return $selectedInstances;
@@ -425,7 +440,9 @@ class CommandHelper
         $payload = [];
 
         foreach ($instances as $instance) {
-            $payload[] = is_object($instance) ? $instance->id : $instance['id'];
+            $payload[] = is_object($instance)
+                ? ( method_exists($instance, 'getId') ? $instance->getId() : $instance->id )
+                : $instance['id'];
         }
 
         return $payload;
