@@ -188,6 +188,9 @@ abstract class Discovery
 
     abstract public function detectUser();
 
+    abstract public function userExists($user);
+    abstract public function groupExists($group);
+
     abstract protected function detectWebrootOS();
 
     public function detectVcsType()

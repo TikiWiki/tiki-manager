@@ -85,6 +85,33 @@ class WindowsDiscovery extends Discovery
         return ['Administrator', 'Administrator', 0750];
     }
 
+
+    public function userExists($user)
+    {
+        // TODO: write a proper user detection...
+        if ($user === 'Administrator' || $user === $this->detectUser()) {
+            return true;
+        }
+
+        throw new ConfigException(
+            'userExists method is currently not implemented for Windows. Please use your current user or "Administrator".',
+            ConfigException::DETECT_ERROR
+        );
+    }
+
+    public function groupExists($group)
+    {
+        // TODO: write a proper group detection...
+        if ($group === 'Administrator' || $group === $this->detectUser()) {
+            return true;
+        }
+
+        throw new ConfigException(
+            'groupExists method is currently not implemented for Windows. Please use your current user or "Administrator".',
+            ConfigException::DETECT_ERROR
+        );
+    }
+
     public function isAvailable()
     {
         $os = $this->detectOS();

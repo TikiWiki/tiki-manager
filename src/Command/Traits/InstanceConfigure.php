@@ -260,23 +260,30 @@ trait InstanceConfigure
         $backupDir = Env::get('BACKUP_FOLDER');
         $mockInstance = new Instance();
         $mockInstance->type = 'local';
-        list($backupUser, $backupGroup, $backupPerm) = $mockInstance->getDiscovery()->detectBackupPerm($backupDir);
+        $mockDiscovery = $mockInstance->getDiscovery();
+        list($backupUser, $backupGroup, $backupPerm) = $mockDiscovery->detectBackupPerm($backupDir);
 
         $backupUser = $this->input->getOption('backup-user') ?? $backupUser ?? '';
         $backupGroup = $this->input->getOption('backup-group') ?? $backupGroup ?? '';
         $backupPerm = $this->input->getOption('backup-permission') ?? $backupPerm ?? '';
 
-        $backupUser = $this->io->ask('Backup user (the local user that will be used as backup files owner)', $backupUser, function ($value) {
+        $backupUser = $this->io->ask('Backup user (the local user that will be used as backup files owner)', $backupUser, function ($value) use ($mockDiscovery) {
             if (!$value) {
                 throw new InvalidOptionException('Backup user cannot be empty. Please use --backup-user=<USER>');
+            }
+            if (! $mockDiscovery->userExists($value)) {
+                throw new InvalidOptionException('Backup user does not exist on the local host.');
             }
 
             return $value;
         });
 
-        $backupGroup = $this->io->ask('Backup group (the local group that will be used as backup files owner)', $backupGroup, function ($value) {
+        $backupGroup = $this->io->ask('Backup group (the local group that will be used as backup files owner)', $backupGroup, function ($value) use ($mockDiscovery) {
             if (!$value) {
                 throw new InvalidOptionException('Backup group cannot be empty. Please use --backup-group=<GROUP>');
+            }
+            if (! $mockDiscovery->groupExists($value)) {
+                throw new InvalidOptionException('Backup group does not exist on the local host.');
             }
 
             return $value;

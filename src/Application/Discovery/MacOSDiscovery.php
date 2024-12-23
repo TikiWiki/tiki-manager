@@ -93,6 +93,31 @@ class MacOSDiscovery extends Discovery
         );
     }
 
+
+    public function userExists($user)
+    {
+        $command = $this->access->createCommand('id', ['-un', $user]);
+        $command->run();
+
+        if ($command->getReturn() === 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function groupExists($group)
+    {
+        $command = $this->access->createCommand('id', ['-gn', $group]);
+        $command->run();
+
+        if ($command->getReturn() === 0) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function detectBackupPerm($path): array
     {
         $user = $group = [];
