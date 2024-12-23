@@ -161,6 +161,9 @@ trait InstanceConfigure
             if (empty($value)) {
                 throw new InvalidOptionException('Name cannot be empty. Please use --name=<NAME>');
             }
+            if (is_numeric($value)) {
+                throw new InvalidOptionException('Name cannot be a numerical value (otherwise we can\'t differenciate from ID).');
+            }
 
             global $db;
             $query = "SELECT COUNT(*) as numInstances FROM instance WHERE name = :name";
