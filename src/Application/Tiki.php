@@ -73,13 +73,19 @@ class Tiki extends Application
         $randomName = md5(time() . 'backup') . '.sql';
         $remoteFile = $this->instance->getWorkPath($randomName);
 
-        $exitCode = $access->runPHP(
+        $backupOutput = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/backup_database.php',
             [$this->instance->webroot, $remoteFile, $indexMode]
         );
+        // Note: runPHP currently does not return any error exit code.
+        // So, we use a workaround: backup_database prints "DATABASE BACKUP OK" when everything succeeds.
+        $backupSuccess = strpos($backupOutput, 'DATABASE BACKUP OK') !== false;
 
-        $warnMsgForInsecurePwd = 'Using a password on the command line interface can be insecure';
-        if ($exitCode === 0 || strpos($exitCode, $warnMsgForInsecurePwd) !== false) {
+        if (!$backupSuccess) {
+            trim_output($backupOutput, ['instance_id' => $this->instance->getId()]);
+        }
+
+        if ($backupSuccess) {
             $access->downloadFile($remoteFile, $targetFile);
         }
 
@@ -87,7 +93,7 @@ class Tiki extends Application
             $access->deleteFile($remoteFile);
         }
 
-        return file_exists($targetFile);
+        return $backupSuccess && file_exists($targetFile);
     }
 
     public function beforeChecksumCollect()

@@ -304,7 +304,7 @@ class Backup
         file_exists($sqlpath) && unlink($sqlpath);
 
         if (!$app->backupDatabase($sqlpath, $this->indexMode)) {
-            throw new \RuntimeException('Unsuccessful database backup. Aborting.');
+            throw new \RuntimeException('Unsuccessful database backup. Aborting. See log files for more information.');
         }
 
         if (file_exists($sqlpath)) {

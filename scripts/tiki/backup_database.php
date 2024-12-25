@@ -43,7 +43,13 @@ $dbArgs = implode(' ', $args);
 
 // Find out how many non-InnoDB tables exist in the schema
 $command = "mysql $dbArgs -BN -e \"SELECT count(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$dbs_tiki' AND engine <> 'InnoDB'\"";
-$numTables = exec($command);
+$numTables = exec($command, $output, $returnCode);
+if ($returnCode !== 0) {
+    print($output);
+    file_put_contents('php://stderr', "Failed to get the non-innodb table count.");
+    exit(1);
+}
+unset($output);
 
 if ($numTables === '0') {
     $args[] = "--single-transaction";
@@ -55,12 +61,24 @@ $args[] = $dbs_tiki;
 
 $tempFile = escapeshellarg($outputFile);
 $command = "mysql $dbArgs $dbs_tiki -BN -e \"SELECT CONCAT('ALTER DATABASE DEFAULT CHARACTER SET ', default_character_set_name, ' COLLATE ', DEFAULT_COLLATION_NAME, ';') FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()\" > " . $tempFile;
-exec($command);
+exec($command, $output, $returnCode);
+if ($returnCode !== 0) {
+    print($output);
+    file_put_contents('php://stderr', "Failed to insert default character set in dump file.");
+    exit(1);
+}
+unset($output);
 
 $command = "mysql $dbArgs $dbs_tiki -BN -e \"SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()\"";
-exec($command, $output);
+exec($command, $output, $returnCode);
+if ($returnCode !== 0) {
+    print($output);
+    file_put_contents('php://stderr', "Failed to get default character set.");
+    exit(1);
+}
 $charset = array_shift($output) ?: 'utf8mb4';
 $args[] = "--default-character-set=" . $charset;
+unset($output);
 
 // mysqldump 8 enabled a new flag called column-statistics by default.
 // When you have MySQL client above 8 and try to run mysqldump on older MySQL versions, an error occurs
@@ -82,11 +100,15 @@ if (!in_array('include-index-backup', $arguments)) {
 $args = implode(' ', $args);
 $command = "(mysqldump --quick --create-options --extended-insert --no-tablespaces $args >> " . $tempFile . ") 2>&1";
 exec($command, $output, $returnCode);
-
 if ($returnCode !== 0) {
+    print($output);
+    file_put_contents('php://stderr', "Dump failed.");
     exit($returnCode);
 }
+unset($output);
 
 chmod($outputFile, 0777);
+
+print("DATABASE BACKUP OK");
 
 // vi: expandtab shiftwidth=4 softtabstop=4 tabstop=4
