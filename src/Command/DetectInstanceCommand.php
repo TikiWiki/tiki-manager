@@ -33,6 +33,13 @@ class DetectInstanceCommand extends TikiManagerCommand
                 'i',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs to be detected, separated by comma (,)'
+            )
+            ->addOption(
+                'update-branch',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Update branch name in case Tiki Application branch is different than the one stored in the Tiki Manager db. Default is false',
+                false
             );
     }
 
@@ -122,10 +129,18 @@ class DetectInstanceCommand extends TikiManagerCommand
                 continue;
             }
 
+            $updateBranch = $input->getOption('update-branch');
             $branch = $app->getBranch();
             if ($instance->branch != $branch) {
+                if (!$updateBranch) {
+                    $this->io->error('Tiki Application branch is different than the one stored in the Tiki Manager db.');
+                    continue;
+                }
+
+                $this->io->warning('Tiki Application branch is different than the one stored in the Tiki Manager db, updating tiki-manager data.');
+                $instance->setBranchAndRepo($branch, $instance->repo_url);
                 $instance->updateVersion();
-            };
+            }
 
             $requirements_helper = new TikiRequirementsHelper(new YamlFetcher());
             $instanceBranch = $instance->getBranch();
