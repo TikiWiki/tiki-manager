@@ -293,18 +293,15 @@ class CommandHelper
      */
     public static function validateInstanceSelection($answer, $allInstances)
     {
-        $selectedInstances = array();
+        $selectedInstances = [];
         if (empty($answer)) {
             throw new \RuntimeException('You must select an instance #ID');
         } elseif (strtolower($answer) == "all") {
-            foreach ($allInstances as $id => $instance) {
-                $selectedInstances[ $id ] = $instance;
-                $selectedInstances[ $instance->name ] = $instance;
-            }
+            $selectedInstances = $allInstances;
         } else {
             $instances = [];
-            foreach ($allInstances as $id => $instance) {
-                $instances[ $id ] = $instance;
+            foreach ($allInstances as $instance) {
+                $instances[ $instance->getId() ] = $instance;
                 $instances[ $instance->name ] = $instance;
             }
 
