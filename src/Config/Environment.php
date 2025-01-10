@@ -551,6 +551,35 @@ class Environment
                     UPDATE info SET value = '16' WHERE name = 'version';
                 ");
             // no break
+            case 16:
+                $db->exec("
+                    CREATE TABLE instance_temp (
+                        instance_id INTEGER PRIMARY KEY,
+                        name VARCHAR(100),
+                        contact VARCHAR(100),
+                        webroot VARCHAR(100),
+                        weburl VARCHAR(100),
+                        tempdir VARCHAR(100),
+                        phpexec VARCHAR(50),
+                        app VARCHAR(10),
+                        state VARCHAR(10)
+                    );
+                ");
+
+                $db->exec("
+                    INSERT INTO instance_temp (instance_id, name, contact, webroot, weburl, tempdir, phpexec, app, state) SELECT instance_id, name, contact, webroot, weburl, tempdir, phpexec, app, state FROM instance;
+                ");
+
+                $db->exec("DROP TABLE instance;");
+
+                $db->exec("
+                    ALTER TABLE instance_temp RENAME TO instance;
+                ");
+
+                $db->exec("
+                    UPDATE info SET value = '17' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

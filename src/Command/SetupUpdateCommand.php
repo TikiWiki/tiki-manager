@@ -2,11 +2,11 @@
 
 namespace TikiManager\Command;
 
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
 
 /**
  * Setup automatic instance updates using CRON
@@ -124,5 +124,7 @@ class SetupUpdateCommand extends TikiManagerCommand
         $this->io->writeln("\n<fg=cyan>If adding to crontab fails and blocks, hit Ctrl-C and add these parameters manually.</>");
         $this->io->writeln("<fg=cyan>\t$entry</>");
         `crontab $file`;
+
+        return Command::SUCCESS;
     }
 }

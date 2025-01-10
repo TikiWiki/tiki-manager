@@ -178,7 +178,7 @@ class SetupCloneManagerCommand extends TikiManagerCommand
             $selectedSourceInstances = $helper->ask($input, $output, $question);
         }
 
-        $sourceInstance = $selectedSourceInstances[0];
+        $sourceInstance = reset($selectedSourceInstances);
         $input->setOption('source', implode(',', CommandHelper::getInstanceIds($selectedSourceInstances)));
 
         // select target instance

@@ -6,6 +6,7 @@
 
 namespace TikiManager\Report;
 
+use PDO;
 use TikiManager\Report\Backup as ReportBackup;
 use TikiManager\Application\Instance;
 
@@ -90,8 +91,10 @@ SQL;
     {
         $result = query(self::SQL_SELECT_AVAIL_INSTANCES);
 
-        $records = $result->fetchAll();
-        $ids = array_map('reset', $records);
+        $records = $result->fetchAll(PDO::FETCH_NUM);
+        $ids = array_map(function ($item) {
+            return reset($item);
+        }, $records);
 
         return $this->buildInstancesArray($ids);
     }
@@ -100,8 +103,10 @@ SQL;
     {
         $result = query(self::SQL_SELECT_REPORT_CONTENT, [':id' => $instance->id]);
 
-        $records = $result->fetchAll();
-        $ids = array_map('reset', $records);
+        $records = $result->fetchAll(PDO::FETCH_NUM);
+        $ids = array_map(function ($item) {
+            return reset($item);
+        }, $records);
 
         return $this->buildInstancesArray($ids);
     }
@@ -110,8 +115,10 @@ SQL;
     {
         $result = query(self::SQL_SELECT_REPORT_CANDIDATES, [':id' => $instance->id]);
 
-        $records = $result->fetchAll();
-        $ids = array_map('reset', $records);
+        $records = $result->fetchAll(PDO::FETCH_NUM);
+        $ids = array_map(function ($item) {
+            return reset($item);
+        }, $records);
 
         return $this->buildInstancesArray($ids);
     }
