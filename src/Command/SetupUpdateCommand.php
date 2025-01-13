@@ -99,8 +99,14 @@ class SetupUpdateCommand extends TikiManagerCommand
         $instancesOption = $input->getOption('instances');
         // Check if option (set in cli is also valid)
         $instances = CommandHelper::getInstances('update');
-        CommandHelper::validateInstanceSelection($instancesOption, $instances);
-        // Note: if the value was "all", we MUST keep "all"!! and not change to IDs.
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
+
+        // If the value was "all", we MUST keep "all"!! and not change to IDs.
+        // Otherwise, the crontab will only handle instance that existed at the time the command was used.
+        // Else, we will replace by numerical IDs, to prevent any injection in the crontab parameters.
+        if ($instancesOption !== 'all') {
+            $instancesOption = implode(',', CommandHelper::getInstanceIds($selectedInstances));
+        }
 
         $email = $input->getOption('email');
         $email = CommandHelper::validateEmailInput($email);
