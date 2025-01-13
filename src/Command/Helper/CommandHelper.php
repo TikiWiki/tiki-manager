@@ -303,7 +303,7 @@ class CommandHelper
             if ($flags & CommandHelper::INSTANCE_SELECTION_ALLOW_EMPTY) {
                 return $selectedInstances;
             }
-            throw new \RuntimeException('You must select an instance #ID');
+            throw new \RuntimeException('You must select an instance');
         } elseif (strtolower($answer) == "all") {
             $selectedInstances = $allInstances;
         } else {
@@ -333,10 +333,10 @@ class CommandHelper
         }
 
         if (! ($flags & CommandHelper::INSTANCE_SELECTION_ALLOW_EMPTY) && count($selectedInstances) === 0) {
-            throw new \RuntimeException('You must select at least one instance #ID');
+            throw new \RuntimeException('You must select at least one instance');
         }
         if (($flags & CommandHelper::INSTANCE_SELECTION_SINGLE) && count($selectedInstances) > 1) {
-            throw new \RuntimeException('You can only select one instance #ID');
+            throw new \RuntimeException('You can only select one instance');
         }
 
         return $selectedInstances;
