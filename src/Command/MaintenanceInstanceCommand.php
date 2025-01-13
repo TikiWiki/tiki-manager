@@ -40,6 +40,27 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
             );
     }
 
+    protected function interact(InputInterface $input, OutputInterface $output)
+    {
+        if (empty($input->getOption('instances'))) {
+            $instances = CommandHelper::getInstances('all', true);
+            $instancesInfo = CommandHelper::getInstancesInfo($instances);
+
+            if (empty($instancesInfo)) {
+                // Let the execute function handle this case.
+                return;
+            }
+
+            CommandHelper::renderInstancesTable($output, $instancesInfo);
+            $answer = $this->io->ask('Select the instance(s)', null, function ($answer) use ($instances) {
+                $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);
+                return implode(',', CommandHelper::getInstanceIds($selectedInstances));
+            });
+
+            $input->setOption('instances', $answer);
+        }
+    }
+
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
@@ -47,10 +68,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $helper = $this->getHelper('question');
         $status = $input->getArgument('status');
-        $instancesOption = $input->getOption('instances');
-        $instancesOption = ! empty($instancesOption) ? explode(',', $instancesOption) : [];
 
         if (! in_array($status, ['on', 'off'])) {
             $this->io->error('Please insert a valid status [on, off].');
@@ -58,67 +76,26 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
         }
 
         $instances = CommandHelper::getInstances('all', true);
-
-        $validInstances = [];
-        foreach ($instances as $instance) {
-            array_push($validInstances, $instance->id);
+        if (empty($instances)) {
+            $output->writeln('<comment>No instance available.</comment>');
+            return 0;
         }
 
-        $validInstancesOptions = count(array_intersect($instancesOption, $validInstances)) == count($instancesOption);
-        if (! $validInstancesOptions) {
-            $this->io->error('Please insert a valid instance id.');
-            return Command::FAILURE;
-        }
-
-        $result = Command::FAILURE;
-        $messages = [];
-        $errors = [];
+        $instancesOption = $input->getOption('instances');
+        $selectedInstances = CommandHelper::validateInstanceSelection($instancesOption, $instances);
 
         $hookName = $this->getCommandHook();
-        if (! empty($instancesOption)) {
-            foreach ($instancesOption as $instanceId) {
-                $instance = Instance::getInstance($instanceId);
-                $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
-                $success = ($status == 'on') ? $instance->lock() : $instance->unlock();
-                if ($success) {
-                    $messages[] = $instance->name;
-                } else {
-                    $errors[] = $instance->name;
-                }
-                $instance->getApplication()->fixPermissions();
-                $hookName->registerPostHookVars(['instance' => $instance, 'maintenance_status' => $instance->isLocked() ? 'on' : 'off']);
-            }
-            if (! empty($messages)) {
-                $this->io->success('Instances [' . implode(',', $messages) . '] maintenance "' . $status . '"');
-                $result = 0;
-            }
-            if (! empty($errors)) {
-                $this->io->error('Instances [' . implode(',', $errors) . '] change maintenance "' . $status . '" failed');
-                $result = 1;
-            }
-        } else {
-            $instancesInfo = CommandHelper::getInstancesInfo($instances);
-            if (isset($instancesInfo)) {
-                CommandHelper::renderInstancesTable($output, $instancesInfo);
-
-                $question = CommandHelper::getQuestion('Select the instance', null);
-                $question->setValidator(function ($answer) use ($instances) {
-                    return CommandHelper::validateInstanceSelection($answer, $instances, CommandHelper::INSTANCE_SELECTION_SINGLE);
-                });
-
-                $selectedInstance = $helper->ask($input, $output, $question);
-                $instance = reset($selectedInstance);
-                $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
-                $success = ($status == 'on') ? $instance->lock() : $instance->unlock();
-                $instance->getApplication()->fixPermissions();
-                $hookName->registerPostHookVars(['instance' => $instance, 'maintenance_status' => $instance->isLocked() ? 'on' : 'off']);
-
-                if ($success) {
-                    $this->io->success('Instance ' . $instance->name . ' maintenance ' . $status);
-                    $result = Command::SUCCESS;
-                } else {
-                    $this->io->error('Instance ' . $instance->name . ' maintenance ' . $status);
-                }
+        $result = Command::SUCCESS; // will be changed to Command::FAILURE if at least on fails.
+        foreach ($selectedInstances as $instance) {
+            $success = ($status == 'on') ? $instance->lock() : $instance->unlock();
+            $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
+            $instance->getApplication()->fixPermissions();
+            $hookName->registerPostHookVars(['instance' => $instance, 'maintenance_status' => $instance->isLocked() ? 'on' : 'off']);
+            if ($success) {
+                $this->io->success('Instance ' . $instance->name . ' maintenance ' . $status);
+            } else {
+                $this->io->error('Instance ' . $instance->name . ' maintenance ' . $status);
+                $result = Command::FAILURE;
             }
         }
 
