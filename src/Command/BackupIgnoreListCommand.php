@@ -24,7 +24,7 @@ class BackupIgnoreListCommand extends TikiManagerCommand
                 'instance',
                 'i',
                 InputOption::VALUE_OPTIONAL,
-                'Instance ID.'
+                'Instance ID (or name).'
             )
             ->addOption('json')
             ->setHelp('This command allows you to list all excluded files/folders from backup folder');

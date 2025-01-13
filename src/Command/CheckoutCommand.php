@@ -24,7 +24,7 @@ class CheckoutCommand extends TikiManagerCommand
                 'instance',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'Instance ID to checkout.'
+                'Instance ID (or name) to checkout.'
             )
             ->addOption(
                 'folder',

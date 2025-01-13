@@ -27,7 +27,7 @@ class ListPatchCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'List of instance IDs to be checked, separated by comma (,)'
+                'List of instance IDs (or names) to be checked, separated by comma (,). You can also use the "all" keyword.'
             )
             ->setHelp('This command allows you to check local patches applied to an instance codebase');
     }

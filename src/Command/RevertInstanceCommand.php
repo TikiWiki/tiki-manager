@@ -26,7 +26,7 @@ class RevertInstanceCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'List of instance IDs to be reverted, separated by comma (,)'
+                'List of instance IDs (or names) to be reverted, separated by comma (,). You can also use the "all" keyword.'
             )
             ->setHelp('This command allows you to revert a version controlled instance to its original state (e.g. remove all locally applied patches or modifications)');
     }

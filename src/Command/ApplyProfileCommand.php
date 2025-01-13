@@ -27,7 +27,7 @@ class ApplyProfileCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'List of instance IDs to be deleted, separated by comma (,)'
+                'List of instance IDs (or names) to be deleted, separated by comma (,). You can also use the "all" keyword.'
             )
             ->addOption(
                 'repository',

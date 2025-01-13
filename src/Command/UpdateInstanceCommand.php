@@ -41,7 +41,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_OPTIONAL,
-                'List of instance IDs to be updated, separated by comma (,)'
+                'List of instance IDs (or names) to be updated, separated by comma (,). You can also use the "all" keyword.'
             )
             ->addOption(
                 'branch',

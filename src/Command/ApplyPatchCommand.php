@@ -26,7 +26,7 @@ class ApplyPatchCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'List of instance IDs to apply the patch on, separated by comma (,)'
+                'List of instance IDs (or names) to apply the patch on, separated by comma (,). You can also use the "all" keyword.'
             )
             ->addOption(
                 'package',

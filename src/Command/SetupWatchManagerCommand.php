@@ -75,7 +75,7 @@ class SetupWatchManagerCommand extends TikiManagerCommand
             $this->io->newLine();
             $this->io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $this->io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance IDs (or names) should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
                 if (! empty($answer)) {
                     $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);

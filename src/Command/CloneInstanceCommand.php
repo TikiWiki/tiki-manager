@@ -63,13 +63,13 @@ class CloneInstanceCommand extends TikiManagerCommand
                 'source',
                 's',
                 InputOption::VALUE_REQUIRED,
-                'Source instance.'
+                'Source instance (ID or name).'
             )
             ->addOption(
                 'target',
                 't',
                 InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
-                'Destination instance(s).'
+                'Destination instance(s) (IDs or names, comma separated).'
             )
             ->addOption(
                 'branch',

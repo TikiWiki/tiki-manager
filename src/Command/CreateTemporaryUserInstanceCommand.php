@@ -28,7 +28,7 @@ class CreateTemporaryUserInstanceCommand extends TikiManagerCommand
                 'instance',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'Instance ID to create a temporary user on.'
+                'Instance ID (or name) to create a temporary user on.'
             )
             ->addOption(
                 'groups',

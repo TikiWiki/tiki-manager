@@ -30,7 +30,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'Instances id\'s'
+                'List of instance IDs (or names), separated by comma (,). You can also use the "all" keyword.'
             )
             ->addOption(
                 'copy-errors',

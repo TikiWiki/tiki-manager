@@ -25,7 +25,7 @@ class BackupInstanceCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_REQUIRED,
-                'Use all or a specific list of instances IDs (comma separated)'
+                'Use "all" or a specific list of instances IDs or names (comma separated)'
             )
             ->addOption(
                 'exclude',
@@ -90,7 +90,7 @@ class BackupInstanceCommand extends TikiManagerCommand
             $this->io->newLine();
             $this->io->writeln('<comment>In case you want to ignore more than one instance, please use a comma (,) between the values</comment>');
 
-            $answer = $this->io->ask('Which instance IDs should be ignored?', null, function ($answer) use ($instances) {
+            $answer = $this->io->ask('Which instance IDs (or names) should be ignored?', null, function ($answer) use ($instances) {
                 $excludeInstance = '';
                 if (!empty($answer)) {
                     $selectedInstances = CommandHelper::validateInstanceSelection($answer, $instances);

@@ -24,7 +24,7 @@ class VerifyInstanceCommand extends TikiManagerCommand
                 'instances',
                 'i',
                 InputOption::VALUE_OPTIONAL,
-                'List of instance IDs to be checked, separated by comma (,)'
+                'List of instance IDs (or names) to be checked, separated by comma (,). You can also use the "all" keyword.'
             )
             ->addOption(
                 'update-from',
