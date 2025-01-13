@@ -158,11 +158,18 @@ trait InstanceConfigure
 
         $name = $this->input->getOption('name') ?: $instance->getDiscovery()->detectName();
         $name = $this->io->ask('Name', $name, function ($value) {
+            $value = trim($value);
             if (empty($value)) {
                 throw new InvalidOptionException('Name cannot be empty. Please use --name=<NAME>');
             }
             if (is_numeric($value)) {
                 throw new InvalidOptionException('Name cannot be a numerical value (otherwise we can\'t differenciate from ID).');
+            }
+            if ($value === 'all') {
+                throw new InvalidOptionException('Name cannot be "all" (which is a special keyword for instances listing).');
+            }
+            if (strpos($value, ',') !== false) {
+                throw new InvalidOptionException('Name cannot contains ",".');
             }
 
             global $db;
