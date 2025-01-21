@@ -51,7 +51,7 @@ class VerifyInstanceCommand extends TikiManagerCommand
                 $this->io->newLine();
                 $this->io->writeln('<comment>In case you want to check more than one instance, please use a comma (,) between the values</comment>');
 
-                $question = CommandHelper::getQuestion('Which instance(s) do you want to check', null, '?');
+                $question = CommandHelper::getQuestion('Which instance(s) (ID(s) or name(s)) do you want to check', null, '?');
                 $question->setValidator(function ($answer) use ($instances) {
                     return CommandHelper::validateInstanceSelection($answer, $instances);
                 });
