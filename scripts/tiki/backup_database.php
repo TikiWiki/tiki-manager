@@ -45,7 +45,7 @@ $dbArgs = implode(' ', $args);
 $command = "mysql $dbArgs -BN -e \"SELECT count(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$dbs_tiki' AND engine <> 'InnoDB'\"";
 $numTables = exec($command, $output, $returnCode);
 if ($returnCode !== 0) {
-    print($output);
+    print(implode("\n", $output));
     file_put_contents('php://stderr', "Failed to get the non-innodb table count.");
     exit(1);
 }
@@ -63,7 +63,7 @@ $tempFile = escapeshellarg($outputFile);
 $command = "mysql $dbArgs $dbs_tiki -BN -e \"SELECT CONCAT('ALTER DATABASE DEFAULT CHARACTER SET ', default_character_set_name, ' COLLATE ', DEFAULT_COLLATION_NAME, ';') FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()\" > " . $tempFile;
 exec($command, $output, $returnCode);
 if ($returnCode !== 0) {
-    print($output);
+    print(implode("\n", $output));
     file_put_contents('php://stderr', "Failed to insert default character set in dump file.");
     exit(1);
 }
@@ -72,7 +72,7 @@ unset($output);
 $command = "mysql $dbArgs $dbs_tiki -BN -e \"SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()\"";
 exec($command, $output, $returnCode);
 if ($returnCode !== 0) {
-    print($output);
+    print(implode("\n", $output));
     file_put_contents('php://stderr', "Failed to get default character set.");
     exit(1);
 }
@@ -101,7 +101,7 @@ $args = implode(' ', $args);
 $command = "(mysqldump --quick --create-options --extended-insert --no-tablespaces $args >> " . $tempFile . ") 2>&1";
 exec($command, $output, $returnCode);
 if ($returnCode !== 0) {
-    print($output);
+    print(implode("\n", $output));
     file_put_contents('php://stderr', "Dump failed.");
     exit($returnCode);
 }
