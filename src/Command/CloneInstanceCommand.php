@@ -197,6 +197,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Skip the index table'
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 
@@ -267,6 +273,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         $sourceInstance = $sourceInstances[0];
 
         $repoURL = $this->repoURL ?? $sourceInstance->repo_url;
+        $sourceInstance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
 
         $isBisectSession = $sourceInstance->getOnGoingBisectSession();
         if ($isBisectSession) {
@@ -445,7 +452,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             foreach ($targetInstances as $key => $destinationInstance) {
                 try {
                     $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
-
+                    $destinationInstance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
                     if (! $setupTargetDatabase && ! $this->input->isInteractive() && ! $this->testExistingDbConnection($destinationInstance)) {
                         throw new Exception('Existing database configuration failed to connect.');
                     }
@@ -541,6 +548,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             $this->io->newLine();
             $this->io->section('Initiating clone of ' . $sourceInstance->name . ' to ' . $destinationInstance->name);
 
+            $destinationInstance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
             $instanceVCS = $destinationInstance->getVersionControlSystem();
             $instanceVCS->setLogger($this->logger);
             $instanceVCS->setVCSOptions($vcsOptions);

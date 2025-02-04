@@ -39,6 +39,12 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 InputOption::VALUE_REQUIRED,
                 'Allow files and folders to be restored if they share the n-th parent use 0 (default) for the instance root folder and N (>=1) for allowing parent folders. Use -1 to skip this check',
                 "0"
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 
@@ -107,6 +113,7 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 }
 
                 $instance->app = $restorableInstance->app; // Required to setup database connection
+                $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
 
                 $this->setupDatabase($instance);
                 $instance->database()->setupConnection();

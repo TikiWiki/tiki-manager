@@ -182,6 +182,7 @@ class Local
     public function rsync($args = [])
     {
         $return_val = -1;
+        $copyErrorsOption = $args['copy-errors'] ?: 'ask';
 
         if (empty($args['src']) || empty($args['dest'])) {
             return $return_val;
@@ -213,8 +214,23 @@ class Local
         }
 
         if ($return_var != 0) {
-            $message = sprintf('Command: %s\nRSYNC exit code: %s\nOutput: %s', $command, $return_var, $output);
-            $this->io->error($message);
+            $message = sprintf("Command: %s\nRSYNC exit code: %s\nOutput: %s", $command, $return_var, $output);
+            switch ($copyErrorsOption) {
+                case 'stop':
+                    throw new \Exception($message);
+                case 'ignore':
+                    $this->io->warning("$message\nIgnoring rsync error and proceeding.");
+                    break;
+                default:
+                    $continue = $this->io->confirm(
+                        "$message\nDo you want to continue?",
+                        true
+                    );
+                    if (!$continue) {
+                        throw new \Exception($message);
+                    }
+                    break;
+            }
         }
 
         debug($output, $prefix = "({$return_var})>>", "\n\n");

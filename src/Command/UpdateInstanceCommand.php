@@ -115,6 +115,12 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 'r',
                 InputOption::VALUE_OPTIONAL,
                 'Specific revision to update the instance to'
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 
@@ -204,6 +210,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
 
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
+                $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
                 $isBisectSession = $instance->getOnGoingBisectSession();
                 if ($isBisectSession) {
                     $bisectInstances[] = $instance->id;

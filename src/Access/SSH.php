@@ -264,7 +264,7 @@ class SSH extends Access implements ShellPrompt
             'mkdir -p ' . escapeshellarg($this->instance->tempdir)
         );
 
-        $host->sendFile($localFile, $remoteFile);
+        $host->sendFile($localFile, $remoteFile, $this->instance->copy_errors);
         $arg = implode(' ', array_map('escapeshellarg', $args));
         $output = $host->runCommands(
             "{$this->instance->phpexec} -q -d memory_limit=256M {$remoteFile} {$arg}",
@@ -291,7 +291,7 @@ class SSH extends Access implements ShellPrompt
         $tempFolder = Env::get('TEMP_FOLDER');
         $local = $target ?: tempnam($tempFolder, 'trim');
 
-        $this->getHost()->receiveFile($filename, $local);
+        $this->getHost()->receiveFile($filename, $local, $this->instance->copy_errors);
 
         if (!$target) {
             $target = $local . $ext;
@@ -305,10 +305,11 @@ class SSH extends Access implements ShellPrompt
     public function uploadFile($filename, $remoteLocation)
     {
         $host = $this->getHost();
+        $copyErrors = $this->instance->copy_errors;
         if ($remoteLocation[0] == '/' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $host->sendFile($filename, $remoteLocation);
+            $host->sendFile($filename, $remoteLocation, $copyErrors);
         } else {
-            $host->sendFile($filename, $this->instance->getWebPath($remoteLocation));
+            $host->sendFile($filename, $this->instance->getWebPath($remoteLocation), $copyErrors);
         }
     }
 
@@ -438,7 +439,8 @@ class SSH extends Access implements ShellPrompt
         return $host->rsync([
             'src' => $remoteLocation,
             'dest' => $localMirror,
-            'download' => true
+            'download' => true,
+            'copy-errors' => $this->instance->copy_errors
         ]);
     }
 

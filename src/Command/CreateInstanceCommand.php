@@ -183,6 +183,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 'r',
                 InputOption::VALUE_OPTIONAL,
                 'Specific revision to checkout'
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 

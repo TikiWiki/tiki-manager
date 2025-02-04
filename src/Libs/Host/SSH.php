@@ -106,11 +106,12 @@ class SSH
         return $this->adapter->runCommands($commands, $output);
     }
 
-    public function sendFile($localFile, $remoteFile)
+    public function sendFile($localFile, $remoteFile, $copyErrorsOption = 'ask')
     {
         $exitCode = $this->rsync([
             'src' => $localFile,
             'dest' => $remoteFile,
+            'copy-errors' => $copyErrorsOption
         ]);
 
         if ($exitCode == 0) {
@@ -120,12 +121,13 @@ class SSH
         return $exitCode == 0;
     }
 
-    public function receiveFile($remoteFile, $localFile)
+    public function receiveFile($remoteFile, $localFile, $copyErrorsOption = 'ask')
     {
         $exitCode = $this->rsync([
             'src' => $remoteFile,
             'dest' => $localFile,
-            'download' => true
+            'download' => true,
+            'copy-errors' => $copyErrorsOption
         ]);
 
         return $exitCode == 0;
@@ -155,6 +157,8 @@ class SSH
     public function rsync($args = [])
     {
         $return_val = -1;
+        $copyErrorsOption = $args['copy-errors'] ?: 'ask';
+
         if (empty($args['src']) || empty($args['dest'])) {
             return $return_val;
         }
@@ -203,9 +207,29 @@ class SSH
         $command = new Command('rsync', $rsyncParams);
         $localHost->runCommand($command);
         $return_var = $command->getReturn();
+        $out = $command->getStdoutContent();
+        $err = $command->getStderrContent();
+        $commandLine = $command->getFullCommand();
 
         if ($return_var != 0) {
-            $this->io->error("RSYNC exit code: $return_var");
+            $output = $err ?: $out;
+            $message = sprintf("Command: %s\nRSYNC exit code: %s\nOutput: %s", $commandLine, $return_var, $output);
+            switch ($copyErrorsOption) {
+                case 'stop':
+                    throw new \Exception($message);
+                case 'ignore':
+                    $this->io->warning("$message\nIgnoring rsync error and proceeding.");
+                    break;
+                default:
+                    $continue = $this->io->confirm(
+                        "$message\nDo you want to continue?",
+                        true
+                    );
+                    if (!$continue) {
+                        throw new \Exception($message);
+                    }
+                    break;
+            }
         }
 
         return $return_var;

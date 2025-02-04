@@ -545,7 +545,8 @@ class Tiki extends Application
                 $host->rsync([
                     'src' => rtrim($folder, '/') . '/',
                     'dest' => rtrim($this->instance->webroot, '/') . '/',
-                    'exclude' => ['.phpenv']
+                    'exclude' => ['.phpenv'],
+                    'copy-errors' => $this->instance->copy_errors
                 ]);
             }
         } else {

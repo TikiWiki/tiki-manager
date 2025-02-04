@@ -340,6 +340,9 @@ trait InstanceConfigure
         }
 
         $instance->repo_url = $vcsRepoUrl;
+        if (!$import) {
+            $instance->copy_errors = $this->input->getOption('copy-errors') ?: 'ask';
+        }
 
         return $instance;
     }

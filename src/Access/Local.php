@@ -452,7 +452,8 @@ class Local extends Access implements ShellPrompt
                 return $host->rsync([
                     'src' => $remoteLocation,
                     'dest' => $localMirror,
-                    'link-dest' => dirname($remoteLocation)
+                    'link-dest' => dirname($remoteLocation),
+                    'copy-errors' => $this->instance->copy_errors
                 ]);
             }
         }

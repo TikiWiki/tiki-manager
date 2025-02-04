@@ -142,6 +142,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Skip lock website.'
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 

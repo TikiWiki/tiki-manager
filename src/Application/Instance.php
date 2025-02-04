@@ -373,6 +373,7 @@ SQL;
     public $repo_url;
     public $branch;
     public $state;
+    public $copy_errors;
 
     public $selection;
     public $last_action;

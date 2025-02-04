@@ -31,6 +31,12 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
                 'i',
                 InputOption::VALUE_REQUIRED,
                 'Instances id\'s'
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 
@@ -72,6 +78,7 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
         if (! empty($instancesOption)) {
             foreach ($instancesOption as $instanceId) {
                 $instance = Instance::getInstance($instanceId);
+                $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
                 $success = ($status == 'on') ? $instance->lock() : $instance->unlock();
                 if ($success) {
                     $messages[] = $instance->name;
@@ -100,7 +107,8 @@ class MaintenanceInstanceCommand extends TikiManagerCommand
                 });
 
                 $selectedInstance = $helper->ask($input, $output, $question);
-                $instance = $selectedInstance[0];
+                $instance = reset($selectedInstance);
+                $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
                 $success = ($status == 'on') ? $instance->lock() : $instance->unlock();
                 $instance->getApplication()->fixPermissions();
                 $hookName->registerPostHookVars(['instance' => $instance, 'maintenance_status' => $instance->isLocked() ? 'on' : 'off']);

@@ -22,6 +22,12 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
                 'i',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs to be redacted, separated by comma (,)'
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 
@@ -62,8 +68,6 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
         CommandHelper::validateInstanceSelection($instancesOption, $instances);
         $instancesOption = explode(',', $instancesOption);
         $selectedInstances = [];
-        $instancesOption = explode(',', $instancesOption);
-        $selectedInstances = [];
         foreach ($instancesOption as $key) { // keeping the same order as in $instancesOption
             if (array_key_exists($key, $instances)) {
                 $selectedInstances[$key] = $instances[$key];
@@ -102,6 +106,12 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
                 '--backup-group' => $instance->backup_group ? $instance->backup_group : 'www-data',
                 '--backup-permission' => $instance->backup_perm ? $instance->backup_perm : '750',
             ];
+            if ($instance->type === 'ssh') {
+                $access = $instance->getBestAccess();
+                $arguments['--user'] = $access->user;
+                $arguments['--host'] = $access->host;
+                $arguments['--port'] = $access->port;
+            }
             $blankInstanceInput = new ArrayInput($arguments);
             $blankInstanceInput->setInteractive(false);
             $command->run($blankInstanceInput, $output);
@@ -118,6 +128,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
                 '--source' => $instance->getId(),
                 '--target' => [$cloneInstance->getId()],
                 '--db-prefix' => $blankInstanceName,
+                '--copy-errors' => $input->getOption('copy-errors') ?: 'ask',
             ];
             $verifyInstanceInput = new ArrayInput($arguments);
             $verifyInstanceInput->setInteractive(true);

@@ -54,6 +54,12 @@ class BackupInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Include the index table in the backup'
+            )
+            ->addOption(
+                'copy-errors',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Handle rsync errors: use "stop" to halt on errors or "ignore" to proceed despite errors'
             );
     }
 
@@ -163,6 +169,7 @@ class BackupInstanceCommand extends TikiManagerCommand
         $hook = $this->getCommandHook();
         $bisectInstances = [];
         foreach ($selectedInstances as $instance) {
+            $instance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
             $isBisectSession = $instance->getOnGoingBisectSession();
             if ($isBisectSession) {
                 $bisectInstances[] = $instance->id;
