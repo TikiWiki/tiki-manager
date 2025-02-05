@@ -61,9 +61,16 @@ class Local
 
         $process->run();
 
-        $command->setStdout($process->getOutput());
-        $command->setStderr($process->getErrorOutput());
-        $command->setReturn($process->getExitCode());
+        $output = $process->getOutput();
+        $error = $process->getErrorOutput();
+        $exitCode = $process->getExitCode();
+
+        $command->setStdout($output);
+        $command->setStderr($error);
+        $command->setReturn($exitCode);
+
+        $out = (empty($output) ? '' : "\nOutput: $output") . (empty($error) ? '' : "\nError: $error");
+        trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] ' . $commandLine . ' - return: ' . $exitCode . $out);
 
         return $command;
     }
@@ -95,10 +102,12 @@ class Local
 
             $result = $process->getOutput();
             $exitCode = $process->getExitCode();
+            $error = $process->getErrorOutput();
 
             $this->last_command_exit_code = $exitCode;
 
-            trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] ' . $cmd . ' - return: ' . $exitCode . (empty($result) ? '' : "\n" . $result));
+            $out = (empty($output) ? '' : "\nOutput: $output") . (empty($error) ? '' : "\nError: $error");
+            trim_output('LOCAL [' . date('Y-m-d H:i:s') . '] ' . $cmd . ' - return: ' . $exitCode . $out);
 
             if ($exitCode) {
                 if ($output) {
