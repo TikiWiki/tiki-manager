@@ -715,13 +715,59 @@ class CommandHelper
     }
 
     /**
+     * Reads the .version file and returns JSON data.
+     */
+    public static function getVersionFileData($path, $onlyComments = false)
+    {
+        $versionFile = ! empty($path) ? $path : $_ENV['TRIM_ROOT'] . '/.version';
+
+        if (!file_exists($versionFile)) {
+            return false;
+        }
+
+        // Read the .version file and ignore empty lines
+        $versionContent = file($versionFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        if (empty($versionContent)) {
+            return false;
+        }
+
+        if ($onlyComments) {
+            // Get the comments only
+            return array_filter($versionContent, function ($line) {
+                return strpos($line, '#') === 0;
+            });
+        }
+
+        // Get the JSON part
+        $filteredJsonContent = array_filter($versionContent, function ($line) {
+            return strpos($line, '#') !== 0;
+        });
+
+        if (!empty($filteredJsonContent)) {
+            $content = implode("\n", $filteredJsonContent);
+            return json_decode($content, true);
+        }
+
+        return false;
+    }
+
+    /**
      * Check Tiki-Manager instance was installed using operation system packages
      *
      * @return bool
      */
     public static function isInstalledFromPackage()
     {
-        if (file_exists($_ENV['TRIM_ROOT'] . '/VERSION')) {
+        $versionFile = $_ENV['TRIM_ROOT'] . '/.version';
+
+        if (!file_exists($versionFile)) {
+            return false;
+        }
+
+        $versionData = self::getVersionFileData($versionFile);
+
+        if (is_array($versionData) && !empty($versionData) && !empty($versionData['version'])) {
             return true;
         }
 

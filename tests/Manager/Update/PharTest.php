@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 use TikiManager\Config\Environment;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Manager\Update\Phar;
 use TikiManager\Manager\UpdateManager;
 use TikiManager\Tests\Helpers\Tests;
@@ -133,8 +134,8 @@ class PharTest extends TestCase
 
         $info = $updater->info();
 
-        $expectedInfo = file_get_contents('phar://' . $pharFile . '/' . UpdateManager::VERSION_FILENAME);
-        $expectedInfo = json_decode($expectedInfo, true);
+        $checksumFile = 'phar://' . $pharFile . '/' . UpdateManager::VERSION_FILENAME;
+        $expectedInfo = CommandHelper::getVersionFileData($checksumFile);
         $expectedDate = date(\DateTime::COOKIE, strtotime($expectedInfo['date']));
 
         $this->assertStringContainsString('Phar detected', $info);

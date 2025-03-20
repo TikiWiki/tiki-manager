@@ -10,6 +10,7 @@ namespace TikiManager\Manager\Update;
 use Phar as PhpPhar;
 use TikiManager\Config\Environment;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Manager\UpdateManager;
 use TikiManager\Traits\FileArchive;
 use TikiManager\Traits\FileDownload;
@@ -118,7 +119,7 @@ class Phar extends UpdateManager
     public function getCurrentVersion()
     {
         $checksumFile = $this->phar . DIRECTORY_SEPARATOR . self::VERSION_FILENAME;
-        return file_exists($checksumFile) ? json_decode(file_get_contents($checksumFile), true) : false;
+        return file_exists($checksumFile) ? CommandHelper::getVersionFileData($checksumFile) : false;
     }
 
     /**

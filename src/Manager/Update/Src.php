@@ -9,6 +9,7 @@ namespace TikiManager\Manager\Update;
 
 use Exception;
 use Symfony\Component\Filesystem\Filesystem;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\Environment;
 use TikiManager\Manager\UpdateManager;
 use TikiManager\Traits\FileArchive;
@@ -74,12 +75,27 @@ class Src extends UpdateManager
     public function getCurrentVersion()
     {
         $checksumFile = $this->targetFolder . DIRECTORY_SEPARATOR . self::VERSION_FILENAME;
-        return file_exists($checksumFile) ? json_decode(file_get_contents($checksumFile), true) : false;
+        return file_exists($checksumFile) ? CommandHelper::getVersionFileData($checksumFile) : false;
     }
 
     protected function setCurrentVersion($versionInfo)
     {
-        $checksumFile = $this->targetFolder . DIRECTORY_SEPARATOR . self::VERSION_FILENAME;
-        return file_put_contents($checksumFile, json_encode($versionInfo));
+        $checksumFile = trim($this->targetFolder . DIRECTORY_SEPARATOR . self::VERSION_FILENAME);
+
+        $comments = '';
+        $jsonEncoded = '';
+
+        $onlyComments = CommandHelper::getVersionFileData($checksumFile, true);
+        if (! empty($onlyComments)) {
+            $comments = implode("\n", $onlyComments) . "\n";
+        }
+
+        if (! empty($versionInfo)) {
+            $jsonEncoded = json_encode($versionInfo);
+        }
+
+        $finalVersionContent = $comments . $jsonEncoded;
+
+        return file_put_contents($checksumFile, $finalVersionContent);
     }
 }

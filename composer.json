@@ -67,7 +67,7 @@
       "./vendor/bin/phpunit --bootstrap src/env_includes.php tests"
     ],
     "build-phar": [
-      "git log -n 1 --format='{\"version\":\"%h\", \"date\":\"%cI\"}' > .version",
+      "bash scripts/generate-version.sh",
       "mkdir -p build",
       "box compile"
     ]

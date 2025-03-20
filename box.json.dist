@@ -18,5 +18,8 @@
             "in": "vendor"
          }
     ],
+    "blacklist": [
+        "scripts/generate-version.sh"
+    ],
     "stub": true
 }
