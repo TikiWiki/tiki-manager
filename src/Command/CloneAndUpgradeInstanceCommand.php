@@ -60,6 +60,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 'Skip generating cache step.'
             )
             ->addOption(
+                'warmup-include-modules',
+                null,
+                InputOption::VALUE_NONE,
+                'Include modules in cache warmup (default is only templates and misc).'
+            )
+            ->addOption(
                 'live-reindex',
                 null,
                 InputOption::VALUE_OPTIONAL,

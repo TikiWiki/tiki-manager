@@ -7,7 +7,6 @@
 
 namespace TikiManager\Command;
 
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -52,6 +51,12 @@ class ApplyPatchCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Skip generating cache step.'
+            )
+            ->addOption(
+                'warmup-include-modules',
+                null,
+                InputOption::VALUE_NONE,
+                'Include modules in cache warmup (default is only templates and misc).'
             )
             ->addOption(
                 'live-reindex',
@@ -118,6 +123,7 @@ class ApplyPatchCommand extends TikiManagerCommand
         $url = $input->getOption('url');
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
+        $warmupIncludeModules = $input->getOption('warmup-include-modules');
         $liveReindex = filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
 
         if (!isset($instancesInfo)) {
@@ -146,6 +152,7 @@ class ApplyPatchCommand extends TikiManagerCommand
                 $result = $instance->getApplication()->applyPatch($patch, [
                     'skip-reindex' => $skipReindex,
                     'skip-cache-warmup' => $skipCache,
+                    'warmup-include-modules' => $warmupIncludeModules,
                     'live-reindex' => $liveReindex
                 ]);
                 if ($result) {

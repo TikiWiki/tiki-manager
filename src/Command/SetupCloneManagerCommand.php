@@ -83,6 +83,12 @@ class SetupCloneManagerCommand extends TikiManagerCommand
                 'Skip generating cache step.'
             )
             ->addOption(
+                'warmup-include-modules',
+                null,
+                InputOption::VALUE_NONE,
+                'Include modules in cache warmup (default is only templates and misc).'
+            )
+            ->addOption(
                 'live-reindex',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -246,7 +252,11 @@ class SetupCloneManagerCommand extends TikiManagerCommand
         }
 
         if ($skipCacheWarmup = $input->getOption('skip-cache-warmup')) {
-            $cloneInstanceCommand .= ' --slip-cache-warmup=' . $skipCacheWarmup;
+            $cloneInstanceCommand .= ' --skip-cache-warmup=' . $skipCacheWarmup;
+        }
+
+        if ($warmupIncludeModules = $input->getOption('warmup-include-modules')) {
+            $cloneInstanceCommand .= ' --warmup-include-modules=' . $warmupIncludeModules;
         }
 
         if ($liveReindex = is_null($input->getOption('live-reindex')) ? true : filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN)) {

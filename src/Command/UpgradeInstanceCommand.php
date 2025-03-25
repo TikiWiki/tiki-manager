@@ -66,6 +66,12 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 'Skip generating cache step.'
             )
             ->addOption(
+                'warmup-include-modules',
+                null,
+                InputOption::VALUE_NONE,
+                'Include modules in cache warmup (default is only templates and misc).'
+            )
+            ->addOption(
                 'live-reindex',
                 null,
                 InputOption::VALUE_NONE,
@@ -112,6 +118,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
+        $warmupIncludeModules = $input->getOption('warmup-include-modules');
         $liveReindex = $input->getOption('live-reindex');
         $lag = $input->getOption('lag');
         $vcsOptions = [
@@ -208,6 +215,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                     'checksum-check' => $checksumCheck,
                     'skip-reindex' => $skipReindex,
                     'skip-cache-warmup' => $skipCache,
+                    'warmup-include-modules' => $warmupIncludeModules,
                     'live-reindex' => $liveReindex,
                     'lag' => $lag,
                     'revision' => $revision

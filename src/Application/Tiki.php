@@ -1221,8 +1221,11 @@ TXT;
             $this->clearCache();
 
             if (empty($options['skip-cache-warmup'])) {
-                $this->io->writeln('Generating caches... <fg=yellow>[may take a while]</>');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
+                $this->io->writeln('Generating templates cache... <fg=yellow>[may take a while]</>');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate templates");
+
+                $this->io->writeln('Generating miscellaneous cache (data related information)... <fg=yellow>[may take a while]</>');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate misc");
             }
 
             if (empty($options['skip-reindex'])) {
@@ -1237,6 +1240,11 @@ TXT;
                 if (! $this->instance->reindex()) {
                     $this->io->error('Rebuilding Index failed.');
                 }
+            }
+
+            if (empty($options['skip-cache-warmup']) && !empty($options['warmup-include-modules'])) {
+                $this->io->writeln('Generating modules cache... <fg=yellow>[may take a while]</>');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate modules");
             }
         }
 

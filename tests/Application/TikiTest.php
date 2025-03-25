@@ -393,6 +393,9 @@ Your requirements could not be resolved to an installable set of packages.');
 
     /**
      * @covers \TikiManager\Application\Tiki::postInstall
+     * By default, only templates and misc cache are generated.
+     * modules cache is NOT generated unless explicitly enabled via warmup-include-modules.
+     * Since we are NOT enabling warmup-include-modules, we expect only 2 calls (shellExec).
      */
     public function testPostInstallWithSkipReindex()
     {
@@ -406,7 +409,9 @@ Your requirements could not be resolved to an installable set of packages.');
             ->willReturn(true);
 
         $accessStub = $this->createMock(Local::class);
+
         $accessStub
+            ->expects($this->exactly(2))
             ->method('shellExec')
             ->willReturn(null);
 
@@ -443,6 +448,66 @@ Your requirements could not be resolved to an installable set of packages.');
             ->method('fixPermissions');
 
         $tikiMock->postInstall(['skip-reindex' => true]);
+    }
+
+    /**
+     * @covers \TikiManager\Application\Tiki::postInstall
+     * By default, only templates and misc cache are generated.
+     * modules cache is NOT generated unless explicitly enabled via warmup-include-modules.
+     * Since we are enabling warmup-include-modules, we expect 3 calls (shellExec).
+     */
+    public function testPostInstallWithSkipWarmupIncludeModules()
+    {
+        $instanceStub = $this->createMock(Instance::class);
+        $instanceStub->type = 'local';
+        $instanceStub->vcs_type = 'git';
+        $instanceStub->method('getVersionControlSystem')->willReturn(new Git($instanceStub));
+
+        $instanceStub
+            ->expects($this->exactly(2))
+            ->method('hasConsole')
+            ->willReturn(true);
+
+        $accessStub = $this->createMock(Local::class);
+
+        $accessStub
+            ->expects($this->exactly(3))
+            ->method('shellExec')
+            ->willReturn(null);
+
+        $instanceStub
+            ->method('getBestAccess')
+            ->willReturn($accessStub);
+
+        $appStub = $this->createMock(Tiki::class);
+        $appStub
+            ->method('getBaseVersion')
+            ->willReturn('master');
+
+        $instanceStub
+            ->method('getApplication')
+            ->willReturn($appStub);
+
+        $tikiMock = $this->createPartialMock(
+            Tiki::class,
+            ['installComposerDependencies', 'runDatabaseUpdate', 'setDbLock', 'clearCache', 'fixPermissions']
+        );
+
+        $tikiMock->__construct($instanceStub);
+
+        $tikiMock
+            ->expects($this->once())
+            ->method('runDatabaseUpdate');
+
+        $tikiMock
+            ->expects($this->once())
+            ->method('setDbLock');
+
+        $tikiMock
+            ->expects($this->once())
+            ->method('fixPermissions');
+
+        $tikiMock->postInstall(['warmup-include-modules' => true]);
     }
 
     /**

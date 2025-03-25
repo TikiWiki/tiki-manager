@@ -90,6 +90,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 'Skip generating cache step. (Only in upgrade mode).'
             )
             ->addOption(
+                'warmup-include-modules',
+                null,
+                InputOption::VALUE_NONE,
+                'Include modules in cache warmup (default is only templates and misc).'
+            )
+            ->addOption(
                 'live-reindex',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -222,6 +228,7 @@ class CloneInstanceCommand extends TikiManagerCommand
         $checksumCheck = $input->getOption('check');
         $skipReindex = $input->getOption('skip-reindex');
         $skipCache = $input->getOption('skip-cache-warmup');
+        $warmupIncludeModules = $input->getOption('warmup-include-modules');
         $liveReindex = is_null($input->getOption('live-reindex')) ? true : filter_var($input->getOption('live-reindex'), FILTER_VALIDATE_BOOLEAN);
         $direct = $input->getOption('direct');
         $keepBackup = $input->getOption('keep-backup');
@@ -538,6 +545,7 @@ class CloneInstanceCommand extends TikiManagerCommand
             'checksum-check' => $checksumCheck,
             'skip-reindex' => $skipReindex,
             'skip-cache-warmup' => $skipCache,
+            'warmup-include-modules' => $warmupIncludeModules,
             'live-reindex' => $liveReindex,
             'timeout' => $timeout,
             'revision' => $revision
