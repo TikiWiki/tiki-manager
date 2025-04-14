@@ -197,11 +197,11 @@ class SSH
         $rsyncParams[] = '-e';
         $rsyncParams[] = "ssh -p {$port} -i $key";
         if (isset($args['download']) && $args['download']) {
-            $rsyncParams[] = "{$user}@{$host}:".escapeshellarg($src);
+            $rsyncParams[] = "{$user}@{$host}:{$src}";
             $rsyncParams[] = $dest;
         } else {
             $rsyncParams[] = $src;
-            $rsyncParams[] = "{$user}@{$host}:".escapeshellarg($dest);
+            $rsyncParams[] = "{$user}@{$host}:{$dest}";
         }
 
         $command = new Command('rsync', $rsyncParams);
