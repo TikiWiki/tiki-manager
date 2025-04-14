@@ -28,7 +28,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -40,7 +40,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -55,7 +55,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_NAME = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -83,7 +83,7 @@ SQL;
 
     const SQLQUERY_UPDATABLE_AND_UPGRADABLE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -139,9 +139,9 @@ SQL;
     const SQL_INSERT_INSTANCE = <<<SQL
 INSERT OR REPLACE INTO
     instance
-    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, app, state)
+    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, phpversion, app, state)
 VALUES
-    (:id, :name, :contact, :web, :url, :temp, :phpexec, :app, :state)
+    (:id, :name, :contact, :web, :url, :temp, :phpexec, :phpversion, :app, :state)
 ;
 SQL;
 
@@ -152,7 +152,8 @@ SET
     contact = :contact,
     webroot = :web,
     weburl = :url,
-    tempdir = :temp
+    tempdir = :temp,
+    phpversion = :phpversion
 WHERE
     instance_id = :id
 ;
@@ -536,6 +537,7 @@ SQL;
             ':url' => $this->weburl,
             ':temp' => $this->tempdir,
             ':phpexec' => $this->phpexec,
+            ':phpversion' => $this->phpversion,
             ':app' => $this->app,
             ':state' => $this->state
         ];
@@ -569,7 +571,8 @@ SQL;
             ':contact' => $this->contact,
             ':web'     => $this->webroot,
             ':url'     => $this->weburl,
-            ':temp'    => $this->tempdir
+            ':temp'    => $this->tempdir,
+            ':phpversion' => $this->phpversion
         ];
 
         query(self::SQL_UPDATE_INSTANCE, $params);

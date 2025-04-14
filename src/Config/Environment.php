@@ -580,6 +580,12 @@ class Environment
                     UPDATE info SET value = '17' WHERE name = 'version';
                 ");
             // no break
+            case 17:
+                $db->exec("
+                    ALTER TABLE instance ADD COLUMN phpversion INTEGER DEFAULT 0;
+                    UPDATE info SET value = '18' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 
