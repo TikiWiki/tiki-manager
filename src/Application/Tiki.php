@@ -819,6 +819,10 @@ class Tiki extends Application
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
 
+        $remoteName = md5($remoteFile);
+        $remoteFileName = $this->instance->getWorkPath($remoteName);
+        $access->getHost()->sendFile($remoteFile, $remoteFileName, $this->instance->copy_errors);
+
         $access = $this->instance->getBestAccess('scripting');
         $root = $this->instance->webroot;
 
@@ -829,8 +833,10 @@ class Tiki extends Application
         $this->io->writeln("Loading '$remoteFile' into '{$database->dbname}'");
         $output = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/run_sql_file.php',
-            [$root, $remoteFile]
+            [$root, $remoteFileName]
         );
+
+        $access->getHost()->runCommands('rm ' . $remoteFileName);
 
         $output = !empty($output) ? explode(PHP_EOL, $output) : [];
 
