@@ -4,8 +4,10 @@ namespace TikiManager\Command;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 use Symfony\Component\Console\Input\InputOption;
+use TikiManager\Command\Helper\OptionValidatorHelper;
 
 class EditInstanceCommand extends TikiManagerCommand
 {
@@ -121,11 +123,14 @@ class EditInstanceCommand extends TikiManagerCommand
 
                 //Instance name
                 if (empty($input->getOption('name'))) {
-                    if ($instance->type != 'local') {
-                        $question = CommandHelper::getQuestion('Host name', $instance->name);
-                    } elseif ($instance->type == 'local') {
+                    if ($instance->type == 'local') {
                         $question = CommandHelper::getQuestion('Instance name', $instance->name);
+                    } else {
+                        $question = CommandHelper::getQuestion('Host name', $instance->name);
                     }
+                    $question->setValidator(function ($answer) use ($instance) {
+                        return OptionValidatorHelper::validateInstanceName($answer);
+                    });
                     $name = $helper->ask($input, $output, $question);
                 } else {
                     $name = $input->getOption('name');
@@ -134,6 +139,9 @@ class EditInstanceCommand extends TikiManagerCommand
                 //Instance email
                 if (empty($input->getOption('email'))) {
                     $question = CommandHelper::getQuestion('Contact email', $instance->contact);
+                    $question->setValidator(function ($answer) {
+                        return OptionValidatorHelper::validateEmail($answer);
+                    });
                     $contact = $helper->ask($input, $output, $question);
                 } else {
                     $contact = $input->getOption('email');
@@ -142,6 +150,10 @@ class EditInstanceCommand extends TikiManagerCommand
                 //Instance webroot
                 if (empty($input->getOption('webroot'))) {
                     $question = CommandHelper::getQuestion('Web root', $instance->webroot);
+                    $question->setValidator(function ($answer) use ($instance) {
+                        $access = $instance->getBestAccess();
+                        return OptionValidatorHelper::validatePathAndContent($answer, $access);
+                    });
                     $webroot = $helper->ask($input, $output, $question);
                 } else {
                     $webroot = $input->getOption('webroot');
@@ -150,6 +162,9 @@ class EditInstanceCommand extends TikiManagerCommand
                 //Instance Web URL
                 if (empty($input->getOption('url'))) {
                     $question = CommandHelper::getQuestion('Web URL', $instance->weburl);
+                    $question->setValidator(function ($answer) {
+                        return OptionValidatorHelper::validateWebUrl($answer);
+                    });
                     $weburl = $helper->ask($input, $output, $question);
                 } else {
                     $weburl = $input->getOption('url');
@@ -158,6 +173,10 @@ class EditInstanceCommand extends TikiManagerCommand
                 //Instance Working directory
                 if (empty($input->getOption('tempdir'))) {
                     $question = CommandHelper::getQuestion('Working directory', $instance->tempdir);
+                    $question->setValidator(function ($answer) use ($instance) {
+                        $access = $instance->getBestAccess();
+                        return OptionValidatorHelper::validatePath($answer, $access);
+                    });
                     $tempdir = $helper->ask($input, $output, $question);
                 } else {
                     $tempdir = $input->getOption('tempdir');
@@ -172,9 +191,15 @@ class EditInstanceCommand extends TikiManagerCommand
                 }
                 $instance->getDiscovery()->detectPHPVersion($phpexec);
 
+                $mockInstance = new Instance();
+                $mockInstance->type = 'local';
+                $mockDiscovery = $mockInstance->getDiscovery();
                 //Instance Backup user
                 if (empty($input->getOption('backup-user'))) {
                     $question = CommandHelper::getQuestion('Backup user (the local user that will be used as backup files owner)', $instance->getProp('backup_user'));
+                    $question->setValidator(function ($answer) use ($mockDiscovery) {
+                        return OptionValidatorHelper::validateBackupUser($answer, $mockDiscovery);
+                    });
                     $backup_user = $helper->ask($input, $output, $question);
                 } else {
                     $backup_user = $input->getOption('backup-user');
@@ -183,6 +208,9 @@ class EditInstanceCommand extends TikiManagerCommand
                 //Instance Backup group
                 if (empty($input->getOption('backup-group'))) {
                     $question = CommandHelper::getQuestion('Backup group (the local group that will be used as backup files owner)', $instance->getProp('backup_group'));
+                    $question->setValidator(function ($answer) use ($mockDiscovery) {
+                        return OptionValidatorHelper::validateBackupGroup($answer, $mockDiscovery);
+                    });
                     $backup_group = $helper->ask($input, $output, $question);
                 } else {
                     $backup_group = $input->getOption('backup-group');
@@ -192,6 +220,9 @@ class EditInstanceCommand extends TikiManagerCommand
                 if (empty($input->getOption('backup-permission'))) {
                     $backup_perm = intval($instance->getProp('backup_perm') ?: 0775);
                     $question = CommandHelper::getQuestion('Backup file permissions', decoct($backup_perm));
+                    $question->setValidator(function ($answer) {
+                        return OptionValidatorHelper::validateBackupPermissions($answer);
+                    });
                     $backup_perm = $helper->ask($input, $output, $question);
                 } else {
                     $backup_perm = $input->getOption('backup-permission');
@@ -203,6 +234,9 @@ class EditInstanceCommand extends TikiManagerCommand
                 if (empty($input->getOption('repo-url'))) {
                     $repoURL = $version->repo_url ?? $_ENV['GIT_TIKIWIKI_URI'];
                     $question = CommandHelper::getQuestion('Repository URL', $repoURL);
+                    $question->setValidator(function ($answer) {
+                        return OptionValidatorHelper::validateWebUrl($answer);
+                    });
                     $repoURL = $helper->ask($input, $output, $question);
                 } else {
                     $repoURL = $input->getOption('repo-url');

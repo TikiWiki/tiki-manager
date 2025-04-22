@@ -14,6 +14,7 @@ use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
 use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Command\Helper\OptionValidatorHelper;
 use TikiManager\Config\Environment as Env;
 
 trait InstanceConfigure
@@ -143,14 +144,8 @@ trait InstanceConfigure
     {
         $url = $this->input->getOption('url') ?: $instance->getDiscovery()->detectWeburl();
         $url = $this->io->ask('WebUrl', $url, function ($value) {
-            if (empty($value)) {
-                throw new InvalidOptionException('URL cannot be empty. Please use --url=<URL>');
-            }
-
-            if (filter_var($value, FILTER_VALIDATE_URL) === false) {
-                throw new InvalidOptionException('URL is invalid. Please use --url=<URL>');
-            }
-
+            OptionValidatorHelper::validateNotEmpty($value, 'URL cannot be empty. Please use --url=<URL>');
+            OptionValidatorHelper::validateWebUrl($value);
             return $value;
         });
 
@@ -159,29 +154,8 @@ trait InstanceConfigure
         $name = $this->input->getOption('name') ?: $instance->getDiscovery()->detectName();
         $name = $this->io->ask('Name', $name, function ($value) {
             $value = trim($value);
-            if (empty($value)) {
-                throw new InvalidOptionException('Name cannot be empty. Please use --name=<NAME>');
-            }
-            if (is_numeric($value)) {
-                throw new InvalidOptionException('Name cannot be a numerical value (otherwise we can\'t differenciate from ID).');
-            }
-            if ($value === 'all') {
-                throw new InvalidOptionException('Name cannot be "all" (which is a special keyword for instances listing).');
-            }
-            if (strpos($value, ',') !== false) {
-                throw new InvalidOptionException('Name cannot contains ",".');
-            }
-
-            global $db;
-            $query = "SELECT COUNT(*) as numInstances FROM instance WHERE name = :name";
-            $stmt = $db->prepare($query);
-            $stmt->execute([':name' => $value]);
-            $count = $stmt->fetchObject();
-
-            if ($count->numInstances) {
-                throw new InvalidOptionException('Instance name already in use. Please choose another name.');
-            }
-
+            OptionValidatorHelper::validateNotEmpty($value, 'Name cannot be empty. Please use --name=<NAME>');
+            OptionValidatorHelper::validateInstanceName($value);
             return $value;
         });
 
@@ -189,10 +163,7 @@ trait InstanceConfigure
 
         $email = $this->input->getOption('email');
         $email = $this->io->ask('Email', $email, function ($value) {
-            if ($value && filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
-                throw new InvalidOptionException('Please insert a valid email address. Please use --email=<EMAIL>');
-            }
-
+            OptionValidatorHelper::validateEmail($value);
             return $value;
         });
 
@@ -203,61 +174,12 @@ trait InstanceConfigure
 
         $webRoot = $this->input->getOption('webroot') ?? $instance->getDiscovery()->detectWebroot();
         $webRoot = $this->io->ask('WebRoot', $webRoot, function ($value) use ($access, $instance, $import) {
-            if (empty($value)) {
-                throw new InvalidOptionException('WebRoot cannot be empty. Please use --webroot=<PATH>');
-            }
-
-            $pathExists = $access->fileExists($value);
-
-            $force = $this->input->hasOption('force') && $this->input->getOption('force');
-
-            if ($pathExists && ($force || $access->isEmptyDir($value) || $import)) {
-                return $value;
-            }
-
-            $instance->webroot = $value;
-
-            // Check if webroot has contents and it's not a Tiki Instance
-            if ($pathExists && !$this->detectApplication($instance)) {
-                return $this->handleNotEmptyWebrootFolder($value);
-            }
-
-            if (!$pathExists && $import) {
-                $error = sprintf('Unable to import. Chosen directory (%s) does not exist.', $value);
-                throw new \Exception($error);
-            }
-
-            $createDir = !$pathExists ? $this->io->confirm('Create directory?', true) : false;
-
-            if ($createDir && !$access->createDirectory($value)) {
-                throw new \Exception('Unable to create the directory: ' . $value);
-            }
-
-            if (!$pathExists && !$createDir) {
-                throw new \Exception('Directory not created');
-            }
-
-            return $value;
+            return $this->validateWebRootOnCreate($value, $access, $instance, $import);
         });
 
         $tempDir = $this->input->getOption('tempdir') ?? $instance->getDiscovery()->detectTmp() . DS . Env::get('INSTANCE_WORKING_TEMP');
         $tempDir = $this->io->ask('TempDir', $tempDir, function ($value) use ($access) {
-            if (empty($value)) {
-                throw new InvalidOptionException('TempDir cannot be empty. Please use --tempDir=<PATH>');
-            }
-
-            $pathExists = $access->fileExists($value);
-            $createDir = !$pathExists ? $this->io->confirm('Create directory?', true) : false;
-
-            if ($createDir && !$access->createDirectory($value)) {
-                throw new \Exception('Unable to create the directory: ' . $value);
-            }
-
-            if (!$pathExists && !$createDir) {
-                throw new \Exception('Directory not created');
-            }
-
-            return $value;
+            return $this->validateTempDir($value, $access);
         });
 
         $instance->webroot = $webRoot;
@@ -278,32 +200,19 @@ trait InstanceConfigure
         $backupPerm = $this->input->getOption('backup-permission') ?? $backupPerm ?? '';
 
         $backupUser = $this->io->ask('Backup user (the local user that will be used as backup files owner)', $backupUser, function ($value) use ($mockDiscovery) {
-            if (!$value) {
-                throw new InvalidOptionException('Backup user cannot be empty. Please use --backup-user=<USER>');
-            }
-            if (! $mockDiscovery->userExists($value)) {
-                throw new InvalidOptionException('Backup user does not exist on the local host.');
-            }
-
+            OptionValidatorHelper::validateNotEmpty($value, 'Backup user cannot be empty. Please use --backup-user=<USER>');
+            OptionValidatorHelper::validateBackupUser($value, $mockDiscovery);
             return $value;
         });
 
         $backupGroup = $this->io->ask('Backup group (the local group that will be used as backup files owner)', $backupGroup, function ($value) use ($mockDiscovery) {
-            if (!$value) {
-                throw new InvalidOptionException('Backup group cannot be empty. Please use --backup-group=<GROUP>');
-            }
-            if (! $mockDiscovery->groupExists($value)) {
-                throw new InvalidOptionException('Backup group does not exist on the local host.');
-            }
-
+            OptionValidatorHelper::validateNotEmpty($value, 'Backup group cannot be empty. Please use --backup-group=<GROUP>');
+            OptionValidatorHelper::validateBackupGroup($value, $mockDiscovery);
             return $value;
         });
 
         $backupPerm = $this->io->ask('Backup file permissions', $backupPerm, function ($value) {
-            if (!$value || !is_numeric($value)) {
-                throw new InvalidOptionException('Backup file permissions must be numeric. Please use --backup-permission=<PERM>');
-            }
-
+            OptionValidatorHelper::validateBackupPermissions($value);
             return $value;
         });
 
@@ -344,9 +253,8 @@ trait InstanceConfigure
         }
 
         if (!($import && $vcsRepoUrl === null)) { // when importing, null is valid.
-            if (empty($vcsRepoUrl) || filter_var($vcsRepoUrl, FILTER_VALIDATE_URL) === false) {
-                throw new InvalidOptionException('Vcs url is invalid. Please use --repo-url=<URL>');
-            }
+            OptionValidatorHelper::validateNotEmpty($vcsRepoUrl, 'Vcs url cannot be empty. Please use --repo-url=<URL>');
+            OptionValidatorHelper::validateWebUrl($vcsRepoUrl, 'Vcs url is invalid. Please use --repo-url=<URL>');
         }
 
         $instance->repo_url = $vcsRepoUrl;
@@ -767,5 +675,67 @@ trait InstanceConfigure
             $phpModules = explode("\n", $phpModules[0]);
         }
         return $phpModules;
+    }
+
+    /**
+     * Validate TempDir
+     * @throws \Exception
+     */
+    protected function validateTempDir(?string $value, $access): string
+    {
+        OptionValidatorHelper::validateNotEmpty($value, 'TempDir cannot be empty. Please use --tempDir=<PATH>');
+
+        $pathExists = $access->fileExists($value);
+        $createDir = !$pathExists ? $this->io->confirm('Create directory?', true) : false;
+
+        if ($createDir && !$access->createDirectory($value)) {
+            throw new \Exception('Unable to create the directory: ' . $value);
+        }
+
+        if (!$pathExists && !$createDir) {
+            throw new \Exception('Directory not created');
+        }
+
+        return $value;
+    }
+
+    /**
+     * Validate WebRoot
+     * @throws \Exception
+     */
+    protected function validateWebRootOnCreate(?string $value, $access, $instance, $import = false): string
+    {
+        OptionValidatorHelper::validateNotEmpty($value, 'WebRoot cannot be empty. Please use --webroot=<PATH>');
+        $pathExists = $access->fileExists($value);
+
+        $force = $this->input->hasOption('force') && $this->input->getOption('force');
+
+        if ($pathExists && ($force || $access->isEmptyDir($value) || $import)) {
+            return $value;
+        }
+
+        $instance->webroot = $value;
+
+        // Check if webroot has contents and it's not a Tiki Instance
+        if ($pathExists && !$this->detectApplication($instance)) {
+            return $this->handleNotEmptyWebrootFolder($value);
+        }
+
+        if (!$pathExists && $import) {
+            $error = sprintf('Unable to import. Chosen directory (%s) does not exist.', $value);
+            throw new \Exception($error);
+        }
+
+        $createDir = !$pathExists ? $this->io->confirm('Create directory?', true) : false;
+
+        if ($createDir && !$access->createDirectory($value)) {
+            throw new \Exception('Unable to create the directory: ' . $value);
+        }
+
+        if (!$pathExists && !$createDir) {
+            throw new \Exception('Directory not created');
+        }
+
+        return $value;
     }
 }
