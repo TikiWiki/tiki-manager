@@ -12,7 +12,7 @@ use TikiManager\Application\Discovery\VirtualminDiscovery;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Instance;
 use TikiManager\Application\Tiki;
-use TikiManager\Application\Tiki\Versions\Fetcher\RequirementsFetcher;
+use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
 use TikiManager\Application\Tiki\Versions\SoftwareRequirement;
 use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
@@ -527,7 +527,7 @@ Your requirements could not be resolved to an installable set of packages.');
             ->method('getVersionControlSystem')
             ->willReturn($vcsStub);
 
-        $fetcher = $this->createMock(RequirementsFetcher::class);
+        $fetcher = $this->createMock(YamlFetcher::class);
         $fetcher->method('getRequirements')->willReturn(
             array_map(function ($req) {
                     return new TikiRequirements(
@@ -585,7 +585,7 @@ Your requirements could not be resolved to an installable set of packages.');
                 ],
             ])
         );
-
+        $fetcher->method('getLTSVersions')->willReturn([12]);
         $tikiStub = $this->getMockBuilder(Tiki::class)
             ->setConstructorArgs([$instanceStub])
             ->setMethodsExcept(['getCompatibleVersions'])

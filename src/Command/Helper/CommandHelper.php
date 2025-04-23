@@ -43,8 +43,15 @@ class CommandHelper
     public static function getInstancesInfo(array $instances, bool $all_infos = false): ?array
     {
         $instancesInfo = null;
-
+        $fetcher = (new \TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher);
+        $requirements = $fetcher->getParsedRequirements();
+        $ltsVersions = $fetcher->getLTSVersions();
+        $ltsLabel = '';
         foreach ($instances as $instance) {
+            if (preg_match('/^(\d+)\.x$/', $instance->branch, $matches)) {
+                $majorVersion = (int) $matches[1];
+                $ltsLabel = self::getLtsLabel(in_array($majorVersion, $ltsVersions, true));
+            }
             $extra = [];
             $instance_initial_infos = [
                 'id' => $instance->id,
@@ -53,7 +60,7 @@ class CommandHelper
                 'url' => $instance->weburl,
                 'email' => $instance->contact,
                 'php_version' => self::formatPhpVersion($instance->phpversion),
-                'branch' => $instance->branch,
+                'branch' => $instance->branch . $ltsLabel,
                 'revision' => $instance->revision,
                 'last_action' => $instance->last_action,
                 'run_user' => $instance->run_user,
@@ -62,7 +69,6 @@ class CommandHelper
                 'last_revision_date' => $instance->last_revision_date
             ];
             if ($all_infos) {
-                $requirements = (new \TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher)->getParsedRequirements();
                 $filter = array_filter($requirements, function ($result) use ($instance) {
                     $branch = str_replace(['tags/','.x'], '', $instance->branch);
                     $pattern = '/' . preg_quote((string)$result['version'], '/') . '/';
@@ -906,5 +912,10 @@ class CommandHelper
                 'instance' => $instance,
             ]);
         }
+    }
+
+    public static function getLtsLabel($isLts)
+    {
+        return $isLts ? ' (LTS)' : '';
     }
 }

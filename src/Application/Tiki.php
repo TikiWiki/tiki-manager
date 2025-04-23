@@ -1179,6 +1179,7 @@ TXT;
     {
         $versions = $this->getVersions();
         $checkTikiVersionRequirement = $this->getTikiRequirementsHelper();
+        $ltsVersions = $checkTikiVersionRequirement->fetcher->getLTSVersions();
         $compatible = [];
         foreach ($versions as $key => $version) {
             preg_match('/(\d+\.|master)/', $version->branch, $matches);
@@ -1192,6 +1193,10 @@ TXT;
             $req = $checkTikiVersionRequirement->findByBranchName($version->branch);
             if ($req && $req->checkRequirements($this->instance)) {
                 $compatible[$key] = $version;
+            }
+            if (preg_match('/^(\d+)\.x$/', $version->branch, $matches)) {
+                $majorVersion = (int) $matches[1];
+                $version->is_lts = in_array($majorVersion, $ltsVersions, true);
             }
         }
 

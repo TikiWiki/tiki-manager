@@ -16,8 +16,11 @@ class TikiRequirementsHelper
      */
     private $requirements;
 
+    public $fetcher;
+
     public function __construct(RequirementsFetcher $fetcher)
     {
+        $this->fetcher = $fetcher;
         $this->requirements = $fetcher->getRequirements();
 
         // make sure requirements are sorted, since we rely on that: master > xx (e.g 26) > xx.y (e.g 26.1)

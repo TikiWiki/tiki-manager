@@ -28,6 +28,7 @@ SQL;
     public $action;
     public $date_revision;
     public $repo_url;
+    public $is_lts = false;
     public $instance_id;
 
     public function __construct($instance = null)
@@ -195,7 +196,13 @@ SQL;
 
     public function __toString()
     {
-        return $this->type . ' : ' . $this->branch;
+        return $this->type . ' : ' . $this->branch . $this->getLtsLabel();
+    }
+
+
+    public function getLtsLabel(): string
+    {
+        return $this->is_lts ? ' : (LTS)' : '';
     }
 }
 

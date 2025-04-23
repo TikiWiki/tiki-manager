@@ -84,7 +84,7 @@ class OptionValidatorHelper
             throw new InvalidOptionException('Name cannot contain ",".');
         }
 
-        return self::validateInstanceNameUniqueness($value);
+        return $value;
     }
 
     /**
@@ -115,7 +115,7 @@ class OptionValidatorHelper
 
 
 
-    private static function validateInstanceNameUniqueness(string $name): string
+    public static function validateInstanceNameUniqueness(string $name): string
     {
         global $db;
         $query = "SELECT COUNT(*) as numInstances FROM instance WHERE name = :name";

@@ -220,6 +220,7 @@ trait InstanceConfigure
             $value = trim($value);
             OptionValidatorHelper::validateNotEmpty($value, 'Name cannot be empty. Please use --name=<NAME>');
             OptionValidatorHelper::validateInstanceName($value);
+            OptionValidatorHelper::validateInstanceNameUniqueness($value);
             return $value;
         });
 
@@ -227,6 +228,7 @@ trait InstanceConfigure
 
         $email = $this->input->getOption('email');
         $email = $this->io->ask('Email', $email, function ($value) {
+            OptionValidatorHelper::validateNotEmpty($value, 'Email cannot be empty. Please use --email=<EMAIL>');
             OptionValidatorHelper::validateEmail($value);
             return $value;
         });

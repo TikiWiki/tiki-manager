@@ -49,4 +49,17 @@ class YamlFetcher implements RequirementsFetcher
     {
         return Yaml::parseFile($this->requirementsFile);
     }
+
+    public function getLTSVersions(): array
+    {
+        $requirements = $this->getParsedRequirements();
+        $lts = [];
+        foreach ($requirements as $requirement) {
+            if (stripos($requirement['name'], 'LTS') !== false) {
+                $lts[] = $requirement['version'];
+            };
+        }
+
+        return $lts;
+    }
 }
