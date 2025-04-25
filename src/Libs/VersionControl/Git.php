@@ -266,6 +266,7 @@ class Git extends VersionControlSystem
     }
 
     /**
+     * Set remote branch for a specific folder
      * @param $targetFolder
      * @param $branch
      * @param string $remote
@@ -374,7 +375,9 @@ class Git extends VersionControlSystem
 
         if ($isUpgrade) {
             $messageUpdate = "Upgrading to '{$branch}' branch {$revisionMsg}";
-            $this->remoteSetBranch($targetFolder, $branch);
+            if (strpos($branch, 'tags/') !== 0) {
+                $this->remoteSetBranch($targetFolder, $branch);
+            }
         }
 
         if ($lag && $isShallow) {
@@ -556,7 +559,7 @@ class Git extends VersionControlSystem
             throw new VcsException('Git log returned with empty output');
         }
 
-        if (!preg_match('/commit (\w+).*Date:\s+([^\\n]*)/s', $gitLog, $matches)) {
+        if (!preg_match('/commit (\w+).*?Date:\s+([^\r\n]*)/s', $gitLog, $matches)) {
             throw new VcsException('Unable to parse Git log output');
         }
 
@@ -572,7 +575,9 @@ class Git extends VersionControlSystem
         foreach ($options as $option => $value) {
             $cmdOptions[] = $option . ($value ? '=' . escapeshellarg($value) : '');
         }
-
+        if (strpos($branch, 'tags/') === 0) {
+            $branch = 'tag ' . $branch;
+        }
         $cmd = sprintf('fetch %s %s', $remote, $branch);
         $cmd .= ' ' . implode(' ', $cmdOptions);
         $cmd .= ($this->quiet ? ' --quiet' : '');

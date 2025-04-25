@@ -179,7 +179,10 @@ class CheckoutCommand extends TikiManagerCommand
                 $this->io->writeln('Folder exists, setting remote branch...');
                 $vcs->setRepositoryUrl($url);
                 $this->io->writeln($vcs->remoteSetUrl($folder, $url));
-                $this->io->writeln($vcs->remoteSetBranch($folder, $branch));
+                // If a branch is a tag, tags can't be set as remote branch.
+                if (strpos($branch, 'tags/') !== 0) {
+                    $this->io->writeln($vcs->remoteSetBranch($folder, $branch));
+                }
                 $isShallow = $vcs->isShallow($folder);
                 $options = [];
                 if ($isShallow && !$revision) {

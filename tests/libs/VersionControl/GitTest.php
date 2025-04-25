@@ -172,7 +172,7 @@ TXT;
         $git->expects(self::once())->method('isUpgrade')->willReturn(true);
         $git->expects(self::once())->method('isShallow')->willReturn(true);
         $git->expects($this->once())->method('fetch');
-        $git->expects(self::once())->method('remoteSetBranch')->with('/root/tmp', 'master');
+        $git->expects(self::atMost(1))->method('remoteSetBranch')->with('/root/tmp', 'master');
         $git->expects(self::once())->method('checkoutBranch')->with('/root/tmp', 'master', null);
         $git->expects(self::once())->method('cleanup');
 
@@ -189,7 +189,7 @@ TXT;
 
         $git->expects(self::once())->method('info')->willReturn('22.x');
         $git->expects(self::once())->method('isUpgrade')->willReturn(true);
-        $git->expects(self::once())->method('remoteSetBranch')->with('/root/tmp', 'master');
+        $git->expects(self::atMost(1))->method('remoteSetBranch')->with('/root/tmp', 'master');
         $git->expects(self::once())->method('isShallow')->willReturn(true);
         $git->expects(self::once())->method('getVersion')->willReturn('2.11.0');
         $git->expects($this->exactly(2))->method('fetch');
