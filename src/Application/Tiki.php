@@ -246,7 +246,7 @@ class Tiki extends Application
                 $this->io->warning('Old Tiki detected, running bundled Tiki Manager setup.sh script.');
                 $filename = $instance->getWorkPath('setup.sh');
                 $access->uploadFile(dirname(__FILE__) . '/../../scripts/setup.sh', $filename);
-                $command = $access->createCommand('bash', ['$filename']); // does composer as well
+                $command = $access->createCommand('bash', [$filename]); // does composer as well
             }
 
             $command->run();
