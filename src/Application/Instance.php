@@ -18,6 +18,7 @@ use TikiManager\Config\App;
 use TikiManager\Access\Access;
 use TikiManager\Libs\Helpers\Archive;
 use TikiManager\Libs\Database\Database;
+use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
@@ -1509,6 +1510,42 @@ SQL;
                 $path = trim($path);
                 query(self::SQL_DELETE_BCKP_IGNORE_LIST, [':id' => $this->getId(), ':paths' => $path]);
             }
+        }
+    }
+
+    public function cleanInstanceWebroot()
+    {
+        if (empty($this->webroot)) {
+            $this->io->warning(sprintf("Instance %s has no webroot. Cannot remove files.", $this->name));
+            return;
+        }
+
+        $access = $this->getBestAccess('scripting');
+
+        // Check if webroot is empty
+        if ($access->isEmptyDir($this->webroot)) {
+            return;
+        }
+
+        // Remove all files, folders within the webroot, not the webroot itself
+        if (ApplicationHelper::isWindows()) {
+            $cmd = "cd /d \"{$this->webroot}\" && for /D %p in (*) do @rmdir \"%p\" /S /Q >nul 2>&1 & del *.* /S /Q >nul 2>&1";
+            $command = new Command($cmd);
+            $access->runCommand($command);
+            return;
+        }
+
+        $cmd = "cd {$this->webroot} && find . -mindepth 1 -delete";
+        $command = new Command($cmd);
+        $access->runCommand($command);
+
+        // fix permissions for webroot folder
+        preg_match('/\/home\/([^\/]+)\/.*/', $this->webroot, $matches);
+        if (!empty($matches[1])) {
+            $user = $matches[1];
+            $groupCommand = $access->createCommand('id', ['-g', '-n', $user])->run();
+            $group = trim($groupCommand->getStdoutContent());
+            $access->createCommand('chown', ['-R', "$user:$group", $this->webroot])->run();
         }
     }
 }

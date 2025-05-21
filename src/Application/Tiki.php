@@ -253,8 +253,8 @@ class Tiki extends Application
             if ($command->getReturn() !== 0) {
                 // Because temp/composer.phar does not exist, the script will return 1.
                 // We do not throw error if instance type is src (composer install is not required)
-                $output = $command->getStdoutContent();
-
+                $output = $command->getStderrContent() ?: $command->getStdoutContent();
+                $this->io->warning($output);
                 if ((!$this->vcs_instance instanceof Src) ||
                     (strpos($output, 'We have failed to obtain the composer executable') === false)) {
                     throw new \Exception('Command failed');
@@ -559,9 +559,20 @@ class Tiki extends Application
 
         $version = $this->registerCurrentInstallation();
         $this->installComposer();
-        $this->installComposerDependencies(); // fix permissions does not return a proper exit code if composer fails
-        $this->installNodeJsDependencies();
+
+        // Failure is acceptable in this case
+        try {
+            // fix permissions does not return a proper exit code if composer fails
+            $this->installComposerDependencies();
+            $this->installNodeJsDependencies();
+        } catch (\Exception $e) {
+            $this->io->warning($e->getMessage() . ' - You may need to fix manually.');
+        }
+
+        // Failure is acceptable in this case, which is already handled within the method
         $this->installTikiPackages();
+
+        // Failure is acceptable in this case, which is already handled within the method
         $this->fixPermissions();
 
         $this->instance->configureHtaccess();
@@ -1109,7 +1120,7 @@ TXT;
             $errorMsg = "Failed to " . $action. " Tiki Packages listed in composer.json in the root folder.";
             $commandOutput = $command->getStderrContent() ?: $command->getStdoutContent() ?: $errorMsg;
             trim_output($commandOutput, ['instance_id' => $instance->getId()]);
-            $this->io->error($errorMsg . "\nCheck logs in " . $_ENV['TRIM_LOGS'] . "/ for more details.");
+            $this->io->warning($errorMsg . "\nCheck logs in " . $_ENV['TRIM_LOGS'] . "/ for more details. \n- you may need to fix manually.");
         }
     }
 

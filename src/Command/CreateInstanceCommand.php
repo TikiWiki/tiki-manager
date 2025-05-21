@@ -207,6 +207,8 @@ class CreateInstanceCommand extends TikiManagerCommand
 
         $instance = new Instance();
 
+        $isNewInstance = true;
+
         try {
             $this->setupAccess($instance);
             $this->setupInstance($instance);
@@ -230,6 +232,7 @@ class CreateInstanceCommand extends TikiManagerCommand
             $instance->save();
 
             if ($this->detectApplication($instance)) {
+                $isNewInstance = false;
                 $add = $this->io->confirm(
                     'An application was detected in [' . $instance->webroot . '], do you want add it to the list?:',
                     true
@@ -258,9 +261,18 @@ class CreateInstanceCommand extends TikiManagerCommand
 
             return 0;
         } catch (\Exception $e) {
-            $instance->delete();
-
-            $this->io->error($e->getMessage());
+            /**
+             * Stop the instance creation process if an error occurs.
+             * Do not clean up the existing instance.
+             * Clean up the instance which is being created.
+             */
+            if ($instance->getId() && $isNewInstance) {
+                $instance->delete();
+            }
+            if ($isNewInstance) {
+                $instance->cleanInstanceWebroot();
+            }
+            $this->io->error("Instance creation steps aborted: \n" . $e->getMessage());
             return $e->getCode() ?: -1;
         }
     }

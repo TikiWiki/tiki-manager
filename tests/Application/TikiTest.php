@@ -386,7 +386,7 @@ Your requirements could not be resolved to an installable set of packages.');
         // installComposerDependencies is void. If no exception is thrown assumes it is OK
         $outputContent = $this->output->fetch();
         $this->assertStringContainsString(
-            '[ERROR] Failed to install Tiki Packages',
+            '[WARNING] Failed to install Tiki Packages',
             $outputContent
         );
     }
