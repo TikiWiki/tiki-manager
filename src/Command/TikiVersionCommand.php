@@ -31,6 +31,7 @@ class TikiVersionCommand extends TikiManagerCommand
             ->addOption('phpexec', null, InputOption::VALUE_OPTIONAL, 'Specify PHP executable to determine compatibility')
             ->addOption('format', null, InputOption::VALUE_OPTIONAL, 'Output format (table or simple)', 'table')
             ->addOption('file', null, InputOption::VALUE_OPTIONAL, 'Output file to write results')
+            ->addOption('phpversion', null, InputOption::VALUE_OPTIONAL, 'Specify a PHP version string to determine compatibility')
             ->setHelp('This command allows you to list all Tiki versions');
     }
 
@@ -42,13 +43,12 @@ class TikiVersionCommand extends TikiManagerCommand
             $vcsOption = '';
         }
 
-        $instance = null;
-        $versions = [];
         $instanceId = $input->getOption('instance');
         $upgrade = $input->getOption('upgrade');
         $phpExec = $input->getOption('phpexec');
         $viewFormat = $input->getOption('format');
         $filePath = $input->getOption('file');
+        $phpVersion = $input->getOption('phpversion');
 
         $dataOutput = $output;
         if ($filePath) {
@@ -60,42 +60,59 @@ class TikiVersionCommand extends TikiManagerCommand
             $dataOutput = new StreamOutput($handle);
         }
 
+        $forceColumn = false;
+        $versions = [];
+        $phpVersionStr = '';
+
         if ($instanceId) {
             $instance = Instance::getInstance($instanceId);
             if (! $instance) {
                 $output->writeln("<error>No instance found with ID $instanceId</error>");
                 return 1;
             }
+
             $access = $instance->getBestAccess('scripting');
             $instance->phpversion = intval($access->getInterpreterVersion($instance->phpexec));
+            $phpVersionStr = CommandHelper::formatPhpVersion($instance->phpversion);
+
             $app = $instance->getApplication();
-            if ($upgrade) {
-                $currentVersion = $instance->getLatestVersion();
-                $versions = $app->getUpgradableVersions($currentVersion, true);
-            } else {
-                $versions = $app->getCompatibleVersions(false);
-            }
-        } elseif ($phpExec) {
+            $versions = $upgrade
+                ? $app->getUpgradableVersions($instance->getLatestVersion(), true)
+                : $app->getCompatibleVersions(false);
+        } elseif ($phpExec || $phpVersion) {
             $instance = new Instance();
             $instance->type = 'local';
-            $instance->vcs_type = 'git';
-            if (! empty($vcsOption)) {
-                $instance->vcs_type = $vcsOption;
-            }
-            $instance->phpexec = $phpExec;
+            $instance->vcs_type = $vcsOption ?: 'git';
+
             $localhost = new Local($instance);
-            $phpVersionNumber = $localhost->getInterpreterVersion($phpExec);
-            $instance->phpversion = intval($phpVersionNumber);
+            if ($phpExec) {
+                $instance->phpexec = $phpExec;
+                $instance->phpversion = intval($localhost->getInterpreterVersion($phpExec));
+                $phpVersionStr = CommandHelper::formatPhpVersion($instance->phpversion);
+            } else {
+                $instance->phpversion = CommandHelper::phpVersionStringToId($phpVersion);
+                $phpVersionStr = $phpVersion;
+            }
+
             $tikiApplication = new Tiki($instance);
             $versions = $tikiApplication->getCompatibleVersions(false);
         } else {
+            $forceColumn = true;
+            $phpVersionStr = phpversion();
             $versions = CommandHelper::getVersions($vcsOption);
         }
 
         $versionsInfo = CommandHelper::getVersionsInfo($versions);
-        if (isset($versionsInfo)) {
+
+        if (!empty($versionsInfo)) {
             $this->io->newLine();
-            CommandHelper::renderVersionsByFormat($dataOutput, $versionsInfo, $viewFormat);
+            CommandHelper::renderVersionsByFormat(
+                $dataOutput,
+                $versionsInfo,
+                $viewFormat,
+                $phpVersionStr,
+                $forceColumn
+            );
         } else {
             $output->writeln('<comment>No versions available to list.</comment>');
         }

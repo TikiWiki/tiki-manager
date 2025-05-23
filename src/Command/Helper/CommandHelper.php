@@ -16,6 +16,8 @@ use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Discovery;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki;
+use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
+use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Exception\InvalidCronTimeException;
 use TikiManager\Config\App;
@@ -557,13 +559,21 @@ class CommandHelper
     }
 
     /**
-     * Render a table with all Versions (SVN || GIT)
+     * Render a table with Versions information
      *
      * @param $output
      * @param $rows
+     * @param string $viewFormat
+     * @param string|null $phpVersionStr
+     * @param bool $showSupportColumn
      */
-    public static function renderVersionsByFormat($output, $rows, $viewFormat = 'table')
-    {
+    public static function renderVersionsByFormat(
+        $output,
+        $rows,
+        $viewFormat = 'table',
+        $phpVersionStr = null,
+        $showSupportColumn = false
+    ) {
         if (empty($rows)) {
             return;
         }
@@ -576,17 +586,69 @@ class CommandHelper
                 $output->writeln('<info>' . $encodedValue . '</info>');
             }
         } else {
-            $versionsTableHeaders = [
-                'Type',
-                'Name'
-            ];
+            if ($showSupportColumn && !empty($phpVersionStr)) {
+                $output->writeln("List of all versions, available for install, they may not be installable depending on the target instance PHP version. Tagged below the ones that would work for PHP {$phpVersionStr}\n");
+            }
+
+            $headers = ['Type', 'Name'];
+            if ($showSupportColumn && !empty($phpVersionStr)) {
+                $headers[] = "Supported in PHP {$phpVersionStr}";
+            }
+
+            $formattedRows = [];
+
+            foreach ($rows as $row) {
+                if ($showSupportColumn && !empty($phpVersionStr)) {
+                    $supported = self::isTikiVersionSupportedInPhp($row[1], $phpVersionStr) ? 'Y' : 'N';
+                    $row[] = $supported;
+                }
+                $formattedRows[] = $row;
+            }
 
             $table = new Table($output);
-            $table
-                ->setHeaders($versionsTableHeaders)
-                ->setRows($rows);
+            $table->setHeaders($headers)->setRows($formattedRows);
             $table->render();
         }
+    }
+
+    /**
+     * Check if a Tiki version is supported in a given PHP version
+     *
+     * @param string $versionName
+     * @param string $phpVersionStr (e.g 8.1.32)
+     * @return bool
+     */
+    public static function isTikiVersionSupportedInPhp(string $versionName, string $phpVersionStr): bool
+    {
+        $helper = new TikiRequirementsHelper(new YamlFetcher());
+        $requirements = $helper->findByBranchName($versionName);
+        $phpVersionId = self::phpVersionStringToId($phpVersionStr);
+
+        if (($phpVersionId >= 50300 && !$requirements) || ($requirements && $requirements->getPhpVersion()->isValidVersion($phpVersionStr))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Convert PHP version string (e.g. 8.1.32) to ID (e.g. 80132)
+     *
+     * @param string $phpVersion
+     * @return int
+     * @throws \RuntimeException
+     */
+    public static function phpVersionStringToId(string $phpVersion): int
+    {
+        $parts = explode('.', $phpVersion);
+        if (count($parts) < 2) {
+            throw new \RuntimeException('Invalid PHP version format. Expected format: x.y.z or x.y');
+        }
+        $major = (int) ($parts[0] ?? 0);
+        $minor = (int) ($parts[1] ?? 0);
+        $patch = (int) ($parts[2] ?? 0);
+
+        return $major * 10000 + $minor * 100 + $patch;
     }
 
     /**
