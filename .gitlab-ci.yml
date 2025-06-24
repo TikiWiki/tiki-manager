@@ -2,7 +2,7 @@ include:
   - local: '/.gitlab-ci/stage-functional-tests-local-git.yml'
   - template: Code-Quality.gitlab-ci.yml
 
-image: xorti/tiki-devops:php-7.4-qa
+image: tikiwiki/tikimanager-ci:php-7.4-qa
 
 variables:
   MYSQL_ROOT_PASSWORD: secret
@@ -40,6 +40,7 @@ stages:
 
 .install-composer-script: &install-composer-script
   - composer install $COMPOSER_FLAGS
+  - composer config --file=vendor-bin/dbdiff/composer.json allow-plugins.kylekatarnls/update-helper true
   - composer bin all install $COMPOSER_FLAGS
 
 .update-composer-script: &update-composer-script
@@ -71,15 +72,15 @@ composer:
   allow_failure: false
 
 lint-scripts-php74:
-  image: xorti/tiki-devops:php-7.4-qa
+  image: tikiwiki/tikimanager-ci:php-7.4-qa
   <<: *lint-scripts
 
 lint-scripts-php80:
-  image: xorti/tiki-devops:php-8.0-qa
+  image: tikiwiki/tikimanager-ci:php-8.0-qa
   <<: *lint-scripts
 
 lint-scripts-php81:
-  image: xorti/tiki-devops:php-8.1-qa
+  image: tikiwiki/tikimanager-ci:php-8.1-qa
   <<: *lint-scripts
 
 phpcs:
@@ -140,15 +141,15 @@ code_quality:
   <<: *unit-tests
 
 unit-tests-php74:
-  image: xorti/tiki-devops:php-7.4-qa
+  image: tikiwiki/tikimanager-ci:php-7.4-qa
   <<: *unit-tests-composer-install
 
 unit-tests-php80:
-  image: xorti/tiki-devops:php-8.0-qa
+  image: tikiwiki/tikimanager-ci:php-8.0-qa
   <<: *unit-tests-composer-update
 
 unit-tests-php81:
-  image: xorti/tiki-devops:php-8.1-qa
+  image: tikiwiki/tikimanager-ci:php-8.1-qa
   <<: *unit-tests-composer-update
 
 #----------------------------------------------------------------------------------------------------------------------#
@@ -164,7 +165,7 @@ unit-tests-php81:
       - ${COMPOSER_CACHE_DIR}/files
 
 .cache-warmup-tiki:
-  image: xorti/tiki-devops:php-7.4-qa
+  image: tikiwiki/tikimanager-ci:php-7.4-qa
   stage: pre-functional-tests
   before_script:
     - source .env.gitlab-ci
@@ -258,7 +259,7 @@ download-tiki-src-files:
 
 
 .template-tiki-manager-commands: &template-tiki-manager-commands
-  image: xorti/tiki-devops:php-all-qa
+  image: tikiwiki/tikimanager-ci:php-all-qa
   stage: functional-tests
   services:
     - name: mysql:5.6

@@ -1,5 +1,5 @@
 .ssh-command-test-git:
-  image: xorti/tiki-devops:7.4-qa-ssh
+  image: tikiwiki/tikimanager-ci:7.4-qa-ssh
   extends: .template-tiki-manager-commands-git
   services:
     - name: mysql:5.6
