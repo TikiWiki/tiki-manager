@@ -11,8 +11,6 @@
     "composer/semver": "^3.2",
     "dragonmantank/cron-expression": "^3.0",
     "gitonomy/gitlib": "^1.2",
-    "laminas/laminas-mail": "^2.12",
-    "laminas/laminas-servicemanager": "^3.4",
     "monolog/monolog": "^1.26 || ^2.0 || ^3.0",
     "php": "^7.4 || ^8.0",
     "phpseclib/phpseclib": "^3.0",
@@ -25,7 +23,8 @@
     "symfony/finder": "^4.4 || ^5.0 || ^6.0 || ^7.0",
     "symfony/filesystem": "^3.4 || ^4.1 || ^5.0 || ^6.0 || ^7.0",
     "symfony/process": "^3.4 || ^4.3 || ^5.0 || ^6.0 || ^7.0",
-    "symfony/yaml": "^3.4 || ^4.3 || ^5.0 || ^6.0 || ^7.0"
+    "symfony/yaml": "^3.4 || ^4.3 || ^5.0 || ^6.0 || ^7.0",
+    "symfony/mailer": "^5.4 || ^6.0 || ^7.0"
   },
   "config": {
     "discard-changes": true,

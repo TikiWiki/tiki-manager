@@ -7,7 +7,6 @@
 
 namespace TikiManager\Command;
 
-use ReflectionClass;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -38,8 +37,7 @@ class ManagerTestSendEmailCommand extends TikiManagerCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $emailTo = $input->getArgument('to');
-        $mailer = $this->getMailer();
-        $transport = (new ReflectionClass($mailer))->getShortName();
+        $transport = $this->getCurrentTransportName();
 
         $this->io->note('Email settings can be configured in .env file');
 
