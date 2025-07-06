@@ -26,4 +26,15 @@ class InstancePatchApplyHook extends TikiCommandHook
 
         $this->postHookVars['INSTANCE_BACKUP_FILE_' . $instance->id] = $vars['backup_file'] ?? null;
     }
+
+    public function registerFailHookVars(array $vars)
+    {
+        $instance = $vars['instance'] ?? null;
+
+        if ($instance instanceof Instance) {
+            $this->failHookVars['INSTANCE_ID'] = $instance->id;
+        }
+
+        parent::registerFailHookVars($vars);
+    }
 }

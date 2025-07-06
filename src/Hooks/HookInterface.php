@@ -16,4 +16,6 @@ interface HookInterface
     public function registerPreHookVars();
 
     public function registerPostHookVars(array $vars);
+
+    public function registerFailHookVars(array $vars);
 }

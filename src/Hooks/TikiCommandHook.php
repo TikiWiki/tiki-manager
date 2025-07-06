@@ -34,6 +34,11 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
     /**
      * @var array
      */
+    protected $failHookVars = [];
+
+    /**
+     * @var array
+     */
     protected $instanceIds = [];
 
     /**
@@ -55,7 +60,12 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
         $scripts = $this->getScripts($type);
 
         if (empty($scripts)) {
-            $this->logger->debug('No ' . $type . ' hook scripts were found in ' . $this->getPath($type));
+            $this->logger->debug("No $type hook scripts found in normal path, checking fallback path " . $this->getPath($type, true));
+            $scripts = $this->getScripts($type, true);
+        }
+
+        if (empty($scripts)) {
+            $this->logger->debug("No $type hook scripts found either in normal or fallback path.");
             return;
         }
 
@@ -74,9 +84,12 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
         }
     }
 
-    public function getPath(string $type = ''): string
+    public function getPath(string $type = '', bool $fallback = false): string
     {
-        $path = App::get('HookHandler')->getHooksFolder() . DS . $this->getHookName();
+        $path = App::get('HookHandler')->getHooksFolder();
+        if (!$fallback) {
+            $path .= DS . $this->getHookName();
+        }
 
         return $type ? $path . DS . $type : $path;
     }
@@ -85,9 +98,9 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
      * @param string $type
      * @return Finder|null
      */
-    public function getScripts(string $type): ?Finder
+    public function getScripts(string $type, bool $fallback = false): ?Finder
     {
-        $folder = $this->getPath($type);
+        $folder = $this->getPath($type, $fallback);
 
         try {
             $finder = new Finder();
@@ -123,6 +136,7 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
             $this->logger->error($process->getErrorOutput());
         }
 
+
         $this->logger->debug("Command output: \n" . trim($process->getOutput() ?? ''));
 
         return $success;
@@ -138,6 +152,19 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
 
     public function registerPreHookVars()
     {
+    }
+
+    public function registerFailHookVars(array $vars)
+    {
+        $errorMessage = $vars['error_message'] ?? '';
+        $errorCode = $vars['error_code'] ?? '';
+        $instance = $vars['instance'] ?? null;
+
+        $this->failHookVars['ERROR_CODE'] = $errorCode;
+        $this->failHookVars['ERROR_MESSAGE'] = $errorMessage;
+        $this->failHookVars['INSTANCE_ID'] = $instance instanceof Instance ? $instance->id : '';
+
+        $this->execute('fail');
     }
 
     public function registerPostHookVars(array $vars)

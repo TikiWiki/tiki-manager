@@ -26,4 +26,25 @@ class InstanceCloneHook extends TikiCommandHook
         $this->postHookVars['SOURCE_INSTANCE_ID'] = $sourceInstance->id;
         $this->postHookVars['SOURCE_INSTANCE_BACKUP'] = $vars['backup'] ?? null;
     }
+
+    public function registerFailHookVars(array $vars)
+    {
+        $sourceInstance = $vars['source'] ?? null;
+        $destinationInstance = $vars['destination'] ?? null;
+        $instance = $vars['instance'] ?? null;
+
+        if ($sourceInstance instanceof Instance) {
+            $this->failHookVars['SOURCE_INSTANCE_ID'] = $sourceInstance->id;
+        }
+
+        if ($destinationInstance instanceof Instance) {
+            $this->failHookVars['DESTINATION_INSTANCE_ID'] = $destinationInstance->id;
+        }
+
+        if ($instance instanceof Instance) {
+            $this->failHookVars['INSTANCE_ID'] = $instance->id;
+        }
+
+        parent::registerFailHookVars($vars);
+    }
 }

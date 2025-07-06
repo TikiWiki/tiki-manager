@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Application\Patch;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Hooks\InstancePatchApplyHook;
 
 class ApplyPatchCommand extends TikiManagerCommand
 {
@@ -64,6 +65,12 @@ class ApplyPatchCommand extends TikiManagerCommand
                 InputOption::VALUE_OPTIONAL,
                 'Live reindex, set instance maintenance off and after perform index rebuild.',
                 true
+            )
+            ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
             )
             ->setHelp('This command allows you to apply a vendor patch (merge request, pull request) to a 3rd party vendor package or to the Tiki source itself');
     }
@@ -139,6 +146,8 @@ class ApplyPatchCommand extends TikiManagerCommand
         $selectedInstances = CommandHelper::validateInstanceSelection($input->getOption('instances'), $instances);
 
         $hookName = $this->getCommandHook();
+        $instancePatchApplyHook = new InstancePatchApplyHook($hookName->getHookName(), $this->logger);
+
         foreach ($selectedInstances as $instance) {
             $patch = Patch::initialize($instance->getId(), $package, $url);
             if ($patch->exists()) {
@@ -171,6 +180,10 @@ class ApplyPatchCommand extends TikiManagerCommand
             'package' => $package,
             'url' => $url,
         ]);
+
+        if ($input->getOption('validate')) {
+            CommandHelper::validateInstances($selectedInstances, $instancePatchApplyHook);
+        }
 
         return 0;
     }

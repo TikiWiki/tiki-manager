@@ -15,6 +15,7 @@ use TikiManager\Application\Version;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Libs\Helpers\Checksum;
+use TikiManager\Hooks\InstanceUpgradeHook;
 use TikiManager\Config\Environment as Env;
 
 class UpgradeInstanceCommand extends TikiManagerCommand
@@ -102,6 +103,12 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 'Specific revision to update the instance to'
             )
             ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
+            )
+            ->addOption(
                 'copy-errors',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -146,6 +153,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
 
         //update
         $hookName = $this->getCommandHook();
+        $InstanceUpgradeHook = new InstanceUpgradeHook($hookName->getHookName(), $this->logger);
         $bisectInstances = [];
         $mismatchVcsInstances = [];
         $revision = $input->getOption('revision');
@@ -186,9 +194,11 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 continue;
             }
 
+            $latestVersion = $instance->getLatestVersion();
+            $previousBranch = $latestVersion instanceof Version ? $latestVersion->branch : null ;
+
             try {
                 $instance->lock();
-                $latestVersion = $instance->getLatestVersion();
 
                 // Note: $latestVersion->repo_url can be empty (when created before this column was added,
                 // or by importing an existing instance.).
@@ -203,7 +213,6 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                     continue;
                 }
 
-                $previousBranch = $latestVersion instanceof Version ? $latestVersion->branch : null ;
                 $filesToResolve = $app->performUpgrade($instance, $selectedVersion, [
                     'checksum-check' => $checksumCheck,
                     'skip-reindex' => $skipReindex,
@@ -223,9 +232,16 @@ class UpgradeInstanceCommand extends TikiManagerCommand
                 $hookName->registerPostHookVars(['instance' => $instance, 'previous_branch' => $previousBranch]);
             } catch (\Exception $e) {
                 $instance->updateState('failure', $this->getName(), 'InstanceUpgradeCommand failure: ' . $e->getMessage());
-                $this->logger->error('Failed to upgrade instance!', [
+                $upgradeErrorMessage = 'Failed to upgrade instance!';
+                $this->logger->error($upgradeErrorMessage, [
                     'instance' => $instance->name,
                     'exception' => $e,
+                ]);
+                $InstanceUpgradeHook->registerFailHookVars([
+                    'error_message' => $upgradeErrorMessage,
+                    'error_code' => 'FAIL_OPERATION_UPGRADE_INSTANCE',
+                    'instance' => $instance,
+                    'previous_branch' => $previousBranch
                 ]);
                 CommandHelper::setInstanceSetupError($instance->id, $e, 'upgrade');
                 continue;
@@ -250,6 +266,10 @@ class UpgradeInstanceCommand extends TikiManagerCommand
             $this->io->warning($mismatchVcsErrMsg);
             $this->logger->warning($mismatchVcsErrMsg);
             return 1;
+        }
+
+        if ($input->getOption('validate')) {
+            CommandHelper::validateInstances($selectedInstances, $InstanceUpgradeHook);
         }
 
         return 0;

@@ -7,8 +7,10 @@
 
 namespace TikiManager\Command\Helper;
 
+use Cron\CronExpression;
 use Gitonomy\Git\Repository;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Filesystem\Exception\IOException;
@@ -22,7 +24,8 @@ use TikiManager\Application\Instance;
 use TikiManager\Command\Exception\InvalidCronTimeException;
 use TikiManager\Config\App;
 use TikiManager\Libs\Helpers\ApplicationHelper;
-use Cron\CronExpression;
+use TikiManager\Hooks\TikiCommandHook;
+use TikiManager\Command\Helper\InstanceValidator;
 
 class CommandHelper
 {
@@ -866,5 +869,36 @@ class CommandHelper
         $table->render();
 
         return true;
+    }
+
+    /**
+     * Validate instances if the "validate" option is enabled.
+     * @param array $instances Array of instances to validate.
+     * @param TikiCommandHook $hook The command hook.
+     * @return void
+     */
+    public static function validateInstances(array $instances, TikiCommandHook $hook): void
+    {
+        $httpClient = HttpClient::create();
+        $logger = App::get('Logger');
+        $io = App::get('io');
+        $instanceValidator = new InstanceValidator($httpClient, $logger);
+
+        foreach ($instances as $instance) {
+            $io->newLine();
+            $io->section('Validating ' . $instance->name);
+            $isValid = $instanceValidator->validate($instance);
+            if ($isValid) {
+                $io->writeln('<info>Instance validated successfully.</info>');
+                return;
+            }
+            $invalidInstanceErrorMessage = 'Instance validation failed for ' . $instance->name;
+            $logger->error($invalidInstanceErrorMessage);
+            $hook->registerFailHookVars([
+                'error_message' => $invalidInstanceErrorMessage,
+                'error_code' => 'FAIL_OPERATION_VALIDATION_INSTANCE',
+                'instance' => $instance,
+            ]);
+        }
     }
 }

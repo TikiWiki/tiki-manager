@@ -150,6 +150,12 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
                 'Skip lock website.'
             )
             ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
+            )
+            ->addOption(
                 'copy-errors',
                 null,
                 InputOption::VALUE_OPTIONAL,

@@ -21,6 +21,7 @@ use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Command\Traits\SendEmail;
 use TikiManager\Libs\Helpers\Checksum;
 use TikiManager\Logger\ArrayHandler;
+use TikiManager\Hooks\InstanceUpdateHook;
 use TikiManager\Config\Environment as Env;
 
 class UpdateInstanceCommand extends TikiManagerCommand
@@ -123,6 +124,12 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 'Specific revision to update the instance to'
             )
             ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
+            )
+            ->addOption(
                 'copy-errors',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -186,9 +193,14 @@ class UpdateInstanceCommand extends TikiManagerCommand
                 }
             }
 
+            $hookName = $this->getCommandHook();
             $lag = $input->getOption('lag');
             if ($lag && (!is_numeric($lag) || $lag < 0)) {
                 $this->io->error('Invalid option for --lag, must be a positive integer.');
+                $hookName->registerFailHookVars([
+                    'error_message' => $this->io->getLastIOErrorMessage(),
+                    'error_code' => 'FAIL_OPERATION_INVALID_OPTION_LAG'
+                ]);
                 return 1;
             }
 
@@ -328,7 +340,16 @@ class UpdateInstanceCommand extends TikiManagerCommand
             }
 
             if (!empty($logs) || !empty($bisectInstances)) {
+                $hookName->registerFailHookVars([
+                    'error_message' => $logs,
+                    'error_code' => 'FAIL_OPERATION_UPDATE_INSTANCE'
+                ]);
                 return 1;
+            }
+
+            if ($input->getOption('validate')) {
+                $instanceUpdateHook = new InstanceUpdateHook($hookName->getHookName(), $this->logger);
+                CommandHelper::validateInstances($selectedInstances, $instanceUpdateHook);
             }
         } else {
             $this->io->writeln('<comment>No instances available to update/upgrade.</comment>');

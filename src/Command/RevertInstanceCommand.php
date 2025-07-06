@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\App;
+use TikiManager\Hooks\InstanceRevertHook;
 
 class RevertInstanceCommand extends TikiManagerCommand
 {
@@ -27,6 +28,12 @@ class RevertInstanceCommand extends TikiManagerCommand
                 'i',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs (or names) to be reverted, separated by comma (,). You can also use the "all" keyword.'
+            )
+            ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
             )
             ->setHelp('This command allows you to revert a version controlled instance to its original state (e.g. remove all locally applied patches or modifications)');
     }
@@ -70,6 +77,13 @@ class RevertInstanceCommand extends TikiManagerCommand
             $this->io->writeln(sprintf('<fg=cyan>Reverting instance %s...</>', $instance->name));
             $instance->revert();
         }
+
+        if ($input->getOption('validate')) {
+            $hookName = $this->getCommandHook();
+            $InstanceRevertHook = new InstanceRevertHook($hookName->getHookName(), $this->logger);
+            CommandHelper::validateInstances($selectedInstances, $InstanceRevertHook);
+        }
+
         return 0;
     }
 }

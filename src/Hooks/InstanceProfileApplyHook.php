@@ -17,4 +17,15 @@ class InstanceProfileApplyHook extends TikiCommandHook
 
         $this->postHookVars['PROFILE'] = $vars['profile'] ?? ($this->postHookVars['PROFILE'] ?? null);
     }
+
+    public function registerFailHookVars(array $vars)
+    {
+        $instance = $vars['instance'] ?? null;
+
+        if ($instance instanceof Instance) {
+            $this->failHookVars['INSTANCE_ID'] = $instance->id;
+        }
+
+        parent::registerFailHookVars($vars);
+    }
 }

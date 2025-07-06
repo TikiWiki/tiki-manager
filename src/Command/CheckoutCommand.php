@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Hooks\InstanceCheckoutHook;
 
 class CheckoutCommand extends TikiManagerCommand
 {
@@ -49,6 +50,12 @@ class CheckoutCommand extends TikiManagerCommand
                 'r',
                 InputOption::VALUE_OPTIONAL,
                 'Git commit hash of a specific revision to checkout.'
+            )
+            ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
             )
             ->setHelp('This command allows you switch to a specific branch or revision of the main Tiki codebase or any other local checkouts of remote repositories. Only Git is supported.');
     }
@@ -136,6 +143,8 @@ class CheckoutCommand extends TikiManagerCommand
     {
         $instanceId = $input->getOption('instance');
         $instance = Instance::getInstance($instanceId);
+        $hookName = $this->getCommandHook();
+        $instanceCheckoutHook = new InstanceCheckoutHook($hookName->getHookName(), $this->logger);
 
         if (! $instance) {
             throw new \RuntimeException(sprintf('Instance %s not found.', $instanceId));
@@ -206,6 +215,10 @@ class CheckoutCommand extends TikiManagerCommand
                     $this->io->writeln('Checking out specific revision...');
                     $this->io->writeln($vcs->checkoutBranch($folder, $branch, $revision));
                 }
+            }
+
+            if ($input->getOption('validate')) {
+                CommandHelper::validateInstances([$instance], $instanceCheckoutHook);
             }
         } catch (\Exception $e) {
             $this->io->error($e->getMessage());

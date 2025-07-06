@@ -183,10 +183,10 @@ class TikiCommandHookTest extends TestCase
             ->setMethods(['getScripts'])
             ->getMock();
 
-        $mock->expects($this->once())
+        $mock->expects($this->exactly(2))
             ->method('getScripts')
-            ->with('pre')
-            ->willReturn(null);
+            ->withConsecutive(['pre', false], ['pre', true])
+            ->willReturnOnConsecutiveCalls(null, null);
 
         $mock->execute('pre');
     }

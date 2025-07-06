@@ -11,7 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Command\Helper\CommandHelper;
-use TikiManager\Config\App;
+use TikiManager\Hooks\InstanceProfileApplyHook;
 use TikiManager\Libs\Helpers\Archive;
 
 class ApplyProfileCommand extends TikiManagerCommand
@@ -41,6 +41,12 @@ class ApplyProfileCommand extends TikiManagerCommand
                 'p',
                 InputOption::VALUE_REQUIRED,
                 'Tiki profiles repository. Default: \'profiles.tiki.org\''
+            )
+            ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
             )
             ->setHelp('This command allows you to apply a profile to an instance');
     }
@@ -96,6 +102,8 @@ class ApplyProfileCommand extends TikiManagerCommand
         $selectedInstances = CommandHelper::validateInstanceSelection($input->getOption('instances'), $instances);
 
         $hookName = $this->getCommandHook();
+        $instanceProfileApplyHook = new InstanceProfileApplyHook($hookName->getHookName(), $this->logger);
+
         foreach ($selectedInstances as $instance) {
             $this->io->writeln(sprintf('<fg=cyan>Applying profile to %s ...</>', $instance->name));
             $instance->getApplication()->installProfile($repository, $profile);
@@ -105,6 +113,10 @@ class ApplyProfileCommand extends TikiManagerCommand
         }
 
         $hookName->registerPostHookVars(['profile' => $profile]);
+
+        if ($input->getOption('validate')) {
+            CommandHelper::validateInstances($selectedInstances, $instanceProfileApplyHook);
+        }
 
         return 0;
     }

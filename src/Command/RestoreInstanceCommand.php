@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
+use TikiManager\Hooks\InstanceRestoreHook;
 
 class RestoreInstanceCommand extends TikiManagerCommand
 {
@@ -39,6 +40,12 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 InputOption::VALUE_REQUIRED,
                 'Allow files and folders to be restored if they share the n-th parent use 0 (default) for the instance root folder and N (>=1) for allowing parent folders. Use -1 to skip this check',
                 "0"
+            )
+            ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
             )
             ->addOption(
                 'copy-errors',
@@ -78,6 +85,8 @@ class RestoreInstanceCommand extends TikiManagerCommand
             );
 
             $hookName = $this->getCommandHook();
+            $InstanceRestoreHook = new InstanceRestoreHook($hookName->getHookName(), $this->logger);
+
             /** @var Instance $instance */
             foreach ($selectedInstances as $instance) {
                 $output->writeln('<fg=cyan>Instance to restore to: ' . $instance->name . '</>');
@@ -132,6 +141,11 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 );
 
                 if (isset($errors)) {
+                    $InstanceRestoreHook->registerFailHookVars([
+                        'error_message' => 'Failed to restore instance: ' . $instance->name,
+                        'error_code' => 'FAIL_OPERATION_RESTORE_INSTANCE',
+                        'instance' => $instance
+                    ]);
                     $restorableInstance->updateState('failure', $this->getName(), 'restore function failure');
                     return 1;
                 }
@@ -145,6 +159,10 @@ class RestoreInstanceCommand extends TikiManagerCommand
                 ]);
 
                 $hookName->registerPostHookVars(['instance' => $instance]);
+
+                if ($input->getOption('validate')) {
+                    CommandHelper::validateInstances([$instance], $InstanceRestoreHook);
+                }
             }
         } else {
             $output->writeln('<comment>No instances available to restore to/from.</comment>');

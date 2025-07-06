@@ -11,6 +11,18 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class TikiManagerStyle extends SymfonyStyle
 {
+    protected $lastIOErrorMessage;
+
+    public function error($message)
+    {
+        $this->lastIOErrorMessage = $message;
+        parent::error($message);
+    }
+
+    public function getLastIOErrorMessage()
+    {
+        return $this->lastIOErrorMessage;
+    }
 
     public function info($text)
     {

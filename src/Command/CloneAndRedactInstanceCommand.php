@@ -5,9 +5,10 @@ namespace TikiManager\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use TikiManager\Application\Instance;
 use Symfony\Component\Console\Output\OutputInterface;
+use TikiManager\Application\Instance;
 use TikiManager\Command\Helper\CommandHelper;
+use TikiManager\Hooks\InstanceCloneAndRedactHook;
 
 class CloneAndRedactInstanceCommand extends TikiManagerCommand
 {
@@ -22,6 +23,12 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
                 'i',
                 InputOption::VALUE_REQUIRED,
                 'List of instance IDs (or names) to be redacted, separated by comma (,). You can also use the "all" keyword.'
+            )
+            ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
             )
             ->addOption(
                 'copy-errors',
@@ -56,6 +63,9 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
         $instances = CommandHelper::getInstances('upgrade');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
         $tiki_namespace = true;
+
+        $hookName = $this->getCommandHook();
+        $instanceCloneAndRedactHook = new InstanceCloneAndRedactHook($hookName->getHookName(), $this->logger);
 
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No Tiki instances available.</comment>');
@@ -125,6 +135,10 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
             $verifyInstanceInput->setInteractive(true);
 
             $command->run($verifyInstanceInput, $output);
+
+            if ($input->getOption('validate')) {
+                CommandHelper::validateInstances([$cloneInstance], $instanceCloneAndRedactHook);
+            }
 
             // manual set up multitiki instance for redact
             $output->writeln('Setup the clone instance for the redact ...');

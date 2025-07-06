@@ -18,6 +18,7 @@ use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
 use TikiManager\Command\Traits\InstanceUpgrade;
 use TikiManager\Config\Environment;
+use TikiManager\Hooks\InstanceCloneHook;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\VersionControl;
 
@@ -199,6 +200,12 @@ class CloneInstanceCommand extends TikiManagerCommand
                 'Skip lock website.'
             )
             ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
+            )
+            ->addOption(
                 'skip-index-backup',
                 null,
                 InputOption::VALUE_NONE,
@@ -216,6 +223,8 @@ class CloneInstanceCommand extends TikiManagerCommand
     {
         $instances = CommandHelper::getInstances('all', true);
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        $hookName = $this->getCommandHook();
+        $instanceCloneHook = new InstanceCloneHook($hookName->getHookName(), $this->logger);
 
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No instances available to clone/clone and upgrade.</comment>');
@@ -252,11 +261,19 @@ class CloneInstanceCommand extends TikiManagerCommand
 
         if ($direct && ($keepBackup || $useLastBackup)) {
             $this->io->error('The options --direct and --keep-backup or --use-last-backup could not be used in conjunction, instance filesystem is not in the backup file.');
+            $hookName->registerFailHookVars([
+                'error_message' => $this->io->getLastIOErrorMessage(),
+                'error_code' => 'FAIL_OPERATION_INVALID_OPTIONS',
+            ]);
             return 1;
         }
 
         if ($cloneUpgrade && ($onlyData || $onlyCode)) {
             $this->io->error('The options --only-code and --only-data cannot be used when cloning and upgrading an instance.');
+            $hookName->registerFailHookVars([
+                'error_message' => $this->io->getLastIOErrorMessage(),
+                'error_code' => 'FAIL_OPERATION_INVALID_OPTIONS',
+            ]);
             return 1;
         }
 
@@ -374,11 +391,20 @@ class CloneInstanceCommand extends TikiManagerCommand
             $noTargetInstancesMsg = 'No valid target instances to continue the clone process.';
             $this->logger->error($noTargetInstancesMsg);
             $this->io->error($noTargetInstancesMsg);
+            $hookName->registerFailHookVars([
+                'error_message' => $noTargetInstancesMsg,
+                'error_code' => 'TARGET_INSTANCE_NOT_FOUND',
+            ]);
             return 1;
         }
 
         if ($setupTargetDatabase && count($targetInstances) > 1) {
-            $this->logger->error('Database setup options can only be used when a single target instance is passed.');
+            $multipleInstancesErrorMessage = 'Database setup options can only be used when a single target instance is passed.';
+            $this->logger->error($multipleInstancesErrorMessage);
+            $hookName->registerFailHookVars([
+                'error_message' => $multipleInstancesErrorMessage,
+                'error_code' => 'FAIL_OPERATION_MULTIPLE_TARGET_INSTANCES_FOR_DB_SETUP',
+            ]);
             return 1;
         }
 
@@ -441,6 +467,7 @@ class CloneInstanceCommand extends TikiManagerCommand
 
         if (!$onlyCode) {
             $dbConfigErrorMessage = 'Unable to load/set database configuration for instance {instance_name} (id: {instance_id}). {exception_message}';
+            $sameDbErrorMessage = 'Database host and name are the same in the source ({source_instance_name}) and destination ({target_instance_id}).';
 
             try {
                 // The source instance needs to be well configured by default
@@ -448,6 +475,11 @@ class CloneInstanceCommand extends TikiManagerCommand
                     throw new Exception('Existing database configuration failed to connect.');
                 }
             } catch (Exception $e) {
+                $instanceCloneHook->registerFailHookVars([
+                    'error_message' => $dbConfigErrorMessage,
+                    'error_code' => 'FAIL_OPERATION_UNABLE_TO_SET_DB_CONFIG',
+                    'instance' => $sourceInstance
+                ]);
                 $this->logger->error($dbConfigErrorMessage, [
                     'instance_name' => $sourceInstance->name,
                     'instance_id' => $sourceInstance->getId(),
@@ -467,6 +499,13 @@ class CloneInstanceCommand extends TikiManagerCommand
                     $this->setupDatabase($destinationInstance, $setupTargetDatabase);
                     $destinationInstance->database()->setupConnection();
                 } catch (Exception $e) {
+                    $instanceCloneHook->registerFailHookVars([
+                        'error_message' => $dbConfigErrorMessage,
+                        'error_code' => 'FAIL_OPERATION_UNABLE_TO_CONNECT_DB',
+                        'source' => $sourceInstance,
+                        'destination' => $destinationInstance,
+                        'instance' => $destinationInstance
+                    ]);
                     $this->logger->error($dbConfigErrorMessage, [
                         'instance_name' => $destinationInstance->name,
                         'instance_id' => $destinationInstance->getId(),
@@ -477,7 +516,14 @@ class CloneInstanceCommand extends TikiManagerCommand
                 }
 
                 if ($this->isSameDatabase($sourceInstance, $destinationInstance)) {
-                    $this->logger->error('Database host and name are the same in the source ({source_instance_name}) and destination ({target_instance_id}).', [
+                    $instanceCloneHook->registerFailHookVars([
+                        'error_message' => $sameDbErrorMessage,
+                        'error_code' => 'FAIL_OPERATION_SAME_DB',
+                        'source' => $sourceInstance,
+                        'destination' => $destinationInstance,
+                        'instance' => $destinationInstance
+                    ]);
+                    $this->logger->error($sameDbErrorMessage, [
                         'source_instance_name' => $sourceInstance->name,
                         'target_instance_id' => $destinationInstance->name
                     ]);
@@ -488,11 +534,15 @@ class CloneInstanceCommand extends TikiManagerCommand
         }
 
         if (empty($targetInstances)) {
-            $this->logger->error('No valid instances to continue the clone process.');
+            $cloneErrorMessage = 'No valid instances to continue the clone process.';
+            $this->logger->error($cloneErrorMessage);
+            $hookName->registerFailHookVars([
+                'error_message' => $cloneErrorMessage,
+                'error_code' => 'TARGET_INSTANCE_NOT_FOUND',
+            ]);
             return 1;
         }
 
-        $hookName = $this->getCommandHook();
         $hookName->registerPostHookVars(['source' => $sourceInstance]);
 
         $archive = '';
@@ -530,12 +580,22 @@ class CloneInstanceCommand extends TikiManagerCommand
             try {
                 $archive = $sourceInstance->backup($direct, true, $onlyCode, $isIncludeIndex);
             } catch (Exception $e) {
+                $hookName->registerFailHookVars([
+                    'error_message' => $e->getMessage(),
+                    'error_code' => 'FAIL_OPERATION_SNAPSHOT_CREATION',
+                    'instance' => $sourceInstance
+                ]);
                 $this->logger->error($e->getMessage());
             }
         }
 
         if (empty($archive)) {
-            $this->logger->error('Snapshot creation failed.');
+            $snapshotErrorMessage = 'Snapshot creation failed.';
+            $hookName->registerFailHookVars([
+                'error_message' => $snapshotErrorMessage,
+                'error_code' => 'FAIL_OPERATION_SNAPSHOT_CREATION',
+            ]);
+            $this->logger->error($snapshotErrorMessage);
             return 1;
         }
 
@@ -602,6 +662,13 @@ class CloneInstanceCommand extends TikiManagerCommand
                 try {
                     $app->performUpgrade($destinationInstance, $upgrade_version, $options);
                 } catch (Exception $e) {
+                    $instanceCloneHook->registerFailHookVars([
+                        'error_message' => $e->getMessage(),
+                        'error_code' => 'FAIL_OPERATION_UPGRADE',
+                        'source' => $sourceInstance,
+                        'destination' => $destinationInstance,
+                        'instance' => $destinationInstance
+                    ]);
                     $destinationInstance->updateState('failure', $this->getName(), 'performUpgrade function failure: ' . $e->getMessage());
                     CommandHelper::setInstanceSetupError($destinationInstance->id, $e, 'upgrade');
                     continue;
@@ -613,6 +680,10 @@ class CloneInstanceCommand extends TikiManagerCommand
             }
 
             $destinationInstance->updateState('success', $this->getName(), 'Instance cloned');
+        }
+
+        if ($input->getOption('validate')) {
+            CommandHelper::validateInstances($targetInstances, $instanceCloneHook);
         }
 
         if (!$keepBackup && !$direct) {

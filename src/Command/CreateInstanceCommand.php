@@ -11,7 +11,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TikiManager\Application\Instance;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Command\Traits\InstanceConfigure;
+use TikiManager\Hooks\InstanceCreateHook;
 
 class CreateInstanceCommand extends TikiManagerCommand
 {
@@ -185,6 +187,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 'Specific revision to checkout'
             )
             ->addOption(
+                'validate',
+                null,
+                InputOption::VALUE_NONE,
+                'Attempt to validate the instance by checking its URL.'
+            )
+            ->addOption(
                 'copy-errors',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -206,6 +214,8 @@ class CreateInstanceCommand extends TikiManagerCommand
         $this->io->title('New Instance Setup');
 
         $instance = new Instance();
+        $hookName = $this->getCommandHook();
+        $instanceCreateHook = new InstanceCreateHook($hookName->getHookName(), $this->logger);
 
         $isNewInstance = true;
 
@@ -243,7 +253,7 @@ class CreateInstanceCommand extends TikiManagerCommand
                 }
 
                 $instance = $this->importApplication($instance);
-                $this->getCommandHook()->registerPostHookVars(['instance' => $instance]);
+                $hookName->registerPostHookVars(['instance' => $instance]);
 
                 $this->io->success('Please test your site at ' . $instance->weburl);
                 return 0;
@@ -256,7 +266,12 @@ class CreateInstanceCommand extends TikiManagerCommand
             }
 
             $instance = $this->install($instance);
-            $this->getCommandHook()->registerPostHookVars(['instance' => $instance]);
+            $hookName->registerPostHookVars(['instance' => $instance]);
+
+            if ($input->getOption('validate') && $instance->selection != 'blank : none') {
+                CommandHelper::validateInstances([$instance], $instanceCreateHook);
+            }
+
             $instance->updateState('success', $this->getName(), 'Instance created');
 
             return 0;
@@ -273,6 +288,10 @@ class CreateInstanceCommand extends TikiManagerCommand
                 $instance->cleanInstanceWebroot();
             }
             $this->io->error("Instance creation steps aborted: \n" . $e->getMessage());
+            $hookName->registerFailHookVars([
+                'error_message' => $this->io->getLastIOErrorMessage(),
+                'error_code' => 'FAIL_OPERATION_CREATE_INSTANCE',
+            ]);
             return $e->getCode() ?: -1;
         }
     }

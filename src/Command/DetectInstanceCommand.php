@@ -95,9 +95,19 @@ class DetectInstanceCommand extends TikiManagerCommand
             if (! $instance->detectPHP()) {
                 if ($instance->phpversion < 50300) {
                     $this->io->error('PHP Interpreter version is less than 5.3.');
+                    $hookName->registerFailHookVars([
+                        'error_message' => $this->io->getLastIOErrorMessage(),
+                        'error_code' => 'FAIL_OPERATION_PHP_VERSION_TOO_LOW',
+                        'instance' => $instance
+                    ]);
                     continue;
                 } else {
                     $this->io->error('PHP Interpreter could not be found on remote host.');
+                    $hookName->registerFailHookVars([
+                        'error_message' => $this->io->getLastIOErrorMessage(),
+                        'error_code' => 'FAIL_OPERATION_PHP_NOT_FOUND_ON_REMOTE',
+                        'instance' => $instance
+                    ]);
                     continue;
                 }
             }
@@ -144,6 +154,11 @@ class DetectInstanceCommand extends TikiManagerCommand
                 $this->io->warning("This version of PHP ($phpVersion) is above the recommended max version ($maxPhpVersion) for the master branch and Tiki may not work as expected.");
             } else {
                 $this->io->error('PHP version is not supported.');
+                $hookName->registerFailHookVars([
+                    'error_message' => $this->io->getLastIOErrorMessage(),
+                    'error_code' => 'FAIL_OPERATION_PHP_VERSION_NOT_SUPPORTED',
+                    'instance' => $instance
+                ]);
                 continue;
             }
 
