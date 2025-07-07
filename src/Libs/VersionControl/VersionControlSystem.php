@@ -12,6 +12,7 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Config\App;
 use TikiManager\Application\Instance;
 
@@ -78,9 +79,10 @@ abstract class VersionControlSystem implements LoggerAwareInterface
     }
 
     /**
-     * Gets VCS for a given instance, if null returns default
+     * retuns VCS for a given instance, throws an exception if type is unsupported
      * @param Instance $instance
-     * @return VersionControlSystem|null
+     * @return VersionControlSystem VCS type of the Instance
+     * @throws VcsException Unsupported VCS type
      */
     public static function getVersionControlSystem(Instance $instance)
     {
@@ -88,15 +90,14 @@ abstract class VersionControlSystem implements LoggerAwareInterface
         $vcsInstance = null;
 
         switch (strtoupper($type)) {
-            case 'SVN':
-                $vcsInstance = new Svn($instance);
-                break;
             case 'GIT':
                 $vcsInstance = new Git($instance);
                 break;
             case 'SRC':
                 $vcsInstance = new Src($instance);
                 break;
+            default:
+                throw new VcsException("Unsupported VCS type: $type. Please update your instance vcs type or .env configuration to use a supported VCS type (GIT or SRC).");
         }
 
         return $vcsInstance;
@@ -161,7 +162,7 @@ abstract class VersionControlSystem implements LoggerAwareInterface
      * Checks for revision is present or not
      *
      * @param string $targetFolder The directory where the repository is located.
-     * @param string $revision The revision identifier (commit hash, tag, or SVN revision number).
+     * @param string $revision The revision identifier (commit hash, tag, or Git revision number).
      * @return bool
      */
     abstract public function isRevisionPresent($targetFolder, $revision);
@@ -170,7 +171,7 @@ abstract class VersionControlSystem implements LoggerAwareInterface
      * Clone until specific revision is found
      *
      * @param string $targetFolder The directory where the repository is located.
-     * @param string $revision The revision identifier (commit hash, tag, or SVN revision number).
+     * @param string $revision The revision identifier (commit hash, tag, or Git revision number).
      */
     abstract public function deepenCloneUntilRevisionPresent($targetFolder, $revision);
 

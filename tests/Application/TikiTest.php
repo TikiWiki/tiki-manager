@@ -605,8 +605,7 @@ Your requirements could not be resolved to an installable set of packages.');
         $this->assertContains("22.x", $branches);
         $this->assertContains("tags/26.1", $branches);
         $this->assertContains("master", $branches);
-        $this->assertContains("trunk", $branches);
-        $this->assertCount(6, $branches);
+        $this->assertCount(5, $branches);
 
         $instanceStub->phpversion = 70222;
 
@@ -692,7 +691,6 @@ Your requirements could not be resolved to an installable set of packages.');
             'tags/22.1',
             'tags/26.1',
             'master',
-            'trunk',
         ];
 
         $upgradeVersions = array_map(function (Version $version) {
@@ -890,7 +888,6 @@ Your requirements could not be resolved to an installable set of packages.');
             Version::buildFake('git', 'tags/22.1'),
             Version::buildFake('git', 'tags/26.1'),
             Version::buildFake('git', 'master'),
-            Version::buildFake('git', 'trunk'),
         ];
     }
 }

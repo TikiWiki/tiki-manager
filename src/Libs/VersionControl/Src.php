@@ -254,7 +254,7 @@ class Src extends VersionControlSystem
     public function getChangedFiles($targetFolder)
     {
         // This method is not intended to be used
-        // Used in partial backups (only supported on Git/SVN)
+        // Used in partial backups (only supported on Git)
         return false;
     }
 
@@ -266,7 +266,7 @@ class Src extends VersionControlSystem
     public function hasRemote($targetFolder, $branch)
     {
         // This method is not intended to be used
-        // Used in partial backups (only supported on Git/SVN)
+        // Used in partial backups (only supported on Git)
         return false;
     }
 

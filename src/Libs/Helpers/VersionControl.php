@@ -7,16 +7,14 @@
 
 namespace TikiManager\Libs\Helpers;
 
+use TikiManager\Application\Exception\VcsException;
+
 class VersionControl
 {
 
     public static function formatBranch($branch, $vcs = null)
     {
         $vcs = strtolower($vcs ?? $_ENV['DEFAULT_VCS']);
-
-        if ($vcs == 'svn') {
-            return static::formatSvnBranch($branch);
-        }
 
         if ($vcs == 'git') {
             return static::formatGitBranch($branch);
@@ -27,25 +25,8 @@ class VersionControl
 
     protected static function formatGitBranch($branch)
     {
-        if ($branch == 'trunk') {
-            return 'master';
-        }
-
         if (preg_match('/^branches\/\d+\.(\d+|x)$/', $branch)) {
             return str_replace('branches/', '', $branch);
-        }
-
-        return $branch;
-    }
-
-    protected static function formatSvnBranch($branch)
-    {
-        if ($branch == 'master') {
-            return 'trunk';
-        }
-
-        if (preg_match('/^\d+\.(\d+|x)$/', $branch)) {
-            return 'branches/' . $branch;
         }
 
         return $branch;

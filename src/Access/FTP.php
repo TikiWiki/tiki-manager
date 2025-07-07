@@ -51,11 +51,6 @@ class FTP extends Access implements Mountable
         }
     }
 
-    public function getSVNPath()
-    {
-        return 1;
-    }
-
     public function getInterpreterVersion($interpreter)
     {
         return 99999;

@@ -39,7 +39,7 @@ class TikiVersionCommand extends TikiManagerCommand
     {
         $vcsOption = $input->getOption('vcs');
         $vcsOption = $vcsOption ? strtoupper($vcsOption) : '';
-        if (! in_array($vcsOption, ['SVN', 'GIT', 'SRC'])) {
+        if (! in_array($vcsOption, ['GIT', 'SRC'])) {
             $vcsOption = '';
         }
 

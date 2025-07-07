@@ -1812,7 +1812,7 @@ class Archive_Tar extends PEAR
     /**
      * This method sets the regular expression for ignoring files and directories
      * at import, for example:
-     * $arch->setIgnoreRegexp("#CVS|\.svn#");
+     * * $arch->setIgnoreRegexp("#CVS|\.git#");
      *
      * @param string $regexp regular expression defining which files or directories to ignore
      */
@@ -1824,7 +1824,7 @@ class Archive_Tar extends PEAR
     /**
      * This method sets the regular expression for ignoring all files and directories
      * matching the filenames in the array list at import, for example:
-     * $arch->setIgnoreList(array('CVS', '.svn', 'bin/tool'));
+     * $arch->setIgnoreList(array('CVS', 'bin/tool'));
      *
      * @param array $list a list of file or directory names to ignore
      *

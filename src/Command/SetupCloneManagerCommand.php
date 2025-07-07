@@ -347,9 +347,9 @@ class SetupCloneManagerCommand extends TikiManagerCommand
         $choices = [];
 
         foreach ($versions as $key => $version) {
-            preg_match('/(\d+\.|trunk|master)/', $version->branch, $matches);
+            preg_match('/(\d+\.|master)/', $version->branch, $matches);
             if (array_key_exists(0, $matches)) {
-                if ((($matches[0] >= 13) || ($matches[0] == 'trunk') || ($matches[0] == 'master')) &&
+                if ((($matches[0] >= 13) || ($matches[0] == 'master')) &&
                     ($instance->phpversion < 50500)) {
                     // Nothing to do, this match is incompatible...
                     $found_incompatibilities = true;

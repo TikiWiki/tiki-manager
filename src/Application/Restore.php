@@ -8,11 +8,11 @@ namespace TikiManager\Application;
 
 use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Exception\RestoreErrorException;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki\Handler\SystemConfigurationFile;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\Git;
-use TikiManager\Libs\VersionControl\Svn;
 
 class Restore extends Backup
 {
@@ -694,14 +694,11 @@ class Restore extends Backup
         $fileSystem = new Filesystem();
         $dest = implode(\DIRECTORY_SEPARATOR, [Environment::get('TEMP_FOLDER'),  md5(time()), $this->instance->name]);
 
-        if ($fileSystem->exists($src . '/.svn')) {
-            $className = Svn::class;
-            $folder = '/.svn';
-        } elseif ($fileSystem->exists($src . '/.git')) {
+        if ($fileSystem->exists($src . '/.git')) {
             $className = Git::class;
             $folder = '/.git';
         } else {
-            return false;
+            throw new VcsException("Unsupported VCS type");
         }
 
         $toCopy = $src . $folder;

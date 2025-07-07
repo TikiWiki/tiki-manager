@@ -8,7 +8,6 @@ variables:
   MYSQL_ROOT_PASSWORD: secret
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
   COMPOSER_FLAGS: '--ansi --no-progress --prefer-dist -n'
-  SVN_SCHEDULER_NAME: 'test-tiki-manager-svn'
   SRC_SCHEDULER_NAME: 'test-tiki-manager-src'
   INSTANCE_TYPE_SSH: 'ssh'
   INSTANCE_TYPE_FTP: 'ftp'
@@ -196,27 +195,7 @@ cache-warmup-tiki-git:
     refs:
       - schedules
     variables:
-      - $SCHEDULER == $SVN_SCHEDULER_NAME
       - $SCHEDULER == $SRC_SCHEDULER_NAME
-
-cache-warmup-tiki-svn:
-  extends: .cache-warmup-tiki
-  variables:
-    VCS: svn
-  script:
-    - TIKI_CACHE=cache/tiki-svn-branches_$PREV_VERSION_BRANCH
-    - |
-      if [ ! -d "$TIKI_CACHE" ]; then
-        svn checkout $SVN_TIKIWIKI_URI/branches/$PREV_VERSION_BRANCH $TIKI_CACHE
-      else
-        cd $TIKI_CACHE && svn up
-      fi;
-    - composer install -d $TIKI_CACHE/vendor_bundled $COMPOSER_FLAGS --no-dev
-  only:
-    refs:
-      - schedules
-    variables:
-      - $SCHEDULER == $SVN_SCHEDULER_NAME
 
 download-tiki-src-files:
   extends: .cache-warmup-tiki
@@ -294,20 +273,7 @@ download-tiki-src-files:
     - *git-config
   except:
     variables:
-      - $SCHEDULER == $SVN_SCHEDULER_NAME
       - $SCHEDULER == $SRC_SCHEDULER_NAME
-
-.template-tiki-manager-commands-svn: &template-tiki-manager-commands-svn
-  <<: *template-tiki-manager-commands
-  dependencies:
-    - cache-warmup-tiki-svn
-  needs:
-    - cache-warmup-tiki-svn
-  only:
-    refs:
-      - schedules
-    variables:
-      - $SCHEDULER == $SVN_SCHEDULER_NAME
 
 .template-tiki-manager-commands-src: &template-tiki-manager-commands-src
   <<: *template-tiki-manager-commands

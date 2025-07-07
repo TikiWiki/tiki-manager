@@ -106,7 +106,6 @@ class DiscoveryTest extends TestCase
             ->method('fileExists')
             ->willReturnOnConsecutiveCalls(
                 $file === '.git',
-                $file === '.svn',
                 $file === 'tiki-index.php'
             );
 
@@ -121,7 +120,6 @@ class DiscoveryTest extends TestCase
     {
         return [
             ['GIT', '.git'],
-            ['SVN', '.svn'],
             ['SRC', 'tiki-index.php'],
             [null, 'unable-to-find-vcs']
         ];

@@ -12,7 +12,6 @@ use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Exception\FolderPermissionException;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
-use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 use TikiManager\Application\Exception\BackupCopyException;
@@ -69,7 +68,7 @@ class Backup
         $this->direct = $direct;
         $this->onlyCode = $onlyCode;
         $this->errors = [];
-        $this->full = !in_array($instance->vcs_type, ['git', 'svn']) ? true : $full;
+        $this->full = !in_array($instance->vcs_type, ['git']) ? true : $full;
         $this->indexMode = $indexMode;
 
         $this->createBackupDir();
@@ -116,12 +115,6 @@ class Backup
                         $this->errors[$error_code][] = $dir;
                     } else {
                         $this->errors[$error_code] = [$error_code => $dir];
-                    }
-                } else {
-                    if ($this->instance->vcs_type == 'svn') {
-                        /** @var Svn $svn */
-                        $svn = VersionControlSystem::getVersionControlSystem($this->instance);
-                        $svn->ensureTempFolder($destDir . DIRECTORY_SEPARATOR . basename($dir));
                     }
                 }
 

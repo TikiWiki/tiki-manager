@@ -203,10 +203,6 @@ abstract class Discovery
             return 'GIT';
         }
 
-        if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . '.svn')) {
-            return 'SVN';
-        }
-
         if ($access->fileExists($webroot . DIRECTORY_SEPARATOR . 'tiki-index.php')) {
             return 'SRC';
         }

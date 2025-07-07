@@ -31,13 +31,6 @@ class LinuxRequirements extends Requirements
             ],
             'tags' => 'ssh, ssh-keygen'
         ],
-        'svn' => [
-            'name'  =>  'SVN package',
-            'commands' => [
-                'svn',
-            ],
-            'tags' => 'svn'
-        ],
         'fileSync' => [
             'name' => 'File synchronization package',
             'commands' => [

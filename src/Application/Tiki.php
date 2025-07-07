@@ -22,14 +22,13 @@ use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\Host\Exception\CommandException;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Src;
-use TikiManager\Libs\VersionControl\Svn;
 
 class Tiki extends Application
 {
     private $installType = null;
     private $branch = null;
     private $installed = null;
-    /** @var Svn|Git|Src  */
+    /** @var Git|Src  */
     private $vcs_instance = null;
 
     public static $excludeBackupFolders = [
@@ -161,17 +160,16 @@ class Tiki extends Application
     /**
      * Get repository revision information
      *
-     * @param string|null $folder If valid folder or null it will collect the svn revision from the folder|instance webroot.
+     * @param string|null $folder If valid folder or null it will collect the git revision from the folder|instance webroot.
      * @return int
      */
     public function getRevision($folder = null)
     {
         $revision = '';
         $access = $this->instance->getBestAccess('scripting');
-        $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
         $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
 
-        if ($access instanceof ShellPrompt && ($can_git || $can_svn)) {
+        if ($access instanceof ShellPrompt && $can_git) {
             $revision = $this->vcs_instance->getRevision($folder);
         }
 
@@ -192,10 +190,9 @@ class Tiki extends Application
 
         if (strlen(trim($commit_id))>0) {
             $access = $this->instance->getBestAccess('scripting');
-            $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
             $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
 
-            if ($access instanceof ShellPrompt && ($can_git || $can_svn)) {
+            if ($access instanceof ShellPrompt && $can_git) {
                 $date_revision = $this->vcs_instance->getDateRevision($folder, $commit_id);
             }
         }
@@ -267,8 +264,6 @@ class Tiki extends Application
     {
         if (substr($version, 0, 4) == '1.9.') {
             return 'REL-' . str_replace('.', '-', $version);
-        } elseif ($this->getInstallType() == 'svn') {
-            return "tags/$version";
         } elseif ($this->getInstallType() == 'tarball') {
             return "tags/$version";
         }
@@ -278,7 +273,7 @@ class Tiki extends Application
     {
         $baseVersion = 'master';
         $branch = $this->getBranch(true);
-        if (preg_match('/(\d+|trunk|master)/', $branch, $matches)) {
+        if (preg_match('/(\d+|master)/', $branch, $matches)) {
             $baseVersion = $matches[1];
         }
 
@@ -433,8 +428,6 @@ class Tiki extends Application
         $access = $this->instance->getBestAccess('filetransfer');
 
         $checkpaths = [
-            $this->instance->getWebPath('.svn/entries') => 'svn',
-            $this->instance->getWebPath('.svn/wc.db') => 'svn',
             $this->instance->getWebPath('.git/HEAD') => 'git',
             $this->instance->getWebPath('tiki-setup.php') => 'src',
         ];
@@ -722,11 +715,10 @@ class Tiki extends Application
     {
         $access = $this->instance->getBestAccess('scripting');
         $vcsType = $this->vcs_instance->getIdentifier();
-        $can_svn = $access->hasExecutable('svn') && $vcsType == 'SVN';
         $can_git = $access->hasExecutable('git') && $vcsType == 'GIT';
         $revision = $options['revision'] ?? null;
 
-        if ($access instanceof ShellPrompt && ($can_git || $can_svn || $vcsType === 'SRC')) {
+        if ($access instanceof ShellPrompt && ($can_git || $vcsType === 'SRC')) {
             $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
             $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
             $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
@@ -756,13 +748,12 @@ class Tiki extends Application
     public function performActualUpgrade(Version $version, $options = [])
     {
         $access = $this->instance->getBestAccess('scripting');
-        $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
         $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
         $revision = $options['revision'] ?? null;
 
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
-        if (!$access instanceof ShellPrompt ||  !($can_svn || $can_git || $this->vcs_instance->getIdentifier() == 'SRC')) {
+        if (!$access instanceof ShellPrompt ||  !($can_git || $this->vcs_instance->getIdentifier() == 'SRC')) {
             return;
         }
 
@@ -967,7 +958,7 @@ TXT;
         $checkTikiVersionRequirement = $this->getTikiRequirementsHelper();
         $compatible = [];
         foreach ($versions as $key => $version) {
-            preg_match('/(\d+\.|trunk|master)/', $version->branch, $matches);
+            preg_match('/(\d+\.|master)/', $version->branch, $matches);
             if (!array_key_exists(0, $matches)) {
                 // If is not a version formatted after a tiki version or master, then we can't guess if is compatible
                 // we just add the version to the list (assuming is a custom branch and as such should be in the list)
@@ -1007,7 +998,6 @@ TXT;
             $baseVersion = $version->getBaseVersion();
 
             $compatible = $baseVersion >= $branchVersion;
-            $compatible |= $baseVersion === 'trunk';
             $compatible |= $baseVersion === 'master';
 
             if ($compatible) {
@@ -1291,7 +1281,7 @@ TXT;
         // vendor_bundled was introduced in Tiki 17
         $baseVersion = $this->instance->getApplication()->getBaseVersion();
 
-        return $baseVersion >= 17 || $baseVersion == 'master' || $baseVersion == 'trunk';
+        return $baseVersion >= 17 || $baseVersion == 'master';
     }
 
     protected function supportsTikiPackages(): bool
@@ -1299,7 +1289,7 @@ TXT;
         // Tiki Packages were introduces in 18.x
         $baseVersion = $this->instance->getApplication()->getBaseVersion();
 
-        return $baseVersion >= 18 || $baseVersion == 'master' || $baseVersion == 'trunk';
+        return $baseVersion >= 18 || $baseVersion == 'master';
     }
 
     protected function supportsNodeJSBuild(): bool
@@ -1307,7 +1297,7 @@ TXT;
         // Build system with NodeJS was introduces for 27.x
         $baseVersion = $this->instance->getApplication()->getBaseVersion();
 
-        return $baseVersion >= 27 || $baseVersion == 'master' || $baseVersion == 'trunk';
+        return $baseVersion >= 27 || $baseVersion == 'master';
     }
 
     public function clearCache($all = false)
@@ -1377,13 +1367,13 @@ TXT;
 
         $files = $this->getFileChanges();
         $backupFiles = \array_merge($files['changed'], $files['untracked']);
-        $include = ['.git', '.svn'];
+        $include = ['.git'];
 
         return array_merge($backupFiles, $include);
     }
 
     /**
-     * @return Git|Src|Svn
+     * @return Git|Src
      */
     public function getVcsInstance()
     {

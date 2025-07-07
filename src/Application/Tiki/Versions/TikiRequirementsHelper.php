@@ -48,7 +48,7 @@ class TikiRequirementsHelper
         $supported = array_values(array_filter($this->requirements, function ($requirement) use ($tikiVersion) {
             $version = $requirement->getVersion();
             if ($version === 'master') {
-                return ($tikiVersion === 'master' || $tikiVersion === 'trunk');
+                return $tikiVersion === 'master';
             } else {
                 return version_compare($tikiVersion, $requirement->getVersion(), '>=');
             }

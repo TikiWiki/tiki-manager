@@ -107,7 +107,7 @@ class RestoreInstanceCommandTest extends TestCase
 
         $inputs = [
             self::$instanceIds['instance2'], // blank instance
-            self::$instanceIds['instance1'], // trunk instance
+            self::$instanceIds['instance1'], // master instance
             0, // first backup in list (last backup)
         ];
 

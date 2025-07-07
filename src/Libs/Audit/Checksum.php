@@ -59,7 +59,7 @@ SQL;
         ;
 SQL;
 
-    const CHECKSUM_IGNORE_PATTERN = '#(^\./temp/|^\./modules/cache/mod|^\./templates_c/|^\./maintenance\.php|/\.git/|/\.svn/)#';
+    const CHECKSUM_IGNORE_PATTERN = '#(^\./temp/|^\./modules/cache/mod|^\./templates_c/|^\./maintenance\.php|/\.git/)#';
 
     public static function hasChecksums($version_id)
     {

@@ -21,11 +21,10 @@ See later in this README file for more informations.
 To easily configure Tiki Manager, copy the `.env.dist` file to `.env` and insert your configurations for the uncommented (#) entries.
 
 ### Version Control System
-Tiki Manager by default uses Git and the main public repository at https://gitlab.com/tikiwiki/tiki. If you want to use SVN as your default vcs (but you shouldn't as SVN is deprecated) or another repository please add the following lines to your `.env` file.
+Tiki Manager by default uses Git and the main public repository at https://gitlab.com/tikiwiki/tiki. If you want to use a custom repository please add the following lines to your `.env` file.
 ```
-DEFAULT_VCS=svn
+DEFAULT_VCS=git
 GIT_TIKIWIKI_URI=<CUSTOM_GIT_REPOSITORY_URL>
-SVN_TIKIWIKI_URI=<CUSTOM_SVN_REPOSITORY_URL>
 ```
 
 #### Behind a Proxy or without internet connection

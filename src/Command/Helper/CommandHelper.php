@@ -521,7 +521,7 @@ class CommandHelper
     }
 
     /**
-     * Get VCS Versions (SVN || GIT)
+     * Get VCS Versions (GIT)
      *
      * @param string $vcsType
      * @return array

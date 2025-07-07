@@ -16,11 +16,11 @@ use TikiManager\Application\Instance\CrontabManager;
 use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
+use TikiManager\Application\Exception\VcsException;
 use TikiManager\Libs\Helpers\Archive;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\Host\Command;
-use TikiManager\Libs\VersionControl\Svn;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
 
 class Instance
@@ -97,9 +97,9 @@ WHERE
     vmax.version_id IS NULL
 SQL;
 
-    const SQL_SELECT_UPDATABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . " AND LOWER(v.type) in('svn', 'tarball', 'git', 'src');";
+    const SQL_SELECT_UPDATABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . " AND LOWER(v.type) in('tarball', 'git', 'src');";
 
-    const SQL_SELECT_UPGRADABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . " AND ((LOWER(v.type) in('svn', 'tarball', 'git', 'src') AND v.revision <> '') OR v.version_id IS NULL);";
+    const SQL_SELECT_UPGRADABLE_INSTANCE = self::SQLQUERY_UPDATABLE_AND_UPGRADABLE . " AND ((LOWER(v.type) in('tarball', 'git', 'src') AND v.revision <> '') OR v.version_id IS NULL);";
 
     const SQL_DUPLICATED_INSTANCE = <<<SQL
 SELECT
@@ -755,18 +755,6 @@ SQL;
         throw new Exception("No suitable php interpreter was found on {$this->name} instance");
     }
 
-    public function detectSVN()
-    {
-        $access = $this->getBestAccess('scripting');
-        $path = $access->getSVNPath();
-
-        if (strlen($path) > 0) {
-            return $path;
-        }
-
-        return false;
-    }
-
     public function detectDistribution()
     {
         $access = $this->getBestAccess('scripting');
@@ -996,12 +984,6 @@ SQL;
         $version->save();
 
         $this->io->writeln('<info>Detected Tiki ' . $version->branch . ' using ' . $version->type . '</info>');
-
-        if ($this->vcs_type == 'svn') {
-            /** @var Svn $svn */
-            $svn = VersionControlSystem::getVersionControlSystem($this);
-            $svn->ensureTempFolder($this->webroot);
-        }
 
         if ($this->app == 'tiki' && ! $onlyData) {
             $this->io->writeln("Applying patches to {$this->name}...");
@@ -1322,11 +1304,15 @@ SQL;
 
     public function getVersionControlSystem()
     {
-        if (!$this->vcs) {
-            $this->vcs = VersionControlSystem::getVersionControlSystem($this);
-        }
+        try {
+            if (!$this->vcs) {
+                $this->vcs = VersionControlSystem::getVersionControlSystem($this);
+            }
 
-        return $this->vcs;
+            return $this->vcs;
+        } catch (VcsException $e) {
+            throw new Exception($e->getMessage());
+        }
     }
 
     public function reindex(): bool
@@ -1351,8 +1337,8 @@ SQL;
 
     public function revert()
     {
-        if ($this->vcs_type != 'svn' && $this->vcs_type != 'git') {
-            $this->io->error(sprintf("Instance %s is not a version controlled instance and cannot be reverted.", $this->name));
+        if ($this->vcs_type != 'git') {
+            $this->io->error(sprintf("Instance %s is not a supported version controlled instance and cannot be reverted.", $this->name));
             return;
         }
         $this->getVersionControlSystem()->revert($this->webroot);
