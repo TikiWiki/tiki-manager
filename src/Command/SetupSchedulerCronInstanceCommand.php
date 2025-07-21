@@ -111,7 +111,7 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
         $input->setOption('time', $cronFreq);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -194,7 +194,7 @@ class SetupSchedulerCronInstanceCommand extends TikiManagerCommand
         return $newCronJob;
     }
 
-    protected function writeCronJobStatus(Instance\CronJob $job = null)
+    protected function writeCronJobStatus(?Instance\CronJob $job = null)
     {
         if (!$job) {
             $message = <<<TXT

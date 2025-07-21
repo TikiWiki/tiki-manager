@@ -19,7 +19,7 @@ class DeleteDatabaseCommand extends TikiManagerCommand
             ->setHelp('This command allows you to delete the database file');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $helper = $this->getHelper('question');
         $question = CommandHelper::getQuestion('Do you want to delete database? [y,n]');

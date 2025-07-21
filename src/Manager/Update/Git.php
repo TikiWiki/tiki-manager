@@ -25,7 +25,7 @@ class Git extends UpdateManager
      * @param LoggerInterface|null $logger
      * @return void
      */
-    public function __construct($targetFolder, LoggerInterface $logger = null)
+    public function __construct($targetFolder, ?LoggerInterface $logger = null)
     {
         $debug = filter_var(getenv('TRIM_DEBUG'), FILTER_VALIDATE_BOOLEAN);
 

@@ -19,7 +19,7 @@ class ClearLogsCommand extends TikiManagerCommand
             ->setHelp('This command allows you to clear the logs folder');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $helper = $this->getHelper('question');
         $question = CommandHelper::getQuestion('Do you want to clear logs folder? [y,n]');

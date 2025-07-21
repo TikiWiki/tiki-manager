@@ -20,7 +20,7 @@ class DeleteBackupCommand extends TikiManagerCommand
             ->setHelp('This command allows you to clear backups folder');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $question = new ChoiceQuestion(
             'Do you confirm you want to delete backups folder?',

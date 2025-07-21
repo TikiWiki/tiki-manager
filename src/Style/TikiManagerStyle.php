@@ -13,7 +13,7 @@ class TikiManagerStyle extends SymfonyStyle
 {
     protected $lastIOErrorMessage;
 
-    public function error($message)
+    public function error($message): void
     {
         $this->lastIOErrorMessage = $message;
         parent::error($message);
@@ -24,7 +24,7 @@ class TikiManagerStyle extends SymfonyStyle
         return $this->lastIOErrorMessage;
     }
 
-    public function info($text)
+    public function info($text): void
     {
         $this->writeln("<info>$text</info>");
     }
@@ -32,7 +32,7 @@ class TikiManagerStyle extends SymfonyStyle
     /**
      * {@inheritdoc}
      */
-    public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL)
+    public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL): void
     {
         if (!is_iterable($messages)) {
             $messages = [$messages];
@@ -50,7 +50,7 @@ class TikiManagerStyle extends SymfonyStyle
     /**
      * {@inheritdoc}
      */
-    public function writeln($messages, $type = self::OUTPUT_NORMAL)
+    public function writeln($messages, $type = self::OUTPUT_NORMAL): void
     {
         if (!is_iterable($messages)) {
             $messages = [$messages];

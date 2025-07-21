@@ -73,7 +73,7 @@ class DeletePatchCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $patchId = $input->getOption('patch');
         try {

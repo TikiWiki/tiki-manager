@@ -19,7 +19,7 @@ class ViewDatabaseCommand extends TikiManagerCommand
             ->setHelp('This command allows you to view the database content');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $databaseFile = $_ENV['DB_FILE'];
 

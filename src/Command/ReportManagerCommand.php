@@ -21,7 +21,7 @@ class ReportManagerCommand extends TikiManagerCommand
             ->setHelp('This command allows you perform actions related to reports (add, modify, remove and send');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('<comment>Note: Only Tiki instances can enable reports.</comment>');
 

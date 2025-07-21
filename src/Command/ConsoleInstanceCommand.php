@@ -68,14 +68,14 @@ class ConsoleInstanceCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances('tiki');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
 
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No Tiki instances available to run Console commands.</comment>');
-            return;
+            return 0;
         }
 
         $instancesOption = $input->getOption('instances');

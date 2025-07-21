@@ -126,7 +126,7 @@ SQL;
 
     abstract public function firstConnect();
 
-    abstract public function getInterpreterPath(TikiRequirements $requirements = null);
+    abstract public function getInterpreterPath(?TikiRequirements $requirements = null);
 
     abstract public function getInterpreterVersion($interpreter);
 

@@ -34,7 +34,7 @@ abstract class UpdateManager
      * VersionControlSystem constructor.
      * @param $targetFolder
      */
-    public function __construct($targetFolder, LoggerInterface $logger = null)
+    public function __construct($targetFolder, ?LoggerInterface $logger = null)
     {
         $this->targetFolder = $targetFolder;
         $this->debug = filter_var(getenv('TRIM_DEBUG'), FILTER_VALIDATE_BOOLEAN);

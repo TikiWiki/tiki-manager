@@ -134,7 +134,7 @@ class CrontabManager
      * @param CronJob|null $newJob If Null, the $oldJob is removed
      * @throws \Exception
      */
-    public function replaceJob(CronJob $oldJob, CronJob $newJob = null)
+    public function replaceJob(CronJob $oldJob, ?CronJob $newJob = null)
     {
         $crontab = $this->readCrontab();
         $crontab = trim($crontab);

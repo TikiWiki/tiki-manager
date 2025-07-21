@@ -713,7 +713,7 @@ class CommandHelper
      * @param string $action
      * @throws \Exception
      */
-    public static function setInstanceSetupError($instanceId, \Exception $e = null, $action = 'install')
+    public static function setInstanceSetupError($instanceId, ?\Exception $e = null, $action = 'install')
     {
         $errors = [];
         $io = App::get('io');

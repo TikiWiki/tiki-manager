@@ -18,7 +18,7 @@ class BlankInstanceCommand extends TikiManagerCommand
             ->setHelp('This command allows you to create a new blank instance without actually add a Tiki');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $command_name = 'manager:instance:create';
         if (! $this->getApplication()->has($command_name)) {

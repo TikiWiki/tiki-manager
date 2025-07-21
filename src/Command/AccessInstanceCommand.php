@@ -26,7 +26,7 @@ class AccessInstanceCommand extends TikiManagerCommand
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);

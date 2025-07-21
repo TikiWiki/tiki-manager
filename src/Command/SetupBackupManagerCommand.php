@@ -102,7 +102,7 @@ class SetupBackupManagerCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $time = $input->getOption('time');
         list($hours, $minutes) = CommandHelper::validateTimeInput($time);

@@ -45,7 +45,7 @@ class MonitorInstanceCommand extends TikiManagerCommand
         $this->instances = $instances;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instanceIds = $input->getOption('instances');
         $simpleTextOutput = $input->getOption('text-output');

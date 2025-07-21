@@ -119,7 +119,7 @@ class BackupInstanceCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $maxBackups = $input->getOption('max-backups') ?: Environment::get('DEFAULT_MAX_BACKUPS', 0);
         $isIncludeIndex = $input->getOption('include-index-backup') ? true : false;

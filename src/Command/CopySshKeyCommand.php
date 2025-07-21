@@ -19,7 +19,7 @@ class CopySshKeyCommand extends TikiManagerCommand
             ->setHelp('This command allows you copy the SSH key to the remote instance');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);

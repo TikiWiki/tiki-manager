@@ -34,7 +34,7 @@ class ManagerTestSendEmailCommand extends TikiManagerCommand
     /**
      * @inheritDoc
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $emailTo = $input->getArgument('to');
         $transport = $this->getCurrentTransportName();

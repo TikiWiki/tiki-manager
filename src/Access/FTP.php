@@ -39,7 +39,7 @@ class FTP extends Access implements Mountable
         return $conn->connect();
     }
 
-    public function getInterpreterPath(TikiRequirements $requirements = null)
+    public function getInterpreterPath(?TikiRequirements $requirements = null)
     {
         $result = $this->runPHP(
             dirname(__FILE__) . '/../../scripts/checkversion.php',

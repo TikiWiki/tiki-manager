@@ -108,7 +108,7 @@ class CreateTemporaryUserInstanceCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $allIinstances = CommandHelper::getInstances('tiki');
         $selectedInstances = CommandHelper::validateInstanceSelection($answer, $allInstances, CommandHelper::INSTANCE_SELECTION_SINGLE);

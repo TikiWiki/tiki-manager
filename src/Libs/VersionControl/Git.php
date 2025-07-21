@@ -28,7 +28,7 @@ class Git extends VersionControlSystem
      * GIT constructor.
      * @inheritDoc
      */
-    public function __construct(Instance $instance, array $vcsOptions = [], LoggerInterface $logger = null)
+    public function __construct(Instance $instance, array $vcsOptions = [], ?LoggerInterface $logger = null)
     {
         parent::__construct($instance, $vcsOptions, $logger);
         $this->setRepositoryUrl($_ENV['GIT_TIKIWIKI_URI'] ?? self::DEFAULT_GIT_REPOSITORY);

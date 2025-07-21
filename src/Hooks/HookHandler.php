@@ -20,7 +20,7 @@ class HookHandler implements LoggerAwareInterface
      * @param LoggerInterface|null $logger
      * @throws \Exception
      */
-    public function __construct(string $hooksFolder, LoggerInterface $logger = null)
+    public function __construct(string $hooksFolder, ?LoggerInterface $logger = null)
     {
         if (!file_exists($hooksFolder)) {
             throw new \Exception('Hooks folder does not exist.');

@@ -51,7 +51,7 @@ class StatsInstanceCommand extends TikiManagerCommand
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $currentCwd = getcwd();
         $instancesOpt = $input->getOption('instances');

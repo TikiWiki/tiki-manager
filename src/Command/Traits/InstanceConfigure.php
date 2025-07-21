@@ -21,6 +21,19 @@ trait InstanceConfigure
 {
     use LoggerAwareTrait;
 
+    protected $input;
+    protected $io;
+
+    public function setInput($input)
+    {
+        $this->input = $input;
+    }
+
+    public function setIO($io)
+    {
+        $this->io = $io;
+    }
+
     public function printManagerInfo()
     {
         if ($this->io->getVerbosity() != OutputInterface::VERBOSITY_DEBUG &&

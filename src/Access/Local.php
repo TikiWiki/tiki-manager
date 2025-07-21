@@ -88,7 +88,7 @@ class Local extends Access implements ShellPrompt
      * @return false|mixed
      * @throws \Exception When no PHP interpreter was found in the system
      */
-    public function getInterpreterPath(TikiRequirements $requirements = null)
+    public function getInterpreterPath(?TikiRequirements $requirements = null)
     {
         $instance = $this->instance;
         $detectedBinaries = $instance->phpexec ? [$instance->phpexec] : $instance->getDiscovery()->detectPHP();

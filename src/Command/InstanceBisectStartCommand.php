@@ -76,7 +76,7 @@ class InstanceBisectStartCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (empty($this->instancesInfo)) {
             $this->io->info('No instances available');

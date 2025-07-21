@@ -89,7 +89,7 @@ class SSH extends Access implements ShellPrompt
     }
 
     // FIXME: Expect all remote to be Unix-like machines
-    public function getInterpreterPath(TikiRequirements $requirements = null)
+    public function getInterpreterPath(?TikiRequirements $requirements = null)
     {
         $instance = $this->instance;
         $detectedBinaries = $instance->phpexec ? [$instance->phpexec] : $instance->getDiscovery()->detectPHP();

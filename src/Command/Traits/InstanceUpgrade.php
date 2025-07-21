@@ -17,7 +17,7 @@ trait InstanceUpgrade
      * @param Version|null $curVersion The current version (from source instance, when cloning)
      * @return Version|null
      */
-    public function getUpgradeVersion(Instance $instance, bool $onlySupported, string $branch = null, Version $curVersion = null): ?Version
+    public function getUpgradeVersion(Instance $instance, bool $onlySupported, ?string $branch = null, ?Version $curVersion = null): ?Version
     {
         $curVersion = $curVersion ?: $instance->getLatestVersion();
         if ($instance->getApplication()) {

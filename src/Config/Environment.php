@@ -50,7 +50,7 @@ class Environment
         require_once $this->homeDirectory . '/src/Libs/Helpers/functions.php';
     }
 
-    public function setIO(InputInterface $input = null, OutputInterface $output = null)
+    public function setIO(?InputInterface $input = null, ?OutputInterface $output = null)
     {
         if (!$input) {
             $input = new ArgvInput();

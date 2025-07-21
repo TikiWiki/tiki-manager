@@ -24,7 +24,7 @@ class ManagerInfoCommand extends TikiManagerCommand
             ->setHelp('This command allows you to show Tiki Manager information');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instance = new Instance();
         $instance->type = 'local';

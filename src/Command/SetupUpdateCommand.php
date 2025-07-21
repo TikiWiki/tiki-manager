@@ -90,7 +90,7 @@ class SetupUpdateCommand extends TikiManagerCommand
      * @param OutputInterface $output
      * @return int|null|void
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $time = $input->getOption('time');
         // Check if option (set in cli is also valid)

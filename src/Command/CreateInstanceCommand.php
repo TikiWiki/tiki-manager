@@ -207,7 +207,7 @@ class CreateInstanceCommand extends TikiManagerCommand
      * @return int
      * @throws \Exception
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->printManagerInfo();
 

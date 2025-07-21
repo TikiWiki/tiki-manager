@@ -727,7 +727,7 @@ SQL;
         return $this->tempdir;
     }
 
-    public function detectPHP(TikiRequirements $requirements = null)
+    public function detectPHP(?TikiRequirements $requirements = null)
     {
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($requirements);
@@ -1229,7 +1229,7 @@ SQL;
         return null;
     }
 
-    public function getCompatibleVersions(bool $withBlank = null)
+    public function getCompatibleVersions(?bool $withBlank = null)
     {
 
         $apps = $this->getApplications();

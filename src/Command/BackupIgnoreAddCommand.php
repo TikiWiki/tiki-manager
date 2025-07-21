@@ -75,7 +75,7 @@ class BackupIgnoreAddCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (empty($this->instancesInfo)) {
             $output->writeln('<comment>No instances available.</comment>');

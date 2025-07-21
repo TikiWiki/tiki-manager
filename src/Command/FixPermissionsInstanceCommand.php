@@ -19,7 +19,7 @@ class FixPermissionsInstanceCommand extends TikiManagerCommand
             ->setHelp('This command allows you to fix permissions on a Tiki instance');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances('tiki');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);

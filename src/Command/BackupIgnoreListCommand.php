@@ -30,7 +30,7 @@ class BackupIgnoreListCommand extends TikiManagerCommand
             ->setHelp('This command allows you to list all excluded files/folders from backup folder');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances();
         $instancesInfo = CommandHelper::getInstancesInfo($instances);

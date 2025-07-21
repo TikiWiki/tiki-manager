@@ -163,7 +163,7 @@ class CloneAndUpgradeInstanceCommand extends TikiManagerCommand
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $command_name = 'manager:instance:clone';
         if (!$this->getApplication()->has($command_name)) {

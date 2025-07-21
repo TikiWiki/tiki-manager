@@ -19,7 +19,7 @@ class ClearCacheCommand extends TikiManagerCommand
             ->setHelp('This command allows you to clear the application\'s cache');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $cachePath = $_ENV['CACHE_FOLDER'];
         $logger = new ConsoleLogger($output);

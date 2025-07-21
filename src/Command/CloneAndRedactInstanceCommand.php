@@ -58,7 +58,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances('upgrade');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
@@ -69,7 +69,7 @@ class CloneAndRedactInstanceCommand extends TikiManagerCommand
 
         if (empty($instancesInfo)) {
             $output->writeln('<comment>No Tiki instances available.</comment>');
-            return;
+            return 0;
         }
         $instancesOption = $input->getOption('instances');
 

@@ -139,7 +139,7 @@ class ImportInstanceCommand extends TikiManagerCommand
      * @param OutputInterface $output
      * @return int|null
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instance = new Instance();
         try {

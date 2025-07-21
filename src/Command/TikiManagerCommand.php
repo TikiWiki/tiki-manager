@@ -28,7 +28,7 @@ abstract class TikiManagerCommand extends Command implements LoggerAwareInterfac
     /** @var TikiManagerStyle */
     protected $io;
 
-    public function __construct(string $name = null, LoggerInterface $logger = null)
+    public function __construct(?string $name = null, ?LoggerInterface $logger = null)
     {
         parent::__construct($name);
         $this->logger = $logger ?? App::get('Logger');

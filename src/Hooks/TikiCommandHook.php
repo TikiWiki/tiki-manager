@@ -114,7 +114,7 @@ class TikiCommandHook implements HookInterface, LoggerAwareInterface
         }
     }
 
-    protected function buildScriptCommand(string $file, string $cwd = null, array $env = []): Process
+    protected function buildScriptCommand(string $file, ?string $cwd = null, array $env = []): Process
     {
         return new Process(['bash', $file], $cwd, $env);
     }

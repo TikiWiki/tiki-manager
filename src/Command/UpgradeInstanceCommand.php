@@ -117,7 +117,7 @@ class UpgradeInstanceCommand extends TikiManagerCommand
     }
 
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $checksumCheck = $input->getOption('check') ?? false;
         $instancesOption = $input->getOption('instances');

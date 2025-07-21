@@ -24,7 +24,7 @@ class CheckRequirementsCommand extends TikiManagerCommand
             ->setHelp('This command allows you to check if Tiki Manager requirements for server/client are met');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->section('Requirements');
 

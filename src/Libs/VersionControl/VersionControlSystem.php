@@ -36,7 +36,7 @@ abstract class VersionControlSystem implements LoggerAwareInterface
      * @param LoggerInterface|null $logger
      * @throws \Exception
      */
-    public function __construct(Instance $instance, array $vcsOptions = [], LoggerInterface $logger = null)
+    public function __construct(Instance $instance, array $vcsOptions = [], ?LoggerInterface $logger = null)
     {
         $this->instance = $instance;
         $this->access = $instance->getBestAccess('scripting');

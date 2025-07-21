@@ -58,11 +58,20 @@ composer:
     <<: *composer-cache
 
 #
+# Parallel Matrix Template (PHP7.4 to PHP8.4)
+# This is used to run the same job with different PHP versions.
+.parallel-matrix: &parallel-matrix
+  parallel:
+    matrix:
+      - PHP_VERSION: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+
+#
 # Lint
 #
 
-.lint-scripts: &lint-scripts
+.lint-scripts-template:
   stage: quality
+  image: tikiwiki/tikimanager-ci:php-${PHP_VERSION}-qa
   script:
     - git log -m --first-parent -1 --name-only --diff-filter=d --pretty="format:" | grep -v "^$" | sort -u | grep '\.php$' - 2>&1 > /dev/null || { git log -m -1 --name-only && echo && echo 'No files to be processed. Skipping...' && echo && exit 0; }
     - git log -m -1 --name-only
@@ -70,17 +79,10 @@ composer:
   needs: [ ]
   allow_failure: false
 
-lint-scripts-php74:
-  image: tikiwiki/tikimanager-ci:php-7.4-qa
-  <<: *lint-scripts
-
-lint-scripts-php80:
-  image: tikiwiki/tikimanager-ci:php-8.0-qa
-  <<: *lint-scripts
-
-lint-scripts-php81:
-  image: tikiwiki/tikimanager-ci:php-8.1-qa
-  <<: *lint-scripts
+lint-scripts:
+  extends: .lint-scripts-template
+  <<: *parallel-matrix
+  allow_failure: false
 
 phpcs:
   stage: quality
@@ -139,17 +141,22 @@ code_quality:
     - composer build-phar
   <<: *unit-tests
 
-unit-tests-php74:
-  image: tikiwiki/tikimanager-ci:php-7.4-qa
-  <<: *unit-tests-composer-install
-
-unit-tests-php80:
-  image: tikiwiki/tikimanager-ci:php-8.0-qa
-  <<: *unit-tests-composer-update
-
-unit-tests-php81:
-  image: tikiwiki/tikimanager-ci:php-8.1-qa
-  <<: *unit-tests-composer-update
+unit-tests:
+  image: tikiwiki/tikimanager-ci:php-${PHP_VERSION}-qa
+  allow_failure: false
+  needs:
+    - composer
+  before_script:
+    - echo 'APP_ENV=gitlab-ci' >> .env
+    - ssh-keygen -t rsa -f ./data/id_rsa -q -P ""
+    - |
+        if [ "$PHP_VERSION" != "7.4" ]; then
+          composer update $COMPOSER_FLAGS
+        fi;
+    - *install-composer-script
+    - composer build-phar
+  <<: *unit-tests
+  <<: *parallel-matrix
 
 #----------------------------------------------------------------------------------------------------------------------#
 # FUNCTIONAL TESTS SECTION

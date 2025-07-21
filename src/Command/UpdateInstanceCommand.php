@@ -137,7 +137,7 @@ class UpdateInstanceCommand extends TikiManagerCommand
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);

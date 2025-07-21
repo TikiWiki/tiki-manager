@@ -35,7 +35,7 @@ class TikiVersionCommand extends TikiManagerCommand
             ->setHelp('This command allows you to list all Tiki versions');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $vcsOption = $input->getOption('vcs');
         $vcsOption = $vcsOption ? strtoupper($vcsOption) : '';

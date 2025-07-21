@@ -68,8 +68,8 @@ class InstanceConfigureTest extends TestCase
         App::getContainer()->set('instance', $this->instance);
 
         $this->traitMock = $this->getObjectForTrait(InstanceConfigure::class);
-        $this->traitMock->input = $this->input;
-        $this->traitMock->io = App::get('io');
+        $this->traitMock->setInput($this->input);
+        $this->traitMock->setIO(App::get('io'));
         $this->traitMock->setLogger(new NullLogger());
     }
 

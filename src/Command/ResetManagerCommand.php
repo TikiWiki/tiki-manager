@@ -20,7 +20,7 @@ class ResetManagerCommand extends TikiManagerCommand
             ->setHelp('This command allows you to delete all state, backup, cache, and log files');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('<comment>WARNING!</comment>');
         $output->writeln('<comment>You are about to delete all state, backup, cache, and log files!</comment>');

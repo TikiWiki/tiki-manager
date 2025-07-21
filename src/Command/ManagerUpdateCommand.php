@@ -39,7 +39,7 @@ class ManagerUpdateCommand extends TikiManagerCommand
             ->setHelp('This command allows to update Tiki Manager');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $packagesInstallation = CommandHelper::isInstalledFromPackage();
         if ($packagesInstallation) {

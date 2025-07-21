@@ -139,7 +139,7 @@ class CheckoutCommand extends TikiManagerCommand
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $instanceId = $input->getOption('instance');
         $instance = Instance::getInstance($instanceId);
