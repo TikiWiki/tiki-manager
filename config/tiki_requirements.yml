@@ -8,6 +8,16 @@
   mysql:
     min: 8.0
 
+- name: Tiki29
+  version: 29
+  php:
+    min: 8.1
+    max: 8.4
+  mariadb:
+    min: 10.5
+  mysql:
+    min: 8.0
+
 - name: Tiki28
   version: 28
   php:
