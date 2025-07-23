@@ -28,6 +28,7 @@ SQL;
     public $action;
     public $date_revision;
     public $repo_url;
+    public $instance_id;
 
     public function __construct($instance = null)
     {
