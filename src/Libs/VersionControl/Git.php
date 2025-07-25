@@ -183,12 +183,13 @@ class Git extends VersionControlSystem
 
     /**
      * @param $targetFolder
+     * @param null $branch
      * @return mixed|string
      * @throws VcsException
      */
-    public function pull($targetFolder)
+    public function pull($targetFolder, $branch = null)
     {
-        $gitCmd = 'pull' . ($this->quiet ? ' --quiet' : '');
+        $gitCmd = 'pull' . ($branch ? " origin $branch" : '') . ($this->quiet ? ' --quiet' : '');
         return $this->exec($targetFolder, $gitCmd);
     }
 
@@ -422,7 +423,7 @@ class Git extends VersionControlSystem
 
         $commitSHA
             ? $this->checkoutBranch($targetFolder, $branch, $commitSHA)
-            : $this->pull($targetFolder);
+            : $this->pull($targetFolder, $branch);
 
         if ($stash) {
             $this->stashPop($targetFolder);
