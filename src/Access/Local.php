@@ -6,8 +6,7 @@
 
 namespace TikiManager\Access;
 
-use Symfony\Component\Filesystem\Exception\IOException;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Process;
 use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\Environment as Env;
@@ -45,7 +44,7 @@ class Local extends Access implements ShellPrompt
     public function getHost()
     {
         if (!(is_object($this->hostlib) && $this->hostlib instanceof LocalHost)) {
-            $this->hostlib = new LocalHost();
+            $this->hostlib = new LocalHost($this->runAsUser);
         }
         $host = $this->hostlib;
         $cwd = $this->instance->webroot;
@@ -157,21 +156,26 @@ class Local extends Access implements ShellPrompt
 
     public function createDirectory($path)
     {
-        $fs = new Filesystem();
-
-        try {
-            $fs->mkdir($path);
-        } catch (IOException $e) {
-            return false;
-        }
-
-        return true;
+        $options = ['-p', $path];
+        $command = $this->createCommand('mkdir', $options);
+        return $command->run()->getReturn() == 0;
     }
 
     public function fileExists($filename)
     {
         if (!$this->isLocalPath($filename)) {
             $filename = $this->instance->getWebPath($filename);
+        }
+
+        if (!empty($this->runAsUser)) {
+            $commandLine = sprintf(
+                "sudo -u %s test -e %s && echo 'exists'",
+                escapeshellarg($this->runAsUser),
+                escapeshellarg($filename)
+            );
+            $process = Process::fromShellCommandline($commandLine);
+            $process->run();
+            return trim($process->getOutput()) === 'exists';
         }
 
         return file_exists($filename);
@@ -183,7 +187,21 @@ class Local extends Access implements ShellPrompt
             $filename = $this->instance->getWebPath($filename);
         }
 
-        return @file_get_contents($filename);
+        if ($this->fileExists($filename)) {
+            if (! $this->runAsUser) {
+                return @file_get_contents($filename);
+            } else {
+                return $this->shellExec(
+                    sprintf(
+                        '%s -r %s',
+                        escapeshellarg($this->instance->phpexec),
+                        escapeshellarg("echo file_get_contents('" . escapeshellarg($filename). "');")
+                    )
+                );
+            }
+        }
+
+        return false;
     }
 
     public function fileModificationDate($filename)
@@ -192,7 +210,21 @@ class Local extends Access implements ShellPrompt
             $filename = $this->instance->getWebPath($filename);
         }
 
-        return date("Y-m-d", filemtime($filename));
+        if ($this->fileExists($filename)) {
+            if (! $this->runAsUser) {
+                return date("Y-m-d", filemtime($filename));
+            } else {
+                return $this->shellExec(
+                    sprintf(
+                        '%s -r %s',
+                        escapeshellarg($this->instance->phpexec),
+                        escapeshellarg("echo date('Y-m-d', filemtime('" . escapeshellarg($filename) . "'));")
+                    )
+                );
+            }
+        }
+
+        return false;
     }
 
     public function runPHP($localFile, $args = [])
@@ -258,8 +290,18 @@ class Local extends Access implements ShellPrompt
             $filename = $this->instance->getWebPath($filename);
         }
 
-        if (file_exists($filename)) {
-            @unlink($filename);
+        if ($this->fileExists($filename)) {
+            if (! $this->runAsUser) {
+                @unlink($filename);
+            } else {
+                $this->shellExec(
+                    sprintf(
+                        '%s -r %s',
+                        escapeshellarg($this->instance->phpexec),
+                        escapeshellarg("unlink('" . escapeshellarg($filename) . "');")
+                    )
+                );
+            }
         }
     }
 
@@ -272,7 +314,18 @@ class Local extends Access implements ShellPrompt
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
         }
 
-        rename($remoteSource, $remoteTarget);
+        if (empty($this->runAsUser)) {
+            rename($remoteSource, $remoteTarget);
+            return;
+        }
+
+        $this->shellExec(
+            sprintf(
+                '%s -r %s',
+                escapeshellarg($this->instance->phpexec),
+                escapeshellarg("rename('" . escapeshellarg($remoteSource) . "', '" . escapeshellarg($remoteTarget) . "');")
+            )
+        );
     }
 
     public function copyFile($remoteSource, $remoteTarget)
@@ -284,7 +337,18 @@ class Local extends Access implements ShellPrompt
             $remoteTarget = $this->instance->getWebPath($remoteTarget);
         }
 
-        copy($remoteSource, $remoteTarget);
+        if (empty($this->runAsUser)) {
+            copy($remoteSource, $remoteTarget);
+            return;
+        }
+
+        $this->shellExec(
+            sprintf(
+                '%s -r %s',
+                escapeshellarg($this->instance->phpexec),
+                escapeshellarg("copy('" . escapeshellarg($remoteSource) . "', '" . escapeshellarg($remoteTarget) . "');")
+            )
+        );
     }
 
     public function chdir($location)
@@ -324,6 +388,9 @@ class Local extends Access implements ShellPrompt
         if ($this->env) {
             $options['env'] = $this->env;
         }
+        if ($this->runAsUser) {
+            $options['webroot'] = $this->instance->webroot;
+        }
 
         $command = new Command($bin, $args, $stdin);
         $command->setOptions($options);
@@ -340,6 +407,9 @@ class Local extends Access implements ShellPrompt
         }
         if ($this->env) {
             $options['env'] = $this->env;
+        }
+        if ($this->runAsUser) {
+            $options['webroot'] = $this->instance->webroot;
         }
 
         return $command->run($host, $options);
@@ -393,10 +463,10 @@ class Local extends Access implements ShellPrompt
 
     public function isEmptyDir($path): bool
     {
-        $dirContents = scandir($path);
-        $dirContents = array_diff($dirContents, ['.','..']);
-
-        return empty($dirContents);
+        $command = $this->createCommand('ls', ['-A', $path]);
+        $runCommand = $command->run();
+        $output = trim($runCommand->getStdoutContent());
+        return empty($output);
     }
 
     /**

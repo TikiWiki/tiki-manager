@@ -129,6 +129,12 @@ class ImportInstanceCommand extends TikiManagerCommand
                 null,
                 InputOption::VALUE_NONE,
                 'Skip PHP minimum requirements check'
+            )
+            ->addOption(
+                'run-as-user',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'User to run commands as'
             );
 
         self::$nonInteractive = false;

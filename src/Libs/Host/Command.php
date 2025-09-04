@@ -23,6 +23,9 @@ class Command
     private $stderr;
     private $stdin;
     private $stdout;
+    private $sudoUser;
+    private $sudoWebroot;
+    private $accessType;
 
     /**
      * Construct a Command object
@@ -69,7 +72,42 @@ class Command
     {
         $command = $this->getArgs();
         array_unshift($command, $this->getCommand());
-        return join(' ', $command);
+        $fullCommand = join(' ', $command);
+
+        if (!empty($this->sudoUser)) {
+            $accessType = $this->getAccessType();
+            $localCmd = strpos($fullCommand, 'ssh') === false;
+            if (strpos($fullCommand, 'rsync') === 0) {
+                $prefix = $accessType === 'local' && $localCmd ? 'sudo ' : '';
+                $rsyncArgs = preg_split('/\s+/', $fullCommand);
+                $rsyncCmd = $prefix . array_shift($rsyncArgs);
+                $args = ["--rsync-path='sudo -u {$this->sudoUser} rsync'", "--chown='{$this->sudoUser}'"];
+                $rsyncArgs = array_merge($args, $rsyncArgs);
+                return implode(' ', array_merge([$rsyncCmd], $rsyncArgs));
+            }
+            if (!empty($this->sudoWebroot) && $accessType === 'local') {
+                $fullCommand = sprintf("cd %s && %s", $this->sudoWebroot, $fullCommand);
+            }
+            return sprintf("sudo -u %s sh -c %s", escapeshellarg($this->sudoUser), escapeshellarg($fullCommand));
+        }
+
+        return $fullCommand;
+    }
+
+    public function wrapWithSudo($user = null, $webroot = null)
+    {
+        $this->sudoUser = $user;
+        $this->sudoWebroot = $webroot;
+    }
+
+    public function setAccessType($type)
+    {
+        $this->accessType = $type;
+    }
+
+    public function getAccessType()
+    {
+        return $this->accessType ?? 'unknown';
     }
 
     /**

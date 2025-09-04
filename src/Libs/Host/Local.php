@@ -15,19 +15,42 @@ class Local
     private $env;
     private $last_command_exit_code = 0;
     private $location;
+    private $runAsUser;
     protected $io;
+    private static $sudoChecked = false;
 
-    public function __construct()
+    public function __construct(?string $runAsUser = null)
     {
         $_ENV['HTTP_ACCEPT_ENCODING'] = '';
         $this->env = $_ENV ?: [];
         $this->io = App::get('io');
+        $this->runAsUser = $runAsUser;
+        if ($this->runAsUser) {
+            $this->checkForSudo();
+        }
     }
 
     public function chdir($location)
     {
-        chdir($location);
+        if (empty($this->runAsUser)) {
+            chdir($location);
+        }
         $this->location = $location;
+    }
+
+    private function checkForSudo()
+    {
+        if (!self::$sudoChecked) {
+            $userInfo = posix_getpwuid(posix_geteuid());
+            $process = Process::fromShellCommandline("sudo -v");
+            $process->run();
+            $exitCode = $process->getExitCode();
+            $errorOutput = trim($process->getErrorOutput());
+            if ($exitCode && !empty($errorOutput)) {
+                throw new \Exception('User '. $userInfo['name'] . ' does not have sudo privileges.');
+            }
+            self::$sudoChecked = true;
+        }
     }
 
     public function setenv($var, $value)
@@ -44,6 +67,12 @@ class Local
     {
         $cwd = !empty($options['cwd']) ? $options['cwd'] : $this->location;
         $env = !empty($options['env']) ? $options['env'] : [];
+        $command->setAccessType('local');
+
+        if (!empty($this->runAsUser)) {
+            $webroot = isset($options['webroot']) ? rtrim($options['webroot'], "/") : null;
+            $command->wrapWithSudo($this->runAsUser, $webroot);
+        }
 
         $commandLine = $command->getFullCommand();
 
@@ -55,7 +84,7 @@ class Local
             $process->setInput($stdIn);
         }
 
-        if ($cwd) {
+        if ($cwd && empty($this->runAsUser)) {
             $process->setWorkingDirectory($cwd);
         }
 
@@ -86,18 +115,18 @@ class Local
         //       flag or a command. We have to change all calls to this function
         $commands = array_filter($commands, 'is_string');
 
-        $commandPrefix = '';
-        $commandPrefixArray = [];
-        if ($this->location) {
-            array_unshift($commandPrefixArray, 'cd ' . escapeshellarg($this->location));
-        }
-
         $contents = '';
         foreach ($commands as $cmd) {
-            $cmd = $commandPrefix . $cmd . ' 2>&1';
+            $command = new Command($cmd);
+            $command->setAccessType('local');
+            if (!empty($this->runAsUser)) {
+                $command->wrapWithSudo($this->runAsUser, $this->location ?? null);
+            }
+            $cmd = $command->getFullCommand() . ' 2>&1';
             debug(var_export($this->env, true) . "\n" . $cmd);
 
-            $process = Process::fromShellCommandline($cmd . ' 2>&1', $this->location, $this->env, null, $_ENV['COMMAND_EXECUTION_TIMEOUT']);
+            $cwd = empty($this->runAsUser) ? $this->location : null;
+            $process = Process::fromShellCommandline($cmd . ' 2>&1', $cwd, $this->env, null, $_ENV['COMMAND_EXECUTION_TIMEOUT']);
             $process->run();
 
             $result = $process->getOutput();
@@ -214,6 +243,16 @@ class Local
             escapeshellarg($args['src']),
             escapeshellarg($args['dest'])
         );
+
+        if ($this->runAsUser) {
+            $explodeArray = explode(' ', "sudo $command");
+            array_splice($explodeArray, 2, 0, [
+                "--rsync-path='sudo -u {$this->runAsUser} rsync'",
+                "--chown='{$this->runAsUser}'"
+            ]);
+            $command = implode(' ', $explodeArray);
+        }
+
         debug($command);
 
         $ph = popen($command, 'r');

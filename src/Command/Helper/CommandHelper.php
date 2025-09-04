@@ -56,6 +56,7 @@ class CommandHelper
                 'branch' => $instance->branch,
                 'revision' => $instance->revision,
                 'last_action' => $instance->last_action,
+                'run_user' => $instance->run_user,
                 'state' => $instance->state,
                 'last_action_date' => $instance->last_action_date,
                 'last_revision_date' => $instance->last_revision_date
@@ -143,6 +144,7 @@ class CommandHelper
             'Branch',
             'Revision',
             'Last Action',
+            'User',
             'Result',
             'Action Date',
             'Revision Date'

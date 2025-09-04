@@ -181,6 +181,12 @@ class CreateInstanceCommand extends TikiManagerCommand
                 'Skip PHP minimum requirements check'
             )
             ->addOption(
+                'run-as-user',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'User to run commands as'
+            )
+            ->addOption(
                 'revision',
                 'r',
                 InputOption::VALUE_OPTIONAL,

@@ -21,6 +21,7 @@ abstract class Access
     public $user;
     public $password;
     public $port;
+    protected $runAsUser;
 
     const SQL_SELECT_ACCESS = <<<SQL
 SELECT
@@ -46,6 +47,9 @@ SQL;
         $this->instance = $instance;
         $this->type = $type;
         $this->io = App::get('io');
+        if (!empty($instance->run_user)) {
+            $this->setRunAsUser($instance->run_user);
+        }
     }
 
     public static function getClassFor($type)
@@ -122,6 +126,16 @@ SQL;
         } else {
             return false;
         }
+    }
+
+    public function setRunAsUser($username)
+    {
+        $this->runAsUser = $username;
+    }
+
+    public function getRunAsUser()
+    {
+        return $this->runAsUser;
     }
 
     abstract public function firstConnect();

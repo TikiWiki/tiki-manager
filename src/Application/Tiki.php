@@ -871,18 +871,19 @@ class Tiki extends Application
 
         $access = $this->instance->getBestAccess('filetransfer');
         $access->uploadFile($tmp, 'db/local.php');
+        $runAsUser = $access->getRunAsUser() ?? 'www-data';
 
         $this->io->writeln('Setting db config file...');
         if ($access instanceof ShellPrompt) {
             $script = sprintf("chmod('%s', 0664);", "{$this->instance->webroot}/db/local.php");
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
 
-            // TODO: Hard-coding: 'apache:apache'
+            // Ownership is now set using the dynamic $runAsUser instead of hard-coded 'apache:apache'.
             // TODO: File ownership under the webroot should be configurable per instance.
-            $script = sprintf("chown('%s', 'apache');", "{$this->instance->webroot}/db/local.php");
+            $script = sprintf("chown('%s', '$runAsUser');", "{$this->instance->webroot}/db/local.php");
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
 
-            $script = sprintf("chgrp('%s', 'apache');", "{$this->instance->webroot}/db/local.php");
+            $script = sprintf("chgrp('%s', '$runAsUser');", "{$this->instance->webroot}/db/local.php");
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
         }
 

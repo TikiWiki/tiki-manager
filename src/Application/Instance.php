@@ -29,7 +29,7 @@ class Instance
 
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -41,7 +41,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -56,7 +56,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_NAME = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -84,7 +84,7 @@ SQL;
 
     const SQLQUERY_UPDATABLE_AND_UPGRADABLE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -140,9 +140,9 @@ SQL;
     const SQL_INSERT_INSTANCE = <<<SQL
 INSERT OR REPLACE INTO
     instance
-    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, phpversion, app, state)
+    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, phpversion, app, state, run_user)
 VALUES
-    (:id, :name, :contact, :web, :url, :temp, :phpexec, :phpversion, :app, :state)
+    (:id, :name, :contact, :web, :url, :temp, :phpexec, :phpversion, :app, :state, :run_user)
 ;
 SQL;
 
@@ -372,6 +372,7 @@ SQL;
     public $backup_group;
     public $backup_perm;
     public $vcs_type;
+    public $run_user;
     public $repo_url;
     public $branch;
     public $state;
@@ -540,6 +541,7 @@ SQL;
             ':phpexec' => $this->phpexec,
             ':phpversion' => $this->phpversion,
             ':app' => $this->app,
+            ':run_user' => $this->run_user,
             ':state' => $this->state
         ];
 
@@ -1323,11 +1325,10 @@ SQL;
         $access = $this->getBestAccess('scripting');
         $cmd = "{$this->phpexec} -q -d memory_limit=256M console.php index:rebuild --log";
         $cmd = $access->executeWithPriorityParams($cmd);
-        $command = new Command($cmd);
-        $data = $access->runCommand($command);
-        $output = $data->getStdoutContent();
+        $command = $access->createCommand($cmd)->run();
+        $output = trim($command->getStdoutContent());
         $_ENV['COMMAND_EXECUTION_TIMEOUT'] = $envExecTimeout;
-        return str_contains($output, 'Rebuilding index done') && $data->getReturn() == 0;
+        return str_contains($output, 'Rebuilding index done') && $command->getReturn() == 0;
     }
 
     public function getCronManager(): CrontabManager

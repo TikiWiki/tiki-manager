@@ -27,7 +27,7 @@ class SSH extends Access implements ShellPrompt
 
     public function getHost()
     {
-        $host = new SSHHost($this->host, $this->user, $this->port);
+        $host = new SSHHost($this->host, $this->user, $this->port, $this->runAsUser);
 
         // change cwd before executing commands, for instance in CoreOS it may influence what
         // php interpreter version is used to execute commands, if the dir is not available
@@ -399,7 +399,7 @@ class SSH extends Access implements ShellPrompt
         $dirContents = unserialize($output);
         $dirContents = array_diff($dirContents, ['.', '..']);
 
-        return array_values($dirContents);
+        return empty($dirContents);
     }
 
     /**

@@ -71,6 +71,12 @@ trait InstanceConfigure
 
         $access = $instance->getBestAccess();
 
+        $runAsUser = $this->input->getOption('run-as-user');
+        if ($runAsUser) {
+            $access->setRunAsUser($runAsUser);
+            $instance->run_user = $runAsUser;
+        }
+
         if ($type !== 'local') {
             $access = $this->setupRemoteAccess($access);
         }

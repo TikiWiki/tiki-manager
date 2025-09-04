@@ -11,6 +11,7 @@ use TikiManager\Config\App;
 class SSH
 {
     private static $sshKeyCheck = [];
+    private static $sudoCheckCache = [];
 
     private $adapter;
     private $location;
@@ -19,19 +20,24 @@ class SSH
     private $host;
     private $user;
     private $port;
+    private $runAsUser;
 
     private $copy_id_port_in_host;
 
     protected $io;
 
-    public function __construct($host, $user, $port, $adapter_class = null)
+    public function __construct($host, $user, $port, $runAsUser = null, $adapter_class = null)
     {
         $this->host = $host ?: '';
         $this->user = $user ?: '';
         $this->port = $port ?: 22;
+        $this->runAsUser = $runAsUser;
         $this->checkCopyId();
         $this->selectAdapter($adapter_class);
         $this->setenv('HTTP_ACCEPT_ENCODING', '');
+        if ($this->runAsUser) {
+            $this->checkForSudo();
+        }
 
         $this->io = App::get('io');
 
@@ -54,6 +60,21 @@ class SSH
     {
         $this->location = $location;
         $this->adapter->setLocation($location);
+    }
+
+    private function checkForSudo()
+    {
+        $sudoCheckId = $this->user . '@' . $this->host;
+        if (!isset(self::$sudoCheckCache[$sudoCheckId])) {
+            $command = new Command('sudo', ['-n', 'true']);
+            $command = $this->adapter->runCommand($command);
+            $exitCode = intval($command->getReturn());
+            if ($exitCode !== 0) {
+                $errMessage = $command->getStderrContent() ?: $command->getStdoutContent();
+                throw new \Exception($errMessage);
+            }
+            self::$sudoCheckCache[$sudoCheckId] = true;
+        }
     }
 
     public function checkCopyId()
@@ -178,7 +199,7 @@ class SSH
         $dest = $args['dest'];
         $port = $this->port ;
 
-        $localHost = new Local();
+        $localHost = new Local($this->runAsUser);
 
         // path may be escaped, in that case we un-escape, since we will escape after
         if (substr($src, 0, 1) === "'" && substr($src, -1) === "'"
@@ -245,13 +266,15 @@ class SSH
             $this->adapter = new $className(
                 $this->host,
                 $this->user,
-                $this->port
+                $this->port,
+                $this->runAsUser
             );
         } catch (\Exception $e) {
             $this->adapter = new SSHWrapperAdapter(
                 $this->host,
                 $this->user,
-                $this->port
+                $this->port,
+                $this->runAsUser
             );
             debug("Unable to use $className, falling back to SSHWrapperAdapter");
         }

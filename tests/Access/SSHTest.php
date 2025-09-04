@@ -36,7 +36,7 @@ class SSHTest extends TestCase
         $stub->method('createCommand')->willReturn($commandStub);
 
         $output = $stub->isEmptyDir('/tmp');
-        $this->assertEquals([], $output);
+        $this->assertTrue($output);
     }
 
     /**
@@ -62,11 +62,6 @@ class SSHTest extends TestCase
 
         $output = $stub->isEmptyDir('/tmp');
 
-        $expectedOutput = [
-            'demo',
-            'index.php'
-        ];
-
-        $this->assertEquals($expectedOutput, $output);
+        $this->assertFalse($output);
     }
 }

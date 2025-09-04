@@ -15,12 +15,14 @@ class SSHWrapperAdapter
     private $port;
     private $env;
     private $location;
+    private $runAsUser;
 
-    public function __construct($host, $user, $port)
+    public function __construct($host, $user, $port, $runAsUser = null)
     {
         $this->host = $host;
         $this->user = $user;
         $this->port = $port ?: 22;
+        $this->runAsUser = $runAsUser;
         $_ENV['HTTP_ACCEPT_ENCODING'] = '';
         $this->env  = $_ENV ?: [];
         $this->location = '';
@@ -93,6 +95,12 @@ class SSHWrapperAdapter
         $cwd = !empty($cwd) ? sprintf('cd %s;', $cwd) : '';
         $env = $this->prepareEnv($env);
 
+        $command->setAccessType('ssh');
+
+        if (!empty($this->runAsUser)) {
+            $command->wrapWithSudo($this->runAsUser, $cwd);
+        }
+
         $commandLine = $this->getCommandPrefix();
         $commandLine .= ' ';
         $commandLine .= escapeshellarg('set -e; ' .$env . $cwd . $command->getFullCommand());
@@ -123,26 +131,28 @@ class SSHWrapperAdapter
 
     public function runCommands($commands, $output = false)
     {
-        $key = $_ENV['SSH_KEY'];
-        $config = $_ENV['SSH_CONFIG'];
-
-        if ($this->location) {
-            array_unshift($commands, 'cd ' . escapeshellarg($this->location));
+        if (!is_array($commands)) {
+            $commands = func_get_args();
+            $commands = array_filter($commands, 'is_string');
         }
 
-        foreach ($this->env as $name => $value) {
-            array_unshift($commands, "export $name=$value");
+        $cwd = !empty($this->location) ? sprintf('cd %s;', $this->location) : '';
+        $env = $this->prepareEnv($this->env);
+
+        $fullShellCommand = implode(' && ', $commands);
+
+        $command = new Command($fullShellCommand);
+        $command->setAccessType('ssh');
+
+        if (!empty($this->runAsUser)) {
+            $command->wrapWithSudo($this->runAsUser, $cwd);
         }
 
-        $string = implode(' && ', $commands);
-        $fullCommand = escapeshellarg($string);
-
-        $port = $this->port != 22 ? " -p {$this->port} " : null;
-
-        $command = "ssh -i $key $port -F $config {$this->user}@{$this->host} $fullCommand";
-        $command .= ($output ? '' : ' 2>> '.$_ENV['TRIM_OUTPUT']);
-
-        $process = Process::fromShellCommandline($command)
+        $commandLine = $this->getCommandPrefix();
+        $commandLine .= ' ';
+        $commandLine .= escapeshellarg('set -e; ' . $env . $cwd . $command->getFullCommand());
+        $commandLine .= ($output ? '' : ' 2>> '.$_ENV['TRIM_OUTPUT']);
+        $process = Process::fromShellCommandline($commandLine)
             ->setTimeout(3600);
         $process->run();
 
@@ -151,7 +161,7 @@ class SSHWrapperAdapter
         $exitCode = $process->getExitCode();
 
         $out = (empty($output) ? '' : "\nOutput: $output") . (empty($error) ? '' : "\nError: $error");
-        trim_output('SSH [' . date('Y-m-d H:i:s') . '] ' . $fullCommand . ' - return: ' . $exitCode . $out);
+        trim_output('SSH [' . date('Y-m-d H:i:s') . '] ' . $commandLine . ' - return: ' . $exitCode . $out);
 
         return $output;
     }

@@ -80,6 +80,12 @@ class EditInstanceCommand extends TikiManagerCommand
                 'PHP binary to be used to manage the instance'
             )
             ->addOption(
+                'run-as-user',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'User to run commands as'
+            )
+            ->addOption(
                 'repo-url',
                 null,
                 InputOption::VALUE_REQUIRED,
@@ -228,6 +234,25 @@ class EditInstanceCommand extends TikiManagerCommand
                     $backup_perm = $input->getOption('backup-permission');
                 }
 
+                //Instance Run as user
+                if (empty($input->getOption('run-as-user'))) {
+                    $choices = ['Edit', 'Remove'];
+                    $run_user = null;
+                    do {
+                        $action = $this->io->choice('RunAsUser', $choices, $choices[0]);
+                        if (! in_array($action, $choices)) {
+                            $this->io->error('Please select a valid choice: Edit or Remove.');
+                            $action = null; // Reset action to null to continue the loop
+                        }
+                    } while ($action === null);
+
+                    if ($action === 'Edit') {
+                        $run_user = $this->io->ask('RunAsUser', $instance->run_user);
+                    }
+                } else {
+                    $run_user = $input->getOption('run-as-user');
+                }
+
                 $version = $instance->getLatestVersion();
 
                 //Instance Repository URL
@@ -267,6 +292,7 @@ class EditInstanceCommand extends TikiManagerCommand
                 $instance->backup_user = $backup_user;
                 $instance->backup_group = $backup_group;
                 $instance->backup_perm = octdec($backup_perm);
+                $instance->run_user = $run_user;
                 $instance->save();
 
                 $hookName->registerPostHookVars(['instance' => $instance]);

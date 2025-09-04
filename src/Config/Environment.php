@@ -586,6 +586,12 @@ class Environment
                     UPDATE info SET value = '18' WHERE name = 'version';
                 ");
             // no break
+            case 18:
+                $db->exec("
+                    ALTER TABLE instance ADD COLUMN run_user VARCHAR(32) DEFAULT NULL;
+                    UPDATE info SET value = '19' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

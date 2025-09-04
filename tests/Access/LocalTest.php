@@ -2,11 +2,10 @@
 
 namespace TikiManager\Tests\Access;
 
-use org\bovigo\vfs\vfsStream;
-use org\bovigo\vfs\vfsStreamDirectory;
-use org\bovigo\vfs\vfsStreamFile;
 use PHPUnit\Framework\TestCase;
 use TikiManager\Access\Local;
+use TikiManager\Application\Instance;
+use TikiManager\Libs\Host\Command;
 
 /**
  * Class LocalTest
@@ -20,12 +19,19 @@ class LocalTest extends TestCase
      */
     public function testIsEmptyDir()
     {
-        $vsfStream = vfsStream::setup('exampleDir');
+        $mockCommand = $this->createMock(Command::class);
+        $mockCommand->method('run')->willReturnSelf();
+        $mockCommand->method('getStdoutContent')->willReturn('');
+        $mockInstance = $this->createMock(Instance::class);
 
-        $stub = $this->createPartialMock(Local::class, []);
-        $output = $stub->isEmptyDir($vsfStream->url());
+        $stub = $this->getMockBuilder(Local::class)
+            ->setConstructorArgs([$mockInstance])
+            ->onlyMethods(['createCommand'])
+            ->getMock();
 
-        $this->assertTrue($output);
+        $stub->method('createCommand')->willReturn($mockCommand);
+
+        $this->assertTrue($stub->isEmptyDir('/some/fake/path'));
     }
 
     /**
@@ -33,14 +39,39 @@ class LocalTest extends TestCase
      */
     public function testIsNotEmptyDir()
     {
+        $mockCommand = $this->createMock(Command::class);
+        $mockCommand->method('run')->willReturnSelf();
+        $mockCommand->method('getStdoutContent')->willReturn('somefile.txt');
+        $mockInstance = $this->createMock(Instance::class);
 
-        $vsfStream = vfsStream::setup('exampleDir');
-        $vsfStream->addChild(new vfsStreamDirectory('demo'));
-        $vsfStream->addChild(new vfsStreamFile('index.php'));
+        $stub = $this->getMockBuilder(Local::class)
+            ->setConstructorArgs([$mockInstance])
+            ->onlyMethods(['createCommand'])
+            ->getMock();
 
-        $stub = $this->createPartialMock(Local::class, []);
-        $output = $stub->isEmptyDir($vsfStream->url());
+        $stub->method('createCommand')->willReturn($mockCommand);
 
-        $this->assertFalse($output);
+        $this->assertFalse($stub->isEmptyDir('/some/fake/path'));
+    }
+
+    /**
+     * @covers \TikiManager\Access\Local::createDirectory
+     */
+    public function testCreateDirectory()
+    {
+        $mockCommand = $this->createMock(Command::class);
+        $mockCommand->method('run')->willReturnSelf();
+        $mockCommand->method('getReturn')->willReturn(0);
+
+        $mockInstance = $this->createMock(Instance::class);
+
+        $stub = $this->getMockBuilder(Local::class)
+            ->setConstructorArgs([$mockInstance])
+            ->onlyMethods(['createCommand'])
+            ->getMock();
+
+        $stub->method('createCommand')->willReturn($mockCommand);
+
+        $this->assertTrue($stub->createDirectory('/some/dir/path'));
     }
 }

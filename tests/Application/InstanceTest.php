@@ -209,11 +209,13 @@ class InstanceTest extends TestCase
             ->willReturn('600');
 
         $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess', 'getApplication']);
+        $instanceMock->phpexec = '/usr/bin/php';
         $instanceMock->expects($this->once())
             ->method('getApplication')
             ->willReturn($tikiMock);
 
         $commandMock = $this->createMock(Command::class);
+        $commandMock->method('run')->willReturn($commandMock);
         $commandMock
             ->expects($this->once())
             ->method('getStdoutContent')
@@ -227,7 +229,14 @@ class InstanceTest extends TestCase
         $accessMock = $this->createMock(Local::class);
         $accessMock
             ->expects($this->once())
-            ->method('runCommand')
+            ->method('executeWithPriorityParams')
+            ->with($instanceMock->phpexec . ' -q -d memory_limit=256M console.php index:rebuild --log')
+            ->willReturn($instanceMock->phpexec . ' -q -d memory_limit=256M console.php index:rebuild --log');
+
+        $accessMock
+            ->expects($this->once())
+            ->method('createCommand')
+            ->with($instanceMock->phpexec . ' -q -d memory_limit=256M console.php index:rebuild --log')
             ->willReturn($commandMock);
 
         $instanceMock
@@ -250,11 +259,13 @@ class InstanceTest extends TestCase
             ->willReturn('600');
 
         $instanceMock = $this->createPartialMock(Instance::class, ['getBestAccess', 'getApplication']);
+        $instanceMock->phpexec = '/usr/bin/php';
         $instanceMock->expects($this->once())
             ->method('getApplication')
             ->willReturn($tikiMock);
 
         $commandMock = $this->createMock(Command::class);
+        $commandMock->method('run')->willReturn($commandMock);
         $commandMock
             ->expects($this->once())
             ->method('getStdoutContent')
@@ -268,7 +279,13 @@ class InstanceTest extends TestCase
         $accessMock = $this->createMock(Local::class);
         $accessMock
             ->expects($this->once())
-            ->method('runCommand')
+            ->method('executeWithPriorityParams')
+            ->with($instanceMock->phpexec . ' -q -d memory_limit=256M console.php index:rebuild --log')
+            ->willReturn($instanceMock->phpexec . ' -q -d memory_limit=256M console.php index:rebuild --log');
+        $accessMock
+            ->expects($this->once())
+            ->method('createCommand')
+            ->with($instanceMock->phpexec . ' -q -d memory_limit=256M console.php index:rebuild --log')
             ->willReturn($commandMock);
 
         $instanceMock
