@@ -49,10 +49,15 @@ class Checksum
                     "(V)iew files",
                     "(D)elete files",
                     "(A)dd files to valid list",
-                    "(S)kip"
+                    "(S)kip",
+                    "(E)xit"
                 ]);
-                $input = $io->ask('(a0 to add file 0. Or a0-3 to add files 0 to 3)');
-            } while ((strlen($input) == 0) || (stripos('pvdas', $input[0]) === false));
+                $input = $io->ask('(a0 to add file 0. Or a0-3 to add files 0 to 3, or e to exit)');
+                if (strtolower($input[0] ?? '') === 'e') {
+                    $io->writeln('<comment>Command terminated.</comment>');
+                    exit(0);
+                }
+            } while ((strlen($input) == 0) || (stripos('pvdas', strtolower($input[0])) === false));
 
             $op = strtolower($input[0]);
             $files = getEntries($newFlat, $input);
@@ -115,7 +120,7 @@ class Checksum
             $io->newLine(2);
 
             $input = 'z';
-            while (stripos('pvcerus', $input[0]) === false) {
+            do {
                 $io->writeln("<comment>What do you want to do about it?</comment>");
                 $io->listing([
                     "(P)rint list again",
@@ -124,10 +129,15 @@ class Checksum
                     "(E)dit files in place",
                     "(R)eplace with version in repository",
                     "(U)pdate hash to accept file version",
-                    "(S)kip"
+                    "(S)kip",
+                    "(E)xit command"
                 ]);
-                $input = $io->ask('(e.g. v0 to view file 0)');
-            }
+                $input = $io->ask('(e.g. v0 to view file 0, or e to exit)');
+                if (strtolower($input[0] ?? '') === 'e') {
+                    $io->writeln('<comment>Command terminated.</comment>');
+                    exit(0);
+                }
+            } while ((strlen($input) == 0) || (stripos('pvcrus', strtolower($input[0])) === false));
 
             $op = strtolower($input[0]);
             $files = getEntries($modFlat, $input);
@@ -229,15 +239,20 @@ class Checksum
             $io->newLine(2);
 
             $input = 'z';
-            while (stripos('drs', $input[0]) === false) {
+            do {
                 $io->writeln("<comment>What do you want to do about it?</comment>");
                 $io->listing([
                     "(R)estore version in repository",
                     "(D)elete hash to accept file removal",
-                    "(S)kip"
+                    "(S)kip",
+                    "(E)xit command"
                 ]);
-                $input = $io->ask('(e.g. r0 to restore file 0)');
-            }
+                $input = $io->ask('(e.g. r0 to restore file 0, or e to exit)');
+                if (strtolower($input[0] ?? '') === 'e') {
+                    $io->writeln('<comment>Command terminated.</comment>');
+                    exit(0);
+                }
+            } while ((strlen($input) == 0) || (stripos('drs', strtolower($input[0])) === false));
 
             $op = strtolower($input[0]);
             $files = getEntries($delFlat, $input);

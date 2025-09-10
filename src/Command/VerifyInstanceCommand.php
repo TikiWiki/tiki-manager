@@ -126,7 +126,7 @@ class VerifyInstanceCommand extends TikiManagerCommand
 
                         $question = new ChoiceQuestion(
                             'Please select an option to apply:',
-                            ['current', 'source', 'skip'],
+                            ['current', 'source', 'skip', 'exit'],
                             null
                         );
                         $question->setErrorMessage('Option %s is invalid.');
@@ -139,17 +139,28 @@ class VerifyInstanceCommand extends TikiManagerCommand
                         $option = $updateFromOption;
                     }
 
+                    if ($option == 'exit') {
+                        $this->io->writeln('<comment>Command terminated.</comment>');
+                        return 0;
+                    }
+
                     if ($option == 'skip') {
+                        $this->io->writeln('<comment>Skipping checksum update for this instance.</comment>');
                         continue;
                     }
 
                     switch ($option) {
                         case 'source':
+                            $this->io->writeln('<info>Collecting checksums from source...</info>');
                             $version->collectChecksumFromSource($instance);
-                            Checksum::handleCheckResult($instance, $version, $version->performCheck($instance));
+                            $checkResult = $version->performCheck($instance);
+                            Checksum::handleCheckResult($instance, $version, $checkResult);
+                            $this->io->writeln('<fg=green>Successfully collected and verified checksums from source.</>');
                             break;
                         case 'current':
+                            $this->io->writeln('<info>Collecting checksums from current instance...</info>');
                             $version->collectChecksumFromInstance($instance);
+                            $this->io->writeln('<fg=green>Successfully collected checksums from current instance.</>');
                             break;
                     }
                 }

@@ -195,6 +195,10 @@ class CommandHelper
             [
                 'skip',
                 'Do nothing'
+            ],
+            [
+                'exit',
+                'Terminate the command'
             ]
         ];
 
