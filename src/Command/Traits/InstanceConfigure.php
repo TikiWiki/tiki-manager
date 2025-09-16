@@ -98,6 +98,51 @@ trait InstanceConfigure
     }
 
     /**
+     * Asks for the package setup mode and handles environment defaults
+     *
+     * @param Instance $instance
+     * @return Instance
+     * @throws \Exception
+     */
+    protected function setupPackageInstallMode(Instance $instance)
+    {
+        $defaultPackageSetupMode = Instance::PACKAGE_SETUP_INSTANCE;
+        $existingPackageSetupModes = [Instance::PACKAGE_SETUP_CACHE, Instance::PACKAGE_SETUP_INSTANCE];
+
+        $packageSetupMode = $this->input->getOption('package-setup');
+        $envPackageSetupMode = Env::getInstance()->get('DEFAULT_PACKAGE_SETUP');
+
+        if ($packageSetupMode && in_array($packageSetupMode, $existingPackageSetupModes)) {
+            $instance->package_setup_mode = $packageSetupMode;
+            return $instance;
+        }
+
+        if (! $this->input->isInteractive()) {
+            if ($envPackageSetupMode && in_array($envPackageSetupMode, $existingPackageSetupModes)) {
+                $instance->package_setup_mode = $envPackageSetupMode;
+            } else {
+                $instance->package_setup_mode = $defaultPackageSetupMode;
+            }
+            return $instance;
+        }
+
+        $setupMode = $this->io->ask(
+            'Package setup mode (' . Instance::PACKAGE_SETUP_CACHE . '/' . Instance::PACKAGE_SETUP_INSTANCE . ')',
+            $envPackageSetupMode ?? $defaultPackageSetupMode,
+            function ($value) use ($existingPackageSetupModes) {
+                if (! empty($value) && ! in_array($value, $existingPackageSetupModes)) {
+                    throw new InvalidOptionException('Invalid package setup mode');
+                }
+                return $value;
+            }
+        );
+
+        $instance->package_setup_mode = $setupMode;
+
+        return $instance;
+    }
+
+    /**
      * @param Access $access
      * @return Access|FTP|SSH
      * @throws \Exception

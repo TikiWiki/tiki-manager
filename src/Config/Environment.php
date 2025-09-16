@@ -592,6 +592,12 @@ class Environment
                     UPDATE info SET value = '19' WHERE name = 'version';
                 ");
             // no break
+            case 19:
+                $db->exec("
+                    ALTER TABLE instance ADD COLUMN package_setup_mode VARCHAR(10) DEFAULT 'instance';
+                    UPDATE info SET value = '20' WHERE name = 'version';
+                ");
+            // no break
         }
     }
 

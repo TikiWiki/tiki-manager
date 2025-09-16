@@ -368,6 +368,10 @@ Your requirements could not be resolved to an installable set of packages.');
                 true, // 'composer.json'
                 false  // 'vendor/autoload.php'
             ));
+        $accessStub
+            ->method('fileGetContents')
+            ->with('composer.json')
+            ->willReturn(json_encode(['require' => ['some/package' => '^1.0']]));
 
         $appStub = $this->createMock(Tiki::class);
         $appStub->method('getBaseVersion')->willReturn('master');
@@ -411,7 +415,7 @@ Your requirements could not be resolved to an installable set of packages.');
         $accessStub = $this->createMock(Local::class);
 
         $accessStub
-            ->expects($this->exactly(2))
+            ->expects($this->exactly(1))
             ->method('shellExec')
             ->willReturn(null);
 
@@ -471,7 +475,7 @@ Your requirements could not be resolved to an installable set of packages.');
         $accessStub = $this->createMock(Local::class);
 
         $accessStub
-            ->expects($this->exactly(3))
+            ->expects($this->exactly(1))
             ->method('shellExec')
             ->willReturn(null);
 

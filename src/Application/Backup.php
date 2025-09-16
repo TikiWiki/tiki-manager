@@ -34,6 +34,9 @@ class Backup
     protected $backupDirname;
     protected $backupRoot;
     protected $errors;
+    /**
+     * @var Instance
+     */
     protected $instance;
     protected $workpath;
     protected $direct;

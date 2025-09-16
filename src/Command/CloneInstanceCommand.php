@@ -438,26 +438,20 @@ class CloneInstanceCommand extends TikiManagerCommand
         $this->io->section('Pre-check');
         $this->io->writeln('Executing pre-check operations...');
 
-        $directWarnMessage = 'Direct backup cannot be used, instance {instance_name} is ftp.';
-        // Check if direct flag can be used
-        if ($direct && $sourceInstance->type == 'ftp') {
-            $direct = false;
-            $this->logger->warning($directWarnMessage, ['instance_name' => $sourceInstance->name]);
-        }
-
         if ($direct) {
             foreach ($targetInstances as $destinationInstance) {
-                if ($destinationInstance->type == 'ssh' && $sourceInstance->type == 'ssh') {
-                    $directWarnMessage = 'Direct backup cannot be used, instance {source_name} and instance {target_name} are both ssh.';
+                $isBothSSH = $destinationInstance->type == 'ssh' && $sourceInstance->type == 'ssh';
+                $isBothFTP = $destinationInstance->type == 'ftp' && $sourceInstance->type == 'ftp';
+                if ($isBothSSH || $isBothFTP) {
+                    $directWarnMessage = "Direct backup cannot be used, instance {source_name} and instance {target_name} are both $sourceInstance->type.";
                     $this->logger->warning(
                         $directWarnMessage,
                         ['target_name' => $destinationInstance->name, 'source_name' => $sourceInstance->name]
                     );
                     $direct = false;
                     break;
-                }
-
-                if ($destinationInstance->type == 'ftp') {
+                } elseif ($destinationInstance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE)) {
+                    $directWarnMessage = 'Direct backup cannot be used, instance {instance_name} is in cache mode.';
                     $this->logger->warning($directWarnMessage, ['instance_name' => $destinationInstance->name]);
                     $direct = false;
                     break;
@@ -492,7 +486,7 @@ class CloneInstanceCommand extends TikiManagerCommand
                 try {
                     $destinationInstance->app = $sourceInstance->app; // Required to setup database connection
                     $destinationInstance->copy_errors = $input->getOption('copy-errors') ?: 'ask';
-                    if (! $setupTargetDatabase && ! $this->input->isInteractive() && ! $this->testExistingDbConnection($destinationInstance)) {
+                    if (! $setupTargetDatabase && ! $this->input->isInteractive() && ! $destinationInstance->testDbConnection()) {
                         throw new Exception('Existing database configuration failed to connect.');
                     }
 

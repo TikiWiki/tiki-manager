@@ -15,11 +15,13 @@ use TikiManager\Application\Discovery\VirtualminDiscovery;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Application\Tiki\Versions\Fetcher\YamlFetcher;
 use TikiManager\Application\Tiki\Versions\TikiRequirementsHelper;
+use TikiManager\Command\Helper\CommandHelper;
 use TikiManager\Config\App;
 use TikiManager\Config\Environment;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\Host\Exception\CommandException;
+use TikiManager\Libs\Host\Local as LocalHost;
 use TikiManager\Libs\VersionControl\Git;
 use TikiManager\Libs\VersionControl\Src;
 
@@ -146,12 +148,46 @@ class Tiki extends Application
             $this->vcs_instance->checkoutBranch($folder, $version->branch, $revision);
         }
 
+        // Revert any existing changes to get a clean state before package installation
+        $this->vcs_instance->revert($folder);
+
+        $existingPlatformPhp = false;
+        if ($this->instance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE)) {
+            $phpVersion = $this->instance->phpversion;
+            $remotePhpVersion = CommandHelper::formatPhpVersion(intval($phpVersion), '%d.%d');
+            $existingPlatformPhp = $this->updateComposerPlatformConfig($folder, $remotePhpVersion, 'vendor_bundled');
+        }
+
         $this->io->writeln('Installing composer dependencies on cache repository... <fg=yellow>[may take a while]</>');
         $composerCmd = Process::fromShellCommandline("composer install -d $folder/vendor_bundled/ --no-interaction --prefer-dist --no-dev --quiet", null, null, null, 1800);
         $composerCmd->run();
 
+        if ($this->instance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE) && $existingPlatformPhp) {
+            $this->updateComposerPlatformConfig($folder, $existingPlatformPhp, 'vendor_bundled');
+        }
+
         if ($composerCmd->getExitCode() !== 0) {
             $this->io->warning($composerCmd->getErrorOutput());
+        }
+
+        $baseVersion = $version->getBaseVersion();
+
+        if ($baseVersion >= 27 || $baseVersion == 'master') {
+            $this->io->writeln('Installing NPM dependencies on cache repository... <fg=yellow>[may take a while]</>');
+            $npmCommand = Process::fromShellCommandline("cd $folder && npm install --clean-install --engine-strict", null, null, null, 1800);
+            $npmCommand->run();
+
+            if ($npmCommand->getExitCode() !== 0) {
+                $this->io->warning($npmCommand->getErrorOutput());
+            }
+
+            $this->io->writeln('NPM, Building artifacts (JS/CSS) on cache repository... <fg=yellow>[may take a while]</>');
+            $npmBuildCommand = Process::fromShellCommandline("cd $folder && npm run build", null, null, null, 1800);
+            $npmBuildCommand->run();
+
+            if ($npmBuildCommand->getExitCode() !== 0) {
+                $this->io->warning($npmBuildCommand->getErrorOutput());
+            }
         }
 
         $this->vcs_instance->setRunLocally(false);
@@ -517,53 +553,48 @@ class Tiki extends Application
      */
     public function install(Version $version, $checksumCheck = false, $revision = null)
     {
-        $access = $this->instance->getBestAccess('scripting');
-        $host = $access->getHost();
-
         $folder = cache_folder($this, $version);
         $this->extractTo($version, $folder, $revision);
 
         $this->io->writeln('<info>Installing Tiki ' . $version->branch . ' using ' . $version->type . '</info>');
 
-        if ($access instanceof ShellPrompt) {
-            $this->io->writeln('Copying files to webroot folder...');
-            if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
-                $host->windowsSync(
-                    $folder,
-                    $this->instance->webroot,
-                    null,
-                    ['.svn/tmp']
-                );
-            } else {
-                $host->rsync([
-                    'src' => rtrim($folder, '/') . '/',
-                    'dest' => rtrim($this->instance->webroot, '/') . '/',
-                    'exclude' => ['.phpenv'],
-                    'copy-errors' => $this->instance->copy_errors
-                ]);
-            }
+        $tempInstance = null;
+        if ($this->instance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE)) {
+            $this->io->writeln("Initializing temp instance ...");
+            $tempInstance = $this->instance->getTempInstance();
+            $this->io->writeln('Copying files from cache to temp instance folder...');
+            $this->copyFilesToWebRoot($folder, $tempInstance->webroot, true);
         } else {
-            $access->copyLocalFolder($folder);
+            $this->io->writeln('Copying files from cache to webroot folder...');
+            $this->copyFilesToWebRoot($folder);
         }
 
         $this->branch = $version->branch;
         $this->installType = $version->type;
-        $this->installed = true;
 
-        $version = $this->registerCurrentInstallation();
-        $this->installComposer();
+        if (!$tempInstance) {
+            $this->installed = true;
+            $version = $this->registerCurrentInstallation();
+        }
+
+        $this->performCleanupForPackages($tempInstance);
+        $this->installComposer($tempInstance);
 
         // Failure is acceptable in this case
         try {
-            // fix permissions does not return a proper exit code if composer fails
-            $this->installComposerDependencies();
-            $this->installNodeJsDependencies();
+            $this->installComposerDependencies($tempInstance);
+            $this->installTikiPackages(false, $tempInstance);
+            $this->installNodeJsDependencies($tempInstance);
         } catch (\Exception $e) {
             $this->io->warning($e->getMessage() . ' - You may need to fix manually.');
         }
 
-        // Failure is acceptable in this case, which is already handled within the method
-        $this->installTikiPackages();
+        if ($tempInstance && $this->instance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE)) {
+            $this->io->writeln('Copying files from temp instance to instance webroot folder...');
+            $this->copyFilesToWebRoot($tempInstance->webroot);
+            $this->installed = true;
+            $version = $this->registerCurrentInstallation();
+        }
 
         // Failure is acceptable in this case, which is already handled within the method
         $this->fixPermissions();
@@ -591,18 +622,70 @@ class Tiki extends Application
     }
 
     /**
+     * cleanup composer and npm dependencies
+     * @param Instance|null $instance
+     */
+    public function performCleanupForPackages(?Instance $instance = null)
+    {
+        $instance = $instance ?? $this->instance;
+        if (empty($instance->webroot)) {
+            return;
+        }
+        $webRoot = rtrim($instance->webroot, '/');
+        $access = $instance->getBestAccess('scripting');
+        $command = $access->createCommand("rm -rf $webRoot/vendor_bundled/vendor $webRoot/node_modules");
+        $command->run();
+        return $command->getReturn();
+    }
+
+    /**
+     * Copy files
+     * @param string $src [cache, temp]
+     * @param string|null $dest [real, temp]
+     * @param bool $isLocalRsync [set when copying files withing the tiki-manager (i.e., cache to temp)]
+     * @param bool $download [set when copying files from remote to local]
+     */
+    public function copyFilesToWebRoot($src, ?string $dest = null, $isLocalRsync = false, $download = false)
+    {
+        $dest = $dest ?? $this->instance->webroot;
+        $access = $this->instance->getBestAccess('scripting');
+        $host = $isLocalRsync ? new LocalHost() : $access->getHost();
+
+        if ($access instanceof ShellPrompt) {
+            if (ApplicationHelper::isWindows() && $this->instance->type == 'local') {
+                $host->windowsSync(
+                    $src,
+                    $dest,
+                    null,
+                    ['.svn/tmp']
+                );
+            } else {
+                $host->rsync([
+                    'src' => rtrim($src, '/') . '/',
+                    'dest' => rtrim($dest, '/') . '/',
+                    'exclude' => ['.phpenv'],
+                    'copy-errors' => $this->instance->copy_errors,
+                    'download' => $download,
+                ]);
+            }
+        } else {
+            $access->copyLocalFolder($src);
+        }
+    }
+
+    /**
      * Try to apply all instance defined patches
      */
-    public function applyPatches()
+    public function applyPatches(?Instance $tempInstance = null, ?array $patches = null)
     {
-        $patches = Patch::getPatches($this->instance->getId());
+        $patches = $patches ?? Patch::getPatches($this->instance->getId());
         foreach ($patches as $patch) {
             try {
                 $this->applyPatch($patch, [
                     'skip-reindex' => true,
                     'skip-cache-warmup' => true,
                     'skip-post-install' => true,
-                ]);
+                ], $tempInstance);
             } catch (\Exception $e) {
                 continue;
             }
@@ -613,9 +696,10 @@ class Tiki extends Application
      * Applies a gitlab/github/maildir formatted patch to an instance
      * @throws Exception
      */
-    public function applyPatch(Patch $patch, $options)
+    public function applyPatch(Patch $patch, $options, ?Instance $tempInstance = null)
     {
-        $access = $this->instance->getBestAccess('scripting');
+        $instance = $tempInstance ?: $this->instance;
+        $access = $instance->getBestAccess('scripting');
         $vcsType = $this->vcs_instance->getIdentifier();
         $can_patch = $access->hasExecutable('patch');
 
@@ -635,18 +719,18 @@ class Tiki extends Application
         $local = tempnam($_ENV['TEMP_FOLDER'], 'patch');
         file_put_contents($local, $patch_contents);
 
-        $filename = $this->instance->getWorkPath(basename($local));
+        $filename = $instance->getWorkPath(basename($local));
         $access->uploadFile($local, $filename);
 
         if ($patch->package == 'tiki') {
-            $access->chdir($this->instance->webroot);
+            $access->chdir($instance->webroot);
         } else {
             // For packages installed via Tiki Package Manager
             $folder = 'vendor/';
             if (substr($patch->package, 0, strlen($folder)) === $folder) {
-                $access->chdir($this->instance->getWebPath($patch->package));
+                $access->chdir($instance->getWebPath($patch->package));
             } else {
-                $access->chdir($this->instance->getWebPath('vendor_bundled/vendor/'.$patch->package));
+                $access->chdir($instance->getWebPath('vendor_bundled/vendor/'.$patch->package));
             }
         }
 
@@ -699,6 +783,87 @@ class Tiki extends Application
         return $result;
     }
 
+    /**
+     * Try to revert all instance defined patches
+     */
+    public function revertPatches(?Instance $tempInstance = null)
+    {
+        $patches = Patch::getPatches($this->instance->getId());
+        foreach ($patches as $patch) {
+            try {
+                $this->revertPatch($patch, $tempInstance);
+            } catch (\Exception $e) {
+                $this->io->warning("Failed to revert patch {$patch->url}: {$e->getMessage()}");
+            }
+        }
+    }
+
+    /**
+     * Reverts a gitlab/github/maildir formatted patch to an instance
+     * @throws Exception
+     */
+    public function revertPatch(Patch $patch, ?Instance $tempInstance = null): bool
+    {
+        $instance = $tempInstance ?: $this->instance;
+        $access = $instance->getBestAccess('scripting');
+
+        if (! $access instanceof ShellPrompt) {
+            throw new \Exception('Shell access is required to revert patches.');
+        }
+
+        if (! $access->hasExecutable('patch')) {
+            throw new \Exception('patch binary not found in the target environment.');
+        }
+
+        $patch_contents = file_get_contents($patch->url);
+        if (empty($patch_contents)) {
+            throw new \Exception("Patch file is empty or cannot be downloaded: {$patch->url}");
+        }
+
+        $local = tempnam($_ENV['TEMP_FOLDER'], 'revert_patch');
+        file_put_contents($local, $patch_contents);
+
+        $filename = $instance->getWorkPath(basename($local));
+        $access->uploadFile($local, $filename);
+
+        // Position to correct working directory
+        if ($patch->package === 'tiki') {
+            $access->chdir($instance->webroot);
+        } elseif (strpos($patch->package, 'vendor/') === 0) {
+            $access->chdir($instance->getWebPath($patch->package));
+        } else {
+            $access->chdir($instance->getWebPath('vendor_bundled/vendor/' . $patch->package));
+        }
+
+        // Dry-run reverse to check if patch is actually applied
+        $checkCmd = $access->createCommand('patch', ['-R', '-p1', '-s', '-f', '--dry-run'], $patch_contents);
+        $checkCmd->run();
+
+        if ($checkCmd->getReturn() !== 0) {
+            $this->io->writeln("Patch already reverted or not applicable: {$patch->url}");
+            $access->deleteFile($filename);
+            @unlink($local);
+            return false;
+        }
+
+        // Actually revert the patch
+        $revertCmd = $access->createCommand('patch', ['-R', '-p1', '-s', '-f'], $patch_contents);
+        $revertCmd->run();
+
+        $access->deleteFile($filename);
+        @unlink($local);
+
+        $success = $revertCmd->getReturn() === 0;
+
+        if (! $success) {
+            $this->io->warning("Failed to revert patch: {$patch->url}");
+        } else {
+            $this->io->writeln("Reverted patch: {$patch->url}");
+        }
+
+        return $success;
+    }
+
     public function isInstalled()
     {
         if (! is_null($this->installed)) {
@@ -717,21 +882,33 @@ class Tiki extends Application
         $vcsType = $this->vcs_instance->getIdentifier();
         $can_git = $access->hasExecutable('git') && $vcsType == 'GIT';
         $revision = $options['revision'] ?? null;
+        $tempInstance = null;
+
+        $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
+        $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
+
+        $lag = $options['lag'] ?? 0;
 
         if ($access instanceof ShellPrompt && ($can_git || $vcsType === 'SRC')) {
-            $escaped_root_path = escapeshellarg(rtrim($this->instance->webroot, '/\\'));
-            $escaped_temp_path = escapeshellarg(rtrim($this->instance->getWebPath('temp'), '/\\'));
-            $escaped_cache_path = escapeshellarg(rtrim($this->instance->getWebPath('temp/cache'), '/\\'));
+            if ($this->instance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE)) {
+                $this->io->writeln('Initializing temp instance...');
+                $tempInstance = $this->instance->getTempInstance();
+                $this->io->writeln('Copying instance webroot to instance temp folder...');
+                $this->copyFilesToWebRoot($this->instance->webroot, $tempInstance->webroot, false, true);
+                $this->io->writeln("Reverting patches to {$tempInstance->name}...");
+                $this->revertPatches($tempInstance);
+                $this->vcs_instance->setRunLocally(true);
+                $this->vcs_instance->update($tempInstance->webroot, $version->branch, $lag, $revision);
+            } else {
+                if ($vcsType === 'SRC') {
+                    $version->branch = $this->vcs_instance->getBranchToUpdate($version->branch);
+                }
 
-            if ($vcsType === 'SRC') {
-                $version->branch = $this->vcs_instance->getBranchToUpdate($version->branch);
-            }
-
-            $lag = $options['lag'] ?? 0;
-            $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag, $revision);
-            foreach ([$escaped_temp_path, $escaped_cache_path] as $path) {
-                $script = sprintf('chmod(%s, 0777);', $path);
-                $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+                $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag, $revision);
+                foreach ([$escaped_temp_path, $escaped_cache_path] as $path) {
+                    $script = sprintf('chmod(%s, 0777);', $path);
+                    $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+                }
             }
         } elseif ($access instanceof Mountable) {
             if ($revision) {
@@ -742,13 +919,14 @@ class Tiki extends Application
             $access->copyLocalFolder($folder);
         }
 
-        $this->postInstall($options);
+        $this->postInstall($options, $tempInstance);
     }
 
     public function performActualUpgrade(Version $version, $options = [])
     {
         $access = $this->instance->getBestAccess('scripting');
         $can_git = $access->hasExecutable('git') && $this->vcs_instance->getIdentifier() == 'GIT';
+        $tempInstance = null;
         $revision = $options['revision'] ?? null;
 
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
@@ -759,15 +937,26 @@ class Tiki extends Application
 
         $lag = $options['lag'] ?? 0;
 
-        $this->clearCache();
-        $this->moveVendor();
-        $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag, $revision);
-        foreach (['temp', 'temp/cache'] as $path) {
-            $script = sprintf('chmod(%s, 0777);', $path);
-            $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+        if ($this->instance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE)) {
+            $this->io->writeln('Initializing temp instance...');
+            $tempInstance = $this->instance->getTempInstance();
+            $this->io->writeln('Copying instance webroot to instance temp folder...');
+            $this->copyFilesToWebRoot($this->instance->webroot, $tempInstance->webroot, false, true);
+            $this->io->writeln("Reverting patches to {$tempInstance->name}...");
+            $this->revertPatches($tempInstance);
+            $this->vcs_instance->setRunLocally(true);
+            $this->vcs_instance->update($tempInstance->webroot, $version->branch, $lag, $revision);
+        } else {
+            $this->clearCache();
+            $this->moveVendor();
+            $this->vcs_instance->update($this->instance->webroot, $version->branch, $lag, $revision);
+            foreach (['temp', 'temp/cache'] as $path) {
+                $script = sprintf('chmod(%s, 0777);', $path);
+                $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
+            }
         }
 
-        $this->postInstall($options);
+        $this->postInstall($options, $tempInstance);
     }
 
     public function removeTemporaryFiles()
@@ -1009,9 +1198,12 @@ TXT;
         return $options;
     }
 
-    public function installComposer()
+    public function installComposer(?Instance $tempInstance = null)
     {
-        if ($this->instance->getBestAccess()->fileExists('temp/composer.phar')) {
+        $instance = $tempInstance ?? $this->instance;
+        $access = $instance->getBestAccess('scripting');
+
+        if ($access->fileExists('temp/composer.phar')) {
             return;
         }
 
@@ -1029,7 +1221,7 @@ TXT;
             $fs->rename($path, $cacheFile);
         }
 
-        $this->instance->getBestAccess()->uploadFile($cacheFile, 'temp/composer.phar');
+        $access->uploadFile($cacheFile, 'temp/composer.phar');
     }
 
     /**
@@ -1038,11 +1230,11 @@ TXT;
      * @return null
      * @throws \Exception
      */
-    public function installComposerDependencies()
+    public function installComposerDependencies(?Instance $tempInstance = null)
     {
         $this->io->writeln('Installing composer dependencies... <fg=yellow>[may take a while]</>');
 
-        $instance = $this->instance;
+        $instance = $tempInstance ?? $this->instance;
         $access = $instance->getBestAccess('scripting');
 
         if ($instance->type === 'local' && !getenv('COMPOSER_HOME') && PHP_SAPI !== 'cli') {
@@ -1067,7 +1259,7 @@ TXT;
         $commandOutput = $command->getStderrContent() ?: '';
         $commandOutput .= $command->getStdoutContent();
 
-        $bundled =  $this->supportsVendorBundled() ? 'vendor_bundled/' : '';
+        $bundled = $this->supportsVendorBundled($tempInstance) ? 'vendor_bundled/' : '';
 
         if ($command->getReturn() !== 0 ||
             !$access->fileExists($bundled . 'vendor/autoload.php') ||
@@ -1082,26 +1274,51 @@ TXT;
         }
     }
 
-    public function installTikiPackages(bool $update = false)
+    public function updateComposerPlatformConfig($folder, $phpVersion, $composerType = 'vendor_bundled')
     {
-        $instance = $this->instance;
+        $composerFilePath = $folder . ($composerType === 'vendor_bundled' ? '/vendor_bundled/composer.json' : '/composer.json');
+        if (!file_exists($composerFilePath) || !$folder) {
+            return false;
+        }
+
+        $composerConfig = json_decode(file_get_contents($composerFilePath), true);
+        $existingPlatformPhp = $composerConfig['config']['platform']['php'];
+        $composerConfig['config']['platform']['php'] = "{$phpVersion}";
+
+        if (file_put_contents($composerFilePath, json_encode($composerConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {
+            return $existingPlatformPhp;
+        }
+
+        return false;
+    }
+
+    public function installTikiPackages(bool $update = false, ?Instance $tempInstance = null)
+    {
+        $instance = $tempInstance ?? $this->instance;
         $access = $instance->getBestAccess();
 
-        if (!$this->supportsTikiPackages() || !$access->fileExists('composer.json')) {
+        if (!$this->supportsTikiPackages($tempInstance) || !$access->fileExists('composer.json')) {
+            return;
+        }
+
+        $composerJsonContent = $access->fileGetContents('composer.json');
+        $composerJsonContent = json_decode($composerJsonContent, true);
+        if (empty($composerJsonContent['require'])) {
+            $this->io->writeln('There are no Tiki packages are available to install, skipping...');
             return;
         }
 
         $msg = ($update ? 'Updating' : 'Installing') . ' Tiki Packages... <fg=yellow>[may take a while]</>';
         $this->io->writeln($msg);
 
-        if ($update && $this->updateTikiPackages()) {
+        if ($update && $this->updateTikiPackages($tempInstance)) {
             return;
         }
 
         $action = $update ? 'update' : 'install';
 
         $command = $access->createCommand(
-            $this->instance->phpexec,
+            $instance->phpexec,
             ['temp/composer.phar', $action, '--no-interaction', '--prefer-dist', '--no-ansi', '--no-progress']
         );
 
@@ -1119,16 +1336,12 @@ TXT;
      * Runs NPM install and build
      * @return void
      */
-    public function installNodeJsDependencies()
+    public function installNodeJsDependencies(?Instance $tempInstance = null)
     {
-        if (! $this->supportsNodeJSBuild()) {
-            return;
-        }
-
-        $instance = $this->instance;
+        $instance = $tempInstance ?? $this->instance;
         $access = $instance->getBestAccess('scripting');
 
-        if (! $access instanceof ShellPrompt || ! $instance->hasConsole()) {
+        if (! $this->supportsNodeJSBuild($tempInstance) || ! $access instanceof ShellPrompt || ! $instance->hasConsole()) {
             return;
         }
 
@@ -1170,11 +1383,12 @@ TXT;
     /**
      * @return bool True if operation completed, false if not supported
      */
-    protected function updateTikiPackages(): bool
+    protected function updateTikiPackages(?Instance $tempInstance = null): bool
     {
-        $access = $this->instance->getBestAccess();
+        $instance = $tempInstance ?? $this->instance;
+        $access = $instance->getBestAccess();
         $command = $access->createCommand(
-            $this->instance->phpexec,
+            $instance->phpexec,
             ['console.php', 'package:update', '--all', '--handle-deprecated']
         );
 
@@ -1200,27 +1414,36 @@ TXT;
      * @param array $options
      * @throws \Exception
      */
-    public function postInstall(array $options = [])
+    public function postInstall(array $options = [], ?Instance $tempInstance = null)
     {
+        $instance = $tempInstance ?? $this->instance;
+        $this->performCleanupForPackages($instance);
+
         $access = $this->instance->getBestAccess('scripting');
         $access->getHost(); // trigger the config of the location change (to catch phpenv)
 
         if (empty($options['applying-patch'])) {
-            $this->applyPatches();
+            $this->io->writeln("Applying patches to {$instance->name}...");
+            $this->applyPatches($tempInstance);
         }
 
         if ($this->vcs_instance->getIdentifier() != 'SRC') {
-            $this->installComposer();
-            $this->installComposerDependencies();
-            $this->installNodeJsDependencies();
+            $this->installComposer($tempInstance);
+            $this->installComposerDependencies($tempInstance);
+            $this->installNodeJsDependencies($tempInstance);
+        }
+
+        $this->installTikiPackages(true, $tempInstance);
+
+        if ($tempInstance) {
+            $this->io->writeln('Syncing updated temp instance folder to instance webroot folder...');
+            $this->copyFilesToWebRoot($tempInstance->webroot);
         }
 
         $this->io->writeln('Updating database schema...');
         $this->runDatabaseUpdate();
 
         $this->setDbLock();
-
-        $this->installTikiPackages(true);
 
         $hasConsole = $this->instance->hasConsole();
 
@@ -1229,11 +1452,8 @@ TXT;
             $this->clearCache();
 
             if (empty($options['skip-cache-warmup'])) {
-                $this->io->writeln('Generating templates cache... <fg=yellow>[may take a while]</>');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate templates");
-
-                $this->io->writeln('Generating miscellaneous cache (data related information)... <fg=yellow>[may take a while]</>');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate misc");
+                $this->io->writeln('Generating caches... <fg=yellow>[may take a while]</>');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
             }
 
             if (empty($options['skip-reindex'])) {
@@ -1248,11 +1468,6 @@ TXT;
                 if (! $this->instance->reindex()) {
                     $this->io->error('Rebuilding Index failed.');
                 }
-            }
-
-            if (empty($options['skip-cache-warmup']) && !empty($options['warmup-include-modules'])) {
-                $this->io->writeln('Generating modules cache... <fg=yellow>[may take a while]</>');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate modules");
             }
         }
 
@@ -1277,26 +1492,29 @@ TXT;
         }
     }
 
-    protected function supportsVendorBundled(): bool
+    protected function supportsVendorBundled(?Instance $tempInstance = null): bool
     {
         // vendor_bundled was introduced in Tiki 17
-        $baseVersion = $this->instance->getApplication()->getBaseVersion();
+        $instance = $tempInstance ?? $this->instance;
+        $baseVersion = $instance->getApplication()->getBaseVersion();
 
         return $baseVersion >= 17 || $baseVersion == 'master';
     }
 
-    protected function supportsTikiPackages(): bool
+    protected function supportsTikiPackages(?Instance $tempInstance = null): bool
     {
         // Tiki Packages were introduces in 18.x
-        $baseVersion = $this->instance->getApplication()->getBaseVersion();
+        $instance = $tempInstance ?? $this->instance;
+        $baseVersion = $instance->getApplication()->getBaseVersion();
 
         return $baseVersion >= 18 || $baseVersion == 'master';
     }
 
-    protected function supportsNodeJSBuild(): bool
+    protected function supportsNodeJSBuild(?Instance $tempInstance = null): bool
     {
         // Build system with NodeJS was introduces for 27.x
-        $baseVersion = $this->instance->getApplication()->getBaseVersion();
+        $instance = $tempInstance ?? $this->instance;
+        $baseVersion = $instance->getApplication()->getBaseVersion();
 
         return $baseVersion >= 27 || $baseVersion == 'master';
     }

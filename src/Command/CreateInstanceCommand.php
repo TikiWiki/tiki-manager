@@ -181,6 +181,13 @@ class CreateInstanceCommand extends TikiManagerCommand
                 'Skip PHP minimum requirements check'
             )
             ->addOption(
+                'package-setup',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Determines where to handle package installations (composer, npm). Options: '
+                . '"' . Instance::PACKAGE_SETUP_CACHE . '" or "' . Instance::PACKAGE_SETUP_INSTANCE . '"'
+            )
+            ->addOption(
                 'run-as-user',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -228,6 +235,7 @@ class CreateInstanceCommand extends TikiManagerCommand
         try {
             $this->setupAccess($instance);
             $this->setupInstance($instance);
+            $this->setupPackageInstallMode($instance);
 
             $skipPhpCheck = $input->getOption('skip-phpcheck');
             if (! $skipPhpCheck && $this->isMissingPHPRequirements($instance, $this->logger)) {

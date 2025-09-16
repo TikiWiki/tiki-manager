@@ -12,24 +12,46 @@ namespace TikiManager\Application;
 use Exception;
 use Exception\FolderPermissionException;
 use Exception\RestoreErrorException;
+use Symfony\Component\Filesystem\Filesystem;
 use TikiManager\Application\Instance\CrontabManager;
 use TikiManager\Application\Tiki\Versions\TikiRequirements;
 use TikiManager\Config\App;
 use TikiManager\Access\Access;
+use TikiManager\Config\Environment;
 use TikiManager\Application\Exception\VcsException;
 use TikiManager\Libs\Helpers\Archive;
 use TikiManager\Libs\Database\Database;
 use TikiManager\Libs\Helpers\ApplicationHelper;
 use TikiManager\Libs\Host\Command;
 use TikiManager\Libs\VersionControl\VersionControlSystem;
+use TikiManager\Application\Patch;
 
 class Instance
 {
     const TYPES = 'local,ftp,ssh';
 
+    /**
+     * Packages (composer, npm, patches, etc.) Should be setup in place in the instance root after copy files there
+     * This is the default behaviour
+     */
+    const PACKAGE_SETUP_INSTANCE = 'instance';
+
+    /**
+     * Packages (composer, npm, patches, etc.) Should be setup in the tiki manager cache before copy to the instance
+     */
+    const PACKAGE_SETUP_CACHE = 'cache';
+
+    const SQL_SELECT_NEXT_INSTANCE_ID = <<<SQL
+SELECT
+    MAX(instance_id) + 1 id
+FROM
+    instance
+;
+SQL;
+
     const SQL_SELECT_INSTANCE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.package_setup_mode, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -41,7 +63,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_ID = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.package_setup_mode, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date
 FROM
     instance i
 INNER JOIN access a
@@ -56,7 +78,7 @@ SQL;
 
     const SQL_SELECT_INSTANCE_BY_NAME = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.package_setup_mode, i.run_user, a.type, v.branch, v.revision, v.type as vcs_type, v.action as last_action, i.state, v.date as last_action_date
 FROM
     instance i
 INNER JOIN access a
@@ -84,7 +106,7 @@ SQL;
 
     const SQLQUERY_UPDATABLE_AND_UPGRADABLE = <<<SQL
 SELECT
-    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.run_user, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
+    i.instance_id id, i.name, i.contact, i.webroot, i.weburl, i.tempdir, i.phpexec, i.phpversion, i.app, i.package_setup_mode, i.run_user, v.branch, a.type, v.type as vcs_type, v.revision, v.action as last_action, i.state, v.date as last_action_date, v.date_revision as last_revision_date, v.repo_url
 FROM
     instance i
 INNER JOIN access a
@@ -140,9 +162,9 @@ SQL;
     const SQL_INSERT_INSTANCE = <<<SQL
 INSERT OR REPLACE INTO
     instance
-    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, phpversion, app, state, run_user)
+    (instance_id, name, contact, webroot, weburl, tempdir, phpexec, phpversion, app, package_setup_mode, state, run_user)
 VALUES
-    (:id, :name, :contact, :web, :url, :temp, :phpexec, :phpversion, :app, :state, :run_user)
+    (:id, :name, :contact, :web, :url, :temp, :phpexec, :phpversion, :app, :package_setup_mode, :state, :run_user)
 ;
 SQL;
 
@@ -372,6 +394,7 @@ SQL;
     public $backup_group;
     public $backup_perm;
     public $vcs_type;
+    public $package_setup_mode;
     public $run_user;
     public $repo_url;
     public $branch;
@@ -541,6 +564,7 @@ SQL;
             ':phpexec' => $this->phpexec,
             ':phpversion' => $this->phpversion,
             ':app' => $this->app,
+            ':package_setup_mode' => $this->getPackageSetupMode(),
             ':run_user' => $this->run_user,
             ':state' => $this->state
         ];
@@ -888,6 +912,69 @@ SQL;
     }
 
     /**
+     * Setup instance for restore/clone operations
+     * Handles patches, dependencies, package installation and permissions fixing
+     */
+    private function setupInstanceForRestore(Instance $srcInstance, $onlyData, ?Instance $tempInstance = null)
+    {
+        if ($this->app != 'tiki' || $onlyData) {
+            return;
+        }
+
+        // Handle patches
+        $this->installPatchesFromSource($srcInstance, $tempInstance);
+
+        // Install dependencies
+        $this->installDependencies($tempInstance);
+
+        // Fix permissions (final destination)
+        if (!$tempInstance) {
+            $this->io->writeln("Fixing permissions for {$this->name}");
+            $this->getApplication()->fixPermissions();
+        }
+    }
+
+    private function installPatchesFromSource(Instance $srcInstance, ?Instance $tempInstance = null)
+    {
+        $instance = $tempInstance ?? $this;
+        $app = $instance->getApplication();
+
+        $message = "Applying patches to {$instance->name}...";
+        $this->io->writeln($message);
+
+        $srcInstancePatches = Patch::getPatches($srcInstance->getId()) ?? [];
+
+        if (!$tempInstance) {
+            // Remove existing patches from destination
+            foreach (Patch::getPatches($this->getId()) as $patch) {
+                $patch->delete();
+            }
+            // Copy patches from source to destination
+            foreach ($srcInstancePatches as $patch) {
+                $patch->id = null;
+                $patch->instance = $this->getId();
+                $patch->save();
+            }
+        }
+
+        $app->applyPatches($tempInstance, $srcInstancePatches);
+    }
+
+    /**
+     * Install dependencies for the instance
+     */
+    private function installDependencies(?Instance $tempInstance = null)
+    {
+        $instance = $tempInstance ?? $this;
+        $app = $instance->getApplication();
+
+        $app->performCleanupForPackages();
+        $app->installComposerDependencies();
+        $app->installNodeJsDependencies();
+        $app->installTikiPackages();
+    }
+
+    /**
      * Restore instance
      *
      * @param $srcInstance
@@ -906,11 +993,20 @@ SQL;
      */
     public function restore($srcInstance, $archive, $clone = false, $checksumCheck = false, $direct = false, $onlyData = false, $onlyCode = false, $options = [], $skipSystemConfigurationCheck = false, $allowCommonParents = 0)
     {
+        $tempInstance = null;
+        if ($this->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE)) {
+            $this->io->writeln("Initializing temp instance for restoration...");
+            $tempInstance = $this->getTempInstance();
+        }
+
         $excludeList = $this->getBackupIgnoreList([
             ':instance_id' => $this->getId()
         ]);
 
-        $restore = new Restore($this, $direct, $onlyData, $skipSystemConfigurationCheck, $allowCommonParents, $excludeList);
+        $instanceName = $tempInstance ? $tempInstance->name : $this->name;
+        $instance = $tempInstance ?? $this;
+
+        $restore = new Restore($instance, $direct, $onlyData, $skipSystemConfigurationCheck, $allowCommonParents, $excludeList);
 
         $restore->lock();
         $restore->setProcess($clone);
@@ -920,10 +1016,10 @@ SQL;
             $restore->setRestoreDirname(basename($archive));
         }
 
-        $message = "Restoring files from '{$archive}' into {$this->name}...";
+        $message = "Restoring files from '{$archive}' into {$instanceName}...";
 
         if ($direct) {
-            $message = "Restoring files from '{$srcInstance->name}' into {$this->name}...";
+            $message = "Restoring files from '{$srcInstance->name}' into {$instanceName}...";
         }
 
         $this->io->writeln($message . ' <fg=yellow>[may take a while]</>');
@@ -937,9 +1033,20 @@ SQL;
         $this->app = $srcInstance->app;
         $this->save();
 
-        if (! $onlyCode) {
+        if ($tempInstance) {
+            $this->setupInstanceForRestore($srcInstance, $onlyData, $tempInstance);
+            $this->io->writeln("Copying temp instance to instance webroot folder...");
+            $this->getApplication()->copyFilesToWebRoot($tempInstance->webroot);
+        }
+
+        if (!$onlyCode) {
             $this->io->writeln('Restoring database...');
             $database_dump = $restore->getRestoreFolder() . "/database_dump.sql";
+
+            if ($srcInstance->type === 'local' && $this->type === 'ssh') {
+                $backup = new Backup($srcInstance);
+                $database_dump = $backup->getBackupDir() . "/database_dump.sql";
+            }
 
             $databaseConfig = $this->getDatabaseConfig();
             if ($databaseConfig) {
@@ -960,10 +1067,11 @@ SQL;
         // Redetect the VCS type in case of change
         $this->vcs_type = $discovery->detectVcsType();
 
-        if (!$this->findApplication()) { // a version is created in this call
+        if (!$this->findApplication()) {
+            // a version is created in this call
             $restore->unlock();
             $this->io->error('Something went wrong with restore. Unable to read application details.');
-            return;
+            return false;
         }
 
         $version = null;
@@ -987,24 +1095,9 @@ SQL;
 
         $this->io->writeln('<info>Detected Tiki ' . $version->branch . ' using ' . $version->type . '</info>');
 
-        if ($this->app == 'tiki' && ! $onlyData) {
-            $this->io->writeln("Applying patches to {$this->name}...");
-            foreach (Patch::getPatches($this->getId()) as $patch) {
-                $patch->delete();
-            }
-            foreach (Patch::getPatches($srcInstance->getId()) as $patch) {
-                $patch->id = null;
-                $patch->instance = $this->getId();
-                $patch->save();
-            }
-
-            $this->getApplication()->applyPatches();
-            $this->getApplication()->installComposerDependencies();
-            $this->getApplication()->installNodeJsDependencies();
-            $this->getApplication()->installTikiPackages();
-
-            $this->io->writeln("Fixing permissions for {$this->name}");
-            $this->getApplication()->fixPermissions();
+        // When cache mode, setup is already done in temp instance
+        if (!$tempInstance) {
+            $this->setupInstanceForRestore($srcInstance, $onlyData);
         }
 
         if ($checksumCheck && ! $onlyData) {
@@ -1014,7 +1107,7 @@ SQL;
 
         if ($onlyData) {
             $options['applying-patch'] = true;
-            $this->getApplication()->postInstall($options);
+            $this->getApplication()->postInstall($options, $tempInstance);
         }
 
         if (!$direct) {
@@ -1338,8 +1431,9 @@ SQL;
 
     public function revert()
     {
-        if ($this->vcs_type != 'git') {
-            $this->io->error(sprintf("Instance %s is not a supported version controlled instance and cannot be reverted.", $this->name));
+        $vcsType = strtolower($this->vcs_type);
+        if ($vcsType != 'git') {
+            $this->io->error(sprintf("Instance %s is not a version controlled instance and cannot be reverted.", $this->name));
             return;
         }
         $this->getVersionControlSystem()->revert($this->webroot);
@@ -1498,6 +1592,83 @@ SQL;
                 query(self::SQL_DELETE_BCKP_IGNORE_LIST, [':id' => $this->getId(), ':paths' => $path]);
             }
         }
+    }
+
+    /**
+     * Return the current setup mode (falling back to the default if not explicitly PACKAGE_SETUP_CACHE)
+     *
+     * @return string
+     */
+    public function getPackageSetupMode(): string
+    {
+        if ($this->package_setup_mode === self::PACKAGE_SETUP_CACHE) {
+            return self::PACKAGE_SETUP_CACHE;
+        }
+
+        return self::PACKAGE_SETUP_INSTANCE;
+    }
+
+    /**
+     * Validates if the current package setup mode is the one provided as argument
+     *
+     * @param string $mode
+     * @return bool
+     */
+    public function isPackageSetupMode(string $mode): bool
+    {
+        if ($this->getPackageSetupMode() === $mode) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function getNextInstanceId()
+    {
+        $result = query(self::SQL_SELECT_NEXT_INSTANCE_ID);
+        $id = $result->fetchColumn();
+        return (int) $id;
+    }
+
+    /**
+     * Initialize a fake local instance that can be used to execute commands against the local temp instance.
+     * @param Version $version
+     * @return Instance
+     * @throws Exception
+     */
+    public function getTempInstance(): Instance
+    {
+        $nextID = self::getNextInstanceId();
+        $tempInstance = new Instance();
+        $tempInstance->id = $nextID + rand(1000, 9999);
+        $tempInstance->type = 'local';
+        $tempInstance->phpexec = $this->phpexec;
+        $tempInstance->vcs_type = 'git';
+        $tempInstance->phpversion = $this->phpversion;
+        $tempInstance->repo_url = $this->repo_url;
+        $tempInstance->tempdir = Environment::get('TEMP_FOLDER') . '/tmp_dir_' . $tempInstance->id;
+        $tempInstance->webroot = Environment::get('TEMP_FOLDER') . '/tmp_instance_' . $tempInstance->id;
+        $tempInstance->name = 'tempInstance_' . $tempInstance->id;
+
+        try {
+            $fileSystem = new Filesystem();
+
+            if (!$fileSystem->exists($tempInstance->webroot)) {
+                $fileSystem->mkdir($tempInstance->webroot);
+            }
+
+            if (!$fileSystem->exists($tempInstance->tempdir)) {
+                $fileSystem->mkdir($tempInstance->tempdir);
+            }
+        } catch (Exception $e) {
+            throw new Exception("Unable to create temporary instance directories (webroot or tempdir): " . $e->getMessage());
+        }
+
+        $apps = $this->getApplications();
+        $app = reset($apps);
+        $tempInstance->app = $app->getName();
+
+        return $tempInstance;
     }
 
     public function cleanInstanceWebroot()

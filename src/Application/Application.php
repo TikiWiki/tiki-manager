@@ -15,6 +15,9 @@ use TikiManager\Style\TikiManagerStyle;
 
 abstract class Application
 {
+    /**
+     * @var Instance
+     */
     protected $instance;
 
     /** @var TikiManagerStyle $io */

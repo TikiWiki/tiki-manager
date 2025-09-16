@@ -80,6 +80,13 @@ class EditInstanceCommand extends TikiManagerCommand
                 'PHP binary to be used to manage the instance'
             )
             ->addOption(
+                'package-setup',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Determines where to handle package installations (composer, npm). Options: '
+                . '"' . Instance::PACKAGE_SETUP_CACHE . '" or "' . Instance::PACKAGE_SETUP_INSTANCE . '"'
+            )
+            ->addOption(
                 'run-as-user',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -234,6 +241,13 @@ class EditInstanceCommand extends TikiManagerCommand
                     $backup_perm = $input->getOption('backup-permission');
                 }
 
+                if (empty($input->getOption('package-setup'))) {
+                    $question = CommandHelper::getQuestion('Package setup mode', $instance->getPackageSetupMode());
+                    $package_setup_mode = $helper->ask($input, $output, $question);
+                } else {
+                    $package_setup_mode = $input->getOption('package-setup');
+                }
+
                 //Instance Run as user
                 if (empty($input->getOption('run-as-user'))) {
                     $choices = ['Edit', 'Remove'];
@@ -292,6 +306,7 @@ class EditInstanceCommand extends TikiManagerCommand
                 $instance->backup_user = $backup_user;
                 $instance->backup_group = $backup_group;
                 $instance->backup_perm = octdec($backup_perm);
+                $instance->package_setup_mode = $package_setup_mode;
                 $instance->run_user = $run_user;
                 $instance->save();
 
