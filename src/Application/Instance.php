@@ -304,7 +304,7 @@ WHERE
 SQL;
 
     const SQL_SELECT_BCKP_IGNORE_LISTS = <<<SQL
-SELECT * FROM 
+SELECT * FROM
     backup_ignore_list
 WHERE
     1 AND (COALESCE(:instance_id, '') = '' OR instance_id = :instance_id) AND (COALESCE(:paths, '') = '' OR exclude = :paths)
@@ -329,7 +329,7 @@ VALUES
 SQL;
 
     const SQL_GET_BISECT_SESSION = <<<SQL
-SELECT * FROM 
+SELECT * FROM
     bisect_sessions
 WHERE
     instance_id = :instance_id AND status = :status
@@ -1313,6 +1313,15 @@ SQL;
         }
 
         $localFile = $access->downloadFile($remoteFile);
+
+        $contents = file_get_contents($localFile);
+        if (preg_match('/(include|require)(_once)?\s*\(?[\'"](.*)[\'"]\)?/', $contents, $matches)) {
+            $remoteFile = $matches[3];
+            if ($access->fileExists($remoteFile)) {
+                $localFile = $access->downloadFile($remoteFile);
+            }
+        }
+
         $dbUser = Database::createFromConfig($this, $localFile);
         unlink($localFile);
 
