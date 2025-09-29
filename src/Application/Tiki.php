@@ -158,16 +158,49 @@ class Tiki extends Application
             $existingPlatformPhp = $this->updateComposerPlatformConfig($folder, $remotePhpVersion, 'vendor_bundled');
         }
 
+        $isGlobalComposerAvailable = true;
+        $composerPath = $this->isGlobalComposerAvailable();
+        $phpexec = $this->instance->type === 'local' ? $this->instance->phpexec : PHP_BINARY;
+
+        if (!$composerPath) {
+            $isGlobalComposerAvailable = false;
+            $this->io->writeln('Downloading Composer for use with the cache repository... <fg=yellow>[may take a while]</>');
+            try {
+                $composerPath = $this->ensureComposerInCache($folder);
+            } catch (\Exception $e) {
+                $composerPath = null;
+            }
+        }
+
+        // Construct composer command based on availability and download success
+        if ($isGlobalComposerAvailable) {
+            $composer = 'composer';
+        } elseif ($composerPath !== null) {
+            $composer = "$phpexec $composerPath";
+        } else {
+            // Composer download failed, create a dummy command that will fail gracefully
+            $composer = "echo 'Composer not available - skipping cache composer install'";
+        }
+
         $this->io->writeln('Installing composer dependencies on cache repository... <fg=yellow>[may take a while]</>');
-        $composerCmd = Process::fromShellCommandline("composer install -d $folder/vendor_bundled/ --no-interaction --prefer-dist --no-dev --quiet", null, null, null, 1800);
+
+        $composerCmd = Process::fromShellCommandline("$composer install -d $folder/vendor_bundled/ --no-interaction --prefer-dist --no-dev --quiet", null, null, null, 1800);
+
         $composerCmd->run();
 
         if ($this->instance->isPackageSetupMode(Instance::PACKAGE_SETUP_CACHE) && $existingPlatformPhp) {
             $this->updateComposerPlatformConfig($folder, $existingPlatformPhp, 'vendor_bundled');
         }
 
-        if ($composerCmd->getExitCode() !== 0) {
-            $this->io->warning($composerCmd->getErrorOutput());
+        $exitCode = $composerCmd->getExitCode();
+        $errorOutput = $composerCmd->getErrorOutput();
+        $output = $composerCmd->getOutput();
+
+        if ($composerPath === null) {
+            $this->io->writeln('<comment>Composer download failed - dependencies will be handled during instance installation</comment>');
+        } elseif ($exitCode !== 0) {
+            $errorOutput .= $output;
+            $this->io->warning("Composer installation warning: " . $errorOutput);
         }
 
         $baseVersion = $version->getBaseVersion();
@@ -1196,6 +1229,53 @@ TXT;
         }
 
         return $options;
+    }
+
+    /**
+     * Check if global composer command is available in the system PATH
+     *
+     * @return bool True if composer is available, false otherwise
+     */
+    private function isGlobalComposerAvailable()
+    {
+        $process = Process::fromShellCommandline('which composer');
+        $process->run();
+        $output = trim($process->getOutput());
+
+        if ($process->getExitCode() === 0 && !empty($output)) {
+            return $output;
+        }
+
+        return false;
+    }
+
+    /**
+     * Download composer.phar to the cache folder if not already present
+     *
+     * @param string $cacheFolder The cache folder path
+     * @return string Path to the downloaded composer.phar
+     * @throws \Exception If composer download fails
+     */
+    private function ensureComposerInCache(string $cacheFolder): string
+    {
+        $composerFileInCache = $cacheFolder . '/temp/composer.phar';
+        $tmp = $cacheFolder . '/temp';
+
+        if (file_exists($composerFileInCache)) {
+            return $composerFileInCache;
+        }
+
+        try {
+            installComposer($tmp);
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+
+        if (!file_exists($composerFileInCache)) {
+            throw new \Exception('composer.phar not found in cache folder');
+        }
+
+        return $composerFileInCache;
     }
 
     public function installComposer(?Instance $tempInstance = null)
