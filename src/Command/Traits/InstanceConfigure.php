@@ -488,34 +488,51 @@ trait InstanceConfigure
         $canCreateUser = $dbRoot->hasCreateUserPermissions();
         $canCreateDB = $dbRoot->hasCreateDatabasePermissions();
 
-        if (!$canCreateUser) {
-            $this->logger->warning('MySQL user cannot create users.');
-        }
-
-        if (!$canCreateDB) {
-            $this->logger->warning('MySQL user cannot create databases.');
-        }
-
         $usePrefix = false;
         if (!$dbName && $canCreateUser && $canCreateDB) {
-            $usePrefix = $hasPrefix ?: $this->io->confirm('Should a new database and user be created now (both)?');
+            if ($hasPrefix !== null) {
+                $usePrefix = $hasPrefix;
+            } else {
+                if ($this->input->isInteractive()) {
+                    $usePrefix = $this->io->confirm('Should a new database and user be created now (both)?');
+                } else {
+                    // In non-interactive mode, default to using prefix when we have permissions
+                    $usePrefix = true;
+                }
+            }
+        }
+
+        // Determine what we actually need to create and show warnings only if we can't
+        $needsToCreateUser = false;
+        $needsToCreateDB = false;
+
+        if ($usePrefix) {
+            // When using prefix, we WILL create new database and user
+            $needsToCreateUser = true;
+            $needsToCreateDB = true;
+        } else {
+            // When not using prefix, check if the specified database exists
+            $proposedDbName = $dbName ?? 'tiki_db';
+            $needsToCreateDB = !$dbRoot->databaseExists($proposedDbName);
+        }
+
+        // Fail immediately if we need to create something but can't
+        if ($needsToCreateUser && !$canCreateUser) {
+            throw new \Exception('MySQL user cannot create users. Cannot proceed with database setup.');
+        }
+        if ($needsToCreateDB && !$canCreateDB) {
+            throw new \Exception('MySQL user cannot create databases. Cannot proceed with database setup.');
         }
 
         if (!$usePrefix) {
-            $dbRoot->dbname = $this->io->ask('Database name', $dbName ?? 'tiki_db', function ($dbname) use ($dbRoot, $canCreateDB) {
-                if (!$dbRoot->databaseExists($dbname) && !$canCreateDB) {
-                    throw new \Exception("Database does not exist and user cannot create.");
-                }
-
-                return $dbname;
-            });
+            $dbRoot->dbname = $this->io->ask('Database name', $dbName ?? 'tiki_db');
         } else {
             $dbPrefix = $this->input->hasOption('db-prefix') ? ($this->input->getOption('db-prefix') ?: 'tiki') : 'tiki';
 
             $dbPrefix = $this->io->ask(
                 'Prefix to use for username and database',
                 $dbPrefix,
-                function ($prefix) use ($dbRoot, &$dbPrefix) {
+                function ($prefix) use ($dbRoot, &$dbPrefix, $canCreateUser) {
 
                     $maxUsernameLength = $dbRoot->getMaxUsernameLength() ?: 32;
                     $maxPrefixLength = $maxUsernameLength - 5;
@@ -526,14 +543,26 @@ trait InstanceConfigure
                     }
 
                     $username = "{$prefix}_user";
+                    $dbname = "{$prefix}_db";
+
+                    // Check if user already exists
                     if ($dbRoot->userExists($username)) {
                         throw new \Exception("User '$username' already exists, can't proceed.");
                     }
 
-                    $dbname = "{$prefix}_db";
-                    if ($dbRoot->databaseExists($dbname)) {
-                        $this->logger->warning("Database '$dbname' already exists.");
-                        if (!$this->io->confirm('Continue?')) {
+                    // Check if we can create user (reuse the already checked value)
+                    if (!$canCreateUser) {
+                        throw new \Exception("User '$username' does not exist and user does not have permission to create users.");
+                    }
+
+                    // Check if we need to create database and if we can
+                    if (!$dbRoot->databaseExists($dbname)) {
+                        if (!$dbRoot->canCreateDatabaseWithPrefix($prefix)) {
+                            throw new \Exception("Database '$dbname' does not exist and user does not have permission to create databases with prefix '$prefix'.");
+                        }
+                    } else {
+                        // Database exists, ask for confirmation to continue
+                        if (!$this->io->confirm("Database '$dbname' already exists. Continue?")) {
                             return false;
                         }
                     }

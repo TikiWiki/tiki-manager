@@ -152,18 +152,74 @@ class Database
     {
         $grants = $this->getCurrentUserPermissions();
 
-        $regex = '/GRANT (ALL PRIVILEGES|.*CREATE USER).* ON \*\.\* .* WITH GRANT OPTION/m';
+        // Check for global permissions
+        $globalRegex = '/GRANT (ALL PRIVILEGES|.*CREATE USER).* ON \*\.\* .* WITH GRANT OPTION/m';
+        if (\preg_match($globalRegex, $grants)) {
+            return true;
+        }
 
-        return \preg_match($regex, $grants);
+        // Check for prefix-based permissions (e.g., GRANT ALL PRIVILEGES ON `db_prefix_%`.*)
+        $prefixRegex = '/GRANT (ALL PRIVILEGES|.*CREATE USER).* ON `[^`]+_%`\.\* .* WITH GRANT OPTION/m';
+        return \preg_match($prefixRegex, $grants);
     }
 
+    /**
+     * Check if the current user has permissions to create databases
+     *
+     * This method checks three types of database creation permissions:
+     * 1. Global permissions: GRANT CREATE ON *.* (allows creating any database)
+     * 2. Prefix-based permissions: GRANT ALL PRIVILEGES ON `prefix_%`.* (allows creating databases matching the prefix pattern)
+     * 3. Specific database permissions: GRANT ALL PRIVILEGES ON `database`.* (allows creating databases with names starting with the specific database name)
+     *
+     * @return boolean True if user can create databases, false otherwise
+     */
     public function hasCreateDatabasePermissions()
     {
         $grants = $this->getCurrentUserPermissions();
 
-        $regex = '/GRANT (ALL PRIVILEGES|.*CREATE(?! USER)).* ON \*\.\*/m';
+        // Check for global permissions (e.g., GRANT CREATE ON *.* or GRANT ALL PRIVILEGES ON *.*)
+        // Matches: CREATE or ALL PRIVILEGES on all databases (*.*), excludes CREATE USER
+        $globalRegex = '/GRANT (ALL PRIVILEGES|.*CREATE(?! USER)).* ON \*\.\*/m';
+        if (\preg_match($globalRegex, $grants)) {
+            return true;
+        }
 
-        return \preg_match($regex, $grants);
+        // Check for prefix-based permissions (e.g., GRANT ALL PRIVILEGES ON `db_prefix_%`.*)
+        // Matches: CREATE or ALL PRIVILEGES on wildcard database patterns ending with _%
+        // [^`]+ requires at least one character before the underscore (meaningful prefix)
+        $prefixRegex = '/GRANT (ALL PRIVILEGES|.*CREATE(?! USER)).* ON `[^`]+_%`\.\*/m';
+        if (\preg_match($prefixRegex, $grants)) {
+            return true;
+        }
+
+        // Check for specific database permissions that include CREATE
+        // Matches: CREATE or ALL PRIVILEGES on specific named databases (e.g., `mydb`.*)
+        // Users with ALL PRIVILEGES on `mydb`.* can create databases like `mydb_backup`, `mydb_test`
+        // [^`]+ ensures we match actual database names, not wildcard patterns
+        $specificDbRegex = '/GRANT (ALL PRIVILEGES|.*CREATE(?! USER)).* ON `[^`]+`\.\*/m';
+        return \preg_match($specificDbRegex, $grants);
+    }
+
+    /**
+     * Check if the user can create a database with the given prefix
+     * This is useful for prefix-based permission validation
+     *
+     * @param string $prefix
+     * @return boolean
+     */
+    public function canCreateDatabaseWithPrefix($prefix)
+    {
+        $grants = $this->getCurrentUserPermissions();
+
+        // Check for global permissions
+        $globalRegex = '/GRANT (ALL PRIVILEGES|.*CREATE(?! USER)).* ON \*\.\*/m';
+        if (\preg_match($globalRegex, $grants)) {
+            return true;
+        }
+
+        // Check for specific prefix permissions (e.g., GRANT ALL PRIVILEGES ON `prefix_%`.*)
+        $prefixRegex = '/GRANT (ALL PRIVILEGES|.*CREATE(?! USER)).* ON `' . preg_quote($prefix, '/') . '_%`\.\*/m';
+        return \preg_match($prefixRegex, $grants);
     }
 
     public function createUser($username, $password)

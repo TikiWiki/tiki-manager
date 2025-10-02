@@ -401,6 +401,10 @@ class InstanceConfigureTest extends TestCase
             ->method('databaseExists')
             ->willReturn(false);
 
+        $databaseStub->expects($this->once())
+            ->method('canCreateDatabaseWithPrefix')
+            ->willReturn(true);
+
         $this->instance->method('database')->willReturn($databaseStub);
 
         $this->traitMock->setupDatabase($this->instance);
