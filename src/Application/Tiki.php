@@ -1097,7 +1097,7 @@ class Tiki extends Application
 
         $this->io->writeln('Setting db config file...');
         if ($access instanceof ShellPrompt) {
-            $script = sprintf("chmod('%s', 0664);", "{$this->instance->webroot}/db/local.php");
+            $script = sprintf("chmod('%s', 0660);", "{$this->instance->webroot}/db/local.php");
             $access->createCommand($this->instance->phpexec, ["-r {$script}"])->run();
 
             // Ownership is now set using the dynamic $runAsUser instead of hard-coded 'apache:apache'.
