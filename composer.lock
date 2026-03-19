@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b92bbc375d830b2d9384c2dd8f6a3d36",
+    "content-hash": "ed1fadf04677bcd596eab19a6a9cb528",
     "packages": [
         {
             "name": "composer/semver",
@@ -499,17 +499,17 @@
         },
         {
             "name": "paragonie/constant_time_encoding",
-            "version": "v2.7.0",
+            "version": "v2.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/constant_time_encoding.git",
-                "reference": "52a0d99e69f56b9ec27ace92ba56897fe6993105"
+                "reference": "e30811f7bc69e4b5b6d5783e712c06c8eabf0226"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/paragonie/constant_time_encoding/paragonie-constant_time_encoding-52a0d99e69f56b9ec27ace92ba56897fe6993105-zip-2b1a14.zip",
-                "reference": "52a0d99e69f56b9ec27ace92ba56897fe6993105",
-                "shasum": "48b1bceb77fbe2fc9c68dd0c88e3770e9f2b5ffc"
+                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/e30811f7bc69e4b5b6d5783e712c06c8eabf0226",
+                "reference": "e30811f7bc69e4b5b6d5783e712c06c8eabf0226",
+                "shasum": ""
             },
             "require": {
                 "php": "^7|^8"
@@ -557,7 +557,12 @@
                 "hex2bin",
                 "rfc4648"
             ],
-            "time": "2024-05-08T12:18:48+00:00"
+            "support": {
+                "email": "info@paragonie.com",
+                "issues": "https://github.com/paragonie/constant_time_encoding/issues",
+                "source": "https://github.com/paragonie/constant_time_encoding"
+            },
+            "time": "2025-09-24T15:12:37+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -606,17 +611,17 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.42",
+            "version": "3.0.50",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "db92f1b1987b12b13f248fe76c3a52cadb67bb98"
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpseclib/phpseclib/phpseclib-phpseclib-db92f1b1987b12b13f248fe76c3a52cadb67bb98-zip-9f59a1.zip",
-                "reference": "db92f1b1987b12b13f248fe76c3a52cadb67bb98",
-                "shasum": "3162b91ac6d6cae8cc9662f76ab8b27f038166ba"
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
+                "shasum": ""
             },
             "require": {
                 "paragonie/constant_time_encoding": "^1|^2|^3",
@@ -694,6 +699,10 @@
                 "x.509",
                 "x509"
             ],
+            "support": {
+                "issues": "https://github.com/phpseclib/phpseclib/issues",
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.50"
+            },
             "funding": [
                 {
                     "url": "https://github.com/terrafrost",
@@ -708,7 +717,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-16T03:06:04+00:00"
+            "time": "2026-03-19T02:57:58+00:00"
         },
         {
             "name": "psr/container",
@@ -3106,5 +3115,5 @@
         "php": "^7.4 || ^8.0"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
