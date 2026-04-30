@@ -185,7 +185,12 @@ class RestoreInstanceCommandTest extends TestCase
         $process->setTimeout(0);
         $process->run();
 
-        $this->assertEquals(0, $process->getExitCode());
+        echo "Command:\n" . $process->getCommandLine() . "\n";
+        echo "Exit code:\n" . $process->getExitCode() . "\n";
+        echo "STDOUT:\n" . $process->getOutput() . "\n";
+        echo "STDERR:\n" . $process->getErrorOutput() . "\n";
+
+        $this->assertSame(0, $process->getExitCode(), $process->getErrorOutput());
         $output = $process->getOutput();
 
         // For debugging purposes
