@@ -3,7 +3,6 @@ include:
   - template: Code-Quality.gitlab-ci.yml
 
 image: tikiwiki/tikimanager-ci:php-7.4-qa
-
 variables:
   MYSQL_ROOT_PASSWORD: secret
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composercache"
@@ -25,7 +24,10 @@ stages:
 
 .composer-cache:
   cache: &composer-cache
-    key: cache-tiki-manager
+    key:
+      files:
+        - composer.lock
+        - vendor-bin/dbdiff/composer.lock
     paths:
       - vendor/
       - vendor-bin/

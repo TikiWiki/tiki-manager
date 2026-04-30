@@ -1,6 +1,6 @@
 {
-    "require-dev": {
-        "dbdiff/dbdiff": "dev-master"
+    "require": {
+        "dbdiff/dbdiff": "^2.0"
     },
     "config": {
         "allow-plugins": {
