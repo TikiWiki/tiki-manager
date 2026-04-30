@@ -12,6 +12,7 @@ use Monolog\Logger;
 use Monolog\Level;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use TikiManager\Application\Instance;
 use TikiManager\Config\App;
@@ -383,7 +384,17 @@ class CloneInstanceCommandTest extends TestCase
 
             $process = new Process($command, $_ENV['TRIM_ROOT'] . '/vendor-bin/dbdiff');
             $process->setTimeout(0);
-            $process->run();
+            try {
+                $process->mustRun();
+            } catch (ProcessFailedException $e) {
+                echo "\033[0;31m ==Process failed:== \033[0m" . PHP_EOL;
+                echo "\033[0;31m" . $e->getMessage() . "\033[0m" . PHP_EOL;
+                $err = trim($process->getErrorOutput());
+                if ($err !== '') {
+                    echo "\033[0;31m" . $err . "\033[0m" . PHP_EOL;
+                }
+                throw $e; // stop execution
+            }
 
             $output = $process->getOutput();
             $this->assertEquals(0, $process->getExitCode());

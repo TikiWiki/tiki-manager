@@ -48,7 +48,7 @@ class CommandHelper
         $ltsVersions = $fetcher->getLTSVersions();
         $ltsLabel = '';
         foreach ($instances as $instance) {
-            if (preg_match('/^(\d+)\.x$/', $instance->branch, $matches)) {
+            if (preg_match('/^(\d+)\.x$/', $instance->branch ?? '', $matches)) {
                 $majorVersion = (int) $matches[1];
                 $ltsLabel = self::getLtsLabel(in_array($majorVersion, $ltsVersions, true));
             }

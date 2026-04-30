@@ -9,6 +9,7 @@ namespace TikiManager\Tests\Command;
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use TikiManager\Command\RestoreInstanceCommand;
 use TikiManager\Application\Instance;
@@ -183,14 +184,19 @@ class RestoreInstanceCommandTest extends TestCase
 
         $process = new Process($command, $_ENV['TRIM_ROOT'] . '/vendor-bin/dbdiff');
         $process->setTimeout(0);
-        $process->run();
+        try {
+            $process->mustRun();
+        } catch (ProcessFailedException $e) {
+            echo "\033[0;31m ==Process failed:== \033[0m" . PHP_EOL;
+            echo "\033[0;31m" . $e->getMessage() . "\033[0m" . PHP_EOL;
+            $err = trim($process->getErrorOutput());
+            if ($err !== '') {
+                echo "\033[0;31m" . $err . "\033[0m" . PHP_EOL;
+            }
+            throw $e; // stop execution
+        }
 
-        echo "Command:\n" . $process->getCommandLine() . "\n";
-        echo "Exit code:\n" . $process->getExitCode() . "\n";
-        echo "STDOUT:\n" . $process->getOutput() . "\n";
-        echo "STDERR:\n" . $process->getErrorOutput() . "\n";
-
-        $this->assertSame(0, $process->getExitCode(), $process->getErrorOutput());
+        $this->assertEquals(0, $process->getExitCode(), $process->getErrorOutput());
         $output = $process->getOutput();
 
         // For debugging purposes
