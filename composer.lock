@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ed1fadf04677bcd596eab19a6a9cb528",
+    "content-hash": "c65b64f3dbb5612590e9c54a04899ffc",
     "packages": [
         {
             "name": "composer/semver",
@@ -141,9 +141,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/doctrine/lexer/doctrine-lexer-861c870e8b75f7c8f69c146c7f89cc1c0f1b49b6-zip-c8fbd6.zip",
+                "url": "https://api.github.com/repos/doctrine/lexer/zipball/861c870e8b75f7c8f69c146c7f89cc1c0f1b49b6",
                 "reference": "861c870e8b75f7c8f69c146c7f89cc1c0f1b49b6",
-                "shasum": "798c2788e0cea9baa9162087743af9c3781d152c"
+                "shasum": ""
             },
             "require": {
                 "doctrine/deprecations": "^1.0",
@@ -189,6 +189,10 @@
                 "parser",
                 "php"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/lexer/issues",
+                "source": "https://github.com/doctrine/lexer/tree/2.1.1"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -279,9 +283,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/egulias/email-validator/egulias-email-validator-e5997fa97e8790cdae03a9cbd5e78e45e3c7bda7-zip-2a88b8.zip",
+                "url": "https://api.github.com/repos/egulias/EmailValidator/zipball/e5997fa97e8790cdae03a9cbd5e78e45e3c7bda7",
                 "reference": "e5997fa97e8790cdae03a9cbd5e78e45e3c7bda7",
-                "shasum": "1b826e2bb60f518b6edc4fbfc446e57d4f450759"
+                "shasum": ""
             },
             "require": {
                 "doctrine/lexer": "^1.2|^2",
@@ -324,6 +328,10 @@
                 "validation",
                 "validator"
             ],
+            "support": {
+                "issues": "https://github.com/egulias/EmailValidator/issues",
+                "source": "https://github.com/egulias/EmailValidator/tree/3.2.6"
+            },
             "funding": [
                 {
                     "url": "https://github.com/egulias",
@@ -342,9 +350,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/gitonomy/gitlib/gitonomy-gitlib-9fea656e75ad6e3452feb2cac46a6c1239cd7f74-zip-3585c6.zip",
+                "url": "https://api.github.com/repos/gitonomy/gitlib/zipball/9fea656e75ad6e3452feb2cac46a6c1239cd7f74",
                 "reference": "9fea656e75ad6e3452feb2cac46a6c1239cd7f74",
-                "shasum": "d98039e834353f9122ed80518df388ef25b1e054"
+                "shasum": ""
             },
             "require": {
                 "ext-pcre": "*",
@@ -395,6 +403,10 @@
                 }
             ],
             "description": "Library for accessing git",
+            "support": {
+                "issues": "https://github.com/gitonomy/gitlib/issues",
+                "source": "https://github.com/gitonomy/gitlib/tree/v1.3.8"
+            },
             "funding": [
                 {
                     "url": "https://tidelift.com/funding/github/packagist/gitonomy/gitlib",
@@ -582,9 +594,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/paragonie/random_compat/paragonie-random_compat-996434e5492cb4c3edcb9168db6fbb1359ef965a-zip-703e25.zip",
+                "url": "https://api.github.com/repos/paragonie/random_compat/zipball/996434e5492cb4c3edcb9168db6fbb1359ef965a",
                 "reference": "996434e5492cb4c3edcb9168db6fbb1359ef965a",
-                "shasum": "d7d3957390731155e5a53e19b865fcc0548cf1d7"
+                "shasum": ""
             },
             "require": {
                 "php": ">= 7"
@@ -615,6 +627,11 @@
                 "pseudorandom",
                 "random"
             ],
+            "support": {
+                "email": "info@paragonie.com",
+                "issues": "https://github.com/paragonie/random_compat/issues",
+                "source": "https://github.com/paragonie/random_compat"
+            },
             "time": "2020-10-15T08:29:30+00:00"
         },
         {
@@ -737,9 +754,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/psr/container/psr-container-513e0666f7216c7459170d56df27dfcefe1689ea-zip-1dff99.zip",
+                "url": "https://api.github.com/repos/php-fig/container/zipball/513e0666f7216c7459170d56df27dfcefe1689ea",
                 "reference": "513e0666f7216c7459170d56df27dfcefe1689ea",
-                "shasum": "1a01dbe83dc9307ba2984cf2979f49c8c568e280"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.4.0"
@@ -769,6 +786,10 @@
                 "container-interop",
                 "psr"
             ],
+            "support": {
+                "issues": "https://github.com/php-fig/container/issues",
+                "source": "https://github.com/php-fig/container/tree/1.1.2"
+            },
             "time": "2021-11-05T16:50:12+00:00"
         },
         {
@@ -781,9 +802,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/psr/event-dispatcher/psr-event-dispatcher-dbefd12671e8a14ec7f180cab83036ed26714bb0-zip-673778.zip",
+                "url": "https://api.github.com/repos/php-fig/event-dispatcher/zipball/dbefd12671e8a14ec7f180cab83036ed26714bb0",
                 "reference": "dbefd12671e8a14ec7f180cab83036ed26714bb0",
-                "shasum": "17db0aa8aefc666557b8be913902a9700bd665b2"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.0"
@@ -815,6 +836,10 @@
                 "psr",
                 "psr-14"
             ],
+            "support": {
+                "issues": "https://github.com/php-fig/event-dispatcher/issues",
+                "source": "https://github.com/php-fig/event-dispatcher/tree/1.0.0"
+            },
             "time": "2019-01-08T18:20:26+00:00"
         },
         {
@@ -827,9 +852,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/psr/log/psr-log-d49695b909c3b7628b6289db5479a1c204601f11-zip-eb602c.zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
                 "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
-                "shasum": "b923b1880a9e35058191091caa1ac7b3ca117612"
+                "shasum": ""
             },
             "require": {
                 "php": ">=5.3.0"
@@ -862,6 +887,9 @@
                 "psr",
                 "psr-3"
             ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/1.1.4"
+            },
             "time": "2021-05-03T11:20:27+00:00"
         },
         {
@@ -874,9 +902,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/console/symfony-console-c4ba980ca61a9eb18ee6bcc73f28e475852bb1ed-zip-0d0792.zip",
+                "url": "https://api.github.com/repos/symfony/console/zipball/c4ba980ca61a9eb18ee6bcc73f28e475852bb1ed",
                 "reference": "c4ba980ca61a9eb18ee6bcc73f28e475852bb1ed",
-                "shasum": "5c109f203b4177146062c45f348a728afb2b5875"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -944,6 +972,9 @@
                 "console",
                 "terminal"
             ],
+            "support": {
+                "source": "https://github.com/symfony/console/tree/v5.4.47"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -970,9 +1001,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/dependency-injection/symfony-dependency-injection-e5ca16dee39ef7d63e552ff0bf0a2526a1142c92-zip-a8f79d.zip",
+                "url": "https://api.github.com/repos/symfony/dependency-injection/zipball/e5ca16dee39ef7d63e552ff0bf0a2526a1142c92",
                 "reference": "e5ca16dee39ef7d63e552ff0bf0a2526a1142c92",
-                "shasum": "173385536b181d1971f6fd90305e874399ae4ce7"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1030,6 +1061,9 @@
             ],
             "description": "Allows you to standardize and centralize the way objects are constructed in your application",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/dependency-injection/tree/v5.4.48"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1056,9 +1090,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/deprecation-contracts/symfony-deprecation-contracts-605389f2a7e5625f273b53960dc46aeaf9c62918-zip-ec488a.zip",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/605389f2a7e5625f273b53960dc46aeaf9c62918",
                 "reference": "605389f2a7e5625f273b53960dc46aeaf9c62918",
-                "shasum": "ed777adc04091a99e7ff83c4c2dc7768265764ae"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.1"
@@ -1094,6 +1128,9 @@
             ],
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v2.5.4"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1120,9 +1157,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/dotenv/symfony-dotenv-08013403089c8a126c968179179b817a552841ab-zip-f3343c.zip",
+                "url": "https://api.github.com/repos/symfony/dotenv/zipball/08013403089c8a126c968179179b817a552841ab",
                 "reference": "08013403089c8a126c968179179b817a552841ab",
-                "shasum": "e49ad7700bf6b5d09ce04efe969c44ca5833b4ed"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1162,6 +1199,9 @@
                 "env",
                 "environment"
             ],
+            "support": {
+                "source": "https://github.com/symfony/dotenv/tree/v5.4.48"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1188,9 +1228,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/event-dispatcher/symfony-event-dispatcher-72982eb416f61003e9bb6e91f8b3213600dcf9e9-zip-1fe9ba.zip",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/72982eb416f61003e9bb6e91f8b3213600dcf9e9",
                 "reference": "72982eb416f61003e9bb6e91f8b3213600dcf9e9",
-                "shasum": "5bc90af09caee581ff44d422967577a91ab83530"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1244,6 +1284,9 @@
             ],
             "description": "Provides tools that allow your application components to communicate with each other by dispatching events and listening to them",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/event-dispatcher/tree/v5.4.45"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1270,9 +1313,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/event-dispatcher-contracts/symfony-event-dispatcher-contracts-e0fe3d79b516eb75126ac6fa4cbf19b79b08c99f-zip-3e363c.zip",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher-contracts/zipball/e0fe3d79b516eb75126ac6fa4cbf19b79b08c99f",
                 "reference": "e0fe3d79b516eb75126ac6fa4cbf19b79b08c99f",
-                "shasum": "6bdb4bf3ead79e15388de318c52b7e7efcab90fb"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1320,6 +1363,9 @@
                 "interoperability",
                 "standards"
             ],
+            "support": {
+                "source": "https://github.com/symfony/event-dispatcher-contracts/tree/v2.5.4"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1346,9 +1392,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/filesystem/symfony-filesystem-57c8294ed37d4a055b77057827c67f9558c95c54-zip-fc115c.zip",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/57c8294ed37d4a055b77057827c67f9558c95c54",
                 "reference": "57c8294ed37d4a055b77057827c67f9558c95c54",
-                "shasum": "64b667be3f47b868ed60c2debcaba4281dbcda2e"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1384,6 +1430,9 @@
             ],
             "description": "Provides basic utilities for the filesystem",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/filesystem/tree/v5.4.45"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1410,9 +1459,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/finder/symfony-finder-63741784cd7b9967975eec610b256eed3ede022b-zip-dc8e70.zip",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/63741784cd7b9967975eec610b256eed3ede022b",
                 "reference": "63741784cd7b9967975eec610b256eed3ede022b",
-                "shasum": "fac9fdc5d39832cde59bdbabbd1250554d4e7965"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1444,6 +1493,9 @@
             ],
             "description": "Finds files and directories via an intuitive fluent interface",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/finder/tree/v5.4.45"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1470,9 +1522,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/http-client/symfony-http-client-d77d8e212cde7b5c4a64142bf431522f19487c28-zip-f6d17b.zip",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/d77d8e212cde7b5c4a64142bf431522f19487c28",
                 "reference": "d77d8e212cde7b5c4a64142bf431522f19487c28",
-                "shasum": "38d48456dd53d57a299e1b27debc33d8d3f68bee"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1532,6 +1584,9 @@
             "keywords": [
                 "http"
             ],
+            "support": {
+                "source": "https://github.com/symfony/http-client/tree/v5.4.49"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1558,9 +1613,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/http-client-contracts/symfony-http-client-contracts-48ef1d0a082885877b664332b9427662065a360c-zip-9c15d0.zip",
+                "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/48ef1d0a082885877b664332b9427662065a360c",
                 "reference": "48ef1d0a082885877b664332b9427662065a360c",
-                "shasum": "482dc23d1702f1606e2479c1426ed1e867f705b6"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5"
@@ -1607,6 +1662,9 @@
                 "interoperability",
                 "standards"
             ],
+            "support": {
+                "source": "https://github.com/symfony/http-client-contracts/tree/v2.5.5"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -1709,9 +1767,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/mime/symfony-mime-8c1b9b3e5b52981551fc6044539af1d974e39064-zip-7a7e9f.zip",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/8c1b9b3e5b52981551fc6044539af1d974e39064",
                 "reference": "8c1b9b3e5b52981551fc6044539af1d974e39064",
-                "shasum": "afcd66f3b5bc216b825f27411435fdb253f84aa2"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -1765,6 +1823,9 @@
                 "mime",
                 "mime-type"
             ],
+            "support": {
+                "source": "https://github.com/symfony/mime/tree/v5.4.45"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -2523,9 +2584,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/service-contracts/symfony-service-contracts-f37b419f7aea2e9abf10abd261832cace12e3300-zip-0ff29e.zip",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/f37b419f7aea2e9abf10abd261832cace12e3300",
                 "reference": "f37b419f7aea2e9abf10abd261832cace12e3300",
-                "shasum": "aa9676747a4d9aa398326910109684b1d4d205c4"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -2577,6 +2638,9 @@
                 "interoperability",
                 "standards"
             ],
+            "support": {
+                "source": "https://github.com/symfony/service-contracts/tree/v2.5.4"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -2603,9 +2667,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/string/symfony-string-136ca7d72f72b599f2631aca474a4f8e26719799-zip-c09a76.zip",
+                "url": "https://api.github.com/repos/symfony/string/zipball/136ca7d72f72b599f2631aca474a4f8e26719799",
                 "reference": "136ca7d72f72b599f2631aca474a4f8e26719799",
-                "shasum": "9cc85b39eb6c3bcb03bb6164a0e082f48ff23150"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -2660,6 +2724,9 @@
                 "utf-8",
                 "utf8"
             ],
+            "support": {
+                "source": "https://github.com/symfony/string/tree/v5.4.47"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -2686,9 +2753,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/symfony/yaml/symfony-yaml-a454d47278cc16a5db371fe73ae66a78a633371e-zip-3f0815.zip",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/a454d47278cc16a5db371fe73ae66a78a633371e",
                 "reference": "a454d47278cc16a5db371fe73ae66a78a633371e",
-                "shasum": "ebfc8c8ec96b0ede920c4225d7d3d6c6f5743c07"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
@@ -2732,6 +2799,9 @@
             ],
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/yaml/tree/v5.4.45"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -2817,9 +2887,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/mikey179/vfsstream/mikey179-vfsstream-fe695ec993e0a55c3abdda10a9364eb31c6f1bf0-zip-e88407.zip",
+                "url": "https://api.github.com/repos/bovigo/vfsStream/zipball/fe695ec993e0a55c3abdda10a9364eb31c6f1bf0",
                 "reference": "fe695ec993e0a55c3abdda10a9364eb31c6f1bf0",
-                "shasum": "271e3d59232c37e97602b0d0076eece568025a31"
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.1.0"
@@ -2852,6 +2922,11 @@
             ],
             "description": "Virtual file system to mock the real file system in unit tests.",
             "homepage": "http://vfs.bovigo.org/",
+            "support": {
+                "issues": "https://github.com/bovigo/vfsStream/issues",
+                "source": "https://github.com/bovigo/vfsStream/tree/master",
+                "wiki": "https://github.com/bovigo/vfsStream/wiki"
+            },
             "time": "2024-08-29T18:43:31+00:00"
         },
         {
@@ -2864,9 +2939,9 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://composer.tiki.org/dist/phpcompatibility/php-compatibility/phpcompatibility-php-compatibility-9fb324479acf6f39452e0655d2429cc0d3914243-zip-ad46ce.zip",
+                "url": "https://api.github.com/repos/PHPCompatibility/PHPCompatibility/zipball/9fb324479acf6f39452e0655d2429cc0d3914243",
                 "reference": "9fb324479acf6f39452e0655d2429cc0d3914243",
-                "shasum": "0d55d5f2add377119182a583c12ee902c2e23fa7"
+                "shasum": ""
             },
             "require": {
                 "php": ">=5.3",
@@ -2910,6 +2985,10 @@
                 "phpcs",
                 "standards"
             ],
+            "support": {
+                "issues": "https://github.com/PHPCompatibility/PHPCompatibility/issues",
+                "source": "https://github.com/PHPCompatibility/PHPCompatibility"
+            },
             "time": "2019-12-27T09:44:58+00:00"
         },
         {
@@ -3136,15 +3215,15 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "ext-bz2": "*",
         "ext-json": "*",
         "ext-pdo": "*",
-        "php": "^7.4 || ^8.0"
+        "php": "~7.4 || ~8.0"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.2.0"
 }
